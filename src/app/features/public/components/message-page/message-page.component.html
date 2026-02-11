@@ -47,16 +47,16 @@
         </div>
 
         <!-- Value Proposition -->
-        <div class="card mb-8 text-center animate-slide-up">
-          <h2 class="text-2xl font-bold text-gray-900 mb-3">Send a Priority Message</h2>
-          <p class="text-gray-600 mb-4">
+        <div class="card mb-8 text-center animate-slide-up p-6">
+          <h2 class="text-2xl font-bold text-neutral-900 mb-3">Send a Priority Message</h2>
+          <p class="text-neutral-600 mb-4">
             Get a guaranteed response by sending a paid priority message. Your message will go directly to 
             {{ creator()?.display_name }}'s inbox.
           </p>
           
           @if (settings()?.response_expectation) {
             <div class="bg-primary-50 p-4 rounded-lg inline-block">
-              <p class="text-sm text-gray-700">
+              <p class="text-sm text-neutral-700">
                 <span class="font-semibold">Response time:</span> {{ settings()?.response_expectation }}
               </p>
             </div>
@@ -64,12 +64,12 @@
         </div>
 
         <!-- Message Form -->
-        <div class="card animate-slide-up">
-          <form (ngSubmit)="submitMessage()">
+        <div class="card animate-slide-up p-6">
+          <form (ngSubmit)="submitMessage()" class="space-y-5">
             <!-- Pricing Selection (if tiered) -->
             @if (settings()?.has_tiered_pricing) {
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-3">Message Type</label>
+              <div class="form-group">
+                <label class="form-label">Message Type</label>
                 <div class="grid grid-cols-2 gap-4">
                   <label
                     class="flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
@@ -120,9 +120,9 @@
             }
 
             <!-- Sender Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Your Name *</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="form-group">
+                <label class="form-label">Your Name *</label>
                 <input
                   type="text"
                   [value]="senderName()"
@@ -133,8 +133,8 @@
                 />
               </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Your Email *</label>
+              <div class="form-group">
+                <label class="form-label">Your Email *</label>
                 <input
                   type="email"
                   [value]="senderEmail()"
@@ -147,22 +147,22 @@
             </div>
 
             <!-- Message Content -->
-            <div class="mb-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Your Message *</label>
+            <div class="form-group">
+              <label class="form-label">Your Message *</label>
               <textarea
                 [value]="messageContent()"
                 (input)="messageContent.set($any($event.target).value)"
                 placeholder="Write your message here..."
                 rows="6"
                 maxlength="1000"
-                class="input-field"
+                class="textarea"
                 required
               ></textarea>
               <div class="flex justify-between items-center mt-1">
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-neutral-500">
                   This message will be sent directly to {{ creator()?.display_name }}'s inbox.
                 </p>
-                <p class="text-xs" [class.text-red-600]="characterCount() > 900" [class.text-gray-500]="characterCount() <= 900">
+                <p class="text-xs" [class.text-danger-600]="characterCount() > 900" [class.text-neutral-500]="characterCount() <= 900">
                   {{ characterCount() }}/1000
                 </p>
               </div>
@@ -172,7 +172,7 @@
             <button
               type="submit"
               [disabled]="submitting()"
-              class="w-full btn-primary text-lg py-4 flex items-center justify-center"
+              class="btn-primary btn-lg w-full"
             >
               @if (submitting()) {
                 <svg class="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

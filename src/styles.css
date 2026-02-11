@@ -1,28 +1,179 @@
-/* You can add global styles to this file, and also import other style files */
+/* Premium Design System - Convozo */
+@import url('https://rsms.me/inter/inter.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@supports (font-variation-settings: normal) {
+  html {
+    font-family: 'Inter var', sans-serif;
+  }
+}
+
 @layer base {
+  * {
+    @apply antialiased;
+  }
+  
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-neutral-50 text-neutral-900;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
   }
 }
 
 @layer components {
+  /* Premium Button System */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 h-12 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+  }
+  
   .btn-primary {
-    @apply px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-200 font-medium;
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] shadow-sm hover:shadow focus-visible:ring-primary-500;
   }
   
   .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium;
+    @apply btn bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50 hover:border-neutral-400 focus-visible:ring-neutral-400;
+  }
+  
+  .btn-ghost {
+    @apply btn text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200;
+  }
+  
+  .btn-danger {
+    @apply btn bg-danger-600 text-white hover:bg-danger-700 shadow-sm focus-visible:ring-danger-500;
+  }
+  
+  .btn-sm {
+    @apply h-10 px-3 text-sm rounded-lg;
+  }
+  
+  .btn-lg {
+    @apply h-14 px-6 text-lg rounded-2xl;
+  }
+  
+  /* Premium Input System */
+  .input {
+    @apply w-full px-4 h-12 bg-white border border-neutral-300 rounded-xl text-base transition-all duration-200 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-neutral-50 disabled:cursor-not-allowed appearance-none;
+  }
+  
+  .input-error {
+    @apply border-danger-300 focus:ring-danger-500;
   }
   
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+    @apply input;
   }
   
+  .textarea {
+    @apply input min-h-[120px] py-3 resize-none;
+  }
+  
+  /* Form Label */
+  .form-label {
+    @apply block text-sm font-medium text-neutral-700 mb-2;
+  }
+  
+  /* Form Group */
+  .form-group {
+    @apply space-y-2;
+  }
+  
+  /* Premium Card System */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-2xl shadow-soft border border-neutral-200/50 overflow-hidden;
+  }
+  
+  .card-hover {
+    @apply card transition-all duration-200 hover:shadow-soft-lg hover:border-neutral-300/50;
+  }
+  
+  .card-padding {
+    @apply p-6;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-neutral-200/50;
+  }
+  
+  /* Badge System */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg;
+  }
+  
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-700;
+  }
+  
+  .badge-success {
+    @apply badge bg-success-100 text-success-700;
+  }
+  
+  .badge-warning {
+    @apply badge bg-warning-100 text-warning-700;
+  }
+  
+  .badge-neutral {
+    @apply badge bg-neutral-100 text-neutral-700;
+  }
+  
+  /* Layout Utilities */
+  .container-mobile {
+    @apply w-full max-w-md mx-auto px-4;
+  }
+  
+  .section-padding {
+    @apply py-8;
+  }
+  
+  /* Loading States */
+  .skeleton {
+    @apply animate-pulse bg-neutral-200 rounded;
+  }
+  
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .shimmer::after {
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    content: '';
+    animation: shimmer 2s ease-in-out infinite;
+  }
+  
+  /* Animations */
+  .animate-in {
+    @apply animate-fade-in;
+  }
+  
+  .slide-up-enter {
+    @apply animate-slide-up;
+  }
+  
+  .scale-in-enter {
+    @apply animate-scale-in;
+  }
+  
+  /* Focus Visible Enhancement */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-lg;
+  }
+  
+  /* Mobile Touch Feedback */
+  .tap-highlight {
+    -webkit-tap-highlight-color: rgba(168, 85, 247, 0.1);
+  }
+  
+  /* Safe Area Padding (for mobile notches) */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

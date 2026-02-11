@@ -19,6 +19,40 @@ export class AuthService {
   ) {}
 
   /**
+   * Sign in with email and password
+   */
+  public async signInWithPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+    if (!FormValidators.isValidEmail(email)) {
+      return { success: false, error: ERROR_MESSAGES.AUTH.INVALID_EMAIL };
+    }
+
+    try {
+      const { data, error } = await this.supabaseService.client.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Check if user has a creator profile
+        const { data: creator } = await this.supabaseService.getCreatorByUserId(data.user.id);
+
+        if (creator) {
+          await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+        } else {
+          await this.router.navigate([ROUTES.CREATOR.ONBOARDING]);
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ERROR_MESSAGES.AUTH.LOGIN_FAILED;
+      return { success: false, error: message };
+    }
+  }
+
+  /**
    * Send magic link to email
    */
   public async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {
