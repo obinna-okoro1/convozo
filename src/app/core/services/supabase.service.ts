@@ -26,12 +26,13 @@ interface SupabaseResponse<T> {
   providedIn: 'root'
 })
 export class SupabaseService {
-  private readonly supabase: SupabaseClient;
+  // Expose client for direct access by feature services
+  public readonly client: SupabaseClient;
   private readonly currentUserSubject: BehaviorSubject<User | null>;
   public readonly currentUser$: Observable<User | null>;
 
   constructor() {
-    this.supabase = createClient(
+    this.client = createClient(
       environment.supabase.url,
       environment.supabase.anonKey
     );
@@ -46,11 +47,11 @@ export class SupabaseService {
    * Initialize authentication state
    */
   private initializeAuthState(): void {
-    this.supabase.auth.getSession().then(({ data: { session } }) => {
+    this.client.auth.getSession().then(({ data: { session } }) => {
       this.currentUserSubject.next(session?.user ?? null);
     });
 
-    this.supabase.auth.onAuthStateChange((_event, session) => {
+    this.client.auth.onAuthStateChange((_event, session) => {
       this.currentUserSubject.next(session?.user ?? null);
     });
   }
@@ -61,7 +62,7 @@ export class SupabaseService {
    * Sign in with email using magic link
    */
   public async signInWithEmail(email: string): Promise<{ data: unknown; error: Error | null }> {
-    const { data, error } = await this.supabase.auth.signInWithOtp({
+    const { data, error } = await this.client.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
@@ -74,7 +75,7 @@ export class SupabaseService {
    * Sign out current user
    */
   public async signOut(): Promise<{ data: null; error: Error | null }> {
-    const { error } = await this.supabase.auth.signOut();
+    const { error } = await this.client.auth.signOut();
     return { data: null, error };
   }
 
@@ -91,7 +92,7 @@ export class SupabaseService {
    * Get creator by user ID
    */
   public async getCreatorByUserId(userId: string): Promise<SupabaseResponse<Creator>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creators')
       .select('*')
       .eq('user_id', userId)
@@ -103,7 +104,7 @@ export class SupabaseService {
    * Get creator by slug with settings
    */
   public async getCreatorBySlug(slug: string): Promise<SupabaseResponse<Creator>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creators')
       .select('*, creator_settings(*)')
       .eq('slug', slug)
@@ -116,7 +117,7 @@ export class SupabaseService {
    * Create a new creator profile
    */
   public async createCreator(creator: Partial<Creator>): Promise<SupabaseResponse<Creator>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creators')
       .insert(creator)
       .select()
@@ -128,7 +129,7 @@ export class SupabaseService {
    * Update creator profile
    */
   public async updateCreator(id: string, updates: Partial<Creator>): Promise<SupabaseResponse<Creator>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creators')
       .update(updates)
       .eq('id', id)
@@ -143,7 +144,7 @@ export class SupabaseService {
    * Get creator settings by creator ID
    */
   public async getCreatorSettings(creatorId: string): Promise<SupabaseResponse<CreatorSettings>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creator_settings')
       .select('*')
       .eq('creator_id', creatorId)
@@ -155,7 +156,7 @@ export class SupabaseService {
    * Create creator settings
    */
   public async createCreatorSettings(settings: Partial<CreatorSettings>): Promise<SupabaseResponse<CreatorSettings>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creator_settings')
       .insert(settings)
       .select()
@@ -167,7 +168,7 @@ export class SupabaseService {
    * Update creator settings
    */
   public async updateCreatorSettings(id: string, updates: Partial<CreatorSettings>): Promise<SupabaseResponse<CreatorSettings>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('creator_settings')
       .update(updates)
       .eq('id', id)
@@ -182,7 +183,7 @@ export class SupabaseService {
    * Get Stripe account by creator ID
    */
   public async getStripeAccount(creatorId: string): Promise<SupabaseResponse<StripeAccount>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('stripe_accounts')
       .select('*')
       .eq('creator_id', creatorId)
@@ -194,7 +195,7 @@ export class SupabaseService {
    * Create Stripe account record
    */
   public async createStripeAccount(account: Partial<StripeAccount>): Promise<SupabaseResponse<StripeAccount>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('stripe_accounts')
       .insert(account)
       .select()
@@ -206,7 +207,7 @@ export class SupabaseService {
    * Update Stripe account record
    */
   public async updateStripeAccount(id: string, updates: Partial<StripeAccount>): Promise<SupabaseResponse<StripeAccount>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('stripe_accounts')
       .update(updates)
       .eq('id', id)
@@ -221,7 +222,7 @@ export class SupabaseService {
    * Get all messages for a creator
    */
   public async getMessages(creatorId: string): Promise<SupabaseResponse<Message[]>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('messages')
       .select('*')
       .eq('creator_id', creatorId)
@@ -233,7 +234,7 @@ export class SupabaseService {
    * Update a message
    */
   public async updateMessage(id: string, updates: Partial<Message>): Promise<SupabaseResponse<Message>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('messages')
       .update(updates)
       .eq('id', id)
@@ -248,7 +249,7 @@ export class SupabaseService {
    * Create Stripe checkout session via Edge Function
    */
   public async createCheckoutSession(payload: CheckoutSessionPayload): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    const { data, error } = await this.supabase.functions.invoke('create-checkout-session', {
+    const { data, error } = await this.client.functions.invoke('create-checkout-session', {
       body: payload,
     });
     return { data, error };
@@ -258,7 +259,7 @@ export class SupabaseService {
    * Send reply email via Edge Function
    */
   public async sendReplyEmail(messageId: string, replyContent: string): Promise<EdgeFunctionResponse<void>> {
-    const { data, error } = await this.supabase.functions.invoke('send-reply-email', {
+    const { data, error } = await this.client.functions.invoke('send-reply-email', {
       body: { message_id: messageId, reply_content: replyContent },
     });
     return { data, error };
@@ -272,7 +273,7 @@ export class SupabaseService {
     email: string,
     displayName: string
   ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
-    const { data, error } = await this.supabase.functions.invoke('create-connect-account', {
+    const { data, error } = await this.client.functions.invoke('create-connect-account', {
       body: { creator_id: creatorId, email, display_name: displayName },
     });
     return { data, error };
@@ -282,7 +283,7 @@ export class SupabaseService {
    * Verify Stripe Connect account status via Edge Function
    */
   public async verifyConnectAccount(accountId: string): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
-    const { data, error } = await this.supabase.functions.invoke('verify-connect-account', {
+    const { data, error } = await this.client.functions.invoke('verify-connect-account', {
       body: { account_id: accountId },
     });
     return { data, error };

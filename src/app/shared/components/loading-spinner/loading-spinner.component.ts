@@ -10,21 +10,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-loading-spinner',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="flex items-center justify-center" [class.h-screen]="fullScreen">
-      <div class="animate-spin rounded-full border-t-2 border-b-2 border-primary-600"
-           [ngClass]="sizeClass">
-      </div>
-      @if (message) {
-        <p class="ml-3 text-gray-600">{{ message }}</p>
-      }
-    </div>
-  `,
-  styles: [`
-    :host {
-      display: block;
-    }
-  `]
+  templateUrl: './loading-spinner.component.html',
+  styleUrls: ['./loading-spinner.component.css']
 })
 export class LoadingSpinnerComponent {
   @Input() public size: 'small' | 'medium' | 'large' = 'medium';

@@ -1,5 +1,6 @@
 /**
- * Dashboard component with proper access modifiers and clean architecture
+ * Dashboard Component
+ * Lean component that delegates business logic to CreatorService
  */
 
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
@@ -7,7 +8,8 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { SupabaseService } from '../../../../core/services/supabase.service';
+import { CreatorService } from '../../services/creator.service';
+import { AuthService } from '../../../auth/services/auth.service';
 import { Creator, CreatorSettings, Message, MessageStats, FilterStatus } from '../../../../core/models';
 import { ROUTES } from '../../../../core/constants';
 
@@ -36,19 +38,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly filterStatus = signal<FilterStatus>('all');
 
   // Computed values
-  protected readonly stats = computed<MessageStats>(() => this.calculateStats());
-  protected readonly publicUrl = computed<string>(() => this.buildPublicUrl());
+  protected readonly stats = computed<MessageStats>(() => 
+    this.creatorService.calculateStats(this.messages())
+  );
+  protected readonly publicUrl = computed<string>(() => 
+    this.creatorService.buildPublicUrl(this.creator()?.slug)
+  );
 
   private queryParamsSubscription?: Subscription;
 
   constructor(
-    private readonly supabaseService: SupabaseService,
+    private readonly creatorService: CreatorService,
+    private readonly authService: AuthService,
     private readonly router: Router,
     private readonly route: ActivatedRoute
   ) {}
 
   public async ngOnInit(): Promise<void> {
-    const user = this.supabaseService.getCurrentUser();
+    const user = this.authService.getCurrentUser();
     if (!user) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
       return;
@@ -63,7 +70,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Subscribe to query parameters to check for Stripe setup status
+   * Subscribe to query parameters
    */
   private subscribeToQueryParams(): void {
     this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
@@ -78,7 +85,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   private async loadDashboardData(userId: string): Promise<void> {
     try {
-      const { data: creatorData, error: creatorError } = await this.supabaseService.getCreatorByUserId(userId);
+      const { data: creatorData, error: creatorError } = await this.creatorService.getCreatorByUserId(userId);
       
       if (creatorError || !creatorData) {
         await this.router.navigate([ROUTES.CREATOR.ONBOARDING]);
@@ -86,8 +93,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       this.creator.set(creatorData);
-      await this.loadCreatorSettings(creatorData.id);
-      await this.loadMessages(creatorData.id);
+
+      const { data: settingsData } = await this.creatorService.getCreatorSettings(creatorData.id);
+      if (settingsData) {
+        this.settings.set(settingsData);
+      }
+
+      const { data: messagesData } = await this.creatorService.getMessages(creatorData.id);
+      if (messagesData) {
+        this.messages.set(messagesData);
+      }
     } catch (err) {
       this.handleError(err, 'Failed to load dashboard');
     } finally {
@@ -96,27 +111,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load creator settings
-   */
-  private async loadCreatorSettings(creatorId: string): Promise<void> {
-    const { data: settingsData } = await this.supabaseService.getCreatorSettings(creatorId);
-    if (settingsData) {
-      this.settings.set(settingsData);
-    }
-  }
-
-  /**
-   * Load messages for the creator
-   */
-  private async loadMessages(creatorId: string): Promise<void> {
-    const { data: messagesData } = await this.supabaseService.getMessages(creatorId);
-    if (messagesData) {
-      this.messages.set(messagesData);
-    }
-  }
-
-  /**
-   * Get filtered messages based on current filter status
+   * Get filtered messages
    */
   protected filteredMessages(): Message[] {
     const msgs = this.messages();
@@ -131,35 +126,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Calculate message statistics
-   */
-  private calculateStats(): MessageStats {
-    const msgs = this.messages();
-    return {
-      total: msgs.length,
-      unhandled: msgs.filter(m => !m.is_handled).length,
-      handled: msgs.filter(m => m.is_handled).length,
-      totalRevenue: msgs.reduce((sum, m) => sum + m.amount_paid, 0) / 100,
-    };
-  }
-
-  /**
-   * Build public URL for the creator
-   */
-  private buildPublicUrl(): string {
-    const creatorSlug = this.creator()?.slug;
-    return creatorSlug ? `${window.location.origin}/${creatorSlug}` : '';
-  }
-
-  /**
-   * Select a message to view details
+   * Select a message
    */
   protected selectMessage(message: Message): void {
     this.selectedMessage.set(message);
   }
 
   /**
-   * Open reply modal for a message
+   * Open reply modal
    */
   protected openReplyModal(message: Message): void {
     this.selectedMessage.set(message);
@@ -168,7 +142,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Close reply modal and reset state
+   * Close reply modal
    */
   protected closeReplyModal(): void {
     this.showReplyModal.set(false);
@@ -177,7 +151,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Send reply to a message
+   * Send reply
    */
   protected async sendReply(): Promise<void> {
     const message = this.selectedMessage();
@@ -189,52 +163,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.sendingReply.set(true);
 
-    try {
-      const { error: emailError } = await this.supabaseService.sendReplyEmail(message.id, content);
+    const result = await this.creatorService.replyToMessage(message.id, content, message.sender_email);
 
-      if (emailError) {
-        throw emailError;
-      }
-
+    if (result.success) {
       const currentCreator = this.creator();
       if (currentCreator) {
-        await this.loadMessages(currentCreator.id);
+        const { data } = await this.creatorService.getMessages(currentCreator.id);
+        if (data) {
+          this.messages.set(data);
+        }
       }
-
       this.closeReplyModal();
-    } catch (err) {
-      this.handleError(err, 'Failed to send reply');
-    } finally {
-      this.sendingReply.set(false);
+    } else {
+      this.handleError(result.error, 'Failed to send reply');
     }
+
+    this.sendingReply.set(false);
   }
 
   /**
-   * Mark a message as handled
+   * Mark message as handled
    */
   protected async markAsHandled(message: Message): Promise<void> {
-    try {
-      await this.supabaseService.updateMessage(message.id, { is_handled: true });
-      
+    const { error } = await this.creatorService.markAsHandled(message.id);
+    
+    if (!error) {
       const currentCreator = this.creator();
       if (currentCreator) {
-        await this.loadMessages(currentCreator.id);
+        const { data } = await this.creatorService.getMessages(currentCreator.id);
+        if (data) {
+          this.messages.set(data);
+        }
       }
-    } catch (err) {
-      this.handleError(err, 'Failed to mark as handled');
+    } else {
+      this.handleError(error, 'Failed to mark as handled');
     }
   }
 
   /**
-   * Sign out the current user
+   * Sign out
    */
   protected async signOut(): Promise<void> {
-    await this.supabaseService.signOut();
-    await this.router.navigate([ROUTES.HOME]);
+    await this.authService.signOut();
   }
 
   /**
-   * Copy public URL to clipboard
+   * Copy public URL
    */
   protected copyPublicUrl(): void {
     const url = this.publicUrl();
@@ -247,7 +221,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle errors consistently
+   * Handle errors
    */
   private handleError(err: unknown, defaultMessage: string): void {
     const errorMessage = err instanceof Error ? err.message : defaultMessage;
