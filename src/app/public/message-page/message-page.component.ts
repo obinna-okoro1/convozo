@@ -1,25 +1,17 @@
-import { Component, OnInit, signal } from '@angular/core';
+/**
+ * Message page component with proper access modifiers and clean architecture
+ */
+
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../shared/supabase.service';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { SupabaseService } from '../../core/services/supabase.service';
+import { CreatorProfile, MessageType } from '../../core/models';
+import { FormValidators } from '../../core/validators/form-validators';
+import { APP_CONSTANTS, ERROR_MESSAGES } from '../../core/constants';
 import { environment } from '../../../environments/environment';
-
-interface CreatorProfile {
-  id: string;
-  display_name: string;
-  bio: string | null;
-  profile_image_url: string | null;
-  slug: string;
-  creator_settings: {
-    has_tiered_pricing: boolean;
-    single_price: number | null;
-    fan_price: number | null;
-    business_price: number | null;
-    response_expectation: string | null;
-  }[];
-}
 
 @Component({
   selector: 'app-message-page',
@@ -28,32 +20,53 @@ interface CreatorProfile {
   styleUrls: ['./message-page.component.css']
 })
 export class MessagePageComponent implements OnInit {
-  creator = signal<CreatorProfile | null>(null);
-  settings = signal<{ has_tiered_pricing: boolean; single_price: number | null; fan_price: number | null; business_price: number | null; response_expectation: string | null; } | null>(null);
-  loading = signal(true);
-  error = signal<string | null>(null);
+  // State signals
+  protected readonly creator = signal<CreatorProfile | null>(null);
+  private readonly creatorSettings = signal<CreatorProfile['creator_settings'][0] | null>(null);
+  protected readonly loading = signal<boolean>(true);
+  protected readonly error = signal<string | null>(null);
 
-  // Form data
-  senderName = signal('');
-  senderEmail = signal('');
-  messageContent = signal('');
-  messageType = signal<'fan' | 'business' | 'single'>('single');
+  // Form signals
+  protected readonly senderName = signal<string>('');
+  protected readonly senderEmail = signal<string>('');
+  protected readonly messageContent = signal<string>('');
+  protected readonly messageType = signal<MessageType>('single');
+  protected readonly submitting = signal<boolean>(false);
+
+  // Computed values
+  protected readonly selectedPrice = computed<number>(() => this.calculateSelectedPrice());
+  protected readonly characterCount = computed<number>(() => this.messageContent().length);
+  protected readonly maxCharacters = APP_CONSTANTS.MESSAGE_MAX_LENGTH;
   
-  submitting = signal(false);
-  
+  // Expose settings to template
+  protected settings() {
+    return this.creatorSettings();
+  }
+
   private stripe: Stripe | null = null;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private supabaseService: SupabaseService
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly supabaseService: SupabaseService
   ) {}
 
-  async ngOnInit() {
-    // Initialize Stripe
-    this.stripe = await loadStripe(environment.stripe.publishableKey);
+  public async ngOnInit(): Promise<void> {
+    await this.initializeStripe();
+    await this.loadCreatorFromUrl();
+  }
 
-    // Get creator slug from URL
+  /**
+   * Initialize Stripe client
+   */
+  private async initializeStripe(): Promise<void> {
+    this.stripe = await loadStripe(environment.stripe.publishableKey);
+  }
+
+  /**
+   * Load creator from URL slug
+   */
+  private async loadCreatorFromUrl(): Promise<void> {
     const slug = this.route.snapshot.paramMap.get('slug');
     if (!slug) {
       this.error.set('Invalid URL');
@@ -61,11 +74,13 @@ export class MessagePageComponent implements OnInit {
       return;
     }
 
-    // Load creator profile
     await this.loadCreator(slug);
   }
 
-  async loadCreator(slug: string) {
+  /**
+   * Load creator profile
+   */
+  private async loadCreator(slug: string): Promise<void> {
     try {
       const { data, error } = await this.supabaseService.getCreatorBySlug(slug);
       
@@ -76,17 +91,10 @@ export class MessagePageComponent implements OnInit {
 
       this.creator.set(data as CreatorProfile);
       
-      // Set settings
-      const settingsData = data.creator_settings?.[0];
-      if (settingsData) {
-        this.settings.set(settingsData);
-        
-        // Set default message type based on pricing
-        if (settingsData.has_tiered_pricing) {
-          this.messageType.set('fan');
-        } else {
-          this.messageType.set('single');
-        }
+      const settings = (data as CreatorProfile).creator_settings?.[0];
+      if (settings) {
+        this.creatorSettings.set(settings);
+        this.setDefaultMessageType(data as CreatorProfile);
       }
     } catch (err) {
       this.error.set('Failed to load creator');
@@ -95,90 +103,124 @@ export class MessagePageComponent implements OnInit {
     }
   }
 
-  get selectedPrice(): number {
-    const settingsData = this.settings();
-    if (!settingsData) return 0;
-
-    if (settingsData.has_tiered_pricing) {
-      return this.messageType() === 'business'
-        ? (settingsData.business_price || 0) / 100
-        : (settingsData.fan_price || 0) / 100;
+  /**
+   * Set default message type based on creator pricing
+   */
+  private setDefaultMessageType(creator: CreatorProfile): void {
+    const settings = creator.creator_settings?.[0];
+    if (settings?.has_tiered_pricing) {
+      this.messageType.set('fan');
+    } else {
+      this.messageType.set('single');
     }
-
-    return (settingsData.single_price || 0) / 100;
   }
 
-  async submitMessage() {
+  /**
+   * Calculate selected price based on message type
+   */
+  private calculateSelectedPrice(): number {
+    const creatorData = this.creator();
+    if (!creatorData) return 0;
+
+    const settings = creatorData.creator_settings?.[0];
+    if (!settings) return 0;
+
+    if (settings.has_tiered_pricing) {
+      return this.messageType() === 'business'
+        ? (settings.business_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER
+        : (settings.fan_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
+    }
+
+    return (settings.single_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
+  }
+
+  /**
+   * Submit message and process payment
+   */
+  protected async submitMessage(): Promise<void> {
     if (!this.validateForm()) {
       return;
     }
 
     if (!this.stripe) {
-      alert('Payment system not initialized');
+      alert(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
       return;
     }
 
     this.submitting.set(true);
 
     try {
-      const priceInCents = this.selectedPrice * 100;
-
-      // Create checkout session via Edge Function
-      const { data, error } = await this.supabaseService.createCheckoutSession({
-        creator_slug: this.creator()!.slug,
-        message_content: this.messageContent(),
-        sender_name: this.senderName(),
-        sender_email: this.senderEmail(),
-        message_type: this.messageType(),
-        price: priceInCents,
-      });
-
-      if (error || !data?.sessionId) {
-        throw new Error(error?.message || 'Failed to create checkout session');
-      }
-
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
+      await this.createCheckoutSession();
     } catch (err) {
-      alert('Failed to process payment: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
     } finally {
       this.submitting.set(false);
     }
   }
 
-  validateForm(): boolean {
-    if (!this.senderName().trim()) {
-      alert('Please enter your name');
+  /**
+   * Create Stripe checkout session and redirect
+   */
+  private async createCheckoutSession(): Promise<void> {
+    const priceInCents = this.selectedPrice() * APP_CONSTANTS.PRICE_MULTIPLIER;
+    const creatorData = this.creator();
+
+    if (!creatorData) {
+      throw new Error('Creator data not loaded');
+    }
+
+    const { data, error } = await this.supabaseService.createCheckoutSession({
+      creator_slug: creatorData.slug,
+      message_content: this.messageContent(),
+      sender_name: this.senderName(),
+      sender_email: this.senderEmail(),
+      message_type: this.messageType(),
+      price: priceInCents,
+    });
+
+    if (error || !data?.sessionId) {
+      throw new Error(error?.message || 'Failed to create checkout session');
+    }
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL received');
+    }
+  }
+
+  /**
+   * Validate form inputs
+   */
+  private validateForm(): boolean {
+    if (!FormValidators.isNotEmpty(this.senderName())) {
+      alert(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
       return false;
     }
 
-    if (!this.senderEmail().trim() || !this.isValidEmail(this.senderEmail())) {
-      alert('Please enter a valid email');
+    if (!FormValidators.isValidEmail(this.senderEmail())) {
+      alert(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
       return false;
     }
 
-    if (!this.messageContent().trim()) {
-      alert('Please enter your message');
+    if (!FormValidators.isNotEmpty(this.messageContent())) {
+      alert(ERROR_MESSAGES.MESSAGE.CONTENT_REQUIRED);
       return false;
     }
 
-    if (this.messageContent().length > 1000) {
-      alert('Message is too long (max 1000 characters)');
+    if (!FormValidators.isValidMessageLength(this.messageContent())) {
+      alert(ERROR_MESSAGES.MESSAGE.CONTENT_TOO_LONG);
       return false;
     }
 
     return true;
   }
 
-  isValidEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  get characterCount() {
-    return this.messageContent().length;
+  /**
+   * Handle errors consistently
+   */
+  private handleError(err: unknown, defaultMessage: string): void {
+    const errorMessage = err instanceof Error ? err.message : defaultMessage;
+    alert(`${defaultMessage}: ${errorMessage}`);
   }
 }

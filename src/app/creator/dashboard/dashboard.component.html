@@ -59,19 +59,19 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="card">
           <div class="text-sm text-gray-600 mb-1">Total Messages</div>
-          <div class="text-3xl font-bold text-gray-900">{{ stats.total }}</div>
+          <div class="text-3xl font-bold text-gray-900">{{ stats().total }}</div>
         </div>
         <div class="card">
           <div class="text-sm text-gray-600 mb-1">Unhandled</div>
-          <div class="text-3xl font-bold text-orange-600">{{ stats.unhandled }}</div>
+          <div class="text-3xl font-bold text-orange-600">{{ stats().unhandled }}</div>
         </div>
         <div class="card">
           <div class="text-sm text-gray-600 mb-1">Handled</div>
-          <div class="text-3xl font-bold text-green-600">{{ stats.handled }}</div>
+          <div class="text-3xl font-bold text-green-600">{{ stats().handled }}</div>
         </div>
         <div class="card">
           <div class="text-sm text-gray-600 mb-1">Total Revenue</div>
-          <div class="text-3xl font-bold text-primary-600">${{ stats.totalRevenue }}</div>
+          <div class="text-3xl font-bold text-primary-600">${{ stats().totalRevenue }}</div>
         </div>
       </div>
 
@@ -81,7 +81,7 @@
         <div class="flex items-center space-x-3">
           <input
             type="text"
-            [value]="publicUrl"
+            [value]="publicUrl()"
             readonly
             class="input-field flex-1 bg-white"
           />

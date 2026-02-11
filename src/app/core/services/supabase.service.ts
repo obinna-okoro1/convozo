@@ -3,8 +3,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { createClient, SupabaseClient, User, PostgrestError } from '@supabase/supabase-js';
+import { environment } from '../../../environments/environment';
 import { BehaviorSubject, Observable } from 'rxjs';
 import {
   Creator,
@@ -15,11 +15,11 @@ import {
   EdgeFunctionResponse,
   StripeConnectResponse,
   StripeAccountStatus,
-} from '../core/models';
+} from '../../core/models';
 
 interface SupabaseResponse<T> {
   data: T | null;
-  error: Error | null;
+  error: PostgrestError | null;
 }
 
 @Injectable({
@@ -60,7 +60,7 @@ export class SupabaseService {
   /**
    * Sign in with email using magic link
    */
-  public async signInWithEmail(email: string): Promise<SupabaseResponse<unknown>> {
+  public async signInWithEmail(email: string): Promise<{ data: unknown; error: Error | null }> {
     const { data, error } = await this.supabase.auth.signInWithOtp({
       email,
       options: {
@@ -73,7 +73,7 @@ export class SupabaseService {
   /**
    * Sign out current user
    */
-  public async signOut(): Promise<SupabaseResponse<void>> {
+  public async signOut(): Promise<{ data: null; error: Error | null }> {
     const { error } = await this.supabase.auth.signOut();
     return { data: null, error };
   }
