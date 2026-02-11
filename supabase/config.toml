@@ -1,0 +1,6 @@
+# Supabase Configuration
+# This file contains links to set up your Supabase project
+
+## Project Setup
+
+project_id = "your-project-ref"
