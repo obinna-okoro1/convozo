@@ -1,0 +1,286 @@
+<div class="min-h-screen bg-gray-50 py-12 px-4">
+  <div class="max-w-3xl mx-auto">
+    <!-- Progress Indicator -->
+    <div class="mb-8">
+      <div class="flex items-center justify-center space-x-4">
+        <div class="flex items-center">
+          <div [class]="currentStep() >= 1 ? 'w-10 h-10 bg-primary-600 text-white' : 'w-10 h-10 bg-gray-300 text-gray-600'" class="rounded-full flex items-center justify-center font-semibold">
+            1
+          </div>
+          <span class="ml-2 font-medium">Profile</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-300" [class.bg-primary-600]="currentStep() >= 2"></div>
+        <div class="flex items-center">
+          <div [class]="currentStep() >= 2 ? 'w-10 h-10 bg-primary-600 text-white' : 'w-10 h-10 bg-gray-300 text-gray-600'" class="rounded-full flex items-center justify-center font-semibold">
+            2
+          </div>
+          <span class="ml-2 font-medium">Pricing</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-300" [class.bg-primary-600]="currentStep() >= 3"></div>
+        <div class="flex items-center">
+          <div [class]="currentStep() >= 3 ? 'w-10 h-10 bg-primary-600 text-white' : 'w-10 h-10 bg-gray-300 text-gray-600'" class="rounded-full flex items-center justify-center font-semibold">
+            3
+          </div>
+          <span class="ml-2 font-medium">Review</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- Step 1: Profile Setup -->
+      @if (currentStep() === 1) {
+        <div class="animate-fade-in">
+          <h2 class="text-2xl font-bold mb-6">Set up your profile</h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Display Name *</label>
+              <input
+                type="text"
+                [value]="displayName()"
+                (input)="updateDisplayName($any($event.target).value)"
+                placeholder="Your Name"
+                class="input-field"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Your Convozo URL *</label>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">convozo.com/</span>
+                <input
+                  type="text"
+                  [value]="slug()"
+                  (input)="slug.set($any($event.target).value)"
+                  placeholder="yourname"
+                  class="input-field flex-1"
+                  required
+                />
+              </div>
+              <p class="text-sm text-gray-500 mt-1">This will be your unique message page URL</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+              <textarea
+                [value]="bio()"
+                (input)="bio.set($any($event.target).value)"
+                placeholder="Tell people about yourself..."
+                rows="3"
+                class="input-field"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Profile Image URL (optional)</label>
+              <input
+                type="url"
+                [value]="profileImageUrl()"
+                (input)="profileImageUrl.set($any($event.target).value)"
+                placeholder="https://example.com/your-photo.jpg"
+                class="input-field"
+              />
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-end">
+            <button
+              (click)="nextStep()"
+              [disabled]="!displayName() || !slug()"
+              class="btn-primary"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 2: Pricing Setup -->
+      @if (currentStep() === 2) {
+        <div class="animate-fade-in">
+          <h2 class="text-2xl font-bold mb-6">Set your pricing</h2>
+          
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Pricing Type</label>
+              <div class="space-y-3">
+                <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer" [class.border-primary-600]="pricingType() === 'single'" [class.bg-primary-50]="pricingType() === 'single'">
+                  <input
+                    type="radio"
+                    name="pricingType"
+                    [checked]="pricingType() === 'single'"
+                    (change)="pricingType.set('single')"
+                    class="mr-3"
+                  />
+                  <div class="flex-1">
+                    <div class="font-semibold">Single Price</div>
+                    <div class="text-sm text-gray-600">One price for all messages</div>
+                  </div>
+                </label>
+
+                <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer" [class.border-primary-600]="pricingType() === 'tiered'" [class.bg-primary-50]="pricingType() === 'tiered'">
+                  <input
+                    type="radio"
+                    name="pricingType"
+                    [checked]="pricingType() === 'tiered'"
+                    (change)="pricingType.set('tiered')"
+                    class="mr-3"
+                  />
+                  <div class="flex-1">
+                    <div class="font-semibold">Tiered Pricing</div>
+                    <div class="text-sm text-gray-600">Different prices for fans and businesses</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            @if (pricingType() === 'single') {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Message Price (USD)</label>
+                <div class="flex items-center">
+                  <span class="text-gray-500 mr-2">$</span>
+                  <input
+                    type="number"
+                    [value]="singlePrice()"
+                    (input)="singlePrice.set(+$any($event.target).value)"
+                    min="1"
+                    class="input-field"
+                  />
+                </div>
+              </div>
+            }
+
+            @if (pricingType() === 'tiered') {
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Fan Message Price (USD)</label>
+                  <div class="flex items-center">
+                    <span class="text-gray-500 mr-2">$</span>
+                    <input
+                      type="number"
+                      [value]="fanPrice()"
+                      (input)="fanPrice.set(+$any($event.target).value)"
+                      min="1"
+                      class="input-field"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Business Price (USD)</label>
+                  <div class="flex items-center">
+                    <span class="text-gray-500 mr-2">$</span>
+                    <input
+                      type="number"
+                      [value]="businessPrice()"
+                      (input)="businessPrice.set(+$any($event.target).value)"
+                      min="1"
+                      class="input-field"
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Response Expectation</label>
+              <textarea
+                [value]="responseExpectation()"
+                (input)="responseExpectation.set($any($event.target).value)"
+                placeholder="Set expectations for response time..."
+                rows="2"
+                class="input-field"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-between">
+            <button (click)="prevStep()" class="btn-secondary">
+              Back
+            </button>
+            <button (click)="nextStep()" class="btn-primary">
+              Continue
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 3: Review and Complete -->
+      @if (currentStep() === 3) {
+        <div class="animate-fade-in">
+          <h2 class="text-2xl font-bold mb-6">Review your profile</h2>
+          
+          <div class="space-y-4 mb-6">
+            <div class="border-b pb-3">
+              <div class="text-sm text-gray-600">Display Name</div>
+              <div class="font-semibold">{{ displayName() }}</div>
+            </div>
+
+            <div class="border-b pb-3">
+              <div class="text-sm text-gray-600">Your URL</div>
+              <div class="font-semibold">convozo.com/{{ slug() }}</div>
+            </div>
+
+            @if (bio()) {
+              <div class="border-b pb-3">
+                <div class="text-sm text-gray-600">Bio</div>
+                <div class="font-semibold">{{ bio() }}</div>
+              </div>
+            }
+
+            <div class="border-b pb-3">
+              <div class="text-sm text-gray-600">Pricing</div>
+              @if (pricingType() === 'single') {
+                <div class="font-semibold">${{ singlePrice() }} per message</div>
+              } @else {
+                <div class="font-semibold">Fan: ${{ fanPrice() }} | Business: ${{ businessPrice() }}</div>
+              }
+            </div>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div class="flex items-start">
+                <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="flex-1">
+                  <div class="font-semibold text-yellow-900">Stripe Connect Required</div>
+                  <div class="text-sm text-yellow-800 mt-1">
+                    You'll need to connect your Stripe account to receive payments. This will be set up in the next step.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (error()) {
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {{ error() }}
+            </div>
+          }
+
+          <div class="mt-6 flex justify-between">
+            <button (click)="prevStep()" class="btn-secondary" [disabled]="loading()">
+              Back
+            </button>
+            <button
+              (click)="completeOnboarding()"
+              [disabled]="loading()"
+              class="btn-primary"
+            >
+              @if (loading()) {
+                <svg class="animate-spin h-5 w-5 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating...
+              } @else {
+                Complete Setup
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
