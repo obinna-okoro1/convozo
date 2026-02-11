@@ -6,10 +6,10 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SupabaseService } from '../../core/services/supabase.service';
-import { PricingType } from '../../core/models';
-import { FormValidators } from '../../core/validators/form-validators';
-import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../core/constants';
+import { SupabaseService } from '../../../../core/services/supabase.service';
+import { PricingType } from '../../../../core/models';
+import { FormValidators } from '../../../../core/validators/form-validators';
+import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 
 @Component({
   selector: 'app-onboarding',

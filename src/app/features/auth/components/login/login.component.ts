@@ -6,9 +6,9 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../core/services/supabase.service';
-import { FormValidators } from '../../core/validators/form-validators';
-import { ERROR_MESSAGES } from '../../core/constants';
+import { SupabaseService } from '../../../../core/services/supabase.service';
+import { FormValidators } from '../../../../core/validators/form-validators';
+import { ERROR_MESSAGES } from '../../../../core/constants';
 
 @Component({
   selector: 'app-login',

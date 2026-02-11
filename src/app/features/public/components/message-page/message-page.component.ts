@@ -7,11 +7,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { SupabaseService } from '../../core/services/supabase.service';
-import { CreatorProfile, MessageType } from '../../core/models';
-import { FormValidators } from '../../core/validators/form-validators';
-import { APP_CONSTANTS, ERROR_MESSAGES } from '../../core/constants';
-import { environment } from '../../../environments/environment';
+import { SupabaseService } from '../../../../core/services/supabase.service';
+import { CreatorProfile, MessageType } from '../../../../core/models';
+import { FormValidators } from '../../../../core/validators/form-validators';
+import { APP_CONSTANTS, ERROR_MESSAGES } from '../../../../core/constants';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-message-page',

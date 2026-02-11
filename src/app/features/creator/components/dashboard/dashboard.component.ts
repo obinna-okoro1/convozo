@@ -7,9 +7,9 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { SupabaseService } from '../../core/services/supabase.service';
-import { Creator, CreatorSettings, Message, MessageStats, FilterStatus } from '../../core/models';
-import { ROUTES } from '../../core/constants';
+import { SupabaseService } from '../../../../core/services/supabase.service';
+import { Creator, CreatorSettings, Message, MessageStats, FilterStatus } from '../../../../core/models';
+import { ROUTES } from '../../../../core/constants';
 
 @Component({
   selector: 'app-dashboard',
