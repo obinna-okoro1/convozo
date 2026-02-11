@@ -1,0 +1,217 @@
+<div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50">
+  @if (loading()) {
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ error() }}</h2>
+        <p class="text-gray-600 mb-4">The creator you're looking for doesn't exist or is inactive.</p>
+        <a routerLink="/home" class="btn-primary">Go to Homepage</a>
+      </div>
+    </div>
+  } @else {
+    <div class="container mx-auto px-4 py-12">
+      <div class="max-w-3xl mx-auto">
+        <!-- Creator Profile Header -->
+        <div class="text-center mb-8 animate-fade-in">
+          @if (creator()?.profile_image_url) {
+            <img
+              [src]="creator()!.profile_image_url!"
+              [alt]="creator()!.display_name"
+              class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg object-cover"
+            />
+          } @else {
+            <div class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg bg-primary-600 flex items-center justify-center">
+              <span class="text-white font-bold text-3xl">{{ creator()?.display_name ? creator()!.display_name.charAt(0) : 'C' }}</span>
+            </div>
+          }
+          
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ creator()?.display_name }}</h1>
+          
+          @if (creator()?.bio) {
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ creator()?.bio }}</p>
+          }
+        </div>
+
+        <!-- Value Proposition -->
+        <div class="card mb-8 text-center animate-slide-up">
+          <h2 class="text-2xl font-bold text-gray-900 mb-3">Send a Priority Message</h2>
+          <p class="text-gray-600 mb-4">
+            Get a guaranteed response by sending a paid priority message. Your message will go directly to 
+            {{ creator()?.display_name }}'s inbox.
+          </p>
+          
+          @if (settings()?.response_expectation) {
+            <div class="bg-primary-50 p-4 rounded-lg inline-block">
+              <p class="text-sm text-gray-700">
+                <span class="font-semibold">Response time:</span> {{ settings()?.response_expectation }}
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Message Form -->
+        <div class="card animate-slide-up">
+          <form (ngSubmit)="submitMessage()">
+            <!-- Pricing Selection (if tiered) -->
+            @if (settings()?.has_tiered_pricing) {
+              <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Message Type</label>
+                <div class="grid grid-cols-2 gap-4">
+                  <label
+                    class="flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
+                    [class.border-primary-600]="messageType() === 'fan'"
+                    [class.bg-primary-50]="messageType() === 'fan'"
+                  >
+                    <input
+                      type="radio"
+                      name="messageType"
+                      [checked]="messageType() === 'fan'"
+                      (change)="messageType.set('fan')"
+                      class="sr-only"
+                    />
+                    <div class="font-semibold mb-1">Fan Message</div>
+                    <div class="text-2xl font-bold text-primary-600">
+                      ${{ (settings()?.fan_price ?? 0) / 100 }}
+                    </div>
+                  </label>
+
+                  <label
+                    class="flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
+                    [class.border-primary-600]="messageType() === 'business'"
+                    [class.bg-primary-50]="messageType() === 'business'"
+                  >
+                    <input
+                      type="radio"
+                      name="messageType"
+                      [checked]="messageType() === 'business'"
+                      (change)="messageType.set('business')"
+                      class="sr-only"
+                    />
+                    <div class="font-semibold mb-1">Business Inquiry</div>
+                    <div class="text-2xl font-bold text-primary-600">
+                      ${{ (settings()?.business_price ?? 0) / 100 }}
+                    </div>
+                  </label>
+                </div>
+              </div>
+            } @else {
+              <div class="mb-6 text-center">
+                <div class="inline-block bg-primary-50 px-6 py-4 rounded-lg">
+                  <div class="text-sm text-gray-600 mb-1">Message Price</div>
+                  <div class="text-4xl font-bold text-primary-600">
+                    ${{ (settings()?.single_price ?? 0) / 100 }}
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Sender Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your Name *</label>
+                <input
+                  type="text"
+                  [value]="senderName()"
+                  (input)="senderName.set($any($event.target).value)"
+                  placeholder="John Doe"
+                  class="input-field"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your Email *</label>
+                <input
+                  type="email"
+                  [value]="senderEmail()"
+                  (input)="senderEmail.set($any($event.target).value)"
+                  placeholder="you@example.com"
+                  class="input-field"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Message Content -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Your Message *</label>
+              <textarea
+                [value]="messageContent()"
+                (input)="messageContent.set($any($event.target).value)"
+                placeholder="Write your message here..."
+                rows="6"
+                maxlength="1000"
+                class="input-field"
+                required
+              ></textarea>
+              <div class="flex justify-between items-center mt-1">
+                <p class="text-xs text-gray-500">
+                  This message will be sent directly to {{ creator()?.display_name }}'s inbox.
+                </p>
+                <p class="text-xs" [class.text-red-600]="characterCount > 900" [class.text-gray-500]="characterCount <= 900">
+                  {{ characterCount }}/1000
+                </p>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              [disabled]="submitting()"
+              class="w-full btn-primary text-lg py-4 flex items-center justify-center"
+            >
+              @if (submitting()) {
+                <svg class="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              } @else {
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                Pay ${{ selectedPrice }} & Send Message
+              }
+            </button>
+
+            <!-- Trust Indicators -->
+            <div class="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-600">
+              <div class="flex items-center">
+                <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Secure Payment
+              </div>
+              <div class="flex items-center">
+                <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Powered by Stripe
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-sm text-gray-500">
+          <p>Powered by <a routerLink="/home" class="text-primary-600 hover:text-primary-700">Convozo</a></p>
+          <p class="mt-1">Not affiliated with Instagram or Meta Platforms, Inc.</p>
+        </div>
+      </div>
+    </div>
+  }
+</div>

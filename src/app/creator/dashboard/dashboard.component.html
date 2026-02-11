@@ -1,0 +1,240 @@
+<div class="min-h-screen bg-gray-50">
+  @if (loading()) {
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-600">Loading dashboard...</p>
+      </div>
+    </div>
+  } @else {
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+              <span class="text-white font-bold text-xl">C</span>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900">{{ creator()?.display_name }}</h1>
+              <p class="text-sm text-gray-500">Creator Dashboard</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button (click)="copyPublicUrl()" class="btn-secondary text-sm">
+              📋 Copy Public URL
+            </button>
+            <button (click)="signOut()" class="text-gray-600 hover:text-gray-900">
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="card">
+          <div class="text-sm text-gray-600 mb-1">Total Messages</div>
+          <div class="text-3xl font-bold text-gray-900">{{ stats.total }}</div>
+        </div>
+        <div class="card">
+          <div class="text-sm text-gray-600 mb-1">Unhandled</div>
+          <div class="text-3xl font-bold text-orange-600">{{ stats.unhandled }}</div>
+        </div>
+        <div class="card">
+          <div class="text-sm text-gray-600 mb-1">Handled</div>
+          <div class="text-3xl font-bold text-green-600">{{ stats.handled }}</div>
+        </div>
+        <div class="card">
+          <div class="text-sm text-gray-600 mb-1">Total Revenue</div>
+          <div class="text-3xl font-bold text-primary-600">${{ stats.totalRevenue }}</div>
+        </div>
+      </div>
+
+      <!-- Public Link Card -->
+      <div class="card mb-8 bg-gradient-to-r from-primary-50 to-purple-50 border-primary-200">
+        <h3 class="font-semibold text-gray-900 mb-3">Your Public Message Page</h3>
+        <div class="flex items-center space-x-3">
+          <input
+            type="text"
+            [value]="publicUrl"
+            readonly
+            class="input-field flex-1 bg-white"
+          />
+          <button (click)="copyPublicUrl()" class="btn-primary">
+            Copy Link
+          </button>
+        </div>
+        <p class="text-sm text-gray-600 mt-2">
+          Share this link in your Instagram bio or auto-reply to start receiving paid messages.
+        </p>
+      </div>
+
+      <!-- Messages Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Messages List -->
+        <div class="lg:col-span-1">
+          <div class="card">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold">Messages</h2>
+              <select
+                [value]="filterStatus()"
+                (change)="filterStatus.set($any($event.target).value)"
+                class="text-sm border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="all">All</option>
+                <option value="unhandled">Unhandled</option>
+                <option value="handled">Handled</option>
+              </select>
+            </div>
+
+            <div class="space-y-2 max-h-[600px] overflow-y-auto">
+              @for (message of filteredMessages(); track message.id) {
+                <div
+                  (click)="selectMessage(message)"
+                  [class.bg-primary-50]="selectedMessage()?.id === message.id"
+                  [class.border-primary-300]="selectedMessage()?.id === message.id"
+                  class="p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div class="flex items-start justify-between mb-1">
+                    <div class="font-semibold text-sm text-gray-900">{{ message.sender_name }}</div>
+                    @if (!message.is_handled) {
+                      <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">New</span>
+                    }
+                  </div>
+                  <div class="text-xs text-gray-600 mb-1">{{ message.sender_email }}</div>
+                  <div class="text-sm text-gray-700 truncate">{{ message.message_content }}</div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="text-xs font-semibold text-green-600">${{ message.amount_paid / 100 }}</span>
+                    <span class="text-xs text-gray-500">{{ message.created_at | date:'short' }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="text-center py-12 text-gray-500">
+                  <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  <p>No messages yet</p>
+                  <p class="text-sm mt-1">Share your link to start receiving messages!</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Detail -->
+        <div class="lg:col-span-2">
+          @if (selectedMessage()) {
+            <div class="card">
+              <div class="flex items-start justify-between mb-6">
+                <div>
+                  <h2 class="text-xl font-bold text-gray-900 mb-1">{{ selectedMessage()?.sender_name }}</h2>
+                  <p class="text-gray-600">{{ selectedMessage()?.sender_email }}</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-green-600">${{ (selectedMessage()?.amount_paid ?? 0) / 100 }}</div>
+                  <div class="text-sm text-gray-500">{{ selectedMessage()?.message_type }}</div>
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <div class="text-sm font-medium text-gray-700 mb-2">Message</div>
+                <div class="bg-gray-50 p-4 rounded-lg text-gray-900">
+                  {{ selectedMessage()?.message_content }}
+                </div>
+              </div>
+
+              @if (selectedMessage()?.reply_content) {
+                <div class="mb-6">
+                  <div class="text-sm font-medium text-gray-700 mb-2">Your Reply</div>
+                  <div class="bg-primary-50 p-4 rounded-lg text-gray-900">
+                    {{ selectedMessage()?.reply_content }}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    Sent {{ selectedMessage()?.replied_at | date:'medium' }}
+                  </div>
+                </div>
+              }
+
+              <div class="flex space-x-3">
+                <button
+                  (click)="openReplyModal(selectedMessage()!)"
+                  class="btn-primary flex-1"
+                >
+                  {{ selectedMessage()?.reply_content ? 'Edit Reply' : 'Reply' }}
+                </button>
+                @if (!selectedMessage()?.is_handled) {
+                  <button
+                    (click)="markAsHandled(selectedMessage()!)"
+                    class="btn-secondary"
+                  >
+                    Mark as Handled
+                  </button>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="card flex items-center justify-center h-full min-h-[400px]">
+              <div class="text-center text-gray-500">
+                <svg class="w-20 h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                </svg>
+                <p class="text-lg">Select a message to view details</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Reply Modal -->
+    @if (showReplyModal()) {
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-lg max-w-2xl w-full p-6 animate-slide-up">
+          <h3 class="text-xl font-bold mb-4">Reply to {{ selectedMessage()?.sender_name }}</h3>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Your Reply</label>
+            <textarea
+              [value]="replyContent()"
+              (input)="replyContent.set($any($event.target).value)"
+              rows="6"
+              class="input-field"
+              placeholder="Type your reply here..."
+            ></textarea>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <button
+              (click)="closeReplyModal()"
+              [disabled]="sendingReply()"
+              class="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              (click)="sendReply()"
+              [disabled]="sendingReply() || !replyContent().trim()"
+              class="btn-primary"
+            >
+              @if (sendingReply()) {
+                <svg class="animate-spin h-5 w-5 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+              } @else {
+                Send Reply
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>
