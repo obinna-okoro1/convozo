@@ -1,0 +1,68 @@
+<div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex items-center justify-center px-4">
+  <div class="max-w-md w-full">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-primary-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+        <span class="text-white font-bold text-2xl">C</span>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to Convozo</h1>
+      <p class="text-gray-600">Sign in with your email to continue</p>
+    </div>
+
+    <div class="card animate-slide-up">
+      @if (success()) {
+        <div class="text-center">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold mb-2">Check your email!</h2>
+          <p class="text-gray-600">We've sent you a magic link to sign in.</p>
+        </div>
+      } @else {
+        <form (ngSubmit)="handleLogin()">
+          <div class="mb-6">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              [value]="email()"
+              (input)="updateEmail($any($event.target).value)"
+              placeholder="you@example.com"
+              class="input-field"
+              required
+            />
+          </div>
+
+          @if (error()) {
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {{ error() }}
+            </div>
+          }
+
+          <button
+            type="submit"
+            [disabled]="loading()"
+            class="w-full btn-primary flex items-center justify-center"
+          >
+            @if (loading()) {
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="ml-2">Sending magic link...</span>
+            } @else {
+              Send Magic Link
+            }
+          </button>
+        </form>
+
+        <div class="mt-6 text-center">
+          <a routerLink="/home" class="text-primary-600 hover:text-primary-700 text-sm">
+            ← Back to home
+          </a>
+        </div>
+      }
+    </div>
+  </div>
+</div>

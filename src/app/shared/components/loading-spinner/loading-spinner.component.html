@@ -1,0 +1,8 @@
+<div class="flex items-center justify-center" [class.h-screen]="fullScreen">
+  <div class="animate-spin rounded-full border-t-2 border-b-2 border-primary-600"
+       [ngClass]="sizeClass">
+  </div>
+  @if (message) {
+    <p class="ml-3 text-gray-600">{{ message }}</p>
+  }
+</div>
