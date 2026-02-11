@@ -213,30 +213,29 @@ npm run build
 - [x] Profile and pricing setup
 - [x] Public message submission page
 - [x] Stripe Checkout integration
+- [x] Stripe Connect Express full onboarding flow
 - [x] Creator dashboard with message inbox
 - [x] Message reply functionality
 - [x] Payment processing with webhooks
 - [x] RLS policies for data security
+- [x] Rate limiting on message submission
 
 ### Future Enhancements 🔮
-- [ ] Complete Stripe Connect Express onboarding flow
 - [ ] Actual email service integration (SendGrid/Resend)
 - [ ] Message filtering and search
 - [ ] Analytics dashboard
 - [ ] Automated responses
 - [ ] Message templates
 - [ ] File attachments
-- [ ] Rate limiting implementation
 - [ ] Admin panel
 - [ ] Subscription plans for creators
 
 ## ⚠️ Known Limitations
 
-1. **Stripe Connect**: Basic implementation; full onboarding flow needs integration
-2. **Email Service**: Placeholder implementation; requires actual email provider
-3. **Rate Limiting**: Not implemented yet; vulnerable to abuse
-4. **File Uploads**: No support for image/video messages yet
-5. **Instagram Integration**: No direct DM integration (by design - off-platform only)
+1. **Email Service**: Placeholder implementation; requires actual email provider
+2. **Rate Limiting**: Implemented in-memory (use Redis for production)
+3. **File Uploads**: No support for image/video messages yet
+4. **Instagram Integration**: No direct DM integration (by design - off-platform only)
 
 ## 🧪 Testing
 

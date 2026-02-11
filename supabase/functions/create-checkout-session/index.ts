@@ -15,6 +15,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limiting store (in-memory, per-instance)
+// In production, use Redis or similar distributed cache
+const rateLimitStore = new Map<string, number[]>();
+
+// Rate limit: 10 requests per hour per email
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+
+function checkRateLimit(email: string): boolean {
+  const now = Date.now();
+  const requests = rateLimitStore.get(email) || [];
+  
+  // Remove old requests outside the time window
+  const recentRequests = requests.filter(time => now - time < RATE_LIMIT_WINDOW);
+  
+  if (recentRequests.length >= RATE_LIMIT_MAX) {
+    return false; // Rate limit exceeded
+  }
+  
+  // Add current request
+  recentRequests.push(now);
+  rateLimitStore.set(email, recentRequests);
+  
+  return true; // Within rate limit
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -28,6 +54,41 @@ Deno.serve(async (req) => {
     if (!creator_slug || !message_content || !sender_name || !sender_email || !price) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check rate limit
+    if (!checkRateLimit(sender_email)) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000 / 60), // minutes
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW / 1000)),
+          } 
+        }
+      );
+    }
+
+    // Validate message content length
+    if (message_content.length > 1000) {
+      return new Response(
+        JSON.stringify({ error: 'Message too long (max 1000 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sender_email)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

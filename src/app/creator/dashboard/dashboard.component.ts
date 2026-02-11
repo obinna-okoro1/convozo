@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService, Creator, CreatorSettings, Message } from '../../shared/supabase.service';
 
@@ -18,6 +18,7 @@ export class DashboardComponent implements OnInit {
   
   loading = signal(true);
   error = signal<string | null>(null);
+  stripeSetupIncomplete = signal(false);
   
   // Reply modal
   showReplyModal = signal(false);
@@ -29,7 +30,8 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private supabaseService: SupabaseService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   async ngOnInit() {
@@ -38,6 +40,13 @@ export class DashboardComponent implements OnInit {
       this.router.navigate(['/auth/login']);
       return;
     }
+
+    // Check if coming back from Stripe setup
+    this.route.queryParams.subscribe(params => {
+      if (params['stripe_setup'] === 'incomplete') {
+        this.stripeSetupIncomplete.set(true);
+      }
+    });
 
     await this.loadDashboardData(user.id);
   }

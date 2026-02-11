@@ -239,4 +239,19 @@ export class SupabaseService {
     });
     return { data, error };
   }
+
+  // Stripe Connect methods
+  async createConnectAccount(creatorId: string, email: string, displayName: string) {
+    const { data, error } = await this.supabase.functions.invoke('create-connect-account', {
+      body: { creator_id: creatorId, email, display_name: displayName },
+    });
+    return { data, error };
+  }
+
+  async verifyConnectAccount(accountId: string) {
+    const { data, error } = await this.supabase.functions.invoke('verify-connect-account', {
+      body: { account_id: accountId },
+    });
+    return { data, error };
+  }
 }

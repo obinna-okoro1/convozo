@@ -114,10 +114,24 @@ export class OnboardingComponent implements OnInit {
         throw settingsError;
       }
 
+      // Create Stripe Connect account and redirect to onboarding
+      const { data: connectData, error: connectError } = await this.supabaseService.createConnectAccount(
+        creator.id,
+        user.email!,
+        this.displayName()
+      );
+
+      if (connectError || !connectData?.url) {
+        // If Connect setup fails, still redirect to dashboard but show warning
+        console.error('Stripe Connect setup failed:', connectError);
+        this.router.navigate(['/creator/dashboard'], {
+          queryParams: { stripe_setup: 'incomplete' }
+        });
+        return;
+      }
+
       // Redirect to Stripe Connect onboarding
-      // For MVP, we'll redirect to dashboard with a placeholder
-      // In production, you'd create a Stripe Connect account link here
-      this.router.navigate(['/creator/dashboard']);
+      window.location.href = connectData.url;
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'An error occurred');
     } finally {

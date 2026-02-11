@@ -157,25 +157,19 @@ convozo/
 - Dashboard functionality
 - Database schema
 - RLS policies
-- Edge Functions (core)
+- Edge Functions (complete with all features)
 - Responsive design
 - Animations
 - Documentation
+- **Stripe Connect Express full onboarding flow**
+- **Rate limiting on message submissions**
+- **Enhanced input validation**
 
 ### Placeholder/Partial Implementation ⚠️
-1. **Stripe Connect Onboarding**
-   - Basic structure in place
-   - Needs full Express onboarding flow
-   - Account verification handling needed
-
-2. **Email Service**
+1. **Email Service**
    - Placeholder in Edge Functions
    - Needs actual provider (SendGrid, Resend)
    - Email templates needed
-
-3. **Rate Limiting**
-   - Documented but not implemented
-   - Critical for production
 
 ### Not Implemented ❌
 1. Content moderation
@@ -196,8 +190,16 @@ convozo/
 ✅ HTTPS enforcement ready
 ✅ Environment variable security
 ✅ CORS configuration
+✅ **Rate limiting (10 requests per hour per email)**
+✅ **Email format validation**
+✅ **Message length limits (1000 characters)**
 
 ### Needs Implementation
+⚠️ Email service integration (placeholder currently)
+⚠️ Content filtering/moderation
+⚠️ Privacy policy and Terms of Service
+⚠️ Data export capability
+⚠️ Right to deletion
 ⚠️ Rate limiting
 ⚠️ Email verification for senders
 ⚠️ Content filtering
