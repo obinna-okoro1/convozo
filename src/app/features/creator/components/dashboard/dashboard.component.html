@@ -6,14 +6,14 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="text-gray-600">Loading dashboard...</p>
+        <p class="text-gray-600 animate-pulse-subtle">Loading dashboard...</p>
       </div>
     </div>
   } @else {
     <!-- Header -->
     <header class="bg-white border-b border-gray-200">
       <div class="container mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex items-center space-x-4">
             <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
               <span class="text-white font-bold text-xl">C</span>
@@ -23,11 +23,19 @@
               <p class="text-sm text-gray-500">Creator Dashboard</p>
             </div>
           </div>
-          <div class="flex items-center space-x-3">
-            <button (click)="copyPublicUrl()" class="btn-secondary text-sm">
-              📋 Copy Public URL
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <a routerLink="/creator/settings" class="btn-secondary text-sm px-3 h-10 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="hidden sm:inline">Settings</span>
+            </a>
+            <button (click)="copyPublicUrl()" class="btn-secondary text-sm px-3 h-10 flex-shrink-0">
+              <span class="text-base">📋</span>
+              <span class="hidden sm:inline">Copy URL</span>
             </button>
-            <button (click)="signOut()" class="text-gray-600 hover:text-gray-900">
+            <button (click)="signOut()" class="text-gray-600 hover:text-gray-900 px-3 h-10 text-sm font-medium flex-shrink-0">
               Sign Out
             </button>
           </div>
@@ -57,26 +65,26 @@
     <div class="container mx-auto px-4 py-8">
       <!-- Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="card p-6">
+        <div class="card p-6 animate-fade-in hover:shadow-soft-lg transition-all duration-200">
           <div class="text-sm text-neutral-600 mb-1">Total Messages</div>
           <div class="text-3xl font-bold text-neutral-900">{{ stats().total }}</div>
         </div>
-        <div class="card p-6">
+        <div class="card p-6 animate-fade-in hover:shadow-soft-lg transition-all duration-200" style="animation-delay: 50ms">
           <div class="text-sm text-neutral-600 mb-1">Unhandled</div>
           <div class="text-3xl font-bold text-warning-600">{{ stats().unhandled }}</div>
         </div>
-        <div class="card p-6">
+        <div class="card p-6 animate-fade-in hover:shadow-soft-lg transition-all duration-200" style="animation-delay: 100ms">
           <div class="text-sm text-neutral-600 mb-1">Handled</div>
           <div class="text-3xl font-bold text-success-600">{{ stats().handled }}</div>
         </div>
-        <div class="card p-6">
+        <div class="card p-6 animate-fade-in hover:shadow-soft-lg transition-all duration-200" style="animation-delay: 150ms">
           <div class="text-sm text-neutral-600 mb-1">Total Revenue</div>
           <div class="text-3xl font-bold text-primary-600">${{ stats().totalRevenue }}</div>
         </div>
       </div>
 
       <!-- Public Link Card -->
-      <div class="card mb-8 bg-gradient-to-r from-primary-50 to-purple-50 border-primary-200 p-6">
+      <div class="card mb-8 bg-gradient-to-r from-primary-50 to-purple-50 border-primary-200 p-6 animate-slide-up">
         <h3 class="font-semibold text-neutral-900 mb-3">Your Public Message Page</h3>
         <div class="flex items-center space-x-3">
           <input
@@ -85,7 +93,7 @@
             readonly
             class="input-field flex-1 bg-white"
           />
-          <button (click)="copyPublicUrl()" class="btn-primary">
+          <button (click)="copyPublicUrl()" class="btn-primary transform hover:scale-105 transition-transform duration-200">
             Copy Link
           </button>
         </div>
@@ -98,48 +106,77 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Messages List -->
         <div class="lg:col-span-1">
-          <div class="card">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-lg font-semibold">Messages</h2>
+          <div class="card p-6 animate-fade-in">
+            <!-- Header with Filter -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-neutral-200">
+              <div>
+                <h2 class="text-xl font-bold text-neutral-900">Inbox</h2>
+                <p class="text-sm text-neutral-500 mt-1">{{ stats().total }} total messages</p>
+              </div>
               <select
                 [value]="filterStatus()"
                 (change)="filterStatus.set($any($event.target).value)"
-                class="text-sm border border-gray-300 rounded px-2 py-1"
+                class="input text-sm h-10 w-auto min-w-[120px]"
               >
-                <option value="all">All</option>
-                <option value="unhandled">Unhandled</option>
-                <option value="handled">Handled</option>
+                <option value="all">All ({{ stats().total }})</option>
+                <option value="unhandled">Unhandled ({{ stats().unhandled }})</option>
+                <option value="handled">Handled ({{ stats().handled }})</option>
               </select>
             </div>
 
-            <div class="space-y-2 max-h-[600px] overflow-y-auto">
-              @for (message of filteredMessages(); track message.id) {
+            <!-- Messages List with Scroll -->
+            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 -mr-2">
+              @for (message of filteredMessages(); track message.id; let i = $index) {
                 <div
                   (click)="selectMessage(message)"
                   [class.bg-primary-50]="selectedMessage()?.id === message.id"
-                  [class.border-primary-300]="selectedMessage()?.id === message.id"
-                  class="p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  [class.border-primary-500]="selectedMessage()?.id === message.id"
+                  [class.shadow-soft]="selectedMessage()?.id === message.id"
+                  class="group p-4 border border-neutral-200 rounded-xl cursor-pointer hover:border-primary-300 hover:shadow-soft transition-all duration-200 animate-slide-up"
+                  [style.animation-delay]="i * 30 + 'ms'"
                 >
-                  <div class="flex items-start justify-between mb-1">
-                    <div class="font-semibold text-sm text-gray-900">{{ message.sender_name }}</div>
+                  <!-- Header -->
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex-1 min-w-0 mr-2">
+                      <div class="font-semibold text-sm text-neutral-900 truncate">{{ message.sender_name }}</div>
+                      <div class="text-xs text-neutral-500 truncate">{{ message.sender_email }}</div>
+                    </div>
                     @if (!message.is_handled) {
-                      <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">New</span>
+                      <span class="badge bg-warning-100 text-warning-700 flex-shrink-0">New</span>
+                    } @else {
+                      <svg class="w-5 h-5 text-success-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
                     }
                   </div>
-                  <div class="text-xs text-gray-600 mb-1">{{ message.sender_email }}</div>
-                  <div class="text-sm text-gray-700 truncate">{{ message.message_content }}</div>
-                  <div class="flex items-center justify-between mt-2">
-                    <span class="text-xs font-semibold text-green-600">${{ message.amount_paid / 100 }}</span>
-                    <span class="text-xs text-gray-500">{{ message.created_at | date:'short' }}</span>
+
+                  <!-- Message Preview -->
+                  <div class="text-sm text-neutral-700 line-clamp-2 mb-3 leading-relaxed">
+                    {{ message.message_content }}
+                  </div>
+
+                  <!-- Footer -->
+                  <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3">
+                      <span class="font-bold text-success-600 bg-success-50 px-2 py-1 rounded-lg">
+                        ${{ message.amount_paid / 100 }}
+                      </span>
+                      <span class="badge bg-neutral-100 text-neutral-600">
+                        {{ message.message_type }}
+                      </span>
+                    </div>
+                    <span class="text-neutral-500">{{ message.created_at | date:'MMM d' }}</span>
                   </div>
                 </div>
               } @empty {
-                <div class="text-center py-12 text-gray-500">
-                  <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                  </svg>
-                  <p>No messages yet</p>
-                  <p class="text-sm mt-1">Share your link to start receiving messages!</p>
+                <div class="text-center py-16 text-neutral-500 animate-fade-in">
+                  <div class="w-20 h-20 mx-auto mb-4 bg-neutral-100 rounded-full flex items-center justify-center">
+                    <svg class="w-10 h-10 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <p class="font-semibold text-neutral-900 mb-1">No messages yet</p>
+                  <p class="text-sm">Share your link to start receiving messages!</p>
                 </div>
               }
             </div>
@@ -149,61 +186,111 @@
         <!-- Message Detail -->
         <div class="lg:col-span-2">
           @if (selectedMessage()) {
-            <div class="card">
-              <div class="flex items-start justify-between mb-6">
-                <div>
-                  <h2 class="text-xl font-bold text-gray-900 mb-1">{{ selectedMessage()?.sender_name }}</h2>
-                  <p class="text-gray-600">{{ selectedMessage()?.sender_email }}</p>
+            <div class="card p-6 animate-fade-in">
+              <!-- Header -->
+              <div class="flex items-start justify-between mb-6 pb-6 border-b border-neutral-200">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h2 class="text-2xl font-bold text-neutral-900">{{ selectedMessage()?.sender_name }}</h2>
+                    @if (!selectedMessage()?.is_handled) {
+                      <span class="badge bg-warning-100 text-warning-700">Unhandled</span>
+                    } @else {
+                      <span class="badge bg-success-100 text-success-700">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        Handled
+                      </span>
+                    }
+                  </div>
+                  <p class="text-neutral-600 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {{ selectedMessage()?.sender_email }}
+                  </p>
+                  <p class="text-sm text-neutral-500 mt-1">
+                    Received {{ selectedMessage()?.created_at | date:'MMMM d, y \'at\' h:mm a' }}
+                  </p>
                 </div>
-                <div class="text-right">
-                  <div class="text-2xl font-bold text-green-600">${{ (selectedMessage()?.amount_paid ?? 0) / 100 }}</div>
-                  <div class="text-sm text-gray-500">{{ selectedMessage()?.message_type }}</div>
+                <div class="text-right flex-shrink-0">
+                  <div class="text-3xl font-bold text-success-600 mb-1">
+                    ${{ (selectedMessage()?.amount_paid ?? 0) / 100 }}
+                  </div>
+                  <div class="badge bg-neutral-100 text-neutral-700">
+                    {{ selectedMessage()?.message_type }}
+                  </div>
                 </div>
               </div>
 
+              <!-- Message Content -->
               <div class="mb-6">
-                <div class="text-sm font-medium text-gray-700 mb-2">Message</div>
-                <div class="bg-gray-50 p-4 rounded-lg text-gray-900">
+                <div class="flex items-center gap-2 mb-3">
+                  <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <div class="text-sm font-semibold text-neutral-700">Message</div>
+                </div>
+                <div class="bg-neutral-50 border border-neutral-200 p-5 rounded-xl text-neutral-900 leading-relaxed">
                   {{ selectedMessage()?.message_content }}
                 </div>
               </div>
 
+              <!-- Reply Section (if exists) -->
               @if (selectedMessage()?.reply_content) {
-                <div class="mb-6">
-                  <div class="text-sm font-medium text-gray-700 mb-2">Your Reply</div>
-                  <div class="bg-primary-50 p-4 rounded-lg text-gray-900">
+                <div class="mb-6 bg-primary-50/50 border border-primary-200 rounded-xl p-5">
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <div class="text-sm font-semibold text-primary-900">Your Reply</div>
+                  </div>
+                  <div class="text-neutral-900 leading-relaxed mb-3">
                     {{ selectedMessage()?.reply_content }}
                   </div>
-                  <div class="text-xs text-gray-500 mt-1">
-                    Sent {{ selectedMessage()?.replied_at | date:'medium' }}
+                  <div class="flex items-center gap-2 text-xs text-neutral-500">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Sent {{ selectedMessage()?.replied_at | date:'MMMM d, y \'at\' h:mm a' }}
                   </div>
                 </div>
               }
 
-              <div class="flex space-x-3">
+              <!-- Actions -->
+              <div class="flex gap-3">
                 <button
                   (click)="openReplyModal(selectedMessage()!)"
-                  class="btn-primary flex-1"
+                  class="btn-primary flex-1 h-12"
                 >
-                  {{ selectedMessage()?.reply_content ? 'Edit Reply' : 'Reply' }}
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  {{ selectedMessage()?.reply_content ? 'Edit Reply' : 'Reply to Message' }}
                 </button>
                 @if (!selectedMessage()?.is_handled) {
                   <button
                     (click)="markAsHandled(selectedMessage()!)"
-                    class="btn-secondary"
+                    class="btn-secondary h-12 px-6"
                   >
-                    Mark as Handled
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Mark Handled
                   </button>
                 }
               </div>
             </div>
           } @else {
-            <div class="card flex items-center justify-center h-full min-h-[400px]">
-              <div class="text-center text-gray-500">
-                <svg class="w-20 h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-                </svg>
-                <p class="text-lg">Select a message to view details</p>
+            <div class="card p-6 flex items-center justify-center min-h-[500px] animate-fade-in">
+              <div class="text-center text-neutral-500">
+                <div class="w-24 h-24 mx-auto mb-6 bg-neutral-100 rounded-full flex items-center justify-center">
+                  <svg class="w-12 h-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                  </svg>
+                </div>
+                <p class="text-lg font-semibold text-neutral-900 mb-2">No message selected</p>
+                <p class="text-sm text-neutral-500">Choose a message from the inbox to view details</p>
               </div>
             </div>
           }
@@ -213,41 +300,78 @@
 
     <!-- Reply Modal -->
     @if (showReplyModal()) {
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-        <div class="bg-white rounded-lg max-w-2xl w-full p-6 animate-slide-up">
-          <h3 class="text-xl font-bold mb-4">Reply to {{ selectedMessage()?.sender_name }}</h3>
-          
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Your Reply</label>
-            <textarea
-              [value]="replyContent()"
-              (input)="replyContent.set($any($event.target).value)"
-              rows="6"
-              class="input-field"
-              placeholder="Type your reply here..."
-            ></textarea>
-          </div>
-
-          <div class="flex justify-end space-x-3">
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-scale-in" style="animation-delay: 50ms">
+          <!-- Modal Header -->
+          <div class="flex items-start justify-between p-6 pb-4 border-b border-neutral-200">
+            <div>
+              <h3 class="text-2xl font-bold text-neutral-900 mb-1">Reply to Message</h3>
+              <p class="text-sm text-neutral-600">{{ selectedMessage()?.sender_name }} • {{ selectedMessage()?.sender_email }}</p>
+            </div>
             <button
               (click)="closeReplyModal()"
               [disabled]="sendingReply()"
-              class="btn-secondary"
+              class="text-neutral-400 hover:text-neutral-600 transition-colors p-2 hover:bg-neutral-100 rounded-lg"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Original Message -->
+          <div class="p-6 bg-neutral-50 border-b border-neutral-200">
+            <div class="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Original Message</div>
+            <div class="text-sm text-neutral-700 leading-relaxed">
+              {{ selectedMessage()?.message_content }}
+            </div>
+          </div>
+
+          <!-- Reply Form -->
+          <div class="p-6">
+            <label class="form-label mb-3">Your Reply</label>
+            <textarea
+              [value]="replyContent()"
+              (input)="replyContent.set($any($event.target).value)"
+              rows="8"
+              class="textarea resize-none"
+              placeholder="Type your thoughtful reply here..."
+              [disabled]="sendingReply()"
+            ></textarea>
+            <div class="flex items-center justify-between mt-2">
+              <p class="text-xs text-neutral-500">
+                {{ replyContent().length }} characters
+              </p>
+              @if (replyContent().length === 0) {
+                <p class="text-xs text-danger-600">Reply cannot be empty</p>
+              }
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="flex justify-end gap-3 p-6 pt-4 border-t border-neutral-200 bg-neutral-50">
+            <button
+              (click)="closeReplyModal()"
+              [disabled]="sendingReply()"
+              class="btn-ghost px-6 h-12"
             >
               Cancel
             </button>
             <button
               (click)="sendReply()"
               [disabled]="sendingReply() || !replyContent().trim()"
-              class="btn-primary"
+              class="btn-primary px-8 h-12"
             >
               @if (sendingReply()) {
                 <svg class="animate-spin h-5 w-5 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Sending...
+                Sending Reply...
               } @else {
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
                 Send Reply
               }
             </button>

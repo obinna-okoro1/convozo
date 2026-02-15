@@ -9,7 +9,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CreatorService } from '../../services/creator.service';
 import { AuthService } from '../../../auth/services/auth.service';
-import { PricingType } from '../../../../core/models';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 
@@ -32,14 +31,18 @@ export class OnboardingComponent implements OnInit {
   protected readonly profileImageUrl = signal<string>('');
   
   // Pricing form data
-  protected readonly pricingType = signal<PricingType>('single');
-  protected readonly singlePrice = signal<number>(50);
-  protected readonly fanPrice = signal<number>(25);
-  protected readonly businessPrice = signal<number>(100);
+  protected readonly messagePrice = signal<number>(1000); // in cents ($10)
+  protected readonly callPrice = signal<number>(5000); // in cents ($50)
+  protected readonly callDuration = signal<number>(30); // minutes
+  protected readonly callsEnabled = signal<boolean>(false);
   protected readonly responseExpectation = signal<string>(APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION);
 
+  // Stripe Connect
+  protected readonly stripeConnecting = signal<boolean>(false);
+  protected readonly stripeConnected = signal<boolean>(false);
+
   // Constants
-  protected readonly TOTAL_STEPS = 3;
+  protected readonly TOTAL_STEPS = 4;
 
   constructor(
     private readonly creatorService: CreatorService,
@@ -121,16 +124,12 @@ export class OnboardingComponent implements OnInit {
       }
 
       // Create creator settings
-      const singlePriceValue = this.pricingType() === 'single' ? this.singlePrice() : undefined;
-      const fanPriceValue = this.pricingType() === 'tiered' ? this.fanPrice() : undefined;
-      const businessPriceValue = this.pricingType() === 'tiered' ? this.businessPrice() : undefined;
-
       const { error: settingsError } = await this.creatorService.createCreatorSettings({
         creatorId: creator.id,
-        pricingType: this.pricingType(),
-        singlePrice: singlePriceValue,
-        fanPrice: fanPriceValue,
-        businessPrice: businessPriceValue,
+        messagePrice: this.messagePrice(),
+        callPrice: this.callsEnabled() ? this.callPrice() : undefined,
+        callDuration: this.callsEnabled() ? this.callDuration() : undefined,
+        callsEnabled: this.callsEnabled(),
         responseExpectation: this.responseExpectation()
       });
 
@@ -138,12 +137,57 @@ export class OnboardingComponent implements OnInit {
         throw settingsError;
       }
 
-      // Redirect to dashboard (Stripe Connect setup happens separately)
-      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+      // Move to Stripe Connect step
+      this.nextStep();
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * Connect Stripe account
+   */
+  protected async connectStripe(): Promise<void> {
+    this.stripeConnecting.set(true);
+    this.error.set(null);
+
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      this.error.set(ERROR_MESSAGES.AUTH.NOT_AUTHENTICATED);
+      this.stripeConnecting.set(false);
+      return;
+    }
+
+    try {
+      const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
+      if (!creator) {
+        throw new Error('Creator profile not found');
+      }
+
+      const { data, error } = await this.creatorService.createStripeConnectAccount(
+        creator.id,
+        user.email || '',
+        this.displayName()
+      );
+
+      if (error || !data?.url) {
+        throw error || new Error('Failed to create Stripe Connect account');
+      }
+
+      // Redirect to Stripe OAuth
+      window.location.href = data.url;
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
+      this.stripeConnecting.set(false);
+    }
+  }
+
+  /**
+   * Skip Stripe setup for now
+   */
+  protected skipStripeSetup(): void {
+    this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
   }
 }

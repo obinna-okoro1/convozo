@@ -19,7 +19,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
       [disabled]="disabled || loading"
       [class]="buttonClasses"
       (click)="handleClick($event)"
-      class="tap-highlight"
+      class="tap-highlight transform active:scale-[0.97] transition-transform duration-150"
     >
       @if (loading) {
         <svg 

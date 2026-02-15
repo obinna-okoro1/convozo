@@ -121,9 +121,12 @@ module.exports = {
         'fade-in': 'fadeIn 200ms ease-out',
         'slide-up': 'slideUp 250ms ease-out',
         'slide-down': 'slideDown 250ms ease-out',
+        'slide-in-right': 'slideInRight 300ms ease-out',
         'scale-in': 'scaleIn 150ms ease-out',
         'shimmer': 'shimmer 2s ease-in-out infinite',
         'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce-subtle': 'bounceSubtle 1s ease-in-out',
+        'wiggle': 'wiggle 0.5s ease-in-out',
       },
       keyframes: {
         fadeIn: {
@@ -138,6 +141,10 @@ module.exports = {
           '0%': { transform: 'translateY(-16px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        slideInRight: {
+          '0%': { transform: 'translateX(16px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
         scaleIn: {
           '0%': { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' },
@@ -149,6 +156,15 @@ module.exports = {
         pulseSubtle: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.85' },
+        },
+        bounceSubtle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '25%': { transform: 'rotate(-3deg)' },
+          '75%': { transform: 'rotate(3deg)' },
         },
       },
       transitionTimingFunction: {

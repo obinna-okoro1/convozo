@@ -5,8 +5,8 @@
       <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl shadow-soft-lg mb-4">
         <span class="text-white font-bold text-2xl">C</span>
       </div>
-      <h1 class="text-3xl font-bold text-neutral-900 mb-2 tracking-tight">Welcome back</h1>
-      <p class="text-neutral-600 text-base">Sign in to manage your creator account</p>
+      <h1 class="text-3xl font-bold text-neutral-900 mb-2 tracking-tight">Create your account</h1>
+      <p class="text-neutral-600 text-base">Start monetizing your influence today</p>
     </div>
 
     <!-- Success State -->
@@ -18,25 +18,25 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 class="text-xl font-semibold text-neutral-900 mb-2">Check your email</h2>
+          <h2 class="text-xl font-semibold text-neutral-900 mb-2">Account created!</h2>
           <p class="text-neutral-600 text-sm leading-relaxed">
-            We've sent a magic link to <span class="font-medium text-neutral-900">{{ email() }}</span>
+            We've sent a confirmation email to <span class="font-medium text-neutral-900">{{ email() }}</span>
           </p>
           <p class="text-neutral-500 text-xs mt-3">
-            Click the link in the email to sign in securely
+            Click the link in the email to verify your account
           </p>
         </div>
       </div>
     }
 
-    <!-- Login Form -->
+    <!-- Signup Form -->
     @else {
-      <div class="card bg-white p-6 slide-up-enter">
+      <div class="card bg-white p-6 animate-slide-up">
         <!-- OAuth Options -->
         <div class="space-y-3 mb-6">
           <button
             type="button"
-            (click)="handleOAuthLogin('instagram')"
+            (click)="handleOAuthSignup('instagram')"
             [disabled]="loading()"
             class="w-full h-12 flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50"
           >
@@ -48,7 +48,7 @@
 
           <button
             type="button"
-            (click)="handleOAuthLogin('google')"
+            (click)="handleOAuthSignup('google')"
             [disabled]="loading()"
             class="w-full h-12 flex items-center justify-center gap-3 bg-white text-neutral-700 border-2 border-neutral-300 rounded-xl font-medium hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50"
           >
@@ -72,7 +72,25 @@
           </div>
         </div>
 
-        <form (ngSubmit)="handleLogin()" class="space-y-5">
+        <form (ngSubmit)="handleSignup()" class="space-y-5">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="fullName" class="form-label">
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              [value]="fullName()"
+              (input)="updateFullName($any($event.target).value)"
+              placeholder="Jane Doe"
+              class="input-field"
+              autocomplete="name"
+              required
+            />
+          </div>
+
           <!-- Email Input -->
           <div class="form-group">
             <label for="email" class="form-label">
@@ -91,25 +109,42 @@
             />
           </div>
 
-          <!-- Password Input (Conditional) -->
-          @if (usePassword()) {
-            <div class="form-group">
-              <label for="password" class="form-label">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                [value]="password()"
-                (input)="updatePassword($any($event.target).value)"
-                placeholder="Enter your password"
-                class="input-field"
-                autocomplete="current-password"
-                required
-              />
-            </div>
-          }
+          <!-- Password Input -->
+          <div class="form-group">
+            <label for="password" class="form-label">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              [value]="password()"
+              (input)="updatePassword($any($event.target).value)"
+              placeholder="At least 6 characters"
+              class="input-field"
+              autocomplete="new-password"
+              required
+            />
+            <p class="text-xs text-neutral-500 mt-1">Must be at least 6 characters</p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label for="confirmPassword" class="form-label">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              [value]="confirmPassword()"
+              (input)="updateConfirmPassword($any($event.target).value)"
+              placeholder="Re-enter your password"
+              class="input-field"
+              autocomplete="new-password"
+              required
+            />
+          </div>
 
           <!-- Error Message -->
           @if (error()) {
@@ -135,68 +170,38 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>{{ usePassword() ? 'Signing in...' : 'Sending...' }}</span>
+                <span>Creating account...</span>
               } @else {
-                <span>{{ usePassword() ? 'Sign in' : 'Send magic link' }}</span>
+                <span>Create Account</span>
               }
             </button>
           </div>
 
-          <!-- Auth Method Toggle -->
-          <div class="text-center pt-2">
-            <button
-              type="button"
-              (click)="toggleAuthMethod()"
-              class="text-sm text-neutral-600 hover:text-neutral-900 transition-colors font-medium focus-ring inline-flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-neutral-50"
-            >
-              @if (usePassword()) {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span>Use magic link instead</span>
-              } @else {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
-                <span>Use password instead</span>
-              }
-            </button>
-          </div>
+          <!-- Terms -->
+          <p class="text-xs text-neutral-500 text-center">
+            By creating an account, you agree to our 
+            <a href="#" class="text-primary-600 hover:text-primary-700 underline">Terms of Service</a>
+            and 
+            <a href="#" class="text-primary-600 hover:text-primary-700 underline">Privacy Policy</a>
+          </p>
         </form>
+      </div>
 
-        <!-- Test Accounts Notice -->
-        @if (usePassword()) {
-          <div class="mt-6 p-4 bg-gradient-to-br from-primary-50 to-purple-50/50 rounded-xl border border-primary-100/50">
-            <div class="flex items-start gap-3">
-              <div class="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-primary-900 mb-2">Development Test Accounts</p>
-                <div class="space-y-1 text-xs">
-                  <p class="text-primary-800 font-mono">creator@example.com</p>
-                  <p class="text-primary-800 font-mono">creator2@example.com</p>
-                  <p class="text-primary-700 mt-1.5">Password: <span class="font-mono font-semibold">sample123</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
+      <!-- Login Link -->
+      <div class="mt-6 text-center animate-fade-in" style="animation-delay: 100ms">
+        <p class="text-sm text-neutral-600">
+          Already have an account?
+          <a 
+            routerLink="/auth/login" 
+            class="text-primary-600 hover:text-primary-700 font-medium focus-ring px-2 py-1 rounded-lg"
+          >
+            Sign in
+          </a>
+        </p>
       </div>
 
       <!-- Back to Home -->
-      <div class="mt-6 text-center animate-fade-in" style="animation-delay: 100ms">
-        <p class="text-sm text-neutral-600 mb-3">
-          Don't have an account?
-          <a 
-            routerLink="/auth/signup" 
-            class="text-primary-600 hover:text-primary-700 font-medium focus-ring px-2 py-1 rounded-lg"
-          >
-            Sign up
-          </a>
-        </p>
+      <div class="mt-4 text-center animate-fade-in" style="animation-delay: 150ms">
         <a 
           routerLink="/home" 
           class="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors font-medium focus-ring px-4 py-2 rounded-lg hover:bg-white/50"

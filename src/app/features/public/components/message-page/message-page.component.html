@@ -6,7 +6,7 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="text-gray-600">Loading...</p>
+        <p class="text-gray-600 animate-pulse-subtle">Loading...</p>
       </div>
     </div>
   } @else if (error()) {
@@ -63,69 +63,61 @@
           }
         </div>
 
-        <!-- Message Form -->
-        <div class="card animate-slide-up p-6">
-          <form (ngSubmit)="submitMessage()" class="space-y-5">
-            <!-- Pricing Selection (if tiered) -->
-            @if (settings()?.has_tiered_pricing) {
-              <div class="form-group">
-                <label class="form-label">Message Type</label>
-                <div class="grid grid-cols-2 gap-4">
-                  <label
-                    class="flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
-                    [class.border-primary-600]="messageType() === 'fan'"
-                    [class.bg-primary-50]="messageType() === 'fan'"
-                  >
-                    <input
-                      type="radio"
-                      name="messageType"
-                      [checked]="messageType() === 'fan'"
-                      (change)="messageType.set('fan')"
-                      class="sr-only"
-                    />
-                    <div class="font-semibold mb-1">Fan Message</div>
-                    <div class="text-2xl font-bold text-primary-600">
-                      ${{ (settings()?.fan_price ?? 0) / 100 }}
-                    </div>
-                  </label>
+        <!-- Tabs -->
+        @if (settings()?.calls_enabled) {
+          <div class="card p-0 mb-6 overflow-hidden animate-slide-up">
+            <div class="flex border-b border-neutral-200">
+              <button
+                type="button"
+                (click)="activeTab.set('message')"
+                [class.border-primary-600]="activeTab() === 'message'"
+                [class.text-primary-600]="activeTab() === 'message'"
+                [class.bg-primary-50]="activeTab() === 'message'"
+                class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
+              >
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Send Message
+              </button>
+              <button
+                type="button"
+                (click)="activeTab.set('call')"
+                [class.border-primary-600]="activeTab() === 'call'"
+                [class.text-primary-600]="activeTab() === 'call'"
+                [class.bg-primary-50]="activeTab() === 'call'"
+                class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
+              >
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Book a Call
+              </button>
+            </div>
+          </div>
+        }
 
-                  <label
-                    class="flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all"
-                    [class.border-primary-600]="messageType() === 'business'"
-                    [class.bg-primary-50]="messageType() === 'business'"
-                  >
-                    <input
-                      type="radio"
-                      name="messageType"
-                      [checked]="messageType() === 'business'"
-                      (change)="messageType.set('business')"
-                      class="sr-only"
-                    />
-                    <div class="font-semibold mb-1">Business Inquiry</div>
-                    <div class="text-2xl font-bold text-primary-600">
-                      ${{ (settings()?.business_price ?? 0) / 100 }}
-                    </div>
-                  </label>
-                </div>
-              </div>
-            } @else {
+        <!-- Message Form -->
+        @if (activeTab() === 'message') {
+          <div class="card animate-slide-up p-6">
+            <form (ngSubmit)="submitMessage()" class="space-y-5">
+              <!-- Message Price Display -->
               <div class="mb-6 text-center">
                 <div class="inline-block bg-primary-50 px-6 py-4 rounded-lg">
                   <div class="text-sm text-gray-600 mb-1">Message Price</div>
                   <div class="text-4xl font-bold text-primary-600">
-                    ${{ (settings()?.single_price ?? 0) / 100 }}
+                    ${{ (settings()?.message_price ?? 0) / 100 }}
                   </div>
                 </div>
               </div>
-            }
 
-            <!-- Sender Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div class="form-group">
-                <label class="form-label">Your Name *</label>
-                <input
-                  type="text"
-                  [value]="senderName()"
+              <!-- Sender Info -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="form-group">
+                  <label class="form-label">Your Name *</label>
+                  <input
+                    type="text"
+                    [value]="senderName()"
                   (input)="senderName.set($any($event.target).value)"
                   placeholder="John Doe"
                   class="input-field"
@@ -172,7 +164,7 @@
             <button
               type="submit"
               [disabled]="submitting()"
-              class="btn-primary btn-lg w-full"
+              class="btn-primary btn-lg w-full transform hover:scale-[1.02] transition-transform duration-200"
             >
               @if (submitting()) {
                 <svg class="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -205,6 +197,135 @@
             </div>
           </form>
         </div>
+        }
+
+        <!-- Call Booking Form -->
+        @if (activeTab() === 'call' && settings()?.calls_enabled) {
+          <div class="card animate-slide-up p-6">
+            <form (ngSubmit)="submitMessage()" class="space-y-5">
+              <!-- Call Price Display -->
+              <div class="mb-6 text-center">
+                <div class="inline-block bg-primary-50 px-8 py-5 rounded-lg">
+                  <div class="text-sm text-gray-600 mb-1">Video Call</div>
+                  <div class="text-4xl font-bold text-primary-600 mb-2">
+                    ${{ (settings()?.call_price ?? 0) / 100 }}
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    {{ settings()?.call_duration }} minutes
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex gap-3">
+                  <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="text-sm text-blue-700">
+                    <p class="font-medium mb-1">How it works</p>
+                    <p>After payment, you'll receive a confirmation email with booking details. {{ creator()?.display_name }} will contact you via Instagram to schedule the exact time within their availability.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Info -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="form-group">
+                  <label class="form-label">Your Name *</label>
+                  <input
+                    type="text"
+                    [value]="senderName()"
+                    (input)="senderName.set($any($event.target).value)"
+                    placeholder="John Doe"
+                    class="input-field"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Your Email *</label>
+                  <input
+                    type="email"
+                    [value]="senderEmail()"
+                    (input)="senderEmail.set($any($event.target).value)"
+                    placeholder="you@example.com"
+                    class="input-field"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Your Instagram Handle *</label>
+                <div class="flex items-center">
+                  <span class="text-gray-500 text-lg mr-2">@</span>
+                  <input
+                    type="text"
+                    [value]="instagramHandle()"
+                    (input)="instagramHandle.set($any($event.target).value)"
+                    placeholder="yourhandle"
+                    class="input-field flex-1"
+                    required
+                  />
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ creator()?.display_name }} will contact you here to schedule the call</p>
+              </div>
+
+              <!-- Preferred Time (optional) -->
+              <div class="form-group">
+                <label class="form-label">Message / Preferred Time (Optional)</label>
+                <textarea
+                  [value]="messageContent()"
+                  (input)="messageContent.set($any($event.target).value)"
+                  placeholder="Let {{ creator()?.display_name }} know your preferred days/times or what you'd like to discuss..."
+                  rows="4"
+                  class="textarea"
+                  maxlength="1000"
+                ></textarea>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Optional - helps with scheduling</span>
+                  <span>{{ characterCount() }} / {{ maxCharacters }}</span>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <button
+                type="submit"
+                [disabled]="submitting()"
+                class="btn-primary btn-lg w-full transform hover:scale-[1.02] transition-transform duration-200"
+              >
+                @if (submitting()) {
+                  <svg class="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                } @else {
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                  Book Call - ${{ selectedPrice() }}
+                }
+              </button>
+
+              <!-- Trust Indicators -->
+              <div class="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-600">
+                <div class="flex items-center">
+                  <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  Secure Payment
+                </div>
+                <div class="flex items-center">
+                  <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  Powered by Stripe
+                </div>
+              </div>
+            </form>
+          </div>
+        }
 
         <!-- Footer -->
         <div class="text-center mt-8 text-sm text-gray-500">

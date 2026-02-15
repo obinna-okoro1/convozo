@@ -18,10 +18,10 @@ export interface Creator {
 export interface CreatorSettings {
   id: string;
   creator_id: string;
-  has_tiered_pricing: boolean;
-  fan_price: number | null;
-  business_price: number | null;
-  single_price: number | null;
+  message_price: number;
+  call_price: number | null;
+  call_duration: number | null;
+  calls_enabled: boolean;
   response_expectation: string | null;
   auto_reply_text: string | null;
   created_at: string;
@@ -56,12 +56,40 @@ export interface StripeAccount {
 }
 
 export interface CreatorProfile extends Creator {
-  creator_settings: CreatorSettings[];
+  creator_settings: CreatorSettings;
 }
 
-export type MessageType = 'fan' | 'business' | 'single';
-export type PricingType = 'single' | 'tiered';
+export type MessageType = 'message' | 'call';
 export type FilterStatus = 'all' | 'unhandled' | 'handled';
+export type CallBookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 6 = Saturday
+
+export interface AvailabilitySlot {
+  id: string;
+  creator_id: string;
+  day_of_week: DayOfWeek;
+  start_time: string; // HH:MM format
+  end_time: string; // HH:MM format
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CallBooking {
+  id: string;
+  creator_id: string;
+  booker_name: string;
+  booker_email: string;
+  booker_instagram: string;
+  scheduled_at: string;
+  duration: number;
+  amount_paid: number;
+  status: CallBookingStatus;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface MessageStats {
   total: number;
@@ -76,6 +104,15 @@ export interface CheckoutSessionPayload {
   sender_name: string;
   sender_email: string;
   message_type: MessageType;
+  price: number;
+}
+
+export interface CallBookingPayload {
+  creator_slug: string;
+  booker_name: string;
+  booker_email: string;
+  booker_instagram: string;
+  message_content: string; // Optional message about preferred times
   price: number;
 }
 

@@ -9,12 +9,11 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ERROR_MESSAGES } from '../../../../core/constants';
-import { ButtonComponent, CardComponent, InputComponent } from '../../../../shared/components/ui';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonComponent, CardComponent, InputComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -30,6 +29,22 @@ export class LoginComponent {
     private readonly authService: AuthService,
     private readonly router: Router
   ) {}
+
+  /**
+   * Handle OAuth login
+   */
+  protected async handleOAuthLogin(provider: 'instagram' | 'google'): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+
+    const result = await this.authService.signInWithOAuth(provider);
+
+    if (!result.success) {
+      this.loading.set(false);
+      this.error.set(result.error || `Failed to sign in with ${provider}`);
+    }
+    // If successful, user will be redirected to OAuth flow
+  }
 
   /**
    * Handle login form submission

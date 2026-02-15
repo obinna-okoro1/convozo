@@ -131,17 +131,19 @@ VALUES (
   true
 ) ON CONFLICT (user_id) DO NOTHING;
 
--- Sample Creator Settings (Single Price)
-INSERT INTO public.creator_settings (creator_id, has_tiered_pricing, single_price, response_expectation, auto_reply_text)
+-- Sample Creator Settings (Single Pricing + Calls)
+INSERT INTO public.creator_settings (creator_id, message_price, call_price, call_duration, calls_enabled, response_expectation, auto_reply_text)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
-  false,
-  5000, -- $50
+  1000, -- $10 for messages
+  5000, -- $50 for 30min calls
+  30, -- 30 minutes
+  true, -- calls enabled
   'I typically respond within 24-48 hours during business days.',
   'Thanks for reaching out! To send me a priority message, visit: https://convozo.com/sarahjohnson'
 ) ON CONFLICT (creator_id) DO NOTHING;
 
--- Sample Creator 2: Mike Chen (Tiered Pricing)
+-- Sample Creator 2: Mike Chen (Messages Only)
 INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, is_active)
 VALUES (
   '44444444-4444-4444-4444-444444444444',
@@ -153,13 +155,12 @@ VALUES (
   true
 ) ON CONFLICT (user_id) DO NOTHING;
 
--- Sample Creator Settings (Tiered Pricing)
-INSERT INTO public.creator_settings (creator_id, has_tiered_pricing, fan_price, business_price, response_expectation)
+-- Sample Creator Settings (Messages Only)
+INSERT INTO public.creator_settings (creator_id, message_price, calls_enabled, response_expectation)
 VALUES (
   '44444444-4444-4444-4444-444444444444',
-  true,
-  2500, -- $25 for fans
-  10000, -- $100 for business
+  500, -- $5 for messages
+  false, -- calls disabled
   'Fan messages: 2-3 days. Business inquiries: 24 hours.'
 ) ON CONFLICT (creator_id) DO NOTHING;
 
@@ -192,8 +193,8 @@ VALUES (
   'John Doe',
   'john@example.com',
   'Hi Sarah! I love your content and would love to collaborate on an upcoming project. Would you be interested in discussing a partnership?',
-  5000,
-  'single',
+  1000,
+  'message',
   false,
   NOW() - INTERVAL '1 day'
 );
@@ -205,8 +206,8 @@ VALUES (
   'Jane Smith',
   'jane@example.com',
   'Your recent video was amazing! Can you share more about your creative process?',
-  5000,
-  'single',
+  1000,
+  'message',
   true,
   'Thanks so much for the kind words! I''ll definitely create a behind-the-scenes video soon.',
   NOW() - INTERVAL '1 day',
@@ -220,8 +221,8 @@ VALUES (
   'Brand Manager',
   'partnerships@brand.com',
   'We''re interested in a sponsored content opportunity. Could we schedule a call?',
-  5000,
-  'single',
+  1000,
+  'message',
   false,
   NOW() - INTERVAL '3 hours'
 );
@@ -234,8 +235,8 @@ VALUES (
   'Gaming Fan',
   'fan@example.com',
   'Love your gaming reviews! What''s your next big review?',
-  2500,
-  'fan',
+  500,
+  'message',
   false,
   NOW() - INTERVAL '5 hours'
 );
@@ -247,8 +248,8 @@ VALUES (
   'Tech Company',
   'marketing@techco.com',
   'We''d like to send you our new gaming laptop for review. Interested?',
-  10000,
-  'business',
+  500,
+  'message',
   true,
   'Absolutely! Please send me the details via email.',
   NOW() - INTERVAL '12 hours',
@@ -262,9 +263,9 @@ VALUES (
   '33333333-3333-3333-3333-333333333333',
   'cs_test_a1b2c3d4e5f6g7h8i9j0',
   'pi_test_1a2b3c4d5e6f7g8h',
-  5000,
-  500, -- 10% platform fee
-  4500,
+  1000,
+  100, -- 10% platform fee
+  900,
   'completed',
   'john@example.com',
   NOW() - INTERVAL '1 day'
@@ -276,9 +277,9 @@ VALUES (
   '33333333-3333-3333-3333-333333333333',
   'cs_test_z9y8x7w6v5u4t3s2r1',
   'pi_test_9z8y7x6w5v4u3t2s',
-  5000,
-  500,
-  4500,
+  1000,
+  100,
+  900,
   'completed',
   'jane@example.com',
   NOW() - INTERVAL '2 days'
@@ -290,9 +291,9 @@ VALUES (
   '33333333-3333-3333-3333-333333333333',
   'cs_test_m1n2o3p4q5r6s7t8u9',
   'pi_test_m1n2o3p4q5r6s7t8',
-  5000,
-  500,
-  4500,
+  1000,
+  100,
+  900,
   'completed',
   'partnerships@brand.com',
   NOW() - INTERVAL '3 hours'
@@ -304,9 +305,9 @@ VALUES (
   '44444444-4444-4444-4444-444444444444',
   'cs_test_f1a2n3b4o5y6z7x8c9',
   'pi_test_f1a2n3b4o5y6z7x8',
-  2500,
-  250,
-  2250,
+  500,
+  50,
+  450,
   'completed',
   'fan@example.com',
   NOW() - INTERVAL '5 hours'
@@ -318,12 +319,42 @@ VALUES (
   '44444444-4444-4444-4444-444444444444',
   'cs_test_b1u2s3i4n5e6s7s8t9',
   'pi_test_b1u2s3i4n5e6s7s8',
-  10000,
-  1000,
-  9000,
+  500,
+  50,
+  450,
   'completed',
   'marketing@techco.com',
   NOW() - INTERVAL '1 day'
+);
+
+-- Sample Availability Slots for Sarah Johnson (Monday-Friday, 9AM-5PM)
+INSERT INTO public.availability_slots (creator_id, day_of_week, start_time, end_time, is_active)
+VALUES 
+  ('33333333-3333-3333-3333-333333333333', 1, '09:00', '12:00', true), -- Monday morning
+  ('33333333-3333-3333-3333-333333333333', 1, '14:00', '17:00', true), -- Monday afternoon
+  ('33333333-3333-3333-3333-333333333333', 2, '09:00', '12:00', true), -- Tuesday morning
+  ('33333333-3333-3333-3333-333333333333', 2, '14:00', '17:00', true), -- Tuesday afternoon
+  ('33333333-3333-3333-3333-333333333333', 3, '09:00', '12:00', true), -- Wednesday morning
+  ('33333333-3333-3333-3333-333333333333', 3, '14:00', '17:00', true), -- Wednesday afternoon
+  ('33333333-3333-3333-3333-333333333333', 4, '09:00', '12:00', true), -- Thursday morning
+  ('33333333-3333-3333-3333-333333333333', 4, '14:00', '17:00', true), -- Thursday afternoon
+  ('33333333-3333-3333-3333-333333333333', 5, '09:00', '12:00', true), -- Friday morning
+  ('33333333-3333-3333-3333-333333333333', 5, '14:00', '17:00', true); -- Friday afternoon
+
+-- Sample Call Booking
+INSERT INTO public.call_bookings (creator_id, booker_name, booker_email, booker_instagram, scheduled_at, duration, amount_paid, status, stripe_checkout_session_id, stripe_payment_intent_id, created_at)
+VALUES (
+  '33333333-3333-3333-3333-333333333333',
+  'Alex Rodriguez',
+  'alex@example.com',
+  '@alexrodriguez',
+  NOW() + INTERVAL '3 days' + INTERVAL '10 hours', -- 3 days from now at 10 AM
+  30,
+  5000,
+  'confirmed',
+  'cs_test_call_1a2b3c4d',
+  'pi_test_call_1a2b3c4d',
+  NOW() - INTERVAL '2 hours'
 );
 
 -- Output summary
@@ -332,10 +363,12 @@ SELECT '✅ Created 2 test users (password: sample123)' as info_1;
 SELECT '✅ Created 2 creators with settings' as info_2;
 SELECT '✅ Created 5 sample messages' as info_3;
 SELECT '✅ Created 5 sample payments' as info_4;
+SELECT '✅ Created availability slots for Sarah' as info_5;
+SELECT '✅ Created 1 sample call booking' as info_6;
 SELECT '' as separator;
 SELECT 'Test Users:' as users_header;
-SELECT '- creator@example.com (Sarah Johnson) - Single pricing: $50' as user_1;
-SELECT '- creator2@example.com (Mike Chen) - Tiered pricing: $25/$100' as user_2;
+SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min (enabled)' as user_1;
+SELECT '- creator2@example.com (Mike Chen) - Messages: $5, Calls: disabled' as user_2;
 SELECT '2. Sign up through the app to create auth users first' as step_2;
 SELECT '3. Update the environment variables with your Stripe keys' as step_3;
 SELECT '4. Set up Stripe Connect for the test creators' as step_4;

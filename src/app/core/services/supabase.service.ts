@@ -12,6 +12,7 @@ import {
   Message,
   StripeAccount,
   CheckoutSessionPayload,
+  CallBookingPayload,
   EdgeFunctionResponse,
   StripeConnectResponse,
   StripeAccountStatus,
@@ -31,6 +32,9 @@ export class SupabaseService {
   private readonly currentUserSubject: BehaviorSubject<User | null>;
   public readonly currentUser$: Observable<User | null>;
 
+  private sessionInitialized = false;
+  private sessionInitPromise: Promise<void> | null = null;
+
   constructor() {
     this.client = createClient(
       environment.supabase.url,
@@ -47,13 +51,24 @@ export class SupabaseService {
    * Initialize authentication state
    */
   private initializeAuthState(): void {
-    this.client.auth.getSession().then(({ data: { session } }) => {
+    this.sessionInitPromise = this.client.auth.getSession().then(({ data: { session } }) => {
       this.currentUserSubject.next(session?.user ?? null);
+      this.sessionInitialized = true;
     });
 
     this.client.auth.onAuthStateChange((_event, session) => {
       this.currentUserSubject.next(session?.user ?? null);
     });
+  }
+
+  /**
+   * Wait for initial session to be loaded
+   */
+  public async waitForSession(): Promise<User | null> {
+    if (!this.sessionInitialized && this.sessionInitPromise) {
+      await this.sessionInitPromise;
+    }
+    return this.currentUserSubject.value;
   }
 
   // ==================== AUTH METHODS ====================
@@ -84,6 +99,55 @@ export class SupabaseService {
    */
   public getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  // ==================== STORAGE METHODS ====================
+
+  /**
+   * Upload file to Supabase Storage
+   */
+  public async uploadFile(
+    bucket: string,
+    path: string,
+    file: File
+  ): Promise<{ data: { path: string; publicUrl: string } | null; error: Error | null }> {
+    try {
+      const { data, error } = await this.client.storage
+        .from(bucket)
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = this.client.storage
+        .from(bucket)
+        .getPublicUrl(path);
+
+      return {
+        data: {
+          path: data.path,
+          publicUrl
+        },
+        error: null
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('Upload failed')
+      };
+    }
+  }
+
+  /**
+   * Delete file from Supabase Storage
+   */
+  public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
+    const { error } = await this.client.storage
+      .from(bucket)
+      .remove([path]);
+    return { error };
   }
 
   // ==================== CREATOR METHODS ====================
@@ -250,6 +314,16 @@ export class SupabaseService {
    */
   public async createCheckoutSession(payload: CheckoutSessionPayload): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     const { data, error } = await this.client.functions.invoke('create-checkout-session', {
+      body: payload,
+    });
+    return { data, error };
+  }
+
+  /**
+   * Create call booking checkout session via Edge Function
+   */
+  public async createCallBookingSession(payload: CallBookingPayload): Promise<EdgeFunctionResponse<{ url: string }>> {
+    const { data, error } = await this.client.functions.invoke('create-call-booking-session', {
       body: payload,
     });
     return { data, error };

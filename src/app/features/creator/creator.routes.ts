@@ -14,6 +14,11 @@ export const CREATOR_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'settings',
+    loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'onboarding',
     loadComponent: () => import('./components/onboarding/onboarding.component').then(m => m.OnboardingComponent),
     canActivate: [authGuard],

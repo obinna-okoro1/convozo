@@ -5,7 +5,16 @@
 
 import { Injectable } from '@angular/core';
 import { SupabaseService } from '../../../core/services/supabase.service';
-import { Creator, CreatorSettings, Message, MessageStats, SupabaseResponse } from '../../../core/models';
+import {
+  Creator,
+  CreatorSettings,
+  Message,
+  MessageStats,
+  SupabaseResponse,
+  EdgeFunctionResponse,
+  StripeConnectResponse,
+  StripeAccountStatus
+} from '../../../core/models';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +27,42 @@ export class CreatorService {
    */
   public async getCreatorByUserId(userId: string): Promise<SupabaseResponse<Creator>> {
     return this.supabaseService.getCreatorByUserId(userId);
+  }
+
+  /**
+   * Get current creator for logged-in user
+   */
+  public async getCurrentCreator(): Promise<Creator | null> {
+    const user = this.supabaseService.getCurrentUser();
+    if (!user) return null;
+
+    const { data } = await this.supabaseService.getCreatorByUserId(user.id);
+    return data;
+  }
+
+  /**
+   * Update creator profile
+   */
+  public async updateCreatorProfile(data: {
+    creatorId: string;
+    displayName: string;
+    slug: string;
+    bio: string | null;
+    profileImageUrl?: string;
+  }): Promise<SupabaseResponse<Creator>> {
+    const { data: creator, error } = await this.supabaseService.client
+      .from('creators')
+      .update({
+        display_name: data.displayName,
+        slug: data.slug,
+        bio: data.bio,
+        profile_image_url: data.profileImageUrl
+      })
+      .eq('id', data.creatorId)
+      .select()
+      .single();
+
+    return { data: creator, error };
   }
 
   /**
@@ -149,22 +194,49 @@ export class CreatorService {
    */
   public async createCreatorSettings(data: {
     creatorId: string;
-    pricingType: 'single' | 'tiered';
-    singlePrice?: number;
-    fanPrice?: number;
-    businessPrice?: number;
+    messagePrice: number;
+    callPrice?: number;
+    callDuration?: number;
+    callsEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
     const { data: settings, error } = await this.supabaseService.client
       .from('creator_settings')
       .insert([{
         creator_id: data.creatorId,
-        pricing_type: data.pricingType,
-        single_price: data.singlePrice,
-        fan_price: data.fanPrice,
-        business_price: data.businessPrice,
+        message_price: data.messagePrice,
+        call_price: data.callPrice,
+        call_duration: data.callDuration,
+        calls_enabled: data.callsEnabled,
         response_expectation: data.responseExpectation
       }])
+      .select()
+      .single();
+
+    return { data: settings, error };
+  }
+
+  /**
+   * Update creator settings
+   */
+  public async updateCreatorSettings(data: {
+    settingsId: string;
+    messagePrice: number;
+    callPrice?: number;
+    callDuration?: number;
+    callsEnabled: boolean;
+    responseExpectation: string;
+  }): Promise<SupabaseResponse<CreatorSettings>> {
+    const { data: settings, error } = await this.supabaseService.client
+      .from('creator_settings')
+      .update({
+        message_price: data.messagePrice,
+        call_price: data.callPrice,
+        call_duration: data.callDuration,
+        calls_enabled: data.callsEnabled,
+        response_expectation: data.responseExpectation
+      })
+      .eq('id', data.settingsId)
       .select()
       .single();
 
@@ -184,5 +256,23 @@ export class CreatorService {
    */
   public calculateSinglePrice(fanPrice: number, businessPrice: number): number {
     return Math.round((fanPrice + businessPrice) / 2);
+  }
+
+  /**
+   * Create Stripe Connect account
+   */
+  public async createStripeConnectAccount(
+    creatorId: string,
+    email: string,
+    displayName: string
+  ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
+    return this.supabaseService.createConnectAccount(creatorId, email, displayName);
+  }
+
+  /**
+   * Verify Stripe Connect account status
+   */
+  public async verifyStripeAccount(accountId: string): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
+    return this.supabaseService.verifyConnectAccount(accountId);
   }
 }

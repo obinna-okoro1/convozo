@@ -22,15 +22,17 @@ import { environment } from '../../../../../environments/environment';
 export class MessagePageComponent implements OnInit {
   // State signals
   protected readonly creator = signal<CreatorProfile | null>(null);
-  private readonly creatorSettings = signal<CreatorProfile['creator_settings'][0] | null>(null);
+  private readonly creatorSettings = signal<CreatorProfile['creator_settings'] | null>(null);
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
 
   // Form signals
+  protected readonly activeTab = signal<'message' | 'call'>('message');
   protected readonly senderName = signal<string>('');
   protected readonly senderEmail = signal<string>('');
   protected readonly messageContent = signal<string>('');
-  protected readonly messageType = signal<MessageType>('single');
+  protected readonly instagramHandle = signal<string>('');
+  protected readonly messageType = signal<MessageType>('message');
   protected readonly submitting = signal<boolean>(false);
 
   // Computed values
@@ -91,12 +93,19 @@ export class MessagePageComponent implements OnInit {
 
       this.creator.set(data as CreatorProfile);
       
-      const settings = (data as CreatorProfile).creator_settings?.[0];
+      const settings = (data as CreatorProfile).creator_settings;
       if (settings) {
+        console.log('DEBUG: Creator settings loaded:', settings);
+        console.log('DEBUG: calls_enabled:', settings.calls_enabled);
+        console.log('DEBUG: call_price:', settings.call_price);
+        console.log('DEBUG: call_duration:', settings.call_duration);
         this.creatorSettings.set(settings);
         this.setDefaultMessageType(data as CreatorProfile);
+      } else {
+        console.log('DEBUG: No settings found for creator');
       }
     } catch (err) {
+      console.error('DEBUG: Error loading creator:', err);
       this.error.set('Failed to load creator');
     } finally {
       this.loading.set(false);
@@ -107,12 +116,7 @@ export class MessagePageComponent implements OnInit {
    * Set default message type based on creator pricing
    */
   private setDefaultMessageType(creator: CreatorProfile): void {
-    const settings = creator.creator_settings?.[0];
-    if (settings?.has_tiered_pricing) {
-      this.messageType.set('fan');
-    } else {
-      this.messageType.set('single');
-    }
+    this.messageType.set('message');
   }
 
   /**
@@ -122,16 +126,14 @@ export class MessagePageComponent implements OnInit {
     const creatorData = this.creator();
     if (!creatorData) return 0;
 
-    const settings = creatorData.creator_settings?.[0];
+    const settings = creatorData.creator_settings;
     if (!settings) return 0;
 
-    if (settings.has_tiered_pricing) {
-      return this.messageType() === 'business'
-        ? (settings.business_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER
-        : (settings.fan_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
+    if (this.activeTab() === 'call' && settings.call_price) {
+      return (settings.call_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
     }
 
-    return (settings.single_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
+    return (settings.message_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
   }
 
   /**
@@ -152,6 +154,7 @@ export class MessagePageComponent implements OnInit {
     try {
       await this.createCheckoutSession();
     } catch (err) {
+      console.error('Checkout session error:', err);
       this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
     } finally {
       this.submitting.set(false);
@@ -169,6 +172,26 @@ export class MessagePageComponent implements OnInit {
       throw new Error('Creator data not loaded');
     }
 
+    // For call bookings, use a different payload structure
+    if (this.activeTab() === 'call') {
+      const { data, error } = await this.supabaseService.createCallBookingSession({
+        creator_slug: creatorData.slug,
+        booker_name: this.senderName(),
+        booker_email: this.senderEmail(),
+        booker_instagram: this.instagramHandle(),
+        message_content: this.messageContent() || '', // Optional message
+        price: priceInCents,
+      });
+
+      if (error || !data?.url) {
+        throw new Error(error?.message || 'Failed to create call booking session');
+      }
+
+      window.location.href = data.url;
+      return;
+    }
+
+    // For regular messages
     const { data, error } = await this.supabaseService.createCheckoutSession({
       creator_slug: creatorData.slug,
       message_content: this.messageContent(),
@@ -178,7 +201,10 @@ export class MessagePageComponent implements OnInit {
       price: priceInCents,
     });
 
+    console.log('Checkout session response:', { data, error });
+
     if (error || !data?.sessionId) {
+      console.error('Checkout session failed:', error);
       throw new Error(error?.message || 'Failed to create checkout session');
     }
 
@@ -203,6 +229,17 @@ export class MessagePageComponent implements OnInit {
       return false;
     }
 
+    // For calls, Instagram handle is required, message is optional
+    if (this.activeTab() === 'call') {
+      if (!FormValidators.isNotEmpty(this.instagramHandle())) {
+        alert('Instagram handle is required for call bookings');
+        return false;
+      }
+      // Message content is optional for calls
+      return true;
+    }
+
+    // For messages, content is required
     if (!FormValidators.isNotEmpty(this.messageContent())) {
       alert(ERROR_MESSAGES.MESSAGE.CONTENT_REQUIRED);
       return false;

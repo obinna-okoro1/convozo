@@ -11,6 +11,10 @@ import { CommonModule } from '@angular/common';
 export class LandingComponent {
   constructor(private router: Router) {}
 
+  navigateToSignup() {
+    this.router.navigate(['/auth/signup']);
+  }
+
   navigateToLogin() {
     this.router.navigate(['/auth/login']);
   }

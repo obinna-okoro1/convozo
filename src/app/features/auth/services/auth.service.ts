@@ -53,6 +53,39 @@ export class AuthService {
   }
 
   /**
+   * Sign up new user with email and password
+   */
+  public async signUp(email: string, password: string, fullName: string): Promise<{ success: boolean; error?: string }> {
+    if (!FormValidators.isValidEmail(email)) {
+      return { success: false, error: ERROR_MESSAGES.AUTH.INVALID_EMAIL };
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters' };
+    }
+
+    try {
+      const { data, error } = await this.supabaseService.client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create account';
+      return { success: false, error: message };
+    }
+  }
+
+  /**
    * Send magic link to email
    */
   public async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {
@@ -73,6 +106,28 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : ERROR_MESSAGES.AUTH.LOGIN_FAILED;
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Sign in with OAuth provider (Instagram, Google, etc.)
+   */
+  public async signInWithOAuth(provider: 'instagram' | 'google'): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await this.supabaseService.client.auth.signInWithOAuth({
+        provider: provider as any,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: provider === 'instagram' ? 'user_profile' : undefined
+        }
+      });
+
+      if (error) throw error;
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'OAuth authentication failed';
       return { success: false, error: message };
     }
   }

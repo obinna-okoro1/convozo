@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { createClient } from 'supabase';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
@@ -7,8 +7,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 });
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,7 +108,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const stripeAccount = creator.stripe_accounts?.[0];
+    // PostgREST returns one-to-one relationships as objects, not arrays
+    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
     if (!stripeAccount?.stripe_account_id) {
       return new Response(
         JSON.stringify({ error: 'Creator payment setup incomplete' }),
@@ -120,8 +121,11 @@ Deno.serve(async (req) => {
     const platformFee = Math.floor(price * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'http://localhost:4200';
 
+    // Check if using test Stripe account (for local development)
+    const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_');
+    
     // Create Stripe Checkout session
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: any = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -148,13 +152,19 @@ Deno.serve(async (req) => {
         message_type: message_type || 'single',
         amount: price.toString(),
       },
-      payment_intent_data: {
+    };
+
+    // Only add Connect transfer if using real Stripe account
+    if (!isTestAccount) {
+      sessionConfig.payment_intent_data = {
         application_fee_amount: platformFee,
         transfer_data: {
           destination: stripeAccount.stripe_account_id,
         },
-      },
-    });
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(
       JSON.stringify({ sessionId: session.id, url: session.url }),
