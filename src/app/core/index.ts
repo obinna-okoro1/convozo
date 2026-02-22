@@ -11,6 +11,10 @@ export * from './interceptors/error.interceptor';
 
 // Services
 export * from './services/supabase.service';
+export * from './services/instagram-public.service';
+export * from './services/push-notification.service';
+export * from './services/analytics.service';
+export * from './services/response-template.service';
 
 // Models
 export * from './models';

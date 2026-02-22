@@ -1,5 +1,6 @@
 /**
  * Message page component with proper access modifiers and clean architecture
+ * Now includes social proof for trust building
  */
 
 import { Component, OnInit, signal, computed } from '@angular/core';
@@ -8,14 +9,16 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { SupabaseService } from '../../../../core/services/supabase.service';
+import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
 import { CreatorProfile, MessageType } from '../../../../core/models';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ERROR_MESSAGES } from '../../../../core/constants';
 import { environment } from '../../../../../environments/environment';
+import { SocialProofComponent, SocialProofData } from '../../../../shared/components/social-proof/social-proof.component';
 
 @Component({
   selector: 'app-message-page',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SocialProofComponent],
   templateUrl: './message-page.component.html',
   styleUrls: ['./message-page.component.css']
 })
@@ -25,13 +28,28 @@ export class MessagePageComponent implements OnInit {
   private readonly creatorSettings = signal<CreatorProfile['creator_settings'] | null>(null);
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
+  
+  // Social proof data
+  protected readonly socialProofData = signal<SocialProofData>({
+    totalMessages: 0,
+    responseRate: 0,
+    avgResponseTime: 24,
+    verifiedCreator: false,
+  });
+
+  // Instagram data
+  protected readonly instagramUsername = signal<string | null>(null);
+  protected readonly instagramProfileUrl = computed(() => {
+    const username = this.instagramUsername();
+    return username ? this.instagramService.getProfileUrl(username) : null;
+  });
 
   // Form signals
   protected readonly activeTab = signal<'message' | 'call'>('message');
   protected readonly senderName = signal<string>('');
   protected readonly senderEmail = signal<string>('');
   protected readonly messageContent = signal<string>('');
-  protected readonly instagramHandle = signal<string>('');
+  protected readonly instagramHandle = signal<string>(''); // For call bookings
   protected readonly messageType = signal<MessageType>('message');
   protected readonly submitting = signal<boolean>(false);
 
@@ -50,7 +68,8 @@ export class MessagePageComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly supabaseService: SupabaseService
+    private readonly supabaseService: SupabaseService,
+    private readonly instagramService: InstagramPublicService
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -93,6 +112,11 @@ export class MessagePageComponent implements OnInit {
 
       this.creator.set(data as CreatorProfile);
       
+      // Load Instagram username if available
+      if ((data as CreatorProfile).instagram_username) {
+        this.instagramUsername.set((data as CreatorProfile).instagram_username);
+      }
+      
       const settings = (data as CreatorProfile).creator_settings;
       if (settings) {
         console.log('DEBUG: Creator settings loaded:', settings);
@@ -104,11 +128,36 @@ export class MessagePageComponent implements OnInit {
       } else {
         console.log('DEBUG: No settings found for creator');
       }
+      
+      // Load social proof data
+      await this.loadSocialProofData((data as CreatorProfile).id);
     } catch (err) {
       console.error('DEBUG: Error loading creator:', err);
       this.error.set('Failed to load creator');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /**
+   * Load social proof data for the creator
+   */
+  private async loadSocialProofData(creatorId: string): Promise<void> {
+    try {
+      // For now, we'll use mock data - in production, this would fetch from the database
+      // This can be extended to call an edge function that returns aggregated stats
+      const mockData: SocialProofData = {
+        totalMessages: Math.floor(Math.random() * 500) + 50, // Simulated for demo
+        responseRate: Math.floor(Math.random() * 20) + 80, // 80-100%
+        avgResponseTime: Math.floor(Math.random() * 12) + 2, // 2-14 hours
+        verifiedCreator: true,
+        joinedDate: this.creator()?.created_at || new Date().toISOString(),
+      };
+      
+      this.socialProofData.set(mockData);
+    } catch (err) {
+      console.error('Failed to load social proof data:', err);
+      // Silently fail - social proof is not critical
     }
   }
 

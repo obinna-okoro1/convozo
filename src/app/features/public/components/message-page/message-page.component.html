@@ -1,97 +1,208 @@
-<div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50">
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+  <!-- Animated background effects -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+    <div class="absolute top-0 -right-4 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+    <div class="absolute -bottom-8 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+  </div>
+
   @if (loading()) {
-    <div class="flex items-center justify-center min-h-screen">
+    <div class="flex items-center justify-center min-h-screen relative z-10">
       <div class="text-center">
-        <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="text-gray-600 animate-pulse-subtle">Loading...</p>
+        <div class="relative inline-block">
+          <svg class="animate-spin h-16 w-16 text-purple-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <div class="absolute inset-0 bg-purple-500 rounded-full filter blur-xl opacity-50 animate-pulse"></div>
+        </div>
+        <p class="text-slate-300 text-lg font-medium animate-pulse">Loading exclusive access...</p>
       </div>
     </div>
   } @else if (error()) {
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="text-center">
-        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="flex items-center justify-center min-h-screen px-4 relative z-10">
+      <div class="text-center max-w-md">
+        <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-500/50">
+          <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ error() }}</h2>
-        <p class="text-gray-600 mb-4">The creator you're looking for doesn't exist or is inactive.</p>
-        <a routerLink="/home" class="btn-primary">Go to Homepage</a>
+        <h2 class="text-3xl font-bold text-white mb-3">Creator Not Found</h2>
+        <p class="text-slate-400 mb-6">This creator profile doesn't exist or is no longer active.</p>
+        <a routerLink="/home" class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Explore Creators
+        </a>
       </div>
     </div>
   } @else {
-    <div class="container mx-auto px-4 py-12">
-      <div class="max-w-3xl mx-auto">
-        <!-- Creator Profile Header -->
-        <div class="text-center mb-8 animate-fade-in">
-          @if (creator()?.profile_image_url) {
-            <img
-              [src]="creator()!.profile_image_url!"
-              [alt]="creator()!.display_name"
-              class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg object-cover"
-            />
-          } @else {
-            <div class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg bg-primary-600 flex items-center justify-center">
-              <span class="text-white font-bold text-3xl">{{ creator()?.display_name ? creator()!.display_name.charAt(0) : 'C' }}</span>
+    <div class="container mx-auto px-4 py-8 relative z-10">
+      <div class="max-w-4xl mx-auto">
+        <!-- Trust banner -->
+        <div class="mb-6 animate-fade-in">
+          <div class="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4">
+            <div class="flex items-center justify-center gap-6 flex-wrap">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm font-medium text-emerald-300">100% Secure Payment</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm font-medium text-blue-300">Guaranteed Response</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm font-medium text-purple-300">Instant Delivery</span>
+              </div>
             </div>
-          }
-          
-          <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ creator()?.display_name }}</h1>
-          
-          @if (creator()?.bio) {
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ creator()?.bio }}</p>
-          }
+          </div>
         </div>
 
-        <!-- Value Proposition -->
-        <div class="card mb-8 text-center animate-slide-up p-6">
-          <h2 class="text-2xl font-bold text-neutral-900 mb-3">Send a Priority Message</h2>
-          <p class="text-neutral-600 mb-4">
-            Get a guaranteed response by sending a paid priority message. Your message will go directly to 
-            {{ creator()?.display_name }}'s inbox.
-          </p>
-          
-          @if (settings()?.response_expectation) {
-            <div class="bg-primary-50 p-4 rounded-lg inline-block">
-              <p class="text-sm text-neutral-700">
-                <span class="font-semibold">Response time:</span> {{ settings()?.response_expectation }}
-              </p>
+        <!-- Creator Profile Header - Premium Glass Card -->
+        <div class="mb-8 animate-slide-up">
+          <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+              <!-- Avatar with glow effect -->
+              <div class="relative group">
+                @if (creator()?.profile_image_url) {
+                  <div class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300 animate-pulse-slow"></div>
+                  <img
+                    [src]="creator()!.profile_image_url!"
+                    [alt]="creator()!.display_name"
+                    class="relative w-32 h-32 rounded-full border-4 border-white/20 shadow-2xl object-cover ring-2 ring-purple-500/50 group-hover:scale-105 transition-transform duration-300"
+                  />
+                } @else {
+                  <div class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                  <div class="relative w-32 h-32 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-4 border-white/20 shadow-2xl ring-2 ring-purple-500/50 group-hover:scale-105 transition-transform duration-300">
+                    <span class="text-white font-bold text-4xl">{{ creator()?.display_name ? creator()!.display_name.charAt(0) : 'C' }}</span>
+                  </div>
+                }
+                <!-- Verified badge -->
+                <div class="absolute -bottom-1 -right-1 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full p-1.5 shadow-lg border-2 border-slate-900">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              
+              <div class="flex-1 text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                  <h1 class="text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+                    {{ creator()?.display_name }}
+                  </h1>
+                  <span class="px-3 py-1 bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-semibold rounded-full backdrop-blur-sm">
+                    PRO
+                  </span>
+                </div>
+                
+                @if (creator()?.bio) {
+                  <p class="text-lg text-slate-300 max-w-2xl mb-4 leading-relaxed">{{ creator()?.bio }}</p>
+                }
+                
+                <!-- Stats row -->
+                <div class="flex items-center justify-center md:justify-start gap-6 text-sm">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span class="text-slate-400">Active now</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                      <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                    </svg>
+                    <span class="text-slate-400">Replies in {{ settings()?.response_expectation || '24-48 hours' }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          }
+          </div>
         </div>
+
+        <!-- Social Proof Section -->
+        <div class="card mb-8 animate-slide-up p-6" style="animation-delay: 50ms">
+          <app-social-proof [data]="socialProofData()" />
+        </div>
+
+        <!-- Instagram Profile Section -->
+        @if (instagramUsername()) {
+          <div class="mb-8 animate-slide-up" style="animation-delay: 100ms;">
+            <div class="bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-orange-500/10 backdrop-blur-2xl border border-pink-500/20 rounded-3xl p-6 shadow-xl hover:shadow-pink-500/20 transition-all duration-500 group">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-sm text-slate-400 mb-1">Follow on Instagram</p>
+                    <p class="text-xl font-bold text-white group-hover:text-pink-300 transition-colors">{{ '@' + instagramUsername() }}</p>
+                  </div>
+                </div>
+                <a
+                  [href]="instagramProfileUrl()"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-600 hover:from-pink-500 hover:to-orange-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                >
+                  <span>Follow</span>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Tabs -->
         @if (settings()?.calls_enabled) {
-          <div class="card p-0 mb-6 overflow-hidden animate-slide-up">
-            <div class="flex border-b border-neutral-200">
+          <div class="mb-6 animate-slide-up overflow-hidden" style="animation-delay: 150ms;">
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-2 flex gap-2">
               <button
                 type="button"
                 (click)="activeTab.set('message')"
-                [class.border-primary-600]="activeTab() === 'message'"
-                [class.text-primary-600]="activeTab() === 'message'"
-                [class.bg-primary-50]="activeTab() === 'message'"
-                class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
+                [class.bg-gradient-to-r]="activeTab() === 'message'"
+                [class.from-purple-600]="activeTab() === 'message'"
+                [class.to-pink-600]="activeTab() === 'message'"
+                [class.text-white]="activeTab() === 'message'"
+                [class.shadow-lg]="activeTab() === 'message'"
+                [class.shadow-purple-500/50]="activeTab() === 'message'"
+                [class.text-slate-400]="activeTab() !== 'message'"
+                [class.hover:text-white]="activeTab() !== 'message'"
+                class="flex-1 px-6 py-4 font-semibold text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-2"
               >
-                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                Send Message
+                <span>Send Message</span>
               </button>
               <button
                 type="button"
                 (click)="activeTab.set('call')"
-                [class.border-primary-600]="activeTab() === 'call'"
-                [class.text-primary-600]="activeTab() === 'call'"
-                [class.bg-primary-50]="activeTab() === 'call'"
-                class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
+                [class.bg-gradient-to-r]="activeTab() === 'call'"
+                [class.from-purple-600]="activeTab() === 'call'"
+                [class.to-pink-600]="activeTab() === 'call'"
+                [class.text-white]="activeTab() === 'call'"
+                [class.shadow-lg]="activeTab() === 'call'"
+                [class.shadow-purple-500/50]="activeTab() === 'call'"
+                [class.text-slate-400]="activeTab() !== 'call'"
+                [class.hover:text-white]="activeTab() !== 'call'"
+                class="flex-1 px-6 py-4 font-semibold text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-2"
               >
-                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                Book a Call
+                <span>Book a Call</span>
               </button>
             </div>
           </div>
@@ -99,104 +210,161 @@
 
         <!-- Message Form -->
         @if (activeTab() === 'message') {
-          <div class="card animate-slide-up p-6">
-            <form (ngSubmit)="submitMessage()" class="space-y-5">
-              <!-- Message Price Display -->
-              <div class="mb-6 text-center">
-                <div class="inline-block bg-primary-50 px-6 py-4 rounded-lg">
-                  <div class="text-sm text-gray-600 mb-1">Message Price</div>
-                  <div class="text-4xl font-bold text-primary-600">
-                    ${{ (settings()?.message_price ?? 0) / 100 }}
+          <div class="animate-slide-up" style="animation-delay: 200ms;">
+            <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+              <form (ngSubmit)="submitMessage()" class="space-y-6">
+                <!-- Message Price Display - Premium Pricing Card -->
+                <div class="mb-8 text-center">
+                  <div class="inline-block relative">
+                    <!-- Glow effect -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur-2xl opacity-30 animate-pulse-slow"></div>
+                    
+                    <div class="relative bg-gradient-to-br from-purple-600 to-pink-600 px-10 py-6 rounded-3xl shadow-2xl border border-purple-400/20">
+                      <div class="text-sm text-purple-100 mb-2 font-medium uppercase tracking-wider">Guaranteed Response</div>
+                      <div class="flex items-baseline justify-center gap-2">
+                        <span class="text-5xl font-bold text-white">${{ (settings()?.message_price ?? 0) / 100 }}</span>
+                        <span class="text-purple-200 text-lg">per message</span>
+                      </div>
+                      <div class="mt-3 flex items-center justify-center gap-2 text-purple-100 text-sm">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Response within {{ settings()?.response_expectation || '24-48 hours' }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Sender Info -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="form-group">
-                  <label class="form-label">Your Name *</label>
-                  <input
-                    type="text"
-                    [value]="senderName()"
-                  (input)="senderName.set($any($event.target).value)"
-                  placeholder="John Doe"
-                  class="input-field"
-                  required
-                />
-              </div>
+                <!-- Sender Info - Premium Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
+                      <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Your Name</span>
+                      <span class="text-pink-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      [value]="senderName()"
+                      (input)="senderName.set($any($event.target).value)"
+                      placeholder="Enter your name"
+                      class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                      required
+                    />
+                  </div>
 
-              <div class="form-group">
-                <label class="form-label">Your Email *</label>
-                <input
-                  type="email"
-                  [value]="senderEmail()"
-                  (input)="senderEmail.set($any($event.target).value)"
-                  placeholder="you@example.com"
-                  class="input-field"
-                  required
-                />
-              </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
+                      <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      </svg>
+                      <span>Your Email</span>
+                      <span class="text-pink-400">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      [value]="senderEmail()"
+                      (input)="senderEmail.set($any($event.target).value)"
+                      placeholder="you@example.com"
+                      class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <!-- Message Content - Premium Textarea -->
+                <div>
+                  <label class="block text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Your Message</span>
+                    <span class="text-pink-400">*</span>
+                  </label>
+                  <textarea
+                    [value]="messageContent()"
+                    (input)="messageContent.set($any($event.target).value)"
+                    placeholder="Share your thoughts, questions, or feedback..."
+                    rows="6"
+                    maxlength="1000"
+                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10 resize-none"
+                    required
+                  ></textarea>
+                  <div class="flex justify-between items-center mt-3">
+                    <p class="text-xs text-slate-400 flex items-center gap-2">
+                      <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Sent directly to {{ creator()?.display_name }}'s inbox</span>
+                    </p>
+                    <p class="text-xs font-medium" 
+                       [class.text-pink-400]="characterCount() > 900" 
+                       [class.text-slate-400]="characterCount() <= 900">
+                      {{ characterCount() }}/1000
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Submit Button - Premium CTA -->
+                <button
+                  type="submit"
+                  type="submit"
+                  [disabled]="submitting()"
+                  class="relative w-full group overflow-hidden"
+                >
+                  <!-- Animated background gradient -->
+                  <div class="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] animate-gradient"></div>
+                  <div class="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-white/20 to-purple-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                  
+                  <!-- Button content -->
+                  <div class="relative px-8 py-5 flex items-center justify-center gap-3 rounded-2xl border-2 border-white/20">
+                    @if (submitting()) {
+                      <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span class="text-white font-bold text-lg">Processing Payment...</span>
+                    } @else {
+                      <svg class="w-6 h-6 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                      </svg>
+                      <span class="text-white font-bold text-lg">Pay ${{ selectedPrice() }} & Send Message</span>
+                      <svg class="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                      </svg>
+                    }
+                  </div>
+                </button>
+
+                <!-- Trust Indicators - Premium -->
+                <div class="mt-6 pt-6 border-t border-white/10">
+                  <div class="flex items-center justify-center gap-8 flex-wrap text-sm">
+                    <div class="flex items-center gap-2 text-emerald-300">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span class="font-medium">256-bit Encryption</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-blue-300">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span class="font-medium">Powered by Stripe</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-purple-300">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                      </svg>
+                      <span class="font-medium">Money-back Guarantee</span>
+                    </div>
+                  </div>
+                </div>
+              </form>
             </div>
-
-            <!-- Message Content -->
-            <div class="form-group">
-              <label class="form-label">Your Message *</label>
-              <textarea
-                [value]="messageContent()"
-                (input)="messageContent.set($any($event.target).value)"
-                placeholder="Write your message here..."
-                rows="6"
-                maxlength="1000"
-                class="textarea"
-                required
-              ></textarea>
-              <div class="flex justify-between items-center mt-1">
-                <p class="text-xs text-neutral-500">
-                  This message will be sent directly to {{ creator()?.display_name }}'s inbox.
-                </p>
-                <p class="text-xs" [class.text-danger-600]="characterCount() > 900" [class.text-neutral-500]="characterCount() <= 900">
-                  {{ characterCount() }}/1000
-                </p>
-              </div>
-            </div>
-
-            <!-- Submit Button -->
-            <button
-              type="submit"
-              [disabled]="submitting()"
-              class="btn-primary btn-lg w-full transform hover:scale-[1.02] transition-transform duration-200"
-            >
-              @if (submitting()) {
-                <svg class="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              } @else {
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-                Pay ${{ selectedPrice() }} & Send Message
-              }
-            </button>
-
-            <!-- Trust Indicators -->
-            <div class="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-600">
-              <div class="flex items-center">
-                <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-                Secure Payment
-              </div>
-              <div class="flex items-center">
-                <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-                Powered by Stripe
-              </div>
-            </div>
-          </form>
-        </div>
+          </div>
         }
 
         <!-- Call Booking Form -->
@@ -223,7 +391,7 @@
                   </svg>
                   <div class="text-sm text-blue-700">
                     <p class="font-medium mb-1">How it works</p>
-                    <p>After payment, you'll receive a confirmation email with booking details. {{ creator()?.display_name }} will contact you via Instagram to schedule the exact time within their availability.</p>
+                    <p>After payment, you'll receive a confirmation email with booking details. {{ creator()?.display_name }} will contact you to schedule the exact time within their availability.</p>
                   </div>
                 </div>
               </div>
@@ -330,7 +498,6 @@
         <!-- Footer -->
         <div class="text-center mt-8 text-sm text-gray-500">
           <p>Powered by <a routerLink="/home" class="text-primary-600 hover:text-primary-700">Convozo</a></p>
-          <p class="mt-1">Not affiliated with Instagram or Meta Platforms, Inc.</p>
         </div>
       </div>
     </div>

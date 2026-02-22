@@ -5,7 +5,7 @@
 
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CreatorService } from '../../services/creator.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import type { Creator, CreatorSettings, StripeAccount } from '../../../../core/models';
@@ -32,6 +32,7 @@ export class SettingsComponent implements OnInit {
   bio = signal('');
   profileImageUrl = signal('');
   profileImagePreview = signal<string | null>(null);
+  instagramUsername = signal(''); // Manual Instagram handle input
 
   // Pricing fields
   messagePrice = signal(1000); // in cents
@@ -47,7 +48,8 @@ export class SettingsComponent implements OnInit {
   constructor(
     private readonly creatorService: CreatorService,
     private readonly supabaseService: SupabaseService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -64,6 +66,7 @@ export class SettingsComponent implements OnInit {
       this.slug.set(creatorData.slug);
       this.bio.set(creatorData.bio || '');
       this.profileImageUrl.set(creatorData.profile_image_url || '');
+      this.instagramUsername.set(creatorData.instagram_username || '');
       if (creatorData.profile_image_url) {
         this.profileImagePreview.set(creatorData.profile_image_url);
       }
@@ -181,7 +184,8 @@ export class SettingsComponent implements OnInit {
       displayName: this.displayName(),
       slug: this.slug(),
       bio: this.bio(),
-      profileImageUrl: this.profileImageUrl() || undefined
+      profileImageUrl: this.profileImageUrl() || undefined,
+      instagramUsername: this.instagramUsername() || undefined
     });
 
     this.saving.set(false);

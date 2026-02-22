@@ -1,167 +1,209 @@
-<div class="min-h-screen bg-neutral-50">
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+  <!-- Animated Background Blobs -->
+  <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl animate-float"></div>
+  <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/30 rounded-full blur-3xl animate-float" style="animation-delay: 1s;"></div>
+  <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse-slow"></div>
+
   @if (loading()) {
-    <div class="flex items-center justify-center min-h-screen">
+    <div class="flex items-center justify-center min-h-screen relative z-10">
       <div class="text-center animate-fade-in">
-        <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="text-neutral-600 animate-pulse-subtle">Loading settings...</p>
+        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50 animate-pulse-slow">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </div>
+        <p class="text-xl font-semibold text-white mb-2">Loading Settings</p>
+        <p class="text-slate-400">Please wait...</p>
       </div>
     </div>
   } @else {
     <!-- Header -->
-    <header class="bg-white border-b border-neutral-200">
-      <div class="container mx-auto px-4 py-4">
+    <header class="sticky top-0 z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10">
+      <div class="container mx-auto px-4 py-6">
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <button (click)="goToDashboard()" class="w-10 h-10 bg-neutral-100 hover:bg-neutral-200 rounded-lg flex items-center justify-center transition-colors">
-              <svg class="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center gap-4">
+            <button (click)="goToDashboard()" class="w-12 h-12 bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-xl rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
             <div>
-              <h1 class="text-xl font-bold text-neutral-900">Settings</h1>
-              <p class="text-sm text-neutral-500">Manage your profile and pricing</p>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Settings</h1>
+              <p class="text-slate-400 text-sm mt-1">Manage your profile, pricing, and payments</p>
             </div>
           </div>
         </div>
       </div>
     </header>
 
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="container mx-auto px-4 py-8 max-w-4xl relative z-10">
       <!-- Success Message -->
       @if (success()) {
-        <div class="mb-6 p-4 bg-success-50 border border-success-200 rounded-xl animate-slide-down">
-          <div class="flex gap-3">
-            <svg class="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <p class="text-sm text-success-700 font-medium">Settings saved successfully!</p>
+        <div class="mb-6 p-6 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 backdrop-blur-2xl rounded-2xl animate-slide-down shadow-lg shadow-emerald-500/20">
+          <div class="flex gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/50 flex-shrink-0">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-lg font-bold text-white mb-1">✨ Success!</p>
+              <p class="text-emerald-200">Settings saved successfully!</p>
+            </div>
           </div>
         </div>
       }
 
       <!-- Error Message -->
       @if (error()) {
-        <div class="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-xl animate-slide-down">
-          <div class="flex gap-3">
-            <svg class="w-5 h-5 text-danger-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-sm text-danger-700 font-medium">{{ error() }}</p>
+        <div class="mb-6 p-6 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 backdrop-blur-2xl rounded-2xl animate-slide-down shadow-lg shadow-red-500/20">
+          <div class="flex gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/50 flex-shrink-0">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-lg font-bold text-white mb-1">⚠️ Error</p>
+              <p class="text-red-200">{{ error() }}</p>
+            </div>
           </div>
         </div>
       }
 
       <!-- Tabs -->
-      <div class="card p-0 mb-6 overflow-hidden animate-slide-up">
-        <div class="flex border-b border-neutral-200">
-          <button
-            (click)="setTab('profile')"
-            [class.border-primary-600]="activeTab() === 'profile'"
-            [class.text-primary-600]="activeTab() === 'profile'"
-            [class.bg-primary-50]="activeTab() === 'profile'"
-            class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
-          >
-            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex gap-2 p-1.5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl mb-8 shadow-lg animate-slide-up">
+        <button
+          (click)="setTab('profile')"
+          [class]="activeTab() === 'profile' 
+            ? 'flex-1 py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-lg shadow-purple-500/50 font-bold text-white transition-all duration-300 transform hover:scale-[1.02]'
+            : 'flex-1 py-4 px-6 rounded-xl font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300'"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             Profile
-          </button>
-          <button
-            (click)="setTab('pricing')"
-            [class.border-primary-600]="activeTab() === 'pricing'"
-            [class.text-primary-600]="activeTab() === 'pricing'"
-            [class.bg-primary-50]="activeTab() === 'pricing'"
-            class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
-          >
-            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          </span>
+        </button>
+        <button
+          (click)="setTab('pricing')"
+          [class]="activeTab() === 'pricing' 
+            ? 'flex-1 py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-lg shadow-purple-500/50 font-bold text-white transition-all duration-300 transform hover:scale-[1.02]'
+            : 'flex-1 py-4 px-6 rounded-xl font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300'"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Pricing
-          </button>
-          <button
-            (click)="setTab('payments')"
-            [class.border-primary-600]="activeTab() === 'payments'"
-            [class.text-primary-600]="activeTab() === 'payments'"
-            [class.bg-primary-50]="activeTab() === 'payments'"
-            class="flex-1 px-6 py-4 font-medium text-sm border-b-2 border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all"
-          >
-            <svg class="w-5 h-5 inline-block mr-2" fill="currentColor" viewBox="0 0 24 24">
+          </span>
+        </button>
+        <button
+          (click)="setTab('payments')"
+          [class]="activeTab() === 'payments' 
+            ? 'flex-1 py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-lg shadow-purple-500/50 font-bold text-white transition-all duration-300 transform hover:scale-[1.02]'
+            : 'flex-1 py-4 px-6 rounded-xl font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300'"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
             </svg>
             Payments
-          </button>
-        </div>
+          </span>
+        </button>
       </div>
 
       <!-- Profile Tab -->
       @if (activeTab() === 'profile') {
-        <div class="card p-6 animate-fade-in">
-          <h2 class="text-lg font-semibold text-neutral-900 mb-6">Profile Information</h2>
-          
-          <form class="space-y-5">
-            <div class="form-group">
-              <label for="displayName" class="form-label">Display Name *</label>
-              <input
-                type="text"
-                id="displayName"
-                [value]="displayName()"
-                (input)="displayName.set($any($event.target).value)"
-                placeholder="Your Name"
-                class="input-field"
-                required
-              />
-              <p class="text-xs text-neutral-500 mt-1">This is how your name appears to message senders</p>
+        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-xl animate-fade-in">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
             </div>
-
-            <div class="form-group">
-              <label for="slug" class="form-label">Public URL Slug *</label>
-              <div class="flex items-center gap-2">
-                <span class="text-neutral-500 text-sm">convozo.com/</span>
+            <div>
+              <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Profile Information</h2>
+              <p class="text-white/60 text-sm mt-1">Manage your public creator profile</p>
+            </div>
+          </div>
+          
+          <form class="space-y-6">
+            <!-- Display Name -->
+            <div class="space-y-3">
+              <label for="displayName" class="block text-sm font-bold text-white">Display Name *</label>
+              <div class="relative group">
                 <input
                   type="text"
-                  id="slug"
-                  [value]="slug()"
-                  (input)="slug.set($any($event.target).value)"
-                  placeholder="yourname"
-                  class="input-field flex-1"
-                  pattern="[a-z0-9-]+"
-                  required
+                  id="displayName"
+                  [value]="displayName()"
+                  (input)="displayName.set($any($event.target).value)"
+                  placeholder="Your Name"
+                  class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
                 />
               </div>
-              <p class="text-xs text-neutral-500 mt-1">Only lowercase letters, numbers, and hyphens</p>
             </div>
-
-            <div class="form-group">
-              <label for="bio" class="form-label">Bio</label>
-              <textarea
-                id="bio"
-                [value]="bio()"
-                (input)="bio.set($any($event.target).value)"
-                placeholder="Tell people about yourself..."
-                rows="4"
-                class="textarea"
-              ></textarea>
-              <p class="text-xs text-neutral-500 mt-1">This appears on your public message page</p>
+                class="input-field"
+                required
             </div>
-
-            <div class="form-group">
-              <label class="form-label">Profile Picture</label>
-              
-              <!-- Image Preview -->
-              @if (profileImagePreview()) {
-                <div class="mb-4 relative inline-block animate-scale-in">
-                  <img
-                    [src]="profileImagePreview()!"
-                    alt="Profile preview"
-                    class="w-32 h-32 rounded-full object-cover border-4 border-neutral-200 shadow-soft"
+            
+            <!-- Slug -->
+            <div class="space-y-3">
+              <label for="slug" class="block text-sm font-bold text-white">Public URL Slug *</label>
+              <div class="flex items-center gap-3">
+                <span class="text-white/60 text-sm font-medium">convozo.com/</span>
+                <div class="relative flex-1 group">
+                  <input
+                    type="text"
+                    id="slug"
+                    [value]="slug()"
+                    (input)="slug.set($any($event.target).value)"
+                    placeholder="yourname"
+                    pattern="[a-z0-9-]+"
+                    required
+                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
                   />
+                </div>
+              </div>
+              <p class="text-xs text-white/50 mt-2">Only lowercase letters, numbers, and hyphens</p>
+            </div>
+
+            <!-- Bio -->
+            <div class="space-y-3">
+              <label for="bio" class="block text-sm font-bold text-white">Bio</label>
+              <div class="relative group">
+                <textarea
+                  id="bio"
+                  [value]="bio()"
+                  (input)="bio.set($any($event.target).value)"
+                  placeholder="Tell people about yourself..."
+                  rows="4"
+                  class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 resize-none"
+                ></textarea>
+              </div>
+              <p class="text-xs text-white/50 mt-2">This appears on your public message page</p>
+            </div>
+
+            <!-- Profile Picture -->
+            <div class="space-y-3">
+              <label class="block text-sm font-bold text-white">Profile Picture</label>
+              
+              @if (profileImagePreview()) {
+                <div class="mb-6 relative inline-block animate-scale-in group">
+                  <div class="relative">
+                    <img
+                      [src]="profileImagePreview()!"
+                      alt="Profile preview"
+                      class="w-40 h-40 rounded-2xl object-cover border-2 border-white/20 shadow-lg shadow-purple-500/20"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
                   <button
                     type="button"
                     (click)="removeProfileImage()"
-                    class="absolute -top-2 -right-2 w-8 h-8 bg-danger-600 text-white rounded-full hover:bg-danger-700 transition-colors shadow-soft flex items-center justify-center"
+                    class="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-xl hover:scale-110 transition-all duration-300 shadow-lg shadow-red-500/50 flex items-center justify-center font-bold"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -169,22 +211,23 @@
                   </button>
                 </div>
               } @else {
-                <div class="mb-4 w-32 h-32 rounded-full bg-neutral-100 flex items-center justify-center border-4 border-neutral-200">
-                  <svg class="w-16 h-16 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mb-6 w-40 h-40 rounded-2xl bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center group hover:border-purple-500/50 hover:bg-white/10 transition-all duration-300">
+                  <svg class="w-20 h-20 text-white/30 group-hover:text-purple-400 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
               }
 
-              <!-- File Upload Button -->
-              <div class="flex items-center gap-3">
+              <!-- File Upload Controls -->
+              <div class="flex items-center gap-4">
                 <label
                   for="profileImageUpload"
-                  class="btn-secondary cursor-pointer inline-flex items-center gap-2"
+                  class="group relative px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-semibold cursor-pointer hover:bg-white/20 transition-all duration-300 inline-flex items-center gap-3 shadow-lg hover:shadow-xl"
                   [class.opacity-50]="uploading()"
+                  [class.cursor-not-allowed]="uploading()"
                 >
                   @if (uploading()) {
-                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-5 w-5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -193,7 +236,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>{{ profileImagePreview() ? 'Change' : 'Upload' }} Photo</span>
+                    <span>{{ profileImagePreview() ? 'Change Photo' : 'Upload Photo' }}</span>
                   }
                 </label>
                 <input
@@ -208,33 +251,60 @@
                   <button
                     type="button"
                     (click)="removeProfileImage()"
-                    class="btn-ghost text-danger-600 hover:text-danger-700"
+                    class="px-6 py-3 rounded-xl font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
                   >
                     Remove
                   </button>
                 }
               </div>
-              <p class="text-xs text-neutral-500 mt-2">JPG, PNG or GIF. Max 2MB.</p>
+              <p class="text-xs text-white/50 mt-3">JPG, PNG or GIF. Max 2MB.</p>
             </div>
 
-            <div class="pt-4 flex gap-3">
+            <!-- Instagram Username -->
+            <div class="space-y-3">
+              <label for="instagramUsername" class="block text-sm font-bold text-white">Instagram Username (Optional)</label>
+              <div class="flex items-center gap-3">
+                <span class="text-purple-400 text-xl font-bold">@</span>
+                <div class="relative flex-1 group">
+                  <input
+                    type="text"
+                    id="instagramUsername"
+                    [value]="instagramUsername()"
+                    (input)="instagramUsername.set($any($event.target).value)"
+                    placeholder="yourhandle"
+                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                  />
+                </div>
+              </div>
+              <p class="text-xs text-white/50 mt-2">Your Instagram handle to display on your public profile</p>
+            </div>
+
+            <!-- Save Button -->
+            <div class="pt-6 flex gap-4">
               <button
                 type="button"
                 (click)="saveProfile()"
                 [disabled]="saving()"
-                class="btn-primary transform hover:scale-105 transition-transform duration-200"
+                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
               >
                 @if (saving()) {
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   <span>Saving...</span>
                 } @else {
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span>Save Profile</span>
                 }
               </button>
-              <button type="button" (click)="goToDashboard()" class="btn-secondary">
+              <button 
+                type="button" 
+                (click)="goToDashboard()" 
+                class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300"
+              >
                 Cancel
               </button>
             </div>
@@ -244,96 +314,117 @@
 
       <!-- Pricing Tab -->
       @if (activeTab() === 'pricing') {
-        <div class="card p-6 animate-fade-in">
-          <h2 class="text-lg font-semibold text-neutral-900 mb-6">Pricing & Availability</h2>
+        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-xl animate-fade-in">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Pricing & Availability</h2>
+              <p class="text-white/60 text-sm mt-1">Configure your rates and booking options</p>
+            </div>
+          </div>
           
-          <form class="space-y-6">
+          <form class="space-y-8">
             <!-- Message Price -->
-            <div class="form-group">
-              <label for="messagePrice" class="form-label">Message Price *</label>
-              <div class="flex items-center gap-3">
-                <span class="text-2xl font-bold text-neutral-600">$</span>
-                <input
-                  type="number"
-                  id="messagePrice"
-                  [value]="messagePrice() / 100"
-                  (input)="messagePrice.set($any($event.target).value * 100)"
-                  min="1"
-                  step="1"
-                  class="input-field"
-                  required
-                />
+            <div class="space-y-3">
+              <label for="messagePrice" class="block text-sm font-bold text-white">Message Price *</label>
+              <div class="flex items-center gap-4">
+                <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
+                <div class="relative flex-1 group">
+                  <input
+                    type="number"
+                    id="messagePrice"
+                    [value]="messagePrice() / 100"
+                    (input)="messagePrice.set($any($event.target).value * 100)"
+                    min="1"
+                    step="1"
+                    required
+                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                  />
+                </div>
               </div>
-              <p class="text-xs text-neutral-500 mt-1">Price per message in USD</p>
+              <p class="text-xs text-white/50 mt-2">Price per message in USD</p>
             </div>
 
             <!-- Call Settings -->
-            <div class="border-t border-neutral-200 pt-6">
-              <div class="flex items-center justify-between mb-4">
+            <div class="border-t border-white/10 pt-8">
+              <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
                 <div>
-                  <h3 class="font-semibold text-neutral-900">Video Call Bookings</h3>
-                  <p class="text-sm text-neutral-600">Allow fans to book video calls with you</p>
+                  <h3 class="font-bold text-white text-lg">📞 Video Call Bookings</h3>
+                  <p class="text-sm text-white/60 mt-1">Allow fans to book video calls with you</p>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
+                <label class="relative inline-flex items-center cursor-pointer group">
                   <input
                     type="checkbox"
                     [checked]="callsEnabled()"
                     (change)="callsEnabled.set($any($event.target).checked)"
                     class="sr-only peer"
                   />
-                  <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                  <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
                 </label>
               </div>
 
               @if (callsEnabled()) {
-                <div class="space-y-5 animate-slide-down">
-                  <div class="grid grid-cols-2 gap-5">
-                    <div class="form-group">
-                      <label for="callPrice" class="form-label">Call Price *</label>
-                      <div class="flex items-center gap-3">
-                        <span class="text-2xl font-bold text-neutral-600">$</span>
-                        <input
-                          type="number"
-                          id="callPrice"
-                          [value]="callPrice() / 100"
-                          (input)="callPrice.set($any($event.target).value * 100)"
-                          min="1"
-                          step="1"
-                          class="input-field"
-                          required
-                        />
+                <div class="space-y-6 animate-slide-down">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Call Price -->
+                    <div class="space-y-3">
+                      <label for="callPrice" class="block text-sm font-bold text-white">Call Price *</label>
+                      <div class="flex items-center gap-4">
+                        <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
+                        <div class="relative flex-1 group">
+                          <input
+                            type="number"
+                            id="callPrice"
+                            [value]="callPrice() / 100"
+                            (input)="callPrice.set($any($event.target).value * 100)"
+                            min="1"
+                            step="1"
+                            required
+                            class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                          />
+                        </div>
                       </div>
-                      <p class="text-xs text-neutral-500 mt-1">Price per call in USD</p>
+                      <p class="text-xs text-white/50 mt-2">Price per call in USD</p>
                     </div>
 
-                    <div class="form-group">
-                      <label for="callDuration" class="form-label">Call Duration *</label>
-                      <div class="flex items-center gap-2">
-                        <input
-                          type="number"
-                          id="callDuration"
-                          [value]="callDuration()"
-                          (input)="callDuration.set($any($event.target).value)"
-                          min="15"
-                          max="120"
-                          step="15"
-                          class="input-field"
-                          required
-                        />
-                        <span class="text-neutral-600">minutes</span>
+                    <!-- Call Duration -->
+                    <div class="space-y-3">
+                      <label for="callDuration" class="block text-sm font-bold text-white">Call Duration *</label>
+                      <div class="flex items-center gap-3">
+                        <div class="relative flex-1 group">
+                          <input
+                            type="number"
+                            id="callDuration"
+                            [value]="callDuration()"
+                            (input)="callDuration.set($any($event.target).value)"
+                            min="15"
+                            max="120"
+                            step="15"
+                            required
+                            class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                          />
+                        </div>
+                        <span class="text-white/60 font-medium">minutes</span>
                       </div>
-                      <p class="text-xs text-neutral-500 mt-1">Duration of each call (15-120 min)</p>
+                      <p class="text-xs text-white/50 mt-2">Duration of each call (15-120 min)</p>
                     </div>
                   </div>
 
-                  <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                    <div class="flex gap-3">
-                      <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div class="text-sm text-blue-700">
-                        <p class="font-medium mb-1">Manage your availability</p>
-                        <p>After saving, you can set your weekly availability from the dashboard.</p>
+                  <!-- Info Banner -->
+                  <div class="p-6 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-blue-500/20">
+                    <div class="flex gap-4">
+                      <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50 flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div class="flex-1">
+                        <p class="font-bold text-white mb-1">📅 Manage Your Availability</p>
+                        <p class="text-blue-200 text-sm">After saving, you can set your weekly availability from the dashboard.</p>
                       </div>
                     </div>
                   </div>
@@ -342,37 +433,47 @@
             </div>
 
             <!-- Response Expectation -->
-            <div class="form-group">
-              <label for="responseExpectation" class="form-label">Response Time Expectation</label>
-              <input
-                type="text"
-                id="responseExpectation"
-                [value]="responseExpectation()"
-                (input)="responseExpectation.set($any($event.target).value)"
-                placeholder="e.g., Within 48 hours"
-                class="input-field"
-              />
-              <p class="text-xs text-neutral-500 mt-1">Let message senders know when they can expect a response</p>
+            <div class="space-y-3">
+              <label for="responseExpectation" class="block text-sm font-bold text-white">Response Time Expectation</label>
+              <div class="relative group">
+                <input
+                  type="text"
+                  id="responseExpectation"
+                  [value]="responseExpectation()"
+                  (input)="responseExpectation.set($any($event.target).value)"
+                  placeholder="e.g., Within 48 hours"
+                  class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                />
+              </div>
+              <p class="text-xs text-white/50 mt-2">Let message senders know when they can expect a response</p>
             </div>
 
-            <div class="pt-4 flex gap-3">
+            <!-- Save Button -->
+            <div class="pt-6 flex gap-4">
               <button
                 type="button"
                 (click)="savePricing()"
                 [disabled]="saving()"
-                class="btn-primary transform hover:scale-105 transition-transform duration-200"
+                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
               >
                 @if (saving()) {
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   <span>Saving...</span>
                 } @else {
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span>Save Pricing</span>
                 }
               </button>
-              <button type="button" (click)="goToDashboard()" class="btn-secondary">
+              <button 
+                type="button" 
+                (click)="goToDashboard()" 
+                class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300"
+              >
                 Cancel
               </button>
             </div>
@@ -382,33 +483,49 @@
 
       <!-- Payments Tab -->
       @if (activeTab() === 'payments') {
-        <div class="card p-6 animate-fade-in">
-          <h2 class="text-2xl font-bold text-neutral-900 mb-6">Payment Settings</h2>
+        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-xl animate-fade-in">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
+              <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Payment Settings</h2>
+              <p class="text-white/60 text-sm mt-1">Manage your Stripe account and payouts</p>
+            </div>
+          </div>
           
           @if (stripeAccount()) {
-            <!-- Stripe Connected -->
-            <div class="bg-success-50 border border-success-200 rounded-lg p-6 mb-6">
-              <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-success-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <!-- Stripe Connected Success -->
+            <div class="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 backdrop-blur-2xl rounded-2xl p-8 mb-8 shadow-lg shadow-emerald-500/20">
+              <div class="flex items-start gap-5">
+                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/50">
+                  <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <h3 class="font-semibold text-success-900 mb-1">Stripe Connected</h3>
-                  <p class="text-sm text-success-700 mb-3">Your Stripe account is connected and ready to receive payments.</p>
-                  <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span class="text-success-600 font-medium">Account ID:</span>
-                      <span class="text-success-800 ml-2 font-mono">{{ stripeAccount()?.stripe_account_id }}</span>
+                  <h3 class="text-xl font-bold text-white mb-2">✓ Stripe Connected</h3>
+                  <p class="text-emerald-200 mb-4">Your Stripe account is connected and ready to receive payments.</p>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-white/10 rounded-xl p-4 border border-white/10">
+                      <span class="text-emerald-300 font-semibold block mb-1">Account ID</span>
+                      <span class="text-white font-mono text-xs">{{ stripeAccount()?.stripe_account_id }}</span>
                     </div>
-                    <div>
-                      <span class="text-success-600 font-medium">Status:</span>
-                      <span class="text-success-800 ml-2">
+                    <div class="bg-white/10 rounded-xl p-4 border border-white/10">
+                      <span class="text-emerald-300 font-semibold block mb-1">Status</span>
+                      <span class="text-white">
                         @if (stripeAccount()?.charges_enabled && stripeAccount()?.payouts_enabled) {
-                          ✓ Fully Active
+                          <span class="inline-flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                            Fully Active
+                          </span>
                         } @else {
-                          ⚠ Incomplete
+                          <span class="inline-flex items-center gap-2">
+                            <span class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                            Incomplete
+                          </span>
                         }
                       </span>
                     </div>
@@ -418,72 +535,90 @@
             </div>
 
             <!-- Payout Info -->
-            <div class="bg-neutral-50 border border-neutral-200 rounded-lg p-6 mb-6">
-              <h3 class="font-semibold text-neutral-900 mb-3">How Payouts Work</h3>
-              <div class="space-y-3 text-sm text-neutral-700">
-                <div class="flex items-start gap-3">
-                  <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <div class="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl p-8 mb-8 shadow-lg">
+              <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>You earn <strong>90% of each payment</strong> after Stripe's processing fees</span>
                 </div>
-                <div class="flex items-start gap-3">
-                  <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <span>Convozo takes a <strong>10% platform fee</strong> to keep the service running</span>
+                How Payouts Work
+              </h3>
+              <div class="space-y-4">
+                <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <span class="text-white/90">You earn <strong class="text-white font-bold">90% of each payment</strong> after Stripe's processing fees</span>
                 </div>
-                <div class="flex items-start gap-3">
-                  <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <span>Payouts are sent directly to your bank account <strong>within 2-3 business days</strong></span>
+                <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <span class="text-white/90">Convozo takes a <strong class="text-white font-bold">10% platform fee</strong> to keep the service running</span>
+                </div>
+                <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <span class="text-white/90">Payouts are sent directly to your bank account <strong class="text-white font-bold">within 2-3 business days</strong></span>
                 </div>
               </div>
             </div>
 
-            <!-- Reconnect Option -->
-            <div class="flex gap-3">
+            <!-- Reconnect/Manage Buttons -->
+            <div class="flex gap-4">
               <button
                 (click)="reconnectStripe()"
                 [disabled]="stripeConnecting()"
-                class="btn-secondary"
+                class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
               >
                 @if (stripeConnecting()) {
-                  <svg class="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Connecting...
                 } @else {
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
                   Reconnect Stripe
                 }
               </button>
             </div>
           } @else {
-            <!-- Stripe Not Connected -->
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
-              <div class="flex items-start gap-4">
-                <svg class="w-12 h-12 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-                <div>
-                  <h3 class="font-semibold text-yellow-900 mb-2">Stripe Not Connected</h3>
-                  <p class="text-sm text-yellow-800 mb-4">You need to connect your Stripe account to receive payments. Without this, fans won't be able to send you paid messages or book calls.</p>
+            <!-- Stripe Not Connected Warning -->
+            <div class="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-2xl p-8 mb-8 shadow-lg shadow-yellow-500/20">
+              <div class="flex items-start gap-5">
+                <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/50">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold text-white mb-3">⚠️ Stripe Not Connected</h3>
+                  <p class="text-yellow-200 mb-6 leading-relaxed">You need to connect your Stripe account to receive payments. Without this, fans won't be able to send you paid messages or book calls.</p>
                   
                   <button
                     (click)="connectStripe()"
                     [disabled]="stripeConnecting()"
-                    class="btn-primary"
+                    class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
                   >
                     @if (stripeConnecting()) {
-                      <svg class="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Connecting...
                     } @else {
-                      <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
                       </svg>
                       Connect Stripe Account
@@ -493,6 +628,7 @@
               </div>
             </div>
           }
+
         </div>
       }
     </div>

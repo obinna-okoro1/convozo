@@ -118,16 +118,18 @@ WHERE NOT EXISTS (
   SELECT 1 FROM auth.identities WHERE user_id = '22222222-2222-2222-2222-222222222222' AND provider = 'email'
 );
 
--- Sample Creator 1: Sarah Johnson (Single Price)
-INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, is_active)
+-- Sample Creator 1: The Rock (Real Instagram Profile Data)
+-- Note: In production, use a third-party Instagram API service to fetch real-time data
+INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, is_active)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   '11111111-1111-1111-1111-111111111111',
   'creator@example.com',
-  'Sarah Johnson',
+  'Dwayne Johnson',
   'sarahjohnson',
-  'Fashion influencer & lifestyle creator. Share your brand inquiries and fan messages here!',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+  'builder of stuff cheat meal crusher tequila sipper og girl dad 💕',
+  'https://i.pravatar.cc/400?img=33',
+  'therock',
   true
 ) ON CONFLICT (user_id) DO NOTHING;
 
@@ -143,15 +145,18 @@ VALUES (
   'Thanks for reaching out! To send me a priority message, visit: https://convozo.com/sarahjohnson'
 ) ON CONFLICT (creator_id) DO NOTHING;
 
--- Sample Creator 2: Mike Chen (Messages Only)
-INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, is_active)
+-- Sample Creator 2: Cristiano Ronaldo (Real Instagram Profile Data)
+-- Note: In production, use a third-party Instagram API service to fetch real-time data
+INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, is_active)
 VALUES (
   '44444444-4444-4444-4444-444444444444',
   '22222222-2222-2222-2222-222222222222',
   'creator2@example.com',
-  'Mike Chen',
+  'Cristiano Ronaldo',
   'mikechen',
-  'Tech reviewer & gaming enthusiast. Let''s connect!',
+  'Passion & Joy ⚽️❤️',
+  'https://i.pravatar.cc/400?img=12',
+  'cristiano',
   true
 ) ON CONFLICT (user_id) DO NOTHING;
 

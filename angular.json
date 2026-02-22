@@ -23,6 +23,21 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "manifest.json",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "sw.js",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "offline.html",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [

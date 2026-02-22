@@ -9,6 +9,15 @@ import { SupabaseService } from '../../../core/services/supabase.service';
 import { ROUTES, ERROR_MESSAGES } from '../../../core/constants';
 import { FormValidators } from '../../../core/validators/form-validators';
 
+export interface OAuthUserData {
+  id: string;
+  email: string;
+  full_name?: string;
+  avatar_url?: string;
+  provider?: string;
+  provider_id?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -111,15 +120,14 @@ export class AuthService {
   }
 
   /**
-   * Sign in with OAuth provider (Instagram, Google, etc.)
+   * Sign in with OAuth provider (Google)
    */
-  public async signInWithOAuth(provider: 'instagram' | 'google'): Promise<{ success: boolean; error?: string }> {
+  public async signInWithOAuth(provider: 'google'): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await this.supabaseService.client.auth.signInWithOAuth({
-        provider: provider as any,
+        provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: provider === 'instagram' ? 'user_profile' : undefined
         }
       });
 
@@ -146,16 +154,66 @@ export class AuthService {
       return;
     }
 
+    // Extract OAuth user data for auto-import
+    const oauthData = this.extractOAuthUserData(user);
+    
+    // Store OAuth data in session storage for onboarding
+    if (oauthData) {
+      sessionStorage.setItem('oauth_user_data', JSON.stringify(oauthData));
+    }
+
     // Check if user has a creator profile
     const { data: creator } = await this.supabaseService.getCreatorByUserId(user.id);
 
     if (creator) {
       // Existing creator, go to dashboard
+      sessionStorage.removeItem('oauth_user_data');
       await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
     } else {
-      // New creator, go to onboarding
+      // New creator, go to onboarding with pre-filled data
       await this.router.navigate([ROUTES.CREATOR.ONBOARDING]);
     }
+  }
+
+  /**
+   * Extract OAuth user data from Supabase user object
+   */
+  private extractOAuthUserData(user: any): OAuthUserData | null {
+    if (!user) return null;
+
+    const metadata = user.user_metadata || {};
+    const provider = user.app_metadata?.provider;
+
+    const data: OAuthUserData = {
+      id: user.id,
+      email: user.email || '',
+      full_name: metadata.full_name || metadata.name || '',
+      avatar_url: metadata.avatar_url || metadata.picture || '',
+      provider,
+      provider_id: metadata.provider_id || metadata.sub || '',
+    };
+
+    return data;
+  }
+
+  /**
+   * Get stored OAuth data from session
+   */
+  public getStoredOAuthData(): OAuthUserData | null {
+    const stored = sessionStorage.getItem('oauth_user_data');
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Clear stored OAuth data
+   */
+  public clearStoredOAuthData(): void {
+    sessionStorage.removeItem('oauth_user_data');
   }
 
   /**
@@ -170,6 +228,7 @@ export class AuthService {
    */
   public async signOut(): Promise<void> {
     await this.supabaseService.client.auth.signOut();
+    sessionStorage.removeItem('oauth_user_data');
     await this.router.navigate([ROUTES.AUTH.LOGIN]);
   }
 }

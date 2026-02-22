@@ -33,7 +33,7 @@ export class LoginComponent {
   /**
    * Handle OAuth login
    */
-  protected async handleOAuthLogin(provider: 'instagram' | 'google'): Promise<void> {
+  protected async handleOAuthLogin(provider: 'google'): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 

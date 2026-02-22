@@ -26,7 +26,7 @@ export class SignupComponent {
 
   constructor(private readonly authService: AuthService) {}
 
-  async handleOAuthSignup(provider: 'instagram' | 'google'): Promise<void> {
+  async handleOAuthSignup(provider: 'google'): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 

@@ -1,6 +1,7 @@
 /**
  * Onboarding Component
  * Lean component that delegates business logic to CreatorService
+ * Now with OAuth auto-import support
  */
 
 import { Component, OnInit, signal } from '@angular/core';
@@ -8,7 +9,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CreatorService } from '../../services/creator.service';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService, OAuthUserData } from '../../../auth/services/auth.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 
@@ -29,6 +30,7 @@ export class OnboardingComponent implements OnInit {
   protected readonly bio = signal<string>('');
   protected readonly slug = signal<string>('');
   protected readonly profileImageUrl = signal<string>('');
+  protected readonly instagramUsername = signal<string>(''); // Manual text input, not OAuth
   
   // Pricing form data
   protected readonly messagePrice = signal<number>(1000); // in cents ($10)
@@ -40,6 +42,10 @@ export class OnboardingComponent implements OnInit {
   // Stripe Connect
   protected readonly stripeConnecting = signal<boolean>(false);
   protected readonly stripeConnected = signal<boolean>(false);
+  
+  // OAuth import indicator
+  protected readonly hasOAuthData = signal<boolean>(false);
+  protected readonly oauthProvider = signal<string>('');
 
   // Constants
   protected readonly TOTAL_STEPS = 4;
@@ -52,6 +58,28 @@ export class OnboardingComponent implements OnInit {
 
   public async ngOnInit(): Promise<void> {
     await this.checkExistingProfile();
+    this.loadOAuthData();
+  }
+
+  /**
+   * Load OAuth data if available and auto-fill form
+   */
+  private loadOAuthData(): void {
+    const oauthData = this.authService.getStoredOAuthData();
+    if (!oauthData) return;
+
+    this.hasOAuthData.set(true);
+    this.oauthProvider.set(oauthData.provider || '');
+
+    // Auto-fill form fields
+    if (oauthData.full_name) {
+      this.displayName.set(oauthData.full_name);
+      this.slug.set(FormValidators.generateSlug(oauthData.full_name));
+    }
+
+    if (oauthData.avatar_url) {
+      this.profileImageUrl.set(oauthData.avatar_url);
+    }
   }
 
   /**
@@ -116,7 +144,8 @@ export class OnboardingComponent implements OnInit {
         displayName: this.displayName(),
         bio: this.bio(),
         slug: this.slug(),
-        profileImageUrl: this.profileImageUrl() || undefined
+        profileImageUrl: this.profileImageUrl() || undefined,
+        instagramUsername: this.instagramUsername() || undefined
       });
 
       if (creatorError || !creator) {

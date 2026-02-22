@@ -49,6 +49,7 @@ export class CreatorService {
     slug: string;
     bio: string | null;
     profileImageUrl?: string;
+    instagramUsername?: string;
   }): Promise<SupabaseResponse<Creator>> {
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -56,7 +57,8 @@ export class CreatorService {
         display_name: data.displayName,
         slug: data.slug,
         bio: data.bio,
-        profile_image_url: data.profileImageUrl
+        profile_image_url: data.profileImageUrl,
+        instagram_username: data.instagramUsername
       })
       .eq('id', data.creatorId)
       .select()
@@ -121,28 +123,17 @@ export class CreatorService {
     senderEmail: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Update message with reply
-      const { error: updateError } = await this.supabaseService.client
-        .from('messages')
-        .update({ 
-          reply: replyContent,
-          handled: true 
-        })
-        .eq('id', messageId);
-
-      if (updateError) throw updateError;
-
-      // Send email notification via Edge Function
-      const { error: emailError } = await this.supabaseService.client.functions.invoke('send-reply-email', {
+      // Send reply via Edge Function which updates DB and sends email
+      const { error: functionError } = await this.supabaseService.client.functions.invoke('send-reply-email', {
         body: {
-          to: senderEmail,
-          replyContent
+          message_id: messageId,
+          reply_content: replyContent
         }
       });
 
-      if (emailError) {
-        console.error('Email notification failed:', emailError);
-        // Don't fail the whole operation if email fails
+      if (functionError) {
+        console.error('Reply function error:', functionError);
+        throw functionError;
       }
 
       return { success: true };
@@ -158,7 +149,7 @@ export class CreatorService {
   public async markAsHandled(messageId: string): Promise<SupabaseResponse<void>> {
     const { error } = await this.supabaseService.client
       .from('messages')
-      .update({ handled: true })
+      .update({ is_handled: true })
       .eq('id', messageId);
 
     return { data: undefined, error };
@@ -173,6 +164,7 @@ export class CreatorService {
     bio: string;
     slug: string;
     profileImageUrl?: string;
+    instagramUsername?: string;
   }): Promise<SupabaseResponse<Creator>> {
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -181,7 +173,8 @@ export class CreatorService {
         display_name: data.displayName,
         bio: data.bio,
         slug: data.slug,
-        profile_image_url: data.profileImageUrl || null
+        profile_image_url: data.profileImageUrl || null,
+        instagram_username: data.instagramUsername || null
       }])
       .select()
       .single();

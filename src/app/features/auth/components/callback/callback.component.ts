@@ -1,9 +1,10 @@
 /**
  * Callback Component
- * Lean component that delegates auth logic to AuthService
+ * Handles OAuth callbacks for Supabase, and Instagram (login + connect)
  */
 
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -13,9 +14,25 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./callback.component.css']
 })
 export class CallbackComponent implements OnInit {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router
+  ) {}
 
   public async ngOnInit(): Promise<void> {
+    // Check for OAuth errors
+    const error = this.route.snapshot.queryParamMap.get('error');
+
+    if (error) {
+      console.error('OAuth error:', error);
+      await this.router.navigate(['/auth/login'], {
+        queryParams: { error: 'oauth_failed' }
+      });
+      return;
+    }
+
+    // Handle Supabase auth callback (Google, magic link, etc.)
     await this.authService.handleAuthCallback();
   }
 }

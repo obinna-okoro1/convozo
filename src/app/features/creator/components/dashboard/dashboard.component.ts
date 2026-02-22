@@ -1,6 +1,7 @@
 /**
  * Dashboard Component
  * Lean component that delegates business logic to CreatorService
+ * Enhanced with analytics, templates, and push notifications
  */
 
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
@@ -12,10 +13,14 @@ import { CreatorService } from '../../services/creator.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { Creator, CreatorSettings, Message, MessageStats, FilterStatus } from '../../../../core/models';
 import { ROUTES } from '../../../../core/constants';
+import { PushNotificationService } from '../../../../core/services/push-notification.service';
+import { ResponseTemplateService } from '../../../../core/services/response-template.service';
+import { AnalyticsDashboardComponent } from '../analytics-dashboard/analytics-dashboard.component';
+import { TemplatePickerComponent } from '../template-picker/template-picker.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AnalyticsDashboardComponent, TemplatePickerComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -34,6 +39,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly replyContent = signal<string>('');
   protected readonly sendingReply = signal<boolean>(false);
   
+  // Template picker state
+  protected readonly showTemplatePicker = signal<boolean>(false);
+  
+  // View state (inbox vs analytics)
+  protected readonly activeView = signal<'inbox' | 'analytics'>('inbox');
+  
+  // Push notifications
+  protected readonly pushEnabled = signal<boolean>(false);
+  protected readonly pushLoading = signal<boolean>(false);
+  
   // Filter state
   protected readonly filterStatus = signal<FilterStatus>('all');
 
@@ -44,6 +59,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly publicUrl = computed<string>(() => 
     this.creatorService.buildPublicUrl(this.creator()?.slug)
   );
+  
+  protected readonly isPushSupported = computed(() => this.pushService.isSupported());
 
   private queryParamsSubscription?: Subscription;
 
@@ -51,7 +68,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly creatorService: CreatorService,
     private readonly authService: AuthService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly pushService: PushNotificationService,
+    private readonly templateService: ResponseTemplateService
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -63,10 +82,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.subscribeToQueryParams();
     await this.loadDashboardData(user.id);
+    this.checkPushSubscription();
   }
 
   public ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
+  }
+
+  /**
+   * Check current push notification subscription status
+   */
+  private checkPushSubscription(): void {
+    this.pushEnabled.set(this.pushService.isSubscribed());
+  }
+
+  /**
+   * Toggle push notifications
+   */
+  protected async togglePushNotifications(): Promise<void> {
+    this.pushLoading.set(true);
+    
+    if (this.pushEnabled()) {
+      const result = await this.pushService.unsubscribe();
+      if (result.success) {
+        this.pushEnabled.set(false);
+      }
+    } else {
+      const result = await this.pushService.subscribe();
+      if (result.success) {
+        this.pushEnabled.set(true);
+        // Show a test notification
+        await this.pushService.sendLocalNotification(
+          'Notifications enabled! 🎉',
+          'You\'ll now receive alerts for new messages.'
+        );
+      } else if (result.error) {
+        alert(result.error);
+      }
+    }
+    
+    this.pushLoading.set(false);
   }
 
   /**
@@ -93,6 +148,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       this.creator.set(creatorData);
+      
+      // Initialize templates for this creator
+      await this.templateService.initializeTemplates(creatorData.id);
 
       const { data: settingsData } = await this.creatorService.getCreatorSettings(creatorData.id);
       if (settingsData) {
@@ -148,6 +206,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showReplyModal.set(false);
     this.replyContent.set('');
     this.sendingReply.set(false);
+    this.showTemplatePicker.set(false);
+  }
+
+  /**
+   * Open template picker
+   */
+  protected openTemplatePicker(): void {
+    this.showTemplatePicker.set(true);
+  }
+
+  /**
+   * Handle template selection
+   */
+  protected onTemplateSelected(content: string): void {
+    // Replace sender_name placeholder with actual name
+    const message = this.selectedMessage();
+    if (message) {
+      content = content.replace(/\{sender_name\}/g, message.sender_name);
+    }
+    this.replyContent.set(content);
+    this.showTemplatePicker.set(false);
   }
 
   /**

@@ -89,6 +89,21 @@
                 class="input-field"
               />
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Instagram Username (optional)</label>
+              <div class="flex items-center">
+                <span class="text-gray-500 text-lg mr-2">@</span>
+                <input
+                  type="text"
+                  [value]="instagramUsername()"
+                  (input)="instagramUsername.set($any($event.target).value)"
+                  placeholder="yourhandle"
+                  class="input-field flex-1"
+                />
+              </div>
+              <p class="text-sm text-neutral-500 mt-1">Your Instagram handle to display your feed on your profile</p>
+            </div>
           </div>
 
           <div class="mt-6 flex justify-end">

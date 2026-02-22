@@ -1,28 +1,36 @@
-<div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50/30 flex items-center justify-center px-4 py-8">
-  <div class="w-full max-w-md mx-auto">
+<div class="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
+  <!-- Animated Background -->
+  <div class="fixed inset-0 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900">
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
+    <div class="absolute top-1/3 right-1/4 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute bottom-1/4 left-1/3 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="animation-delay: 4s;"></div>
+  </div>
+
+  <div class="w-full max-w-md mx-auto relative z-10">
     <!-- Logo & Header -->
     <div class="text-center mb-8 animate-slide-down">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl shadow-soft-lg mb-4">
-        <span class="text-white font-bold text-2xl">C</span>
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl shadow-2xl shadow-purple-500/50 mb-6">
+        <span class="text-white font-bold text-3xl">C</span>
       </div>
-      <h1 class="text-3xl font-bold text-neutral-900 mb-2 tracking-tight">Create your account</h1>
-      <p class="text-neutral-600 text-base">Start monetizing your influence today</p>
+      <h1 class="text-4xl font-bold text-white mb-3 tracking-tight">Create your account</h1>
+      <p class="text-slate-300 text-lg">Start monetizing your influence today</p>
     </div>
 
     <!-- Success State -->
     @if (success()) {
-      <div class="card bg-white p-6 animate-scale-in">
+      <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 animate-scale-in shadow-2xl">
         <div class="text-center py-4">
-          <div class="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/50">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 class="text-xl font-semibold text-neutral-900 mb-2">Account created!</h2>
-          <p class="text-neutral-600 text-sm leading-relaxed">
-            We've sent a confirmation email to <span class="font-medium text-neutral-900">{{ email() }}</span>
+          <h2 class="text-2xl font-bold text-white mb-3">Account created!</h2>
+          <p class="text-slate-300 text-base leading-relaxed mb-2">
+            We've sent a confirmation email to
           </p>
-          <p class="text-neutral-500 text-xs mt-3">
+          <p class="text-purple-300 font-semibold text-lg">{{ email() }}</p>
+          <p class="text-slate-400 text-sm mt-4">
             Click the link in the email to verify your account
           </p>
         </div>
@@ -31,26 +39,14 @@
 
     <!-- Signup Form -->
     @else {
-      <div class="card bg-white p-6 animate-slide-up">
+      <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 animate-slide-up shadow-2xl">
         <!-- OAuth Options -->
         <div class="space-y-3 mb-6">
           <button
             type="button"
-            (click)="handleOAuthSignup('instagram')"
-            [disabled]="loading()"
-            class="w-full h-12 flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50"
-          >
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-            Continue with Instagram
-          </button>
-
-          <button
-            type="button"
             (click)="handleOAuthSignup('google')"
             [disabled]="loading()"
-            class="w-full h-12 flex items-center justify-center gap-3 bg-white text-neutral-700 border-2 border-neutral-300 rounded-xl font-medium hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50"
+            class="w-full h-14 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-neutral-700 border-2 border-white/20 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 shadow-lg hover:shadow-xl"
           >
             <svg class="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -63,19 +59,19 @@
         </div>
 
         <!-- Divider -->
-        <div class="relative my-6">
+        <div class="relative my-8">
           <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-neutral-300"></div>
+            <div class="w-full border-t border-white/10"></div>
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-4 bg-white text-neutral-500 font-medium">Or continue with email</span>
+            <span class="px-4 bg-slate-900/50 text-slate-300 font-medium backdrop-blur-sm">Or continue with email</span>
           </div>
         </div>
 
-        <form (ngSubmit)="handleSignup()" class="space-y-5">
+        <form (ngSubmit)="handleSignup()" class="space-y-6">
           <!-- Full Name -->
-          <div class="form-group">
-            <label for="fullName" class="form-label">
+          <div>
+            <label for="fullName" class="block text-sm font-semibold text-slate-200 mb-2">
               Full Name
             </label>
             <input
@@ -85,15 +81,15 @@
               [value]="fullName()"
               (input)="updateFullName($any($event.target).value)"
               placeholder="Jane Doe"
-              class="input-field"
+              class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
               autocomplete="name"
               required
             />
           </div>
 
           <!-- Email Input -->
-          <div class="form-group">
-            <label for="email" class="form-label">
+          <div>
+            <label for="email" class="block text-sm font-semibold text-slate-200 mb-2">
               Email address
             </label>
             <input
@@ -103,15 +99,15 @@
               [value]="email()"
               (input)="updateEmail($any($event.target).value)"
               placeholder="you@example.com"
-              class="input-field"
+              class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
               autocomplete="email"
               required
             />
           </div>
 
           <!-- Password Input -->
-          <div class="form-group">
-            <label for="password" class="form-label">
+          <div>
+            <label for="password" class="block text-sm font-semibold text-slate-200 mb-2">
               Password
             </label>
             <input
@@ -121,16 +117,16 @@
               [value]="password()"
               (input)="updatePassword($any($event.target).value)"
               placeholder="At least 6 characters"
-              class="input-field"
+              class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
               autocomplete="new-password"
               required
             />
-            <p class="text-xs text-neutral-500 mt-1">Must be at least 6 characters</p>
+            <p class="text-xs text-slate-400 mt-2">Must be at least 6 characters</p>
           </div>
 
           <!-- Confirm Password -->
-          <div class="form-group">
-            <label for="confirmPassword" class="form-label">
+          <div>
+            <label for="confirmPassword" class="block text-sm font-semibold text-slate-200 mb-2">
               Confirm Password
             </label>
             <input
@@ -140,7 +136,7 @@
               [value]="confirmPassword()"
               (input)="updateConfirmPassword($any($event.target).value)"
               placeholder="Re-enter your password"
-              class="input-field"
+              class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
               autocomplete="new-password"
               required
             />
@@ -148,69 +144,61 @@
 
           <!-- Error Message -->
           @if (error()) {
-            <div class="p-4 bg-danger-50 border border-danger-200 rounded-xl animate-slide-down">
+            <div class="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl animate-slide-down backdrop-blur-sm">
               <div class="flex gap-3">
-                <svg class="w-5 h-5 text-danger-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p class="text-sm text-danger-700 font-medium">{{ error() }}</p>
+                <p class="text-sm text-red-300 font-medium">{{ error() }}</p>
               </div>
             </div>
           }
 
           <!-- Submit Button -->
-          <div class="pt-1">
+          <div class="pt-2">
             <button
               type="submit"
               [disabled]="loading()"
-              class="btn-primary btn-lg w-full"
+              class="relative w-full group overflow-hidden"
             >
-              @if (loading()) {
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Creating account...</span>
-              } @else {
-                <span>Create Account</span>
-              }
+              <!-- Animated background gradient -->
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] animate-gradient"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-white/20 to-purple-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              
+              <!-- Button content -->
+              <div class="relative px-8 py-5 flex items-center justify-center gap-3 rounded-2xl border-2 border-white/20">
+                @if (loading()) {
+                  <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="text-white font-bold text-lg">Creating account...</span>
+                } @else {
+                  <span class="text-white font-bold text-lg">Create Account</span>
+                  <svg class="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                  </svg>
+                }
+              </div>
             </button>
           </div>
 
           <!-- Terms -->
-          <p class="text-xs text-neutral-500 text-center">
-            By creating an account, you agree to our 
-            <a href="#" class="text-primary-600 hover:text-primary-700 underline">Terms of Service</a>
-            and 
-            <a href="#" class="text-primary-600 hover:text-primary-700 underline">Privacy Policy</a>
+          <p class="text-xs text-center text-slate-400 leading-relaxed">
+            By creating an account, you agree to our
+            <a href="#" class="text-purple-400 hover:text-purple-300 underline">Terms of Service</a>
+            and
+            <a href="#" class="text-purple-400 hover:text-purple-300 underline">Privacy Policy</a>
           </p>
         </form>
-      </div>
 
-      <!-- Login Link -->
-      <div class="mt-6 text-center animate-fade-in" style="animation-delay: 100ms">
-        <p class="text-sm text-neutral-600">
-          Already have an account?
-          <a 
-            routerLink="/auth/login" 
-            class="text-primary-600 hover:text-primary-700 font-medium focus-ring px-2 py-1 rounded-lg"
-          >
-            Sign in
-          </a>
-        </p>
-      </div>
-
-      <!-- Back to Home -->
-      <div class="mt-4 text-center animate-fade-in" style="animation-delay: 150ms">
-        <a 
-          routerLink="/home" 
-          class="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors font-medium focus-ring px-4 py-2 rounded-lg hover:bg-white/50"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span>Back to home</span>
-        </a>
+        <!-- Login Link -->
+        <div class="mt-8 pt-6 border-t border-white/10 text-center">
+          <p class="text-slate-300">
+            Already have an account?
+            <a routerLink="/login" class="text-purple-400 hover:text-purple-300 font-semibold ml-1 transition-colors">Sign in</a>
+          </p>
+        </div>
       </div>
     }
   </div>
