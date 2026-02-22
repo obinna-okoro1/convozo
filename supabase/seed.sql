@@ -269,8 +269,8 @@ VALUES (
   'cs_test_a1b2c3d4e5f6g7h8i9j0',
   'pi_test_1a2b3c4d5e6f7g8h',
   1000,
-  100, -- 10% platform fee
-  900,
+  350, -- 35% platform fee
+  650,
   'completed',
   'john@example.com',
   NOW() - INTERVAL '1 day'
@@ -283,8 +283,8 @@ VALUES (
   'cs_test_z9y8x7w6v5u4t3s2r1',
   'pi_test_9z8y7x6w5v4u3t2s',
   1000,
-  100,
-  900,
+  350,
+  650,
   'completed',
   'jane@example.com',
   NOW() - INTERVAL '2 days'
@@ -297,8 +297,8 @@ VALUES (
   'cs_test_m1n2o3p4q5r6s7t8u9',
   'pi_test_m1n2o3p4q5r6s7t8',
   1000,
-  100,
-  900,
+  350,
+  650,
   'completed',
   'partnerships@brand.com',
   NOW() - INTERVAL '3 hours'
@@ -311,8 +311,8 @@ VALUES (
   'cs_test_f1a2n3b4o5y6z7x8c9',
   'pi_test_f1a2n3b4o5y6z7x8',
   500,
-  50,
-  450,
+  175,
+  325,
   'completed',
   'fan@example.com',
   NOW() - INTERVAL '5 hours'
@@ -325,8 +325,8 @@ VALUES (
   'cs_test_b1u2s3i4n5e6s7s8t9',
   'pi_test_b1u2s3i4n5e6s7s8',
   500,
-  50,
-  450,
+  175,
+  325,
   'completed',
   'marketing@techco.com',
   NOW() - INTERVAL '1 day'

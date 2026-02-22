@@ -5,7 +5,7 @@
 
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { CreatorService } from '../../services/creator.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import type { Creator, CreatorSettings, StripeAccount } from '../../../../core/models';
@@ -13,7 +13,7 @@ import type { Creator, CreatorSettings, StripeAccount } from '../../../../core/m
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })

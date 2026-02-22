@@ -10,7 +10,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
-import { CreatorProfile, MessageType } from '../../../../core/models';
+import { CreatorProfile, MessageType, AvailabilitySlot } from '../../../../core/models';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ERROR_MESSAGES } from '../../../../core/constants';
 import { environment } from '../../../../../environments/environment';
@@ -36,6 +36,10 @@ export class MessagePageComponent implements OnInit {
     avgResponseTime: 24,
     verifiedCreator: false,
   });
+
+  // Availability data
+  protected readonly availabilitySlots = signal<AvailabilitySlot[]>([]);
+  protected readonly hasAvailability = computed(() => this.availabilitySlots().length > 0);
 
   // Instagram data
   protected readonly instagramUsername = signal<string | null>(null);
@@ -73,6 +77,12 @@ export class MessagePageComponent implements OnInit {
   ) {}
 
   public async ngOnInit(): Promise<void> {
+    // Handle ?tab=call query parameter for deep-linking
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'call') {
+      this.activeTab.set('call');
+    }
+
     await this.initializeStripe();
     await this.loadCreatorFromUrl();
   }
@@ -131,6 +141,9 @@ export class MessagePageComponent implements OnInit {
       
       // Load social proof data
       await this.loadSocialProofData((data as CreatorProfile).id);
+      
+      // Load availability slots for call bookings
+      await this.loadAvailabilitySlots((data as CreatorProfile).id);
     } catch (err) {
       console.error('DEBUG: Error loading creator:', err);
       this.error.set('Failed to load creator');
@@ -159,6 +172,59 @@ export class MessagePageComponent implements OnInit {
       console.error('Failed to load social proof data:', err);
       // Silently fail - social proof is not critical
     }
+  }
+
+  /**
+   * Load availability slots for the creator
+   */
+  private async loadAvailabilitySlots(creatorId: string): Promise<void> {
+    try {
+      const { data, error } = await this.supabaseService.client
+        .from('availability_slots')
+        .select('*')
+        .eq('creator_id', creatorId)
+        .eq('is_active', true)
+        .order('day_of_week', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (!error && data) {
+        this.availabilitySlots.set(data);
+      }
+    } catch (err) {
+      console.error('Failed to load availability slots:', err);
+    }
+  }
+
+  /**
+   * Get availability grouped by day
+   */
+  protected getAvailabilityByDay(): { day: string; slots: { start: string; end: string }[] }[] {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const grouped = new Map<number, { start: string; end: string }[]>();
+
+    for (const slot of this.availabilitySlots()) {
+      if (!grouped.has(slot.day_of_week)) {
+        grouped.set(slot.day_of_week, []);
+      }
+      grouped.get(slot.day_of_week)!.push({
+        start: this.formatTime(slot.start_time),
+        end: this.formatTime(slot.end_time),
+      });
+    }
+
+    return Array.from(grouped.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([day, slots]) => ({ day: dayNames[day], slots }));
+  }
+
+  /**
+   * Format time from 24h to 12h
+   */
+  protected formatTime(time: string): string {
+    const [hours, minutes] = time.substring(0, 5).split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
   }
 
   /**

@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '10');
+    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
     const platformFee = Math.floor(price * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'http://localhost:4200';
 
@@ -132,8 +132,8 @@ Deno.serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `Priority Message to ${creator.display_name}`,
-              description: message_type === 'business' ? 'Business Inquiry' : 'Fan Message',
+              name: `Paid DM to ${creator.display_name}`,
+              description: 'Priority direct message',
             },
             unit_amount: price,
           },

@@ -63,8 +63,9 @@ serve(async (req) => {
       throw new Error('Creator payment account not set up')
     }
 
-    // Calculate platform fee (10%)
-    const platformFee = Math.round(payload.price * 0.10)
+    // Calculate platform fee (35% - Option A: Stripe fees come out of platform's cut, creator gets 65% flat)
+    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35')
+    const platformFee = Math.round(payload.price * (platformFeePercentage / 100))
 
     // Check if using test Stripe account (for local development)
     const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_')

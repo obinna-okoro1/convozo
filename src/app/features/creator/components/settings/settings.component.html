@@ -145,9 +145,6 @@
                 />
               </div>
             </div>
-                class="input-field"
-                required
-            </div>
             
             <!-- Slug -->
             <div class="space-y-3">
@@ -424,7 +421,13 @@
                       </div>
                       <div class="flex-1">
                         <p class="font-bold text-white mb-1">📅 Manage Your Availability</p>
-                        <p class="text-blue-200 text-sm">After saving, you can set your weekly availability from the dashboard.</p>
+                        <p class="text-blue-200 text-sm mb-3">Set your weekly availability schedule so fans know when you're free for calls.</p>
+                        <a routerLink="/creator/dashboard" [queryParams]="{view: 'availability'}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-2.5 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-purple-500/30">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Set Availability →
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -551,7 +554,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                   </div>
-                  <span class="text-white/90">You earn <strong class="text-white font-bold">90% of each payment</strong> after Stripe's processing fees</span>
+                  <span class="text-white/90">You earn <strong class="text-white font-bold">65% of each payment</strong> directly — Stripe fees come out of our cut, not yours</span>
                 </div>
                 <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
                   <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
@@ -559,7 +562,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                   </div>
-                  <span class="text-white/90">Convozo takes a <strong class="text-white font-bold">10% platform fee</strong> to keep the service running</span>
+                  <span class="text-white/90">Convozo takes a <strong class="text-white font-bold">35% platform fee</strong> which covers Stripe processing fees and keeps the service running</span>
                 </div>
                 <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
                   <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">

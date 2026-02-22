@@ -10,6 +10,7 @@ import {
   CreatorSettings,
   Message,
   MessageStats,
+  AvailabilitySlot,
   SupabaseResponse,
   EdgeFunctionResponse,
   StripeConnectResponse,
@@ -267,5 +268,98 @@ export class CreatorService {
    */
   public async verifyStripeAccount(accountId: string): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
     return this.supabaseService.verifyConnectAccount(accountId);
+  }
+
+  // ==================== AVAILABILITY METHODS ====================
+
+  /**
+   * Load availability slots for a creator
+   */
+  public async getAvailabilitySlots(creatorId: string): Promise<SupabaseResponse<AvailabilitySlot[]>> {
+    const { data, error } = await this.supabaseService.client
+      .from('availability_slots')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .order('day_of_week', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    return { data, error };
+  }
+
+  /**
+   * Save availability slots for a creator (replaces all existing slots)
+   */
+  public async saveAvailabilitySlots(
+    creatorId: string,
+    slots: Omit<AvailabilitySlot, 'id' | 'created_at' | 'updated_at'>[]
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Delete all existing slots for this creator
+      const { error: deleteError } = await this.supabaseService.client
+        .from('availability_slots')
+        .delete()
+        .eq('creator_id', creatorId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      // Insert new slots (if any)
+      if (slots.length > 0) {
+        const { error: insertError } = await this.supabaseService.client
+          .from('availability_slots')
+          .insert(slots);
+
+        if (insertError) {
+          throw insertError;
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save availability';
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Add a single availability slot
+   */
+  public async addAvailabilitySlot(
+    slot: Omit<AvailabilitySlot, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<SupabaseResponse<AvailabilitySlot>> {
+    const { data, error } = await this.supabaseService.client
+      .from('availability_slots')
+      .insert(slot)
+      .select()
+      .single();
+
+    return { data, error };
+  }
+
+  /**
+   * Delete a single availability slot
+   */
+  public async deleteAvailabilitySlot(slotId: string): Promise<SupabaseResponse<void>> {
+    const { error } = await this.supabaseService.client
+      .from('availability_slots')
+      .delete()
+      .eq('id', slotId);
+
+    return { data: undefined, error };
+  }
+
+  /**
+   * Update a single availability slot's active state
+   */
+  public async toggleAvailabilitySlot(slotId: string, isActive: boolean): Promise<SupabaseResponse<AvailabilitySlot>> {
+    const { data, error } = await this.supabaseService.client
+      .from('availability_slots')
+      .update({ is_active: isActive })
+      .eq('id', slotId)
+      .select()
+      .single();
+
+    return { data, error };
   }
 }

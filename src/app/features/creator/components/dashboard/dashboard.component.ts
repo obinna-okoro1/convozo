@@ -17,10 +17,11 @@ import { PushNotificationService } from '../../../../core/services/push-notifica
 import { ResponseTemplateService } from '../../../../core/services/response-template.service';
 import { AnalyticsDashboardComponent } from '../analytics-dashboard/analytics-dashboard.component';
 import { TemplatePickerComponent } from '../template-picker/template-picker.component';
+import { AvailabilityManagerComponent } from '../availability-manager/availability-manager.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, FormsModule, RouterLink, AnalyticsDashboardComponent, TemplatePickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AnalyticsDashboardComponent, TemplatePickerComponent, AvailabilityManagerComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -43,7 +44,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly showTemplatePicker = signal<boolean>(false);
   
   // View state (inbox vs analytics)
-  protected readonly activeView = signal<'inbox' | 'analytics'>('inbox');
+  protected readonly activeView = signal<'inbox' | 'analytics' | 'availability'>('inbox');
   
   // Push notifications
   protected readonly pushEnabled = signal<boolean>(false);
@@ -131,6 +132,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
       if (params['stripe_setup'] === 'incomplete') {
         this.stripeSetupIncomplete.set(true);
+      }
+      if (params['view'] === 'availability') {
+        this.activeView.set('availability');
       }
     });
   }

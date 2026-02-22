@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
           };
 
         const amountInCents = parseInt(amount);
-        const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '10');
+        const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
         const platformFee = Math.floor(amountInCents * (platformFeePercentage / 100));
         const creatorAmount = amountInCents - platformFee;
 
