@@ -315,7 +315,7 @@ export class CallBookingFormComponent {
     this.formSubmit.emit({
       senderName: this.senderName,
       senderEmail: this.senderEmail,
-      instagramHandle: this.instagramHandle,
+      instagramHandle: this.instagramHandle.replace(/^@/, ''),
       messageContent: this.messageContent,
     });
   }

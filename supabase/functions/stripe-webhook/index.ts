@@ -28,6 +28,27 @@ Deno.serve(async (req) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
 
+      // Idempotency: skip if this checkout session has already been processed
+      const { data: existingPayment } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('stripe_checkout_session_id', session.id)
+        .maybeSingle();
+
+      const { data: existingBooking } = await supabase
+        .from('call_bookings')
+        .select('id')
+        .eq('stripe_checkout_session_id', session.id)
+        .maybeSingle();
+
+      if (existingPayment || existingBooking) {
+        console.log('Checkout session already processed, skipping:', session.id);
+        return new Response(JSON.stringify({ received: true, skipped: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
       // Check if this is a call booking
       if (session.metadata?.type === 'call_booking') {
         const { creator_id, booker_name, booker_email, booker_instagram, message_content, duration } = 
@@ -53,6 +74,7 @@ Deno.serve(async (req) => {
             duration: parseInt(duration),
             amount_paid: amountInCents,
             status: 'confirmed',
+            call_notes: message_content || null,
             stripe_checkout_session_id: session.id,
             stripe_payment_intent_id: session.payment_intent as string,
           })
@@ -64,31 +86,17 @@ Deno.serve(async (req) => {
           throw bookingError;
         }
 
-        // If there's a message/note, create a message record too
-        if (message_content) {
-          await supabase
-            .from('messages')
-            .insert({
-              creator_id,
-              sender_name: booker_name,
-              sender_email: booker_email,
-              message_content: `[Call Booking Note] ${message_content}`,
-              amount_paid: 0, // Amount is tracked in call_bookings
-              message_type: 'call',
-              is_handled: false,
-            });
-        }
-
         console.log('Call booking created successfully:', booking.id);
         
       } else {
         // Handle regular message payment
-        const { creator_id, message_content, sender_name, sender_email, message_type, amount } = 
+        const { creator_id, message_content, sender_name, sender_email, sender_instagram, message_type, amount } = 
           session.metadata as {
             creator_id: string;
             message_content: string;
             sender_name: string;
             sender_email: string;
+            sender_instagram: string;
             message_type: string;
             amount: string;
           };
@@ -103,6 +111,7 @@ Deno.serve(async (req) => {
             creator_id,
             sender_name,
             sender_email,
+            sender_instagram: sender_instagram || null,
             message_content,
             amount_paid: amountInCents,
             message_type: validMessageType,

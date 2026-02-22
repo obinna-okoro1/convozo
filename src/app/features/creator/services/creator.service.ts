@@ -11,6 +11,7 @@ import {
   CreatorSettings,
   Message,
   MessageStats,
+  CallBooking,
   AvailabilitySlot,
   SupabaseResponse,
   EdgeFunctionResponse,
@@ -90,6 +91,7 @@ export class CreatorService {
       .from('messages')
       .select('*')
       .eq('creator_id', creatorId)
+      .neq('message_type', 'call')
       .order('created_at', { ascending: false });
 
     return { data, error };
@@ -129,6 +131,72 @@ export class CreatorService {
    */
   public unsubscribeFromMessages(channel: RealtimeChannel): void {
     this.supabaseService.client.removeChannel(channel);
+  }
+
+  // ==================== CALL BOOKING METHODS ====================
+
+  /**
+   * Load call bookings for a creator
+   */
+  public async getCallBookings(creatorId: string): Promise<SupabaseResponse<CallBooking[]>> {
+    const { data, error } = await this.supabaseService.client
+      .from('call_bookings')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .order('created_at', { ascending: false });
+
+    return { data, error };
+  }
+
+  /**
+   * Subscribe to real-time changes on the call_bookings table for a creator.
+   */
+  public subscribeToCallBookings(
+    creatorId: string,
+    onchange: (bookings: CallBooking[]) => void
+  ): RealtimeChannel {
+    return this.supabaseService.client
+      .channel(`call_bookings:${creatorId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'call_bookings',
+          filter: `creator_id=eq.${creatorId}`,
+        },
+        async () => {
+          const { data } = await this.getCallBookings(creatorId);
+          if (data) {
+            onchange(data);
+          }
+        }
+      )
+      .subscribe();
+  }
+
+  /**
+   * Unsubscribe from real-time call bookings channel
+   */
+  public unsubscribeFromCallBookings(channel: RealtimeChannel): void {
+    this.supabaseService.client.removeChannel(channel);
+  }
+
+  /**
+   * Update call booking status
+   */
+  public async updateBookingStatus(
+    bookingId: string,
+    status: string
+  ): Promise<SupabaseResponse<CallBooking>> {
+    const { data, error } = await this.supabaseService.client
+      .from('call_bookings')
+      .update({ status })
+      .eq('id', bookingId)
+      .select()
+      .single();
+
+    return { data, error };
   }
 
   /**

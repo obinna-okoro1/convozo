@@ -6,7 +6,7 @@
 import { Component, OnInit, signal, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AnalyticsService, AnalyticsData } from '../../../../core/services/analytics.service';
-import { Message } from '../../../../core/models';
+import { Message, CallBooking } from '../../../../core/models';
 
 @Component({
   selector: 'app-analytics-dashboard',
@@ -246,7 +246,7 @@ import { Message } from '../../../../core/models';
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
           </svg>
-          Message Breakdown
+          Message & Booking Breakdown
         </h3>
         @if (analytics().messageTypeBreakdown.length > 0) {
           <div class="space-y-4">
@@ -286,6 +286,7 @@ import { Message } from '../../../../core/models';
 })
 export class AnalyticsDashboardComponent implements OnInit {
   messages = input<Message[]>([]);
+  callBookings = input<CallBooking[]>([]);
   
   protected readonly timeRange = signal<'7d' | '30d' | 'all'>('30d');
   protected readonly analytics = signal<AnalyticsData>({
@@ -304,7 +305,7 @@ export class AnalyticsDashboardComponent implements OnInit {
   });
 
   protected readonly projectedRevenue = computed(() => 
-    this.analyticsService.getProjectedRevenue(this.messages())
+    this.analyticsService.getProjectedRevenue(this.messages(), this.callBookings())
   );
 
   protected readonly topPeakHours = computed(() => 
@@ -326,7 +327,8 @@ export class AnalyticsDashboardComponent implements OnInit {
 
   private updateAnalytics(): void {
     const messages = this.filterMessagesByTimeRange();
-    const analytics = this.analyticsService.calculateAnalytics(messages);
+    const bookings = this.filterBookingsByTimeRange();
+    const analytics = this.analyticsService.calculateAnalytics(messages, bookings);
     this.analytics.set(analytics);
   }
 
@@ -343,6 +345,19 @@ export class AnalyticsDashboardComponent implements OnInit {
     return allMessages.filter(m => new Date(m.created_at) >= cutoff);
   }
 
+  private filterBookingsByTimeRange(): CallBooking[] {
+    const range = this.timeRange();
+    const allBookings = this.callBookings();
+    
+    if (range === 'all') return allBookings;
+
+    const now = new Date();
+    const days = range === '7d' ? 7 : 30;
+    const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+    return allBookings.filter(b => new Date(b.created_at) >= cutoff);
+  }
+
   formatCurrency(value: number): string {
     return this.analyticsService.formatCurrency(value);
   }
@@ -357,7 +372,7 @@ export class AnalyticsDashboardComponent implements OnInit {
   }
 
   getTypePercentage(count: number): number {
-    const total = this.analytics().totalMessages || 1;
+    const total = (this.analytics().totalMessages + this.callBookings().length) || 1;
     return (count / total) * 100;
   }
 

@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { creator_slug, message_content, sender_name, sender_email, message_type, price } = 
+    const { creator_slug, message_content, sender_name, sender_email, sender_instagram, message_type, price } = 
       await req.json();
 
     // Validate input
@@ -152,6 +152,7 @@ Deno.serve(async (req) => {
         message_content,
         sender_name,
         sender_email,
+        sender_instagram: sender_instagram || '',
         message_type: validMessageType,
         amount: price.toString(),
       },

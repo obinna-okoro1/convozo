@@ -34,6 +34,7 @@ export interface Message {
   creator_id: string;
   sender_name: string;
   sender_email: string;
+  sender_instagram: string | null;
   message_content: string;
   amount_paid: number;
   message_type: MessageType;
@@ -82,10 +83,11 @@ export interface CallBooking {
   booker_name: string;
   booker_email: string;
   booker_instagram: string;
-  scheduled_at: string;
+  scheduled_at: string | null;
   duration: number;
   amount_paid: number;
   status: CallBookingStatus;
+  call_notes: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   created_at: string;
@@ -104,6 +106,7 @@ export interface CheckoutSessionPayload {
   message_content: string;
   sender_name: string;
   sender_email: string;
+  sender_instagram?: string;
   message_type: MessageType;
   price: number;
 }

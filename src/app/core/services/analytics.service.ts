@@ -4,7 +4,7 @@
  */
 
 import { Injectable, signal, computed } from '@angular/core';
-import { Message } from '../models';
+import { Message, CallBooking } from '../models';
 
 export interface DailyStats {
   date: string;
@@ -49,8 +49,8 @@ export class AnalyticsService {
   /**
    * Calculate comprehensive analytics from messages
    */
-  public calculateAnalytics(messages: Message[]): AnalyticsData {
-    if (!messages.length) {
+  public calculateAnalytics(messages: Message[], bookings: CallBooking[] = []): AnalyticsData {
+    if (!messages.length && !bookings.length) {
       return this.getEmptyAnalytics();
     }
 
@@ -65,10 +65,20 @@ export class AnalyticsService {
       return date >= sixtyDaysAgo && date < thirtyDaysAgo;
     });
 
-    // Basic stats
-    const totalRevenue = messages.reduce((sum, m) => sum + m.amount_paid, 0) / 100;
+    // Filter bookings for different periods
+    const bookingsLast30 = bookings.filter(b => new Date(b.created_at) >= thirtyDaysAgo);
+    const bookingsPrev30 = bookings.filter(b => {
+      const date = new Date(b.created_at);
+      return date >= sixtyDaysAgo && date < thirtyDaysAgo;
+    });
+
+    // Basic stats — revenue includes both messages and call bookings
+    const messageRevenue = messages.reduce((sum, m) => sum + m.amount_paid, 0) / 100;
+    const bookingRevenue = bookings.reduce((sum, b) => sum + b.amount_paid, 0) / 100;
+    const totalRevenue = messageRevenue + bookingRevenue;
     const totalMessages = messages.length;
-    const avgMessageValue = totalMessages > 0 ? totalRevenue / totalMessages : 0;
+    const totalItems = totalMessages + bookings.length;
+    const avgMessageValue = totalItems > 0 ? totalRevenue / totalItems : 0;
 
     // Response stats
     const handledMessages = messages.filter(m => m.is_handled);
@@ -86,9 +96,11 @@ export class AnalyticsService {
       avgResponseTime = totalResponseTime / repliedMessages.length / (1000 * 60 * 60); // Convert to hours
     }
 
-    // Growth calculations
-    const currentRevenue = last30Days.reduce((sum, m) => sum + m.amount_paid, 0) / 100;
-    const prevRevenue = prev30Days.reduce((sum, m) => sum + m.amount_paid, 0) / 100;
+    // Growth calculations — include booking revenue
+    const currentRevenue = last30Days.reduce((sum, m) => sum + m.amount_paid, 0) / 100
+      + bookingsLast30.reduce((sum, b) => sum + b.amount_paid, 0) / 100;
+    const prevRevenue = prev30Days.reduce((sum, m) => sum + m.amount_paid, 0) / 100
+      + bookingsPrev30.reduce((sum, b) => sum + b.amount_paid, 0) / 100;
     const revenueGrowth = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : 0;
     
     const currentMessages = last30Days.length;
@@ -112,17 +124,17 @@ export class AnalyticsService {
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 5);
 
-    // Daily stats (last 30 days)
-    const dailyStats = this.calculateDailyStats(last30Days);
+    // Daily stats (last 30 days) — include booking revenue
+    const dailyStats = this.calculateDailyStats(last30Days, bookingsLast30);
 
     // Weekly stats (last 12 weeks)
-    const weeklyStats = this.calculateWeeklyStats(messages);
+    const weeklyStats = this.calculateWeeklyStats(messages, bookings);
 
     // Peak hours
     const peakHours = this.calculatePeakHours(messages);
 
-    // Message type breakdown
-    const messageTypeBreakdown = this.calculateMessageTypeBreakdown(messages);
+    // Type breakdown — includes call bookings as a separate category
+    const messageTypeBreakdown = this.calculateMessageTypeBreakdown(messages, bookings);
 
     return {
       totalRevenue,
@@ -143,7 +155,7 @@ export class AnalyticsService {
   /**
    * Calculate daily stats for the last 30 days
    */
-  private calculateDailyStats(messages: Message[]): DailyStats[] {
+  private calculateDailyStats(messages: Message[], bookings: CallBooking[] = []): DailyStats[] {
     const dailyMap = new Map<string, DailyStats>();
     
     // Initialize last 30 days
@@ -154,12 +166,22 @@ export class AnalyticsService {
       dailyMap.set(dateStr, { date: dateStr, revenue: 0, messageCount: 0 });
     }
 
-    // Populate with actual data
+    // Populate with message data
     messages.forEach(m => {
       const dateStr = new Date(m.created_at).toISOString().split('T')[0];
       const existing = dailyMap.get(dateStr);
       if (existing) {
         existing.revenue += m.amount_paid / 100;
+        existing.messageCount += 1;
+      }
+    });
+
+    // Add booking revenue
+    bookings.forEach(b => {
+      const dateStr = new Date(b.created_at).toISOString().split('T')[0];
+      const existing = dailyMap.get(dateStr);
+      if (existing) {
+        existing.revenue += b.amount_paid / 100;
         existing.messageCount += 1;
       }
     });
@@ -170,7 +192,7 @@ export class AnalyticsService {
   /**
    * Calculate weekly stats for the last 12 weeks
    */
-  private calculateWeeklyStats(messages: Message[]): WeeklyStats[] {
+  private calculateWeeklyStats(messages: Message[], bookings: CallBooking[] = []): WeeklyStats[] {
     const weeklyMap = new Map<string, WeeklyStats>();
     const now = new Date();
 
@@ -182,7 +204,7 @@ export class AnalyticsService {
       weeklyMap.set(weekStr, { week: weekStr, revenue: 0, messageCount: 0 });
     }
 
-    // Populate with actual data
+    // Populate with message data
     messages.forEach(m => {
       const msgDate = new Date(m.created_at);
       const weekStart = new Date(msgDate);
@@ -192,6 +214,20 @@ export class AnalyticsService {
       const existing = weeklyMap.get(weekStr);
       if (existing) {
         existing.revenue += m.amount_paid / 100;
+        existing.messageCount += 1;
+      }
+    });
+
+    // Add booking revenue
+    bookings.forEach(b => {
+      const bDate = new Date(b.created_at);
+      const weekStart = new Date(bDate);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekStr = weekStart.toISOString().split('T')[0];
+      
+      const existing = weeklyMap.get(weekStr);
+      if (existing) {
+        existing.revenue += b.amount_paid / 100;
         existing.messageCount += 1;
       }
     });
@@ -224,7 +260,7 @@ export class AnalyticsService {
   /**
    * Calculate message type breakdown
    */
-  private calculateMessageTypeBreakdown(messages: Message[]): { type: string; count: number; revenue: number }[] {
+  private calculateMessageTypeBreakdown(messages: Message[], bookings: CallBooking[] = []): { type: string; count: number; revenue: number }[] {
     const typeMap = new Map<string, { count: number; revenue: number }>();
 
     messages.forEach(m => {
@@ -234,6 +270,12 @@ export class AnalyticsService {
       existing.revenue += m.amount_paid / 100;
       typeMap.set(type, existing);
     });
+
+    // Add call bookings as their own category
+    if (bookings.length > 0) {
+      const bookingData = { count: bookings.length, revenue: bookings.reduce((sum, b) => sum + b.amount_paid, 0) / 100 };
+      typeMap.set('call booking', bookingData);
+    }
 
     return Array.from(typeMap.entries())
       .map(([type, data]) => ({ type, ...data }));
@@ -282,16 +324,21 @@ export class AnalyticsService {
   /**
    * Get projected monthly revenue
    */
-  public getProjectedRevenue(messages: Message[]): number {
+  public getProjectedRevenue(messages: Message[], bookings: CallBooking[] = []): number {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const daysPassed = now.getDate();
 
-    const monthRevenue = messages
+    const messageRevenue = messages
       .filter(m => new Date(m.created_at) >= startOfMonth)
       .reduce((sum, m) => sum + m.amount_paid, 0) / 100;
 
+    const bookingRevenue = bookings
+      .filter(b => new Date(b.created_at) >= startOfMonth)
+      .reduce((sum, b) => sum + b.amount_paid, 0) / 100;
+
+    const monthRevenue = messageRevenue + bookingRevenue;
     return (monthRevenue / daysPassed) * daysInMonth;
   }
 }

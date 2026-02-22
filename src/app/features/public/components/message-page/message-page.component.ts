@@ -8,7 +8,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
-import { CreatorProfile, AvailabilitySlot, MessageType } from '../../../../core/models';
+import { CreatorProfile, AvailabilitySlot, MessageType, CheckoutSessionPayload } from '../../../../core/models';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ERROR_MESSAGES } from '../../../../core/constants';
 import { environment } from '../../../../../environments/environment';
@@ -216,7 +216,7 @@ export class MessagePageComponent implements OnInit {
    */
   protected async onMessageSubmit(formData: MessageFormData): Promise<void> {
     if (!this.validateMessageForm(formData)) return;
-    await this.processCheckout(formData.senderName, formData.senderEmail, formData.messageContent, 'message');
+    await this.processCheckout(formData.senderName, formData.senderEmail, formData.senderInstagram, formData.messageContent, 'message');
   }
 
   /**
@@ -272,7 +272,7 @@ export class MessagePageComponent implements OnInit {
   /**
    * Process message checkout via Stripe
    */
-  private async processCheckout(senderName: string, senderEmail: string, messageContent: string, messageType: MessageType): Promise<void> {
+  private async processCheckout(senderName: string, senderEmail: string, senderInstagram: string, messageContent: string, messageType: MessageType): Promise<void> {
     if (!this.stripe) {
       this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
       return;
@@ -283,14 +283,21 @@ export class MessagePageComponent implements OnInit {
 
     this.submitting.set(true);
     try {
-      const { data, error } = await this.supabaseService.createCheckoutSession({
+      const payload: CheckoutSessionPayload = {
         creator_slug: creatorData.slug,
         message_content: messageContent,
         sender_name: senderName,
         sender_email: senderEmail,
         message_type: messageType,
         price: this.messagePriceCents(),
-      });
+      };
+
+      // Only include sender_instagram if provided
+      if (senderInstagram.trim()) {
+        payload.sender_instagram = senderInstagram.trim();
+      }
+
+      const { data, error } = await this.supabaseService.createCheckoutSession(payload);
 
       if (error || !data?.sessionId) {
         throw new Error(error?.message || 'Failed to create checkout session');

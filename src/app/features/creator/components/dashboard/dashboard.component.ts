@@ -12,7 +12,7 @@ import { Subscription } from 'rxjs';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { CreatorService } from '../../services/creator.service';
 import { AuthService } from '../../../auth/services/auth.service';
-import { Creator, CreatorSettings, Message, MessageStats, FilterStatus } from '../../../../core/models';
+import { Creator, CreatorSettings, Message, MessageStats, CallBooking, FilterStatus } from '../../../../core/models';
 import { ROUTES } from '../../../../core/constants';
 import { PushNotificationService } from '../../../../core/services/push-notification.service';
 import { ResponseTemplateService } from '../../../../core/services/response-template.service';
@@ -32,7 +32,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly creator = signal<Creator | null>(null);
   protected readonly settings = signal<CreatorSettings | null>(null);
   protected readonly messages = signal<Message[]>([]);
+  protected readonly callBookings = signal<CallBooking[]>([]);
   protected readonly selectedMessage = signal<Message | null>(null);
+  protected readonly selectedBooking = signal<CallBooking | null>(null);
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
   protected readonly stripeSetupIncomplete = signal<boolean>(false);
@@ -45,8 +47,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Template picker state
   protected readonly showTemplatePicker = signal<boolean>(false);
   
-  // View state (inbox vs analytics)
-  protected readonly activeView = signal<'inbox' | 'analytics' | 'availability'>('inbox');
+  // View state (inbox vs analytics vs bookings vs availability)
+  protected readonly activeView = signal<'inbox' | 'analytics' | 'bookings' | 'availability'>('inbox');
   
   // Push notifications
   protected readonly pushEnabled = signal<boolean>(false);
@@ -55,10 +57,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Filter state
   protected readonly filterStatus = signal<FilterStatus>('all');
 
-  // Computed values
-  protected readonly stats = computed<MessageStats>(() => 
-    this.creatorService.calculateStats(this.messages())
-  );
+  // Computed values — revenue includes both messages and call bookings
+  protected readonly stats = computed<MessageStats>(() => {
+    const msgStats = this.creatorService.calculateStats(this.messages());
+    const bookingRevenueCents = this.callBookings().reduce((sum, b) => sum + (b.amount_paid || 0), 0);
+    const bookingRevenue = Math.round(bookingRevenueCents / 100 * 100) / 100;
+    return { ...msgStats, totalRevenue: msgStats.totalRevenue + bookingRevenue };
+  });
   protected readonly publicUrl = computed<string>(() => 
     this.creatorService.buildPublicUrl(this.creator()?.slug)
   );
@@ -74,8 +79,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return msgs;
   });
 
+  // Booking stats
+  protected readonly bookingStats = computed(() => {
+    const bookings = this.callBookings();
+    const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+    const completed = bookings.filter(b => b.status === 'completed').length;
+    const totalRevenue = Math.round(bookings.reduce((sum, b) => sum + (b.amount_paid || 0), 0) / 100 * 100) / 100;
+    return { total: bookings.length, confirmed, completed, totalRevenue };
+  });
+
   private queryParamsSubscription?: Subscription;
   private realtimeChannel?: RealtimeChannel;
+  private bookingsRealtimeChannel?: RealtimeChannel;
 
   /**
    * Extract string value from an input/textarea/select event
@@ -117,6 +132,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.queryParamsSubscription?.unsubscribe();
     if (this.realtimeChannel) {
       this.creatorService.unsubscribeFromMessages(this.realtimeChannel);
+    }
+    if (this.bookingsRealtimeChannel) {
+      this.creatorService.unsubscribeFromCallBookings(this.bookingsRealtimeChannel);
     }
   }
 
@@ -196,6 +214,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messages.set(messagesData);
       }
 
+      const { data: bookingsData } = await this.creatorService.getCallBookings(creatorData.id);
+      if (bookingsData) {
+        this.callBookings.set(bookingsData);
+      }
+
       // Subscribe to real-time updates so the inbox refreshes instantly
       this.realtimeChannel = this.creatorService.subscribeToMessages(
         creatorData.id,
@@ -207,6 +230,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
             const refreshed = updatedMessages.find(m => m.id === selected.id);
             if (refreshed) {
               this.selectedMessage.set(refreshed);
+            }
+          }
+        }
+      );
+
+      // Subscribe to real-time call booking updates
+      this.bookingsRealtimeChannel = this.creatorService.subscribeToCallBookings(
+        creatorData.id,
+        (updatedBookings) => {
+          this.callBookings.set(updatedBookings);
+          const selected = this.selectedBooking();
+          if (selected) {
+            const refreshed = updatedBookings.find(b => b.id === selected.id);
+            if (refreshed) {
+              this.selectedBooking.set(refreshed);
             }
           }
         }
@@ -318,6 +356,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
         () => this.toast.success('URL copied to clipboard!'),
         () => this.toast.error('Failed to copy URL')
       );
+    }
+  }
+
+  /**
+   * Select a call booking
+   */
+  protected selectBooking(booking: CallBooking): void {
+    this.selectedBooking.set(booking);
+  }
+
+  /**
+   * Mark a booking as completed
+   */
+  protected async markBookingCompleted(booking: CallBooking): Promise<void> {
+    const { error } = await this.creatorService.updateBookingStatus(booking.id, 'completed');
+    if (error) {
+      this.handleError(error, 'Failed to update booking');
+    } else {
+      this.toast.success('Booking marked as completed!');
+    }
+  }
+
+  /**
+   * Mark a booking as cancelled
+   */
+  protected async cancelBooking(booking: CallBooking): Promise<void> {
+    const { error } = await this.creatorService.updateBookingStatus(booking.id, 'cancelled');
+    if (error) {
+      this.handleError(error, 'Failed to cancel booking');
+    } else {
+      this.toast.success('Booking cancelled');
     }
   }
 
