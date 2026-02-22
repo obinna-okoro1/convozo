@@ -5,6 +5,7 @@
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import type { User } from '@supabase/supabase-js';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ROUTES, ERROR_MESSAGES } from '../../../core/constants';
 import { FormValidators } from '../../../core/validators/form-validators';
@@ -144,10 +145,15 @@ export class AuthService {
    * Handle authentication callback
    */
   public async handleAuthCallback(): Promise<void> {
-    // Wait for auth state to update
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Exchange the URL token for a session instead of a blind timeout
+    const { data: sessionData, error: sessionError } = await this.supabaseService.client.auth.getSession();
 
-    const user = this.supabaseService.getCurrentUser();
+    if (sessionError) {
+      await this.router.navigate([ROUTES.AUTH.LOGIN]);
+      return;
+    }
+
+    const user = sessionData?.session?.user ?? this.supabaseService.getCurrentUser();
 
     if (!user) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
@@ -178,19 +184,19 @@ export class AuthService {
   /**
    * Extract OAuth user data from Supabase user object
    */
-  private extractOAuthUserData(user: any): OAuthUserData | null {
+  private extractOAuthUserData(user: User | null): OAuthUserData | null {
     if (!user) return null;
 
-    const metadata = user.user_metadata || {};
-    const provider = user.app_metadata?.provider;
+    const metadata = user.user_metadata ?? {};
+    const provider = user.app_metadata?.['provider'] as string | undefined;
 
     const data: OAuthUserData = {
       id: user.id,
       email: user.email || '',
-      full_name: metadata.full_name || metadata.name || '',
-      avatar_url: metadata.avatar_url || metadata.picture || '',
+      full_name: (metadata['full_name'] ?? metadata['name'] ?? '') as string,
+      avatar_url: (metadata['avatar_url'] ?? metadata['picture'] ?? '') as string,
       provider,
-      provider_id: metadata.provider_id || metadata.sub || '',
+      provider_id: (metadata['provider_id'] ?? metadata['sub'] ?? '') as string,
     };
 
     return data;

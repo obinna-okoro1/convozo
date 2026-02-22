@@ -59,6 +59,13 @@ export class AvailabilityManagerComponent implements OnInit {
 
   protected readonly timeOptions = TIME_OPTIONS;
 
+  /**
+   * Extract string value from a select/input event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLSelectElement).value;
+  }
+
   protected readonly totalSlots = computed(() =>
     this.schedule().reduce((sum, day) => sum + (day.enabled ? day.slots.length : 0), 0)
   );

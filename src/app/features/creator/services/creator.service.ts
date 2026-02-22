@@ -4,6 +4,7 @@
  */
 
 import { Injectable } from '@angular/core';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import {
   Creator,
@@ -76,7 +77,7 @@ export class CreatorService {
       .from('creator_settings')
       .select('*')
       .eq('creator_id', creatorId)
-      .single();
+      .maybeSingle();
 
     return { data, error };
   }
@@ -95,13 +96,51 @@ export class CreatorService {
   }
 
   /**
+   * Subscribe to real-time changes on the messages table for a creator.
+   * Calls the provided callback whenever a message is inserted or updated.
+   */
+  public subscribeToMessages(
+    creatorId: string,
+    onchange: (messages: Message[]) => void
+  ): RealtimeChannel {
+    return this.supabaseService.client
+      .channel(`messages:${creatorId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `creator_id=eq.${creatorId}`,
+        },
+        async () => {
+          // Re-fetch the full list so ordering and computed stats stay correct
+          const { data } = await this.getMessages(creatorId);
+          if (data) {
+            onchange(data);
+          }
+        }
+      )
+      .subscribe();
+  }
+
+  /**
+   * Unsubscribe from real-time messages channel
+   */
+  public unsubscribeFromMessages(channel: RealtimeChannel): void {
+    this.supabaseService.client.removeChannel(channel);
+  }
+
+  /**
    * Calculate message statistics
+   * Revenue is converted from cents to dollars for display
    */
   public calculateStats(messages: Message[]): MessageStats {
     const total = messages.length;
     const unhandled = messages.filter(m => !m.is_handled).length;
     const handled = messages.filter(m => m.is_handled).length;
-    const totalRevenue = messages.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
+    const totalRevenueCents = messages.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
+    const totalRevenue = Math.round(totalRevenueCents / 100 * 100) / 100;
 
     return { total, unhandled, handled, totalRevenue };
   }
@@ -161,6 +200,7 @@ export class CreatorService {
    */
   public async createCreator(data: {
     userId: string;
+    email: string;
     displayName: string;
     bio: string;
     slug: string;
@@ -169,14 +209,15 @@ export class CreatorService {
   }): Promise<SupabaseResponse<Creator>> {
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
-      .insert([{
+      .insert({
         user_id: data.userId,
+        email: data.email,
         display_name: data.displayName,
         bio: data.bio,
         slug: data.slug,
         profile_image_url: data.profileImageUrl || null,
         instagram_username: data.instagramUsername || null
-      }])
+      })
       .select()
       .single();
 
@@ -196,14 +237,14 @@ export class CreatorService {
   }): Promise<SupabaseResponse<CreatorSettings>> {
     const { data: settings, error } = await this.supabaseService.client
       .from('creator_settings')
-      .insert([{
+      .insert({
         creator_id: data.creatorId,
         message_price: data.messagePrice,
         call_price: data.callPrice,
         call_duration: data.callDuration,
         calls_enabled: data.callsEnabled,
         response_expectation: data.responseExpectation
-      }])
+      })
       .select()
       .single();
 

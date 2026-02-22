@@ -139,7 +139,7 @@
                   type="text"
                   id="displayName"
                   [value]="displayName()"
-                  (input)="displayName.set($any($event.target).value)"
+                  (input)="displayName.set(inputValue($event))"
                   placeholder="Your Name"
                   class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
                 />
@@ -156,7 +156,7 @@
                     type="text"
                     id="slug"
                     [value]="slug()"
-                    (input)="slug.set($any($event.target).value)"
+                    (input)="slug.set(inputValue($event))"
                     placeholder="yourname"
                     pattern="[a-z0-9-]+"
                     required
@@ -174,7 +174,7 @@
                 <textarea
                   id="bio"
                   [value]="bio()"
-                  (input)="bio.set($any($event.target).value)"
+                  (input)="bio.set(inputValue($event))"
                   placeholder="Tell people about yourself..."
                   rows="4"
                   class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 resize-none"
@@ -267,7 +267,7 @@
                     type="text"
                     id="instagramUsername"
                     [value]="instagramUsername()"
-                    (input)="instagramUsername.set($any($event.target).value)"
+                    (input)="instagramUsername.set(inputValue($event))"
                     placeholder="yourhandle"
                     class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
                   />
@@ -335,7 +335,7 @@
                     type="number"
                     id="messagePrice"
                     [value]="messagePrice() / 100"
-                    (input)="messagePrice.set($any($event.target).value * 100)"
+                    (input)="messagePrice.set(inputNumber($event) * 100)"
                     min="1"
                     step="1"
                     required
@@ -357,7 +357,7 @@
                   <input
                     type="checkbox"
                     [checked]="callsEnabled()"
-                    (change)="callsEnabled.set($any($event.target).checked)"
+                    (change)="callsEnabled.set(inputChecked($event))"
                     class="sr-only peer"
                   />
                   <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
@@ -377,7 +377,7 @@
                             type="number"
                             id="callPrice"
                             [value]="callPrice() / 100"
-                            (input)="callPrice.set($any($event.target).value * 100)"
+                            (input)="callPrice.set(inputNumber($event) * 100)"
                             min="1"
                             step="1"
                             required
@@ -397,7 +397,7 @@
                             type="number"
                             id="callDuration"
                             [value]="callDuration()"
-                            (input)="callDuration.set($any($event.target).value)"
+                            (input)="callDuration.set(inputNumber($event))"
                             min="15"
                             max="120"
                             step="15"
@@ -443,7 +443,7 @@
                   type="text"
                   id="responseExpectation"
                   [value]="responseExpectation()"
-                  (input)="responseExpectation.set($any($event.target).value)"
+                  (input)="responseExpectation.set(inputValue($event))"
                   placeholder="e.g., Within 48 hours"
                   class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
                 />

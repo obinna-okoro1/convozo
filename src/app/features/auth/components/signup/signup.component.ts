@@ -5,13 +5,14 @@
 
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css']
 })
@@ -25,6 +26,13 @@ export class SignupComponent {
   error = signal<string | null>(null);
 
   constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Extract string value from an input event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
 
   async handleOAuthSignup(provider: 'google'): Promise<void> {
     this.loading.set(true);

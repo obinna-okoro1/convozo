@@ -9,12 +9,14 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { CreatorService } from '../../services/creator.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { Creator, CreatorSettings, Message, MessageStats, FilterStatus } from '../../../../core/models';
 import { ROUTES } from '../../../../core/constants';
 import { PushNotificationService } from '../../../../core/services/push-notification.service';
 import { ResponseTemplateService } from '../../../../core/services/response-template.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { AnalyticsDashboardComponent } from '../analytics-dashboard/analytics-dashboard.component';
 import { TemplatePickerComponent } from '../template-picker/template-picker.component';
 import { AvailabilityManagerComponent } from '../availability-manager/availability-manager.component';
@@ -63,7 +65,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
   
   protected readonly isPushSupported = computed(() => this.pushService.isSupported());
 
+  // Filtered messages as a computed signal (avoids recalculation every CD cycle)
+  protected readonly filteredMessages = computed<Message[]>(() => {
+    const msgs = this.messages();
+    const status = this.filterStatus();
+    if (status === 'unhandled') return msgs.filter(m => !m.is_handled);
+    if (status === 'handled') return msgs.filter(m => m.is_handled);
+    return msgs;
+  });
+
   private queryParamsSubscription?: Subscription;
+  private realtimeChannel?: RealtimeChannel;
+
+  /**
+   * Extract string value from an input/textarea/select event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  /**
+   * Handle filter status change from select element
+   */
+  protected onFilterChange(event: Event): void {
+    this.filterStatus.set((event.target as HTMLSelectElement).value as FilterStatus);
+  }
 
   constructor(
     private readonly creatorService: CreatorService,
@@ -71,7 +97,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     private readonly pushService: PushNotificationService,
-    private readonly templateService: ResponseTemplateService
+    private readonly templateService: ResponseTemplateService,
+    private readonly toast: ToastService
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -88,6 +115,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
+    if (this.realtimeChannel) {
+      this.creatorService.unsubscribeFromMessages(this.realtimeChannel);
+    }
   }
 
   /**
@@ -118,7 +148,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           'You\'ll now receive alerts for new messages.'
         );
       } else if (result.error) {
-        alert(result.error);
+        this.toast.error(result.error);
       }
     }
     
@@ -165,26 +195,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (messagesData) {
         this.messages.set(messagesData);
       }
+
+      // Subscribe to real-time updates so the inbox refreshes instantly
+      this.realtimeChannel = this.creatorService.subscribeToMessages(
+        creatorData.id,
+        (updatedMessages) => {
+          this.messages.set(updatedMessages);
+          // Keep the selected message detail pane in sync
+          const selected = this.selectedMessage();
+          if (selected) {
+            const refreshed = updatedMessages.find(m => m.id === selected.id);
+            if (refreshed) {
+              this.selectedMessage.set(refreshed);
+            }
+          }
+        }
+      );
     } catch (err) {
       this.handleError(err, 'Failed to load dashboard');
     } finally {
       this.loading.set(false);
     }
-  }
-
-  /**
-   * Get filtered messages
-   */
-  protected filteredMessages(): Message[] {
-    const msgs = this.messages();
-    const status = this.filterStatus();
-
-    if (status === 'unhandled') {
-      return msgs.filter(m => !m.is_handled);
-    } else if (status === 'handled') {
-      return msgs.filter(m => m.is_handled);
-    }
-    return msgs;
   }
 
   /**
@@ -249,13 +280,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const result = await this.creatorService.replyToMessage(message.id, content, message.sender_email);
 
     if (result.success) {
-      const currentCreator = this.creator();
-      if (currentCreator) {
-        const { data } = await this.creatorService.getMessages(currentCreator.id);
-        if (data) {
-          this.messages.set(data);
-        }
-      }
+      this.toast.success('Reply sent!');
       this.closeReplyModal();
     } else {
       this.handleError(result.error, 'Failed to send reply');
@@ -270,17 +295,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected async markAsHandled(message: Message): Promise<void> {
     const { error } = await this.creatorService.markAsHandled(message.id);
     
-    if (!error) {
-      const currentCreator = this.creator();
-      if (currentCreator) {
-        const { data } = await this.creatorService.getMessages(currentCreator.id);
-        if (data) {
-          this.messages.set(data);
-        }
-      }
-    } else {
+    if (error) {
       this.handleError(error, 'Failed to mark as handled');
     }
+    // The realtime subscription will automatically refresh the messages list
   }
 
   /**
@@ -297,8 +315,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const url = this.publicUrl();
     if (url) {
       navigator.clipboard.writeText(url).then(
-        () => alert('URL copied to clipboard!'),
-        () => alert('Failed to copy URL')
+        () => this.toast.success('URL copied to clipboard!'),
+        () => this.toast.error('Failed to copy URL')
       );
     }
   }
@@ -308,6 +326,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   private handleError(err: unknown, defaultMessage: string): void {
     const errorMessage = err instanceof Error ? err.message : defaultMessage;
-    alert(errorMessage);
+    this.toast.error(errorMessage);
   }
 }

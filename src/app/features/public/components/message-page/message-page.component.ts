@@ -4,21 +4,31 @@
  */
 
 import { Component, OnInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
-import { CreatorProfile, MessageType, AvailabilitySlot } from '../../../../core/models';
+import { CreatorProfile, AvailabilitySlot, MessageType } from '../../../../core/models';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ERROR_MESSAGES } from '../../../../core/constants';
 import { environment } from '../../../../../environments/environment';
 import { SocialProofComponent, SocialProofData } from '../../../../shared/components/social-proof/social-proof.component';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { TrustBannerComponent } from '../../../../shared/components/trust-banner/trust-banner.component';
+import { CreatorProfileHeaderComponent } from '../creator-profile-header/creator-profile-header.component';
+import { MessageFormComponent, MessageFormData } from '../message-form/message-form.component';
+import { CallBookingFormComponent, CallBookingFormData } from '../call-booking-form/call-booking-form.component';
 
 @Component({
   selector: 'app-message-page',
-  imports: [CommonModule, FormsModule, RouterLink, SocialProofComponent],
+  imports: [
+    RouterLink,
+    SocialProofComponent,
+    TrustBannerComponent,
+    CreatorProfileHeaderComponent,
+    MessageFormComponent,
+    CallBookingFormComponent,
+  ],
   templateUrl: './message-page.component.html',
   styleUrls: ['./message-page.component.css']
 })
@@ -39,7 +49,6 @@ export class MessagePageComponent implements OnInit {
 
   // Availability data
   protected readonly availabilitySlots = signal<AvailabilitySlot[]>([]);
-  protected readonly hasAvailability = computed(() => this.availabilitySlots().length > 0);
 
   // Instagram data
   protected readonly instagramUsername = signal<string | null>(null);
@@ -48,24 +57,16 @@ export class MessagePageComponent implements OnInit {
     return username ? this.instagramService.getProfileUrl(username) : null;
   });
 
-  // Form signals
+  // UI state
   protected readonly activeTab = signal<'message' | 'call'>('message');
-  protected readonly senderName = signal<string>('');
-  protected readonly senderEmail = signal<string>('');
-  protected readonly messageContent = signal<string>('');
-  protected readonly instagramHandle = signal<string>(''); // For call bookings
-  protected readonly messageType = signal<MessageType>('message');
   protected readonly submitting = signal<boolean>(false);
 
   // Computed values
-  protected readonly selectedPrice = computed<number>(() => this.calculateSelectedPrice());
-  protected readonly characterCount = computed<number>(() => this.messageContent().length);
-  protected readonly maxCharacters = APP_CONSTANTS.MESSAGE_MAX_LENGTH;
-  
-  // Expose settings to template
-  protected settings() {
-    return this.creatorSettings();
-  }
+  protected readonly settings = computed(() => this.creatorSettings());
+  protected readonly messagePriceCents = computed(() => this.settings()?.message_price ?? 0);
+  protected readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
+  protected readonly callDuration = computed(() => this.settings()?.call_duration ?? 30);
+  protected readonly responseExpectation = computed(() => this.settings()?.response_expectation ?? '24-48 hours');
 
   private stripe: Stripe | null = null;
 
@@ -73,7 +74,8 @@ export class MessagePageComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly supabaseService: SupabaseService,
-    private readonly instagramService: InstagramPublicService
+    private readonly instagramService: InstagramPublicService,
+    private readonly toast: ToastService
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -129,14 +131,7 @@ export class MessagePageComponent implements OnInit {
       
       const settings = (data as CreatorProfile).creator_settings;
       if (settings) {
-        console.log('DEBUG: Creator settings loaded:', settings);
-        console.log('DEBUG: calls_enabled:', settings.calls_enabled);
-        console.log('DEBUG: call_price:', settings.call_price);
-        console.log('DEBUG: call_duration:', settings.call_duration);
         this.creatorSettings.set(settings);
-        this.setDefaultMessageType(data as CreatorProfile);
-      } else {
-        console.log('DEBUG: No settings found for creator');
       }
       
       // Load social proof data
@@ -144,8 +139,7 @@ export class MessagePageComponent implements OnInit {
       
       // Load availability slots for call bookings
       await this.loadAvailabilitySlots((data as CreatorProfile).id);
-    } catch (err) {
-      console.error('DEBUG: Error loading creator:', err);
+    } catch {
       this.error.set('Failed to load creator');
     } finally {
       this.loading.set(false);
@@ -153,24 +147,46 @@ export class MessagePageComponent implements OnInit {
   }
 
   /**
-   * Load social proof data for the creator
+   * Load real social proof data for the creator from the database
    */
   private async loadSocialProofData(creatorId: string): Promise<void> {
     try {
-      // For now, we'll use mock data - in production, this would fetch from the database
-      // This can be extended to call an edge function that returns aggregated stats
-      const mockData: SocialProofData = {
-        totalMessages: Math.floor(Math.random() * 500) + 50, // Simulated for demo
-        responseRate: Math.floor(Math.random() * 20) + 80, // 80-100%
-        avgResponseTime: Math.floor(Math.random() * 12) + 2, // 2-14 hours
+      const { data: messages, error } = await this.supabaseService.client
+        .from('messages')
+        .select('id, is_handled, created_at, replied_at')
+        .eq('creator_id', creatorId);
+
+      if (error || !messages) {
+        return;
+      }
+
+      const totalMessages = messages.length;
+
+      // Calculate response rate: messages that have been replied to
+      const replied = messages.filter(m => m.replied_at).length;
+      const responseRate = totalMessages > 0 ? Math.round((replied / totalMessages) * 100) : 0;
+
+      // Calculate average response time in hours (for messages that have a reply)
+      let avgResponseTime = 24;
+      const repliedMessages = messages.filter(m => m.replied_at && m.created_at);
+      if (repliedMessages.length > 0) {
+        const totalHours = repliedMessages.reduce((sum, m) => {
+          const created = new Date(m.created_at).getTime();
+          const replied = new Date(m.replied_at).getTime();
+          return sum + (replied - created) / (1000 * 60 * 60);
+        }, 0);
+        avgResponseTime = Math.max(1, Math.round(totalHours / repliedMessages.length));
+      }
+
+      this.socialProofData.set({
+        totalMessages,
+        responseRate,
+        avgResponseTime,
         verifiedCreator: true,
         joinedDate: this.creator()?.created_at || new Date().toISOString(),
-      };
-      
-      this.socialProofData.set(mockData);
-    } catch (err) {
-      console.error('Failed to load social proof data:', err);
-      // Silently fail - social proof is not critical
+      });
+    } catch {
+      // Silently fail — social proof is not critical
     }
   }
 
@@ -196,80 +212,95 @@ export class MessagePageComponent implements OnInit {
   }
 
   /**
-   * Get availability grouped by day
+   * Handle message form submission from MessageFormComponent
    */
-  protected getAvailabilityByDay(): { day: string; slots: { start: string; end: string }[] }[] {
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const grouped = new Map<number, { start: string; end: string }[]>();
+  protected async onMessageSubmit(formData: MessageFormData): Promise<void> {
+    if (!this.validateMessageForm(formData)) return;
+    await this.processCheckout(formData.senderName, formData.senderEmail, formData.messageContent, 'message');
+  }
 
-    for (const slot of this.availabilitySlots()) {
-      if (!grouped.has(slot.day_of_week)) {
-        grouped.set(slot.day_of_week, []);
-      }
-      grouped.get(slot.day_of_week)!.push({
-        start: this.formatTime(slot.start_time),
-        end: this.formatTime(slot.end_time),
-      });
+  /**
+   * Handle call booking submission from CallBookingFormComponent
+   */
+  protected async onCallBookingSubmit(formData: CallBookingFormData): Promise<void> {
+    if (!this.validateCallForm(formData)) return;
+    await this.processCallCheckout(formData);
+  }
+
+  /**
+   * Validate message form inputs
+   */
+  private validateMessageForm(data: MessageFormData): boolean {
+    if (!FormValidators.isNotEmpty(data.senderName)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+      return false;
     }
-
-    return Array.from(grouped.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([day, slots]) => ({ day: dayNames[day], slots }));
-  }
-
-  /**
-   * Format time from 24h to 12h
-   */
-  protected formatTime(time: string): string {
-    const [hours, minutes] = time.substring(0, 5).split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
-  }
-
-  /**
-   * Set default message type based on creator pricing
-   */
-  private setDefaultMessageType(creator: CreatorProfile): void {
-    this.messageType.set('message');
-  }
-
-  /**
-   * Calculate selected price based on message type
-   */
-  private calculateSelectedPrice(): number {
-    const creatorData = this.creator();
-    if (!creatorData) return 0;
-
-    const settings = creatorData.creator_settings;
-    if (!settings) return 0;
-
-    if (this.activeTab() === 'call' && settings.call_price) {
-      return (settings.call_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
+    if (!FormValidators.isValidEmail(data.senderEmail)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+      return false;
     }
-
-    return (settings.message_price || 0) / APP_CONSTANTS.PRICE_MULTIPLIER;
+    if (!FormValidators.isNotEmpty(data.messageContent)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.CONTENT_REQUIRED);
+      return false;
+    }
+    if (!FormValidators.isValidMessageLength(data.messageContent)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.CONTENT_TOO_LONG);
+      return false;
+    }
+    return true;
   }
 
   /**
-   * Submit message and process payment
+   * Validate call booking form inputs
    */
-  protected async submitMessage(): Promise<void> {
-    if (!this.validateForm()) {
-      return;
+  private validateCallForm(data: CallBookingFormData): boolean {
+    if (!FormValidators.isNotEmpty(data.senderName)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+      return false;
     }
+    if (!FormValidators.isValidEmail(data.senderEmail)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+      return false;
+    }
+    if (!FormValidators.isNotEmpty(data.instagramHandle)) {
+      this.toast.error('Instagram handle is required for call bookings');
+      return false;
+    }
+    return true;
+  }
 
+  /**
+   * Process message checkout via Stripe
+   */
+  private async processCheckout(senderName: string, senderEmail: string, messageContent: string, messageType: MessageType): Promise<void> {
     if (!this.stripe) {
-      alert(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
+      this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
       return;
     }
+
+    const creatorData = this.creator();
+    if (!creatorData) return;
 
     this.submitting.set(true);
-
     try {
-      await this.createCheckoutSession();
+      const { data, error } = await this.supabaseService.createCheckoutSession({
+        creator_slug: creatorData.slug,
+        message_content: messageContent,
+        sender_name: senderName,
+        sender_email: senderEmail,
+        message_type: messageType,
+        price: this.messagePriceCents(),
+      });
+
+      if (error || !data?.sessionId) {
+        throw new Error(error?.message || 'Failed to create checkout session');
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (err) {
-      console.error('Checkout session error:', err);
       this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
     } finally {
       this.submitting.set(false);
@@ -277,95 +308,37 @@ export class MessagePageComponent implements OnInit {
   }
 
   /**
-   * Create Stripe checkout session and redirect
+   * Process call booking checkout via Stripe
    */
-  private async createCheckoutSession(): Promise<void> {
-    const priceInCents = this.selectedPrice() * APP_CONSTANTS.PRICE_MULTIPLIER;
-    const creatorData = this.creator();
-
-    if (!creatorData) {
-      throw new Error('Creator data not loaded');
+  private async processCallCheckout(formData: CallBookingFormData): Promise<void> {
+    if (!this.stripe) {
+      this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
+      return;
     }
 
-    // For call bookings, use a different payload structure
-    if (this.activeTab() === 'call') {
+    const creatorData = this.creator();
+    if (!creatorData) return;
+
+    this.submitting.set(true);
+    try {
       const { data, error } = await this.supabaseService.createCallBookingSession({
         creator_slug: creatorData.slug,
-        booker_name: this.senderName(),
-        booker_email: this.senderEmail(),
-        booker_instagram: this.instagramHandle(),
-        message_content: this.messageContent() || '', // Optional message
-        price: priceInCents,
+        booker_name: formData.senderName,
+        booker_email: formData.senderEmail,
+        booker_instagram: formData.instagramHandle,
+        message_content: formData.messageContent || '',
+        price: this.callPriceCents(),
       });
 
       if (error || !data?.url) {
         throw new Error(error?.message || 'Failed to create call booking session');
       }
-
       window.location.href = data.url;
-      return;
+    } catch (err) {
+      this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
+    } finally {
+      this.submitting.set(false);
     }
-
-    // For regular messages
-    const { data, error } = await this.supabaseService.createCheckoutSession({
-      creator_slug: creatorData.slug,
-      message_content: this.messageContent(),
-      sender_name: this.senderName(),
-      sender_email: this.senderEmail(),
-      message_type: this.messageType(),
-      price: priceInCents,
-    });
-
-    console.log('Checkout session response:', { data, error });
-
-    if (error || !data?.sessionId) {
-      console.error('Checkout session failed:', error);
-      throw new Error(error?.message || 'Failed to create checkout session');
-    }
-
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error('No checkout URL received');
-    }
-  }
-
-  /**
-   * Validate form inputs
-   */
-  private validateForm(): boolean {
-    if (!FormValidators.isNotEmpty(this.senderName())) {
-      alert(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
-      return false;
-    }
-
-    if (!FormValidators.isValidEmail(this.senderEmail())) {
-      alert(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
-      return false;
-    }
-
-    // For calls, Instagram handle is required, message is optional
-    if (this.activeTab() === 'call') {
-      if (!FormValidators.isNotEmpty(this.instagramHandle())) {
-        alert('Instagram handle is required for call bookings');
-        return false;
-      }
-      // Message content is optional for calls
-      return true;
-    }
-
-    // For messages, content is required
-    if (!FormValidators.isNotEmpty(this.messageContent())) {
-      alert(ERROR_MESSAGES.MESSAGE.CONTENT_REQUIRED);
-      return false;
-    }
-
-    if (!FormValidators.isValidMessageLength(this.messageContent())) {
-      alert(ERROR_MESSAGES.MESSAGE.CONTENT_TOO_LONG);
-      return false;
-    }
-
-    return true;
   }
 
   /**
@@ -373,6 +346,6 @@ export class MessagePageComponent implements OnInit {
    */
   private handleError(err: unknown, defaultMessage: string): void {
     const errorMessage = err instanceof Error ? err.message : defaultMessage;
-    alert(`${defaultMessage}: ${errorMessage}`);
+    this.toast.error(`${defaultMessage}: ${errorMessage}`);
   }
 }

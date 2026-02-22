@@ -31,6 +31,13 @@ export class LoginComponent {
   ) {}
 
   /**
+   * Extract string value from an input event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  /**
    * Handle OAuth login
    */
   protected async handleOAuthLogin(provider: 'google'): Promise<void> {

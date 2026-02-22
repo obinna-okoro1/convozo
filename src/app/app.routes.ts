@@ -28,4 +28,8 @@ export const routes: Routes = [
     path: ':slug', 
     loadComponent: () => import('./features/public/components/message-page/message-page.component').then(m => m.MessagePageComponent)
   },
+  {
+    path: '**',
+    redirectTo: '/home',
+  },
 ];

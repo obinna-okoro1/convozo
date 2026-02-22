@@ -6,9 +6,6 @@
 // Guards
 export * from './guards/auth.guard';
 
-// Interceptors
-export * from './interceptors/error.interceptor';
-
 // Services
 export * from './services/supabase.service';
 export * from './services/instagram-public.service';

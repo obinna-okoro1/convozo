@@ -36,7 +36,7 @@ import { ResponseTemplateService, ResponseTemplate, TemplateCategory } from '../
           <input
             type="text"
             [value]="searchQuery()"
-            (input)="searchQuery.set($any($event.target).value)"
+            (input)="searchQuery.set(inputValue($event))"
             placeholder="Search templates..."
             class="w-full pl-10 pr-4 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
@@ -151,7 +151,7 @@ import { ResponseTemplateService, ResponseTemplate, TemplateCategory } from '../
               <input
                 type="text"
                 [value]="newTemplate.title"
-                (input)="newTemplate.title = $any($event.target).value"
+                (input)="newTemplate.title = inputValue($event)"
                 placeholder="e.g., Thank you response"
                 class="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500"
               />
@@ -160,7 +160,7 @@ import { ResponseTemplateService, ResponseTemplate, TemplateCategory } from '../
               <label class="block text-sm font-medium text-neutral-700 mb-1">Category</label>
               <select
                 [value]="newTemplate.category"
-                (change)="newTemplate.category = $any($event.target).value"
+                (change)="newTemplate.category = inputValue($event)"
                 class="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 <option value="General">General</option>
@@ -175,7 +175,7 @@ import { ResponseTemplateService, ResponseTemplate, TemplateCategory } from '../
               <label class="block text-sm font-medium text-neutral-700 mb-1">Content</label>
               <textarea
                 [value]="newTemplate.content"
-                (input)="newTemplate.content = $any($event.target).value"
+                (input)="newTemplate.content = inputValue($event)"
                 placeholder="Type your template content here..."
                 rows="6"
                 class="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
@@ -250,6 +250,13 @@ export class TemplatePickerComponent implements OnInit {
   };
 
   constructor(private readonly templateService: ResponseTemplateService) {}
+
+  /**
+   * Extract string value from an input/textarea/select event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
 
   ngOnInit(): void {
     const creatorId = this.creatorId();

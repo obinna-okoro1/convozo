@@ -160,7 +160,7 @@ export class SupabaseService {
       .from('creators')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
     return { data: data as Creator | null, error };
   }
 
@@ -173,7 +173,7 @@ export class SupabaseService {
       .select('*, creator_settings(*)')
       .eq('slug', slug)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
     return { data: data as Creator | null, error };
   }
 
@@ -212,7 +212,7 @@ export class SupabaseService {
       .from('creator_settings')
       .select('*')
       .eq('creator_id', creatorId)
-      .single();
+      .maybeSingle();
     return { data: data as CreatorSettings | null, error };
   }
 
@@ -251,7 +251,7 @@ export class SupabaseService {
       .from('stripe_accounts')
       .select('*')
       .eq('creator_id', creatorId)
-      .single();
+      .maybeSingle();
     return { data: data as StripeAccount | null, error };
   }
 

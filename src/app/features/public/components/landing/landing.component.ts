@@ -1,21 +1,12 @@
 import { Component } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-landing',
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css']
 })
 export class LandingComponent {
-  constructor(private router: Router) {}
-
-  navigateToSignup() {
-    this.router.navigate(['/auth/signup']);
-  }
-
-  navigateToLogin() {
-    this.router.navigate(['/auth/login']);
-  }
+  protected readonly currentYear = new Date().getFullYear();
 }

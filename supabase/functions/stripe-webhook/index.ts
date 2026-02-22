@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.text();
-    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -94,11 +94,9 @@ Deno.serve(async (req) => {
           };
 
         const amountInCents = parseInt(amount);
-        const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
-        const platformFee = Math.floor(amountInCents * (platformFeePercentage / 100));
-        const creatorAmount = amountInCents - platformFee;
+        const validMessageType = message_type === 'call' ? 'call' : 'message';
 
-        // Create message
+        // Create the message only after payment succeeds
         const { data: message, error: messageError } = await supabase
           .from('messages')
           .insert({
@@ -107,9 +105,9 @@ Deno.serve(async (req) => {
             sender_email,
             message_content,
             amount_paid: amountInCents,
-            message_type,
+            message_type: validMessageType,
           })
-          .select()
+          .select('id')
           .single();
 
         if (messageError) {
@@ -117,7 +115,11 @@ Deno.serve(async (req) => {
           throw messageError;
         }
 
-        // Create payment record
+        // Create payment record linked to the message
+        const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
+        const platformFee = Math.floor(amountInCents * (platformFeePercentage / 100));
+        const creatorAmount = amountInCents - platformFee;
+
         const { error: paymentError } = await supabase
           .from('payments')
           .insert({
@@ -137,8 +139,7 @@ Deno.serve(async (req) => {
           throw paymentError;
         }
 
-        // TODO: Send confirmation email to sender
-        console.log('Payment processed successfully for message:', message.id);
+        console.log('Message and payment created for:', message.id);
       }
     }
 

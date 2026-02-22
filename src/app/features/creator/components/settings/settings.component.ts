@@ -45,6 +45,27 @@ export class SettingsComponent implements OnInit {
   settings = signal<CreatorSettings | null>(null);
   stripeAccount = signal<StripeAccount | null>(null);
 
+  /**
+   * Extract string value from an input/textarea/select event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  /**
+   * Extract numeric value from an input event
+   */
+  protected inputNumber(event: Event): number {
+    return +(event.target as HTMLInputElement).value;
+  }
+
+  /**
+   * Extract checked state from a checkbox event
+   */
+  protected inputChecked(event: Event): boolean {
+    return (event.target as HTMLInputElement).checked;
+  }
+
   constructor(
     private readonly creatorService: CreatorService,
     private readonly supabaseService: SupabaseService,
@@ -93,7 +114,7 @@ export class SettingsComponent implements OnInit {
       .from('stripe_accounts')
       .select('*')
       .eq('creator_id', creatorId)
-      .single();
+      .maybeSingle();
     
     if (data) {
       this.stripeAccount.set(data);

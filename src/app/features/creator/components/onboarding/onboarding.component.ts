@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CreatorService } from '../../services/creator.service';
 import { AuthService, OAuthUserData } from '../../../auth/services/auth.service';
+import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 
@@ -30,6 +31,8 @@ export class OnboardingComponent implements OnInit {
   protected readonly bio = signal<string>('');
   protected readonly slug = signal<string>('');
   protected readonly profileImageUrl = signal<string>('');
+  protected readonly profileImagePreview = signal<string | null>(null);
+  protected readonly uploading = signal<boolean>(false);
   protected readonly instagramUsername = signal<string>(''); // Manual text input, not OAuth
   
   // Pricing form data
@@ -50,9 +53,31 @@ export class OnboardingComponent implements OnInit {
   // Constants
   protected readonly TOTAL_STEPS = 4;
 
+  /**
+   * Extract string value from an input/textarea/select event
+   */
+  protected inputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  /**
+   * Extract numeric value from an input event
+   */
+  protected inputNumber(event: Event): number {
+    return +(event.target as HTMLInputElement).value;
+  }
+
+  /**
+   * Extract checked state from a checkbox event
+   */
+  protected inputChecked(event: Event): boolean {
+    return (event.target as HTMLInputElement).checked;
+  }
+
   constructor(
     private readonly creatorService: CreatorService,
     private readonly authService: AuthService,
+    private readonly supabaseService: SupabaseService,
     private readonly router: Router
   ) {}
 
@@ -79,6 +104,7 @@ export class OnboardingComponent implements OnInit {
 
     if (oauthData.avatar_url) {
       this.profileImageUrl.set(oauthData.avatar_url);
+      this.profileImagePreview.set(oauthData.avatar_url);
     }
   }
 
@@ -124,6 +150,63 @@ export class OnboardingComponent implements OnInit {
   }
 
   /**
+   * Handle profile image file upload
+   */
+  protected async handleFileUpload(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.error.set('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      this.error.set('Image must be less than 2MB');
+      return;
+    }
+
+    this.uploading.set(true);
+    this.error.set(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.profileImagePreview.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      const userId = this.authService.getCurrentUser()?.id;
+      if (!userId) throw new Error('User not authenticated');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { data, error } = await this.supabaseService.uploadFile('public', filePath, file);
+      if (error) throw error;
+
+      if (data?.publicUrl) {
+        this.profileImageUrl.set(data.publicUrl);
+      }
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : 'Failed to upload image');
+      this.profileImagePreview.set(null);
+    } finally {
+      this.uploading.set(false);
+    }
+  }
+
+  /**
+   * Remove profile image
+   */
+  protected removeProfileImage(): void {
+    this.profileImageUrl.set('');
+    this.profileImagePreview.set(null);
+  }
+
+  /**
    * Complete onboarding
    */
   protected async completeOnboarding(): Promise<void> {
@@ -141,6 +224,7 @@ export class OnboardingComponent implements OnInit {
       // Create creator profile
       const { data: creator, error: creatorError } = await this.creatorService.createCreator({
         userId: user.id,
+        email: user.email || '',
         displayName: this.displayName(),
         bio: this.bio(),
         slug: this.slug(),

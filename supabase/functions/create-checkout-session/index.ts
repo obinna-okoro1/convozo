@@ -117,6 +117,9 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Normalise message_type to match DB constraint ('message' | 'call')
+    const validMessageType = message_type === 'call' ? 'call' : 'message';
+
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
     const platformFee = Math.floor(price * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'http://localhost:4200';
@@ -149,7 +152,7 @@ Deno.serve(async (req) => {
         message_content,
         sender_name,
         sender_email,
-        message_type: message_type || 'single',
+        message_type: validMessageType,
         amount: price.toString(),
       },
     };

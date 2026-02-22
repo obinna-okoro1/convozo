@@ -252,7 +252,7 @@
               </div>
               <select
                 [value]="filterStatus()"
-                (change)="filterStatus.set($any($event.target).value)"
+                (change)="onFilterChange($event)"
                 class="bg-white/5 backdrop-blur-xl border border-white/20 text-white px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
               >
                 <option value="all" class="bg-slate-900">All ({{ stats().total }})</option>
@@ -496,7 +496,7 @@
             </div>
             <textarea
               [value]="replyContent()"
-              (input)="replyContent.set($any($event.target).value)"
+              (input)="replyContent.set(inputValue($event))"
               rows="8"
               class="w-full bg-white/5 backdrop-blur-xl border border-white/20 text-white px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none placeholder-slate-500 text-base leading-relaxed"
               placeholder="Type your thoughtful reply here..."

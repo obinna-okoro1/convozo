@@ -359,6 +359,10 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
+# Stripe webhook must bypass JWT auth — Stripe authenticates via its own signature
+[functions.stripe-webhook]
+verify_jwt = false
+
 [edge_runtime.secrets]
 STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_PUBLISHABLE_KEY = "env(STRIPE_PUBLISHABLE_KEY)"
