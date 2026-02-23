@@ -13,7 +13,24 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('APP_URL') || 'http://localhost:4200',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// Rate limiting store (in-memory, per-instance)
+const rateLimitStore = new Map<string, number[]>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now();
+  const requests = (rateLimitStore.get(key) || []).filter(t => now - t < RATE_LIMIT_WINDOW);
+  if (requests.length >= RATE_LIMIT_MAX) return false;
+  requests.push(now);
+  rateLimitStore.set(key, requests);
+  return true;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface CallBookingPayload {
   creator_slug: string;
@@ -37,6 +54,37 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate email format
+    if (!EMAIL_RE.test(payload.booker_email)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate message content length
+    if (payload.message_content && payload.message_content.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: 'Message too long (max 2000 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Rate limit: 10 requests per hour per email
+    if (!checkRateLimit(payload.booker_email)) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW / 1000)),
+          },
+        }
       );
     }
 

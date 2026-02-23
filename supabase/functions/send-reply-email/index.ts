@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { sendEmail, creatorReplyEmail } from '../_shared/email.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -7,25 +8,29 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('APP_URL') || 'http://localhost:4200',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// HTML-escape to prevent XSS / injection in email templates
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+/** Maximum allowed reply length (characters). */
+const MAX_REPLY_LENGTH = 5000;
+/** UUID v4 pattern for message_id validation. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Only accept POST
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
-    // Authenticate the caller via JWT
+    // ── 1. Authenticate the caller via JWT ────────────────────────────────
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       return new Response(
@@ -45,20 +50,39 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { message_id, reply_content } = await req.json();
+    // ── 2. Parse & validate body ──────────────────────────────────────────
+    const body = await req.json();
+    const messageId: string | undefined = body?.message_id;
+    const replyContent: string | undefined = typeof body?.reply_content === 'string'
+      ? body.reply_content.trim()
+      : undefined;
 
-    if (!message_id || !reply_content) {
+    if (!messageId || !replyContent) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required fields: message_id, reply_content' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get message details
+    if (!UUID_RE.test(messageId)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid message ID format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (replyContent.length > MAX_REPLY_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Reply too long (max ${MAX_REPLY_LENGTH} characters)` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ── 3. Fetch message & verify ownership ───────────────────────────────
     const { data: message, error: messageError } = await supabase
       .from('messages')
-      .select('*, creators(display_name, user_id)')
-      .eq('id', message_id)
+      .select('id, sender_email, message_content, replied_at, creators(display_name, user_id)')
+      .eq('id', messageId)
       .single();
 
     if (messageError || !message) {
@@ -68,65 +92,54 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify the caller owns this creator profile (is the creator who received the message)
+    // Only the creator who received the message may reply
     if (message.creators.user_id !== user.id) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: you do not own this message' }),
+        JSON.stringify({ error: 'Forbidden' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Update message with reply
+    // Prevent double-replying
+    if (message.replied_at) {
+      return new Response(
+        JSON.stringify({ error: 'This message has already been replied to' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ── 4. Persist the reply ──────────────────────────────────────────────
     const { error: updateError } = await supabase
       .from('messages')
       .update({
-        reply_content,
+        reply_content: replyContent,
         replied_at: new Date().toISOString(),
         is_handled: true,
       })
-      .eq('id', message_id);
+      .eq('id', messageId);
 
     if (updateError) {
       throw updateError;
     }
 
-    // Send email to sender — escape user content to prevent HTML injection
-    const safeDisplayName = escapeHtml(message.creators.display_name);
-    const safeMessageContent = escapeHtml(message.message_content);
-    const safeReplyContent = escapeHtml(reply_content);
+    // ── 5. Send notification email (fire-and-forget) ──────────────────────
+    const emailPayload = creatorReplyEmail({
+      creatorName: message.creators.display_name,
+      originalMessage: message.message_content,
+      replyContent,
+    });
 
-    const emailContent = {
-      to: message.sender_email,
-      from: 'noreply@convozo.com',
-      subject: `Reply from ${safeDisplayName}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>You received a reply from ${safeDisplayName}!</h2>
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Your message:</strong></p>
-            <p>${safeMessageContent}</p>
-          </div>
-          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Reply:</strong></p>
-            <p>${safeReplyContent}</p>
-          </div>
-          <p style="color: #666; font-size: 14px;">
-            This is an automated message from Convozo. Please do not reply to this email.
-          </p>
-        </div>
-      `,
-    };
-
-    console.log('Email would be sent:', emailContent);
-    // Placeholder for actual email sending
-    // await sendEmail(emailContent);
+    const sent = await sendEmail({ to: message.sender_email, ...emailPayload, idempotencyKey: `reply_${messageId}` });
+    if (!sent) {
+      console.error('[send-reply-email] Email delivery failed for message:', messageId);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Reply sent successfully' }),
+      JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
-    console.error('Error sending reply:', err);
+    console.error('[send-reply-email] Unhandled error:', err);
     return new Response(
       JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -93,6 +93,8 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 PLATFORM_FEE_PERCENTAGE=35
 APP_URL=http://localhost:4200
+RESEND_API_KEY=re_...
+RESEND_FROM_ADDRESS=Convozo <onboarding@resend.dev>
 ```
 
 ### OAuth Setup
@@ -147,12 +149,13 @@ supabase/
 │   ├── 005_add_instagram_username.sql
 │   └── 006_availability_rls_policies.sql
 ├── functions/                   # Deno Edge Functions
+│   ├── _shared/email.ts         # Resend email utility & templates
 │   ├── create-checkout-session/ # Stripe Checkout for messages
 │   ├── create-call-booking-session/ # Stripe Checkout for calls
 │   ├── create-connect-account/  # Stripe Connect Express onboarding
 │   ├── verify-connect-account/  # Verify Stripe account status
-│   ├── stripe-webhook/          # Handle payment events
-│   └── send-reply-email/        # Email notification on reply
+│   ├── stripe-webhook/          # Handle payment events & send emails
+│   └── send-reply-email/        # Creator reply → email to sender
 └── seed.sql                     # Dev seed data
 ```
 
@@ -179,6 +182,20 @@ All tables use Row Level Security. Creators access only their own data. Public u
 - **Typed events** — `inputValue(event: Event)` helpers instead of `$any()` casts
 - **Toast notifications** — `ToastService` with signal-based reactive stack, no `alert()` calls
 - **Barrel exports** — `core/index.ts` and `shared/index.ts` for clean imports
+
+### Email Notifications
+
+Transactional emails are sent via [Resend](https://resend.com) through a shared utility (`supabase/functions/_shared/email.ts`). Every email uses a branded HTML template with XSS-safe escaping.
+
+| Trigger | Recipient | What they receive |
+|---------|-----------|-------------------|
+| Fan sends a paid message | **Fan (sender)** | Payment confirmation with the message content and amount |
+| Fan sends a paid message | **Creator** | New message alert with sender name, email, Instagram handle, message content, and payment amount |
+| Fan books a video call | **Fan (booker)** | Booking confirmation with duration, amount, and next steps |
+| Fan books a video call | **Creator** | New booking alert with booker name, email, Instagram handle, duration, amount, and call notes |
+| Creator replies to a message | **Fan (sender)** | Reply notification showing the original message and the creator's response |
+
+All emails are fire-and-forget — failures are logged but never block the main flow. The `RESEND_API_KEY` environment variable must be set for emails to send; if missing, sends are silently skipped.
 
 ## Deployment
 
@@ -207,6 +224,8 @@ supabase secrets set STRIPE_SECRET_KEY=sk_live_...
 supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 supabase secrets set PLATFORM_FEE_PERCENTAGE=35
 supabase secrets set APP_URL=https://convozo.com
+supabase secrets set RESEND_API_KEY=re_...
+supabase secrets set RESEND_FROM_ADDRESS="Convozo <noreply@convozo.com>"
 ```
 
 ### Stripe
