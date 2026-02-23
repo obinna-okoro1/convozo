@@ -11,7 +11,7 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('APP_URL') || 'http://localhost:4200',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     // Get creator info
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, stripe_accounts(stripe_account_id)')
+      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -107,6 +107,16 @@ Deno.serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
+    const settings = creator.creator_settings as { message_price: number } | null;
+    if (!settings?.message_price || settings.message_price < 100) {
+      return new Response(
+        JSON.stringify({ error: 'Creator pricing not configured' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const serverPrice = settings.message_price;
 
     // PostgREST returns one-to-one relationships as objects, not arrays
     const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
@@ -121,7 +131,7 @@ Deno.serve(async (req) => {
     const validMessageType = message_type === 'call' ? 'call' : 'message';
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
-    const platformFee = Math.floor(price * (platformFeePercentage / 100));
+    const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'http://localhost:4200';
 
     // Check if using test Stripe account (for local development)
@@ -138,7 +148,7 @@ Deno.serve(async (req) => {
               name: `Paid DM to ${creator.display_name}`,
               description: 'Priority direct message',
             },
-            unit_amount: price,
+            unit_amount: serverPrice,
           },
           quantity: 1,
         },
@@ -154,7 +164,7 @@ Deno.serve(async (req) => {
         sender_email,
         sender_instagram: sender_instagram || '',
         message_type: validMessageType,
-        amount: price.toString(),
+        amount: serverPrice.toString(),
       },
     };
 
@@ -177,7 +187,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error('Error creating checkout session:', err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

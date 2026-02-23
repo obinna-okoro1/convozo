@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         
       } else {
         // Handle regular message payment
-        const { creator_id, message_content, sender_name, sender_email, sender_instagram, message_type, amount } = 
+        const { creator_id, message_content, sender_name, sender_email, sender_instagram, message_type } = 
           session.metadata as {
             creator_id: string;
             message_content: string;
@@ -98,10 +98,10 @@ Deno.serve(async (req) => {
             sender_email: string;
             sender_instagram: string;
             message_type: string;
-            amount: string;
           };
 
-        const amountInCents = parseInt(amount);
+        // Use Stripe-authoritative amount, not metadata (prevents manipulation)
+        const amountInCents = session.amount_total || 0;
         const validMessageType = message_type === 'call' ? 'call' : 'message';
 
         // Create the message only after payment succeeds
@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error('Webhook error:', err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Webhook processing failed' }),
       {
         status: 400,
         headers: { 'Content-Type': 'application/json' },

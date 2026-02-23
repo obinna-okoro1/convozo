@@ -11,7 +11,7 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('APP_URL') || 'http://localhost:4200',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const payload: CallBookingPayload = await req.json();
 
     // Validate required fields
-    if (!payload.creator_slug || !payload.booker_name || !payload.booker_email || !payload.booker_instagram || !payload.price) {
+    if (!payload.creator_slug || !payload.booker_name || !payload.booker_email || !payload.booker_instagram) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -56,10 +56,19 @@ Deno.serve(async (req) => {
     }
 
     // PostgREST returns one-to-one relationships as objects, not arrays
-    const settings = creator.creator_settings as { calls_enabled: boolean; call_duration: number } | null;
+    const settings = creator.creator_settings as { calls_enabled: boolean; call_duration: number; call_price: number } | null;
     if (!settings || !settings.calls_enabled) {
       return new Response(
         JSON.stringify({ error: 'Call bookings are not enabled for this creator' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
+    const serverPrice = settings.call_price;
+    if (!serverPrice || serverPrice < 100) {
+      return new Response(
+        JSON.stringify({ error: 'Creator call pricing not configured' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -72,9 +81,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Calculate platform fee (35%)
+    // Calculate platform fee (35%) — using server-authoritative price
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
-    const platformFee = Math.round(payload.price * (platformFeePercentage / 100));
+    const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'http://localhost:4200';
 
     // Check if using test Stripe account (for local development)
@@ -92,7 +101,7 @@ Deno.serve(async (req) => {
               name: `Video Call with ${creator.display_name}`,
               description: `${settings.call_duration} minute video call`,
             },
-            unit_amount: payload.price,
+            unit_amount: serverPrice,
           },
           quantity: 1,
         },
@@ -106,7 +115,7 @@ Deno.serve(async (req) => {
         booker_instagram: payload.booker_instagram,
         message_content: payload.message_content || '',
         duration: settings.call_duration.toString(),
-        amount: payload.price.toString(),
+        amount: serverPrice.toString(),
       },
       customer_email: payload.booker_email,
       success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=call`,
@@ -132,7 +141,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error('Error creating call booking session:', err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
