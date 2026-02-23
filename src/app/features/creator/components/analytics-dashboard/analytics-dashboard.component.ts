@@ -149,10 +149,10 @@ import { Message, CallBooking } from '../../../../core/models';
           </svg>
           Revenue Trend (Last 30 Days)
         </h3>
-        <div class="h-44 flex items-end justify-between gap-[3px]">
+        <div class="h-44 flex items-end justify-between gap-[0.1875rem]">
           @for (day of analytics().dailyStats; track day.date) {
             <div
-              class="flex-1 bg-gradient-to-t from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 rounded-t-lg transition-all duration-200 cursor-pointer group relative min-h-[3px] opacity-80 hover:opacity-100"
+              class="flex-1 bg-gradient-to-t from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 rounded-t-lg transition-all duration-200 cursor-pointer group relative min-h-[0.1875rem] opacity-80 hover:opacity-100"
               [style.height.%]="getBarHeight(day.revenue)"
               [title]="day.date + ': ' + formatCurrency(day.revenue)"
             >

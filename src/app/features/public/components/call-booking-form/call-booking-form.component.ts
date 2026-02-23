@@ -139,7 +139,7 @@ interface AvailabilityByDay {
               @for (day of availabilityByDay(); track day.day) {
                 <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all duration-200">
                   <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
-                    <span class="text-[10px] font-extrabold text-white uppercase">{{ day.day.substring(0, 2) }}</span>
+                    <span class="text-[0.625rem] font-extrabold text-white uppercase">{{ day.day.substring(0, 2) }}</span>
                   </div>
                   <div class="flex flex-wrap gap-x-3 gap-y-1">
                     @for (slot of day.slots; track $index) {
