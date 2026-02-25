@@ -7,7 +7,9 @@
  * Truncate string to specified length
  */
 export function truncate(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str;
+  if (str.length <= maxLength) {
+    return str;
+  }
   return str.substring(0, maxLength) + '...';
 }
 
@@ -15,7 +17,9 @@ export function truncate(str: string, maxLength: number): string {
  * Capitalize first letter of string
  */
 export function capitalize(str: string): string {
-  if (!str) return str;
+  if (!str) {
+    return str;
+  }
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 

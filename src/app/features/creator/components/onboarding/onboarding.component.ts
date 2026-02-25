@@ -4,21 +4,170 @@
  * Now with OAuth auto-import support
  */
 
-import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CreatorService } from '../../services/creator.service';
-import { AuthService, OAuthUserData } from '../../../auth/services/auth.service';
+import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
-import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
+import { AuthService } from '../../../auth/services/auth.service';
+import { CreatorService } from '../../services/creator.service';
+
+/**
+ * Country code entry for the phone number dropdown
+ */
+interface CountryCode {
+  code: string; // dial code e.g. "+1"
+  country: string; // country name
+  flag: string; // emoji flag
+  iso: string; // ISO 3166-1 alpha-2
+}
+
+/**
+ * Common country codes for the phone number dropdown
+ */
+const COUNTRY_CODES: CountryCode[] = [
+  { code: '+1', country: 'United States', flag: '🇺🇸', iso: 'US' },
+  { code: '+1', country: 'Canada', flag: '🇨🇦', iso: 'CA' },
+  { code: '+44', country: 'United Kingdom', flag: '🇬🇧', iso: 'GB' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺', iso: 'AU' },
+  { code: '+91', country: 'India', flag: '🇮🇳', iso: 'IN' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪', iso: 'DE' },
+  { code: '+33', country: 'France', flag: '🇫🇷', iso: 'FR' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵', iso: 'JP' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷', iso: 'KR' },
+  { code: '+86', country: 'China', flag: '🇨🇳', iso: 'CN' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷', iso: 'BR' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽', iso: 'MX' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹', iso: 'IT' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸', iso: 'ES' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱', iso: 'NL' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪', iso: 'SE' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴', iso: 'NO' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰', iso: 'DK' },
+  { code: '+358', country: 'Finland', flag: '🇫🇮', iso: 'FI' },
+  { code: '+48', country: 'Poland', flag: '🇵🇱', iso: 'PL' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭', iso: 'CH' },
+  { code: '+43', country: 'Austria', flag: '🇦🇹', iso: 'AT' },
+  { code: '+32', country: 'Belgium', flag: '🇧🇪', iso: 'BE' },
+  { code: '+351', country: 'Portugal', flag: '🇵🇹', iso: 'PT' },
+  { code: '+353', country: 'Ireland', flag: '🇮🇪', iso: 'IE' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿', iso: 'NZ' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬', iso: 'SG' },
+  { code: '+852', country: 'Hong Kong', flag: '🇭🇰', iso: 'HK' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪', iso: 'AE' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦', iso: 'SA' },
+  { code: '+972', country: 'Israel', flag: '🇮🇱', iso: 'IL' },
+  { code: '+90', country: 'Turkey', flag: '🇹🇷', iso: 'TR' },
+  { code: '+27', country: 'South Africa', flag: '🇿🇦', iso: 'ZA' },
+  { code: '+234', country: 'Nigeria', flag: '🇳🇬', iso: 'NG' },
+  { code: '+254', country: 'Kenya', flag: '🇰🇪', iso: 'KE' },
+  { code: '+20', country: 'Egypt', flag: '🇪🇬', iso: 'EG' },
+  { code: '+63', country: 'Philippines', flag: '🇵🇭', iso: 'PH' },
+  { code: '+66', country: 'Thailand', flag: '🇹🇭', iso: 'TH' },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾', iso: 'MY' },
+  { code: '+62', country: 'Indonesia', flag: '🇮🇩', iso: 'ID' },
+  { code: '+84', country: 'Vietnam', flag: '🇻🇳', iso: 'VN' },
+  { code: '+92', country: 'Pakistan', flag: '🇵🇰', iso: 'PK' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩', iso: 'BD' },
+  { code: '+94', country: 'Sri Lanka', flag: '🇱🇰', iso: 'LK' },
+  { code: '+57', country: 'Colombia', flag: '🇨🇴', iso: 'CO' },
+  { code: '+56', country: 'Chile', flag: '🇨🇱', iso: 'CL' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷', iso: 'AR' },
+  { code: '+51', country: 'Peru', flag: '🇵🇪', iso: 'PE' },
+  { code: '+7', country: 'Russia', flag: '🇷🇺', iso: 'RU' },
+  { code: '+380', country: 'Ukraine', flag: '🇺🇦', iso: 'UA' },
+  { code: '+40', country: 'Romania', flag: '🇷🇴', iso: 'RO' },
+  { code: '+420', country: 'Czech Republic', flag: '🇨🇿', iso: 'CZ' },
+  { code: '+36', country: 'Hungary', flag: '🇭🇺', iso: 'HU' },
+  { code: '+30', country: 'Greece', flag: '🇬🇷', iso: 'GR' },
+];
+
+/**
+ * Map timezone to ISO country code for auto-detection
+ */
+const TIMEZONE_TO_COUNTRY: Record<string, string> = {
+  'America/New_York': 'US',
+  'America/Chicago': 'US',
+  'America/Denver': 'US',
+  'America/Los_Angeles': 'US',
+  'America/Phoenix': 'US',
+  'America/Anchorage': 'US',
+  'Pacific/Honolulu': 'US',
+  'America/Detroit': 'US',
+  'America/Indiana/Indianapolis': 'US',
+  'America/Toronto': 'CA',
+  'America/Vancouver': 'CA',
+  'America/Edmonton': 'CA',
+  'America/Winnipeg': 'CA',
+  'America/Halifax': 'CA',
+  'America/St_Johns': 'CA',
+  'Europe/London': 'GB',
+  'Europe/Dublin': 'IE',
+  'Australia/Sydney': 'AU',
+  'Australia/Melbourne': 'AU',
+  'Australia/Perth': 'AU',
+  'Australia/Brisbane': 'AU',
+  'Australia/Adelaide': 'AU',
+  'Asia/Kolkata': 'IN',
+  'Asia/Calcutta': 'IN',
+  'Europe/Berlin': 'DE',
+  'Europe/Paris': 'FR',
+  'Asia/Tokyo': 'JP',
+  'Asia/Seoul': 'KR',
+  'Asia/Shanghai': 'CN',
+  'Asia/Hong_Kong': 'HK',
+  'America/Sao_Paulo': 'BR',
+  'America/Mexico_City': 'MX',
+  'Europe/Rome': 'IT',
+  'Europe/Madrid': 'ES',
+  'Europe/Amsterdam': 'NL',
+  'Europe/Stockholm': 'SE',
+  'Europe/Oslo': 'NO',
+  'Europe/Copenhagen': 'DK',
+  'Europe/Helsinki': 'FI',
+  'Europe/Warsaw': 'PL',
+  'Europe/Zurich': 'CH',
+  'Europe/Vienna': 'AT',
+  'Europe/Brussels': 'BE',
+  'Europe/Lisbon': 'PT',
+  'Pacific/Auckland': 'NZ',
+  'Asia/Singapore': 'SG',
+  'Asia/Dubai': 'AE',
+  'Asia/Riyadh': 'SA',
+  'Asia/Jerusalem': 'IL',
+  'Europe/Istanbul': 'TR',
+  'Africa/Johannesburg': 'ZA',
+  'Africa/Lagos': 'NG',
+  'Africa/Nairobi': 'KE',
+  'Africa/Cairo': 'EG',
+  'Asia/Manila': 'PH',
+  'Asia/Bangkok': 'TH',
+  'Asia/Kuala_Lumpur': 'MY',
+  'Asia/Jakarta': 'ID',
+  'Asia/Ho_Chi_Minh': 'VN',
+  'Asia/Karachi': 'PK',
+  'Asia/Dhaka': 'BD',
+  'Asia/Colombo': 'LK',
+  'America/Bogota': 'CO',
+  'America/Santiago': 'CL',
+  'America/Argentina/Buenos_Aires': 'AR',
+  'America/Lima': 'PE',
+  'Europe/Moscow': 'RU',
+  'Europe/Kiev': 'UA',
+  'Europe/Bucharest': 'RO',
+  'Europe/Prague': 'CZ',
+  'Europe/Budapest': 'HU',
+  'Europe/Athens': 'GR',
+};
 
 @Component({
   selector: 'app-onboarding',
   imports: [CommonModule, FormsModule],
   templateUrl: './onboarding.component.html',
-  styleUrls: ['./onboarding.component.css']
+  styleUrls: ['./onboarding.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OnboardingComponent implements OnInit {
   // Step management
@@ -34,24 +183,50 @@ export class OnboardingComponent implements OnInit {
   protected readonly profileImagePreview = signal<string | null>(null);
   protected readonly uploading = signal<boolean>(false);
   protected readonly instagramUsername = signal<string>(''); // Manual text input, not OAuth
-  
+
+  // Phone number
+  protected readonly countryCodes = COUNTRY_CODES;
+  protected readonly selectedCountryIndex = signal<number>(0); // index into COUNTRY_CODES
+  protected readonly phoneNumber = signal<string>(''); // local number without country code
+  protected readonly fullPhoneNumber = computed(() => {
+    const country = COUNTRY_CODES[this.selectedCountryIndex()];
+    const local = this.phoneNumber().trim();
+    if (!local) {
+      return '';
+    }
+    return `${country.code} ${local}`;
+  });
+
   // Pricing form data
   protected readonly messagePrice = signal<number>(1000); // in cents ($10)
   protected readonly callPrice = signal<number>(5000); // in cents ($50)
   protected readonly callDuration = signal<number>(30); // minutes
   protected readonly callsEnabled = signal<boolean>(false);
-  protected readonly responseExpectation = signal<string>(APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION);
+  protected readonly responseExpectation = signal<string>(
+    APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
+  );
 
   // Stripe Connect
   protected readonly stripeConnecting = signal<boolean>(false);
   protected readonly stripeConnected = signal<boolean>(false);
-  
+
   // OAuth import indicator
   protected readonly hasOAuthData = signal<boolean>(false);
   protected readonly oauthProvider = signal<string>('');
 
   // Constants
   protected readonly TOTAL_STEPS = 4;
+
+  constructor(
+    private readonly creatorService: CreatorService,
+    private readonly authService: AuthService,
+    private readonly supabaseService: SupabaseService,
+    private readonly router: Router,
+  ) {}
+
+  public ngOnInit(): void {
+    void this.initialize();
+  }
 
   /**
    * Extract string value from an input/textarea/select event
@@ -74,68 +249,18 @@ export class OnboardingComponent implements OnInit {
     return (event.target as HTMLInputElement).checked;
   }
 
-  constructor(
-    private readonly creatorService: CreatorService,
-    private readonly authService: AuthService,
-    private readonly supabaseService: SupabaseService,
-    private readonly router: Router
-  ) {}
-
-  public async ngOnInit(): Promise<void> {
-    await this.checkExistingProfile();
-    this.loadOAuthData();
-  }
-
-  /**
-   * Load OAuth data if available and auto-fill form
-   */
-  private loadOAuthData(): void {
-    const oauthData = this.authService.getStoredOAuthData();
-    if (!oauthData) return;
-
-    this.hasOAuthData.set(true);
-    this.oauthProvider.set(oauthData.provider || '');
-
-    // Auto-fill form fields
-    if (oauthData.full_name) {
-      this.displayName.set(oauthData.full_name);
-      this.slug.set(FormValidators.generateSlug(oauthData.full_name));
-    }
-
-    if (oauthData.avatar_url) {
-      this.profileImageUrl.set(oauthData.avatar_url);
-      this.profileImagePreview.set(oauthData.avatar_url);
-    }
-  }
-
-  /**
-   * Check if user already has a profile
-   */
-  private async checkExistingProfile(): Promise<void> {
-    const user = this.authService.getCurrentUser();
-    if (!user) {
-      await this.router.navigate([ROUTES.AUTH.LOGIN]);
-      return;
-    }
-
-    const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
-    if (creator) {
-      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
-    }
-  }
-
   /**
    * Navigate steps
    */
   protected nextStep(): void {
     if (this.currentStep() < this.TOTAL_STEPS) {
-      this.currentStep.update(s => s + 1);
+      this.currentStep.update((s) => s + 1);
     }
   }
 
   protected prevStep(): void {
     if (this.currentStep() > 1) {
-      this.currentStep.update(s => s - 1);
+      this.currentStep.update((s) => s - 1);
     }
   }
 
@@ -155,7 +280,9 @@ export class OnboardingComponent implements OnInit {
   protected async handleFileUpload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (!file.type.startsWith('image/')) {
       this.error.set('Please upload an image file');
@@ -178,14 +305,18 @@ export class OnboardingComponent implements OnInit {
       reader.readAsDataURL(file);
 
       const userId = this.authService.getCurrentUser()?.id;
-      if (!userId) throw new Error('User not authenticated');
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const fileName = `${userId}-${String(Date.now())}.${fileExt ?? ''}`;
       const filePath = `avatars/${fileName}`;
 
       const { data, error } = await this.supabaseService.uploadFile('public', filePath, file);
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data?.publicUrl) {
         this.profileImageUrl.set(data.publicUrl);
@@ -228,8 +359,9 @@ export class OnboardingComponent implements OnInit {
         displayName: this.displayName(),
         bio: this.bio(),
         slug: this.slug(),
+        phoneNumber: this.fullPhoneNumber(),
         profileImageUrl: this.profileImageUrl() || undefined,
-        instagramUsername: this.instagramUsername() || undefined
+        instagramUsername: this.instagramUsername() || undefined,
       });
 
       if (creatorError || !creator) {
@@ -243,7 +375,7 @@ export class OnboardingComponent implements OnInit {
         callPrice: this.callsEnabled() ? this.callPrice() : undefined,
         callDuration: this.callsEnabled() ? this.callDuration() : undefined,
         callsEnabled: this.callsEnabled(),
-        responseExpectation: this.responseExpectation()
+        responseExpectation: this.responseExpectation(),
       });
 
       if (settingsError) {
@@ -282,11 +414,11 @@ export class OnboardingComponent implements OnInit {
       const { data, error } = await this.creatorService.createStripeConnectAccount(
         creator.id,
         user.email || '',
-        this.displayName()
+        this.displayName(),
       );
 
       if (error || !data?.url) {
-        throw error || new Error('Failed to create Stripe Connect account');
+        throw error instanceof Error ? error : new Error('Failed to create Stripe Connect account');
       }
 
       // Redirect to Stripe OAuth
@@ -301,6 +433,70 @@ export class OnboardingComponent implements OnInit {
    * Skip Stripe setup for now
    */
   protected skipStripeSetup(): void {
-    this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+    void this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+  }
+
+  private async initialize(): Promise<void> {
+    this.detectCountryCode();
+    await this.checkExistingProfile();
+    this.loadOAuthData();
+  }
+
+  /**
+   * Auto-detect country code from browser timezone
+   */
+  private detectCountryCode(): void {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const iso = TIMEZONE_TO_COUNTRY[tz];
+      if (iso) {
+        const idx = COUNTRY_CODES.findIndex((c) => c.iso === iso);
+        if (idx >= 0) {
+          this.selectedCountryIndex.set(idx);
+        }
+      }
+    } catch {
+      // Fallback: default to US (index 0)
+    }
+  }
+
+  /**
+   * Load OAuth data if available and auto-fill form
+   */
+  private loadOAuthData(): void {
+    const oauthData = this.authService.getStoredOAuthData();
+    if (!oauthData) {
+      return;
+    }
+
+    this.hasOAuthData.set(true);
+    this.oauthProvider.set(oauthData.provider || '');
+
+    // Auto-fill form fields
+    if (oauthData.full_name) {
+      this.displayName.set(oauthData.full_name);
+      this.slug.set(FormValidators.generateSlug(oauthData.full_name));
+    }
+
+    if (oauthData.avatar_url) {
+      this.profileImageUrl.set(oauthData.avatar_url);
+      this.profileImagePreview.set(oauthData.avatar_url);
+    }
+  }
+
+  /**
+   * Check if user already has a profile
+   */
+  private async checkExistingProfile(): Promise<void> {
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      await this.router.navigate([ROUTES.AUTH.LOGIN]);
+      return;
+    }
+
+    const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
+    if (creator) {
+      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+    }
   }
 }

@@ -1,0 +1,451 @@
+{
+  "root": true,
+
+  "ignorePatterns": [
+    "projects/**/*",
+    "dist/**",
+    "node_modules/**",
+    "coverage/**",
+    "supabase/functions/**",
+    "*.js"
+  ],
+
+  "overrides": [
+    /*──────────────────────────────────────────────────────────────────────────
+     *  TYPESCRIPT FILES  (.ts)
+     *  Applies to every *.ts file under src/
+     *──────────────────────────────────────────────────────────────────────────*/
+    {
+      "files": ["*.ts"],
+
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": ["tsconfig.eslint.json"],
+        "createDefaultProgram": false
+      },
+
+      "plugins": [
+        "@typescript-eslint",
+        "@angular-eslint",
+        "import",
+        "rxjs",
+        "prettier"
+      ],
+
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/strict-type-checked",
+        "plugin:@typescript-eslint/stylistic-type-checked",
+        "plugin:@angular-eslint/recommended",
+        "plugin:import/typescript",
+        "plugin:rxjs/recommended",
+        "plugin:prettier/recommended"
+      ],
+
+      "settings": {
+        "import/resolver": {
+          "typescript": {
+            "alwaysTryTypes": true,
+            "project": "tsconfig.eslint.json"
+          }
+        }
+      },
+
+      "rules": {
+        /*────────────────────────────────────────
+         *  1. STRICT TYPESCRIPT
+         *
+         *  Prevents silent type-safety holes.
+         *  `no-explicit-any` stops the escape hatch,
+         *  `strict-boolean-expressions` catches
+         *  accidental truthy/falsy coercions, and
+         *  `no-floating-promises` forces every
+         *  async path to be awaited or handled.
+         *────────────────────────────────────────*/
+        "@typescript-eslint/no-explicit-any": "error",
+        "@typescript-eslint/no-unsafe-assignment": "error",
+        "@typescript-eslint/no-unsafe-call": "error",
+        "@typescript-eslint/no-unsafe-member-access": "error",
+        "@typescript-eslint/no-unsafe-return": "error",
+        "@typescript-eslint/no-unsafe-argument": "error",
+        "@typescript-eslint/no-floating-promises": "error",
+        "@typescript-eslint/no-misused-promises": "error",
+        "@typescript-eslint/await-thenable": "error",
+        "@typescript-eslint/require-await": "error",
+        "@typescript-eslint/strict-boolean-expressions": [
+          "error",
+          {
+            "allowString": true,
+            "allowNumber": false,
+            "allowNullableObject": true,
+            "allowNullableBoolean": true,
+            "allowNullableString": true
+          }
+        ],
+        "@typescript-eslint/no-unnecessary-condition": "warn",
+        "@typescript-eslint/no-unnecessary-type-assertion": "error",
+        "@typescript-eslint/prefer-nullish-coalescing": "warn",
+        "@typescript-eslint/prefer-optional-chain": "warn",
+        "@typescript-eslint/no-non-null-assertion": "warn",
+        "@typescript-eslint/no-redundant-type-constituents": "warn",
+        "@typescript-eslint/switch-exhaustiveness-check": "error",
+        "@typescript-eslint/consistent-type-exports": "error",
+        "@typescript-eslint/consistent-type-imports": "off",
+        "@typescript-eslint/no-import-type-side-effects": "off",
+        "@typescript-eslint/no-inferrable-types": "off",
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "vars": "all",
+            "args": "after-used",
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "ignoreRestSiblings": true
+          }
+        ],
+        "import/no-unused-modules": [
+          "warn",
+          { "unusedExports": true }
+        ],
+        "@typescript-eslint/no-extraneous-class": [
+          "error",
+          { "allowWithDecorator": true }
+        ],
+
+        /*────────────────────────────────────────
+         *  2. NAMING CONVENTIONS
+         *
+         *  Enforces consistent casing across the
+         *  codebase: PascalCase for types/classes,
+         *  camelCase for variables/functions, and
+         *  UPPER_CASE for constants. Reduces
+         *  cognitive load during code review.
+         *────────────────────────────────────────*/
+        "@typescript-eslint/naming-convention": [
+          "warn",
+          {
+            "selector": "default",
+            "format": ["camelCase"],
+            "leadingUnderscore": "allow",
+            "trailingUnderscore": "allow"
+          },
+          {
+            "selector": "variable",
+            "format": ["camelCase", "UPPER_CASE"],
+            "leadingUnderscore": "allow"
+          },
+          {
+            "selector": "parameter",
+            "format": ["camelCase"],
+            "leadingUnderscore": "allow"
+          },
+          {
+            "selector": "typeLike",
+            "format": ["PascalCase"]
+          },
+          {
+            "selector": "enumMember",
+            "format": ["PascalCase", "UPPER_CASE"]
+          },
+          {
+            "selector": "property",
+            "format": null
+          },
+          {
+            "selector": "objectLiteralProperty",
+            "format": null
+          }
+        ],
+
+        /*────────────────────────────────────────
+         *  3. ACCESS MODIFIERS & MEMBER ORDERING
+         *
+         *  Every class property and method must have
+         *  an explicit access modifier (public,
+         *  protected, private). Private members are
+         *  ordered last so the public API of a class
+         *  is always visible at the top of the file.
+         *────────────────────────────────────────*/
+        "@typescript-eslint/explicit-member-accessibility": [
+          "error",
+          {
+            "accessibility": "explicit",
+            "overrides": {
+              "constructors": "no-public",
+              "accessors": "explicit",
+              "methods": "explicit",
+              "properties": "explicit",
+              "parameterProperties": "explicit"
+            }
+          }
+        ],
+        "@typescript-eslint/member-ordering": [
+          "warn",
+          {
+            "default": [
+              "public-static-field",
+              "public-decorated-field",
+              "public-instance-field",
+
+              "protected-static-field",
+              "protected-decorated-field",
+              "protected-instance-field",
+
+              "private-static-field",
+              "private-decorated-field",
+              "private-instance-field",
+
+              "constructor",
+
+              "public-static-get",
+              "public-static-set",
+              "public-static-method",
+              "public-decorated-get",
+              "public-decorated-set",
+              "public-decorated-method",
+              "public-instance-get",
+              "public-instance-set",
+              "public-instance-method",
+
+              "protected-static-get",
+              "protected-static-set",
+              "protected-static-method",
+              "protected-decorated-get",
+              "protected-decorated-set",
+              "protected-decorated-method",
+              "protected-instance-get",
+              "protected-instance-set",
+              "protected-instance-method",
+
+              "private-static-get",
+              "private-static-set",
+              "private-static-method",
+              "private-decorated-get",
+              "private-decorated-set",
+              "private-decorated-method",
+              "private-instance-get",
+              "private-instance-set",
+              "private-instance-method"
+            ]
+          }
+        ],
+
+        /*────────────────────────────────────────
+         *  4. ANGULAR BEST PRACTICES
+         *
+         *  Enforces the "app" selector prefix for
+         *  components/directives, prevents empty
+         *  lifecycle hooks, and ensures proper use
+         *  of standalone component APIs. Inline
+         *  templates are banned — always use a
+         *  separate .html templateUrl file.
+         *────────────────────────────────────────*/
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "type": "attribute",
+            "prefix": "app",
+            "style": "camelCase"
+          }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": "app",
+            "style": "kebab-case"
+          }
+        ],
+        "@angular-eslint/no-empty-lifecycle-method": "error",
+        "@angular-eslint/use-lifecycle-interface": "error",
+        "@angular-eslint/contextual-lifecycle": "error",
+        "@angular-eslint/prefer-inject": "off",
+        "@angular-eslint/no-input-rename": "error",
+        "@angular-eslint/no-output-rename": "error",
+        "@angular-eslint/no-output-native": "error",
+        "@angular-eslint/no-output-on-prefix": "error",
+        "@angular-eslint/prefer-on-push-component-change-detection": "warn",
+        "@angular-eslint/use-component-view-encapsulation": "warn",
+        "@angular-eslint/relative-url-prefix": "error",
+        "@angular-eslint/component-class-suffix": "error",
+        "@angular-eslint/directive-class-suffix": "error",
+        "@angular-eslint/component-max-inline-declarations": [
+          "error",
+          {
+            "template": 0
+          }
+        ],
+
+        /*────────────────────────────────────────
+         *  5. RxJS SAFETY
+         *
+         *  Prevents common RxJS foot-guns: leaked
+         *  subscriptions (no-ignored-subscribe),
+         *  exposed subjects that break encapsulation,
+         *  and unsafe first/takeUntil placement.
+         *────────────────────────────────────────*/
+        "rxjs/no-ignored-subscription": "error",
+        "rxjs/no-nested-subscribe": "error",
+        "rxjs/no-unbound-methods": "warn",
+        "rxjs/throw-error": "error",
+        "rxjs/no-implicit-any-catch": "off",
+        "rxjs/no-exposed-subjects": [
+          "warn",
+          { "allowProtected": true }
+        ],
+        "rxjs/finnish": [
+          "warn",
+          {
+            "functions": false,
+            "methods": false,
+            "parameters": true,
+            "properties": true,
+            "variables": true
+          }
+        ],
+
+        /*────────────────────────────────────────
+         *  6. IMPORT ORDERING & HYGIENE
+         *
+         *  Keeps imports grouped and sorted:
+         *  builtins → external libs → internal
+         *  modules → relative paths. Prevents
+         *  accidental deep imports into library
+         *  internals.
+         *────────────────────────────────────────*/
+        "import/order": [
+          "warn",
+          {
+            "groups": [
+              "builtin",
+              "external",
+              "internal",
+              ["parent", "sibling", "index"]
+            ],
+            "newlines-between": "never",
+            "alphabetize": { "order": "asc", "caseInsensitive": true }
+          }
+        ],
+        "import/no-duplicates": "error",
+        "import/no-self-import": "error",
+        "import/no-cycle": ["warn", { "maxDepth": 4 }],
+        "import/no-useless-path-segments": "error",
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@angular/core/testing*"],
+                "message": "Do not import testing utilities in production code."
+              },
+              {
+                "group": ["rxjs/internal/*"],
+                "message": "Do not import from rxjs/internal — use the public API."
+              }
+            ]
+          }
+        ],
+
+        /*────────────────────────────────────────
+         *  7. COMPLEXITY LIMITS
+         *
+         *  Keeps individual functions / files
+         *  from growing unwieldy. These thresholds
+         *  are intentionally generous to avoid
+         *  noise but still catch egregious cases.
+         *────────────────────────────────────────*/
+        "max-lines": ["warn", { "max": 400, "skipBlankLines": true, "skipComments": true }],
+        "max-lines-per-function": ["warn", { "max": 75, "skipBlankLines": true, "skipComments": true }],
+        "max-depth": ["warn", 4],
+        "complexity": ["warn", 15],
+        "max-params": ["warn", 5],
+
+        /*────────────────────────────────────────
+         *  8. GENERAL QUALITY
+         *
+         *  Core ESLint rules that catch mistakes
+         *  regardless of the framework.
+         *────────────────────────────────────────*/
+        "no-console": ["warn", { "allow": ["warn", "error"] }],
+        "no-debugger": "error",
+        "no-alert": "error",
+        "no-duplicate-case": "error",
+        "no-irregular-whitespace": "error",
+        "no-template-curly-in-string": "error",
+        "curly": ["error", "all"],
+        "eqeqeq": ["error", "always", { "null": "ignore" }],
+        "no-eval": "error",
+        "no-implied-eval": "error",
+        "no-new-wrappers": "error",
+        "no-throw-literal": "error",
+        "prefer-const": "error",
+        "no-var": "error",
+        "no-return-await": "off",
+        "@typescript-eslint/return-await": ["error", "in-try-catch"],
+
+        /*────────────────────────────────────────
+         *  9. PRETTIER (must be last)
+         *
+         *  Disables all ESLint formatting rules
+         *  that would conflict with Prettier, then
+         *  reports Prettier violations as ESLint
+         *  errors so a single `lint:fix` pass
+         *  handles both logic and formatting.
+         *────────────────────────────────────────*/
+        "prettier/prettier": [
+          "warn",
+          {
+            "printWidth": 100,
+            "singleQuote": true,
+            "trailingComma": "all",
+            "arrowParens": "always",
+            "endOfLine": "lf",
+            "bracketSpacing": true
+          }
+        ]
+      }
+    },
+
+    /*──────────────────────────────────────────────────────────────────────────
+     *  ANGULAR HTML TEMPLATES  (.html)
+     *
+     *  Uses @angular-eslint/template-parser to lint
+     *  inline and external Angular templates. Catches
+     *  banana-in-box typos, call-expressions in
+     *  bindings (which hurt change-detection perf),
+     *  and accessibility issues.
+     *──────────────────────────────────────────────────────────────────────────*/
+    {
+      "files": ["*.html"],
+
+      "parser": "@angular-eslint/template-parser",
+
+      "plugins": ["@angular-eslint/template"],
+
+      "extends": [
+        "plugin:@angular-eslint/template/recommended",
+        "plugin:@angular-eslint/template/accessibility"
+      ],
+
+      "rules": {
+        "@angular-eslint/template/banana-in-box": "error",
+        "@angular-eslint/template/no-negated-async": "error",
+        "@angular-eslint/template/eqeqeq": ["error", { "allowNullOrUndefined": true }],
+        "@angular-eslint/template/no-duplicate-attributes": "error",
+        "@angular-eslint/template/no-call-expression": "off",
+        "@angular-eslint/template/use-track-by-function": "warn",
+        "@angular-eslint/template/click-events-have-key-events": "warn",
+        "@angular-eslint/template/interactive-supports-focus": "warn",
+        "@angular-eslint/template/alt-text": "warn",
+        "@angular-eslint/template/elements-content": "warn",
+        "@angular-eslint/template/label-has-associated-control": "warn",
+        "@angular-eslint/template/valid-aria": "warn",
+        "@angular-eslint/template/role-has-required-aria": "warn",
+        "@angular-eslint/template/table-scope": "error",
+        "@angular-eslint/template/no-autofocus": "warn",
+        "@angular-eslint/template/no-positive-tabindex": "error"
+      }
+    }
+  ]
+}

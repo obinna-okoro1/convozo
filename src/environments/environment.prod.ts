@@ -8,5 +8,6 @@ export const environment = {
     publishableKey: 'YOUR_STRIPE_PUBLISHABLE_KEY',
   },
   platformFeePercentage: 35, // 35% platform fee (Option A: Stripe fees come out of platform's cut, creator gets 65% flat)
-  vapidPublicKey: 'BMUmrPyd-C_NfHyTfq2PzEiTFTYdRtx1tSFQM7eknpvNHmYdU3-i9AiEQzVVie3T8bh4iVO8L9zEivHsibsv3pc',
+  vapidPublicKey:
+    'BMUmrPyd-C_NfHyTfq2PzEiTFTYdRtx1tSFQM7eknpvNHmYdU3-i9AiEQzVVie3T8bh4iVO8L9zEivHsibsv3pc',
 };

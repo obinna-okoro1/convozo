@@ -21,7 +21,7 @@
       <div class="mb-10 animate-fade-in">
         <div class="flex items-center justify-center space-x-2">
           <div class="flex items-center">
-            <div [class]="currentStep() >= 1 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10'" class="rounded-full flex items-center justify-center font-bold transition-all duration-500">
+            <div [class]="currentStep() >= 1 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold transition-all duration-500' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold transition-all duration-500'">
               @if (currentStep() > 1) {
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -30,11 +30,11 @@
                 1
               }
             </div>
-            <span class="ml-2 font-semibold text-sm" [class]="currentStep() >= 1 ? 'text-white' : 'text-white/40'">Profile</span>
+            <span [class]="currentStep() >= 1 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Profile</span>
           </div>
-          <div class="w-12 h-1 rounded-full transition-all duration-500" [class]="currentStep() >= 2 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-white/10'"></div>
+          <div [class]="currentStep() >= 2 ? 'w-12 h-1 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-12 h-1 rounded-full transition-all duration-500 bg-white/10'"></div>
           <div class="flex items-center">
-            <div [class]="currentStep() >= 2 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10'" class="rounded-full flex items-center justify-center font-bold transition-all duration-500">
+            <div [class]="currentStep() >= 2 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold transition-all duration-500' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold transition-all duration-500'">
               @if (currentStep() > 2) {
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -43,11 +43,11 @@
                 2
               }
             </div>
-            <span class="ml-2 font-semibold text-sm" [class]="currentStep() >= 2 ? 'text-white' : 'text-white/40'">Pricing</span>
+            <span [class]="currentStep() >= 2 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Pricing</span>
           </div>
-          <div class="w-12 h-1 rounded-full transition-all duration-500" [class]="currentStep() >= 3 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-white/10'"></div>
+          <div [class]="currentStep() >= 3 ? 'w-12 h-1 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-12 h-1 rounded-full transition-all duration-500 bg-white/10'"></div>
           <div class="flex items-center">
-            <div [class]="currentStep() >= 3 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10'" class="rounded-full flex items-center justify-center font-bold transition-all duration-500">
+            <div [class]="currentStep() >= 3 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold transition-all duration-500' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold transition-all duration-500'">
               @if (currentStep() > 3) {
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -56,14 +56,14 @@
                 3
               }
             </div>
-            <span class="ml-2 font-semibold text-sm" [class]="currentStep() >= 3 ? 'text-white' : 'text-white/40'">Review</span>
+            <span [class]="currentStep() >= 3 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Review</span>
           </div>
-          <div class="w-12 h-1 rounded-full transition-all duration-500" [class]="currentStep() >= 4 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-white/10'"></div>
+          <div [class]="currentStep() >= 4 ? 'w-12 h-1 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-12 h-1 rounded-full transition-all duration-500 bg-white/10'"></div>
           <div class="flex items-center">
-            <div [class]="currentStep() >= 4 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10'" class="rounded-full flex items-center justify-center font-bold transition-all duration-500">
+            <div [class]="currentStep() >= 4 ? 'w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold transition-all duration-500' : 'w-10 h-10 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold transition-all duration-500'">
               4
             </div>
-            <span class="ml-2 font-semibold text-sm" [class]="currentStep() >= 4 ? 'text-white' : 'text-white/40'">Payments</span>
+            <span [class]="currentStep() >= 4 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Payments</span>
           </div>
         </div>
       </div>
@@ -226,12 +226,51 @@
                 </div>
                 <p class="text-xs text-white/50 mt-2">Your Instagram handle to display your feed on your profile</p>
               </div>
+
+              <!-- Phone Number -->
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-white">Phone Number *</label>
+                <div class="flex items-stretch gap-2">
+                  <!-- Country Code Dropdown -->
+                  <div class="relative group">
+                    <select
+                      [value]="selectedCountryIndex()"
+                      (change)="selectedCountryIndex.set(+inputValue($event))"
+                      class="appearance-none h-full pl-3 pr-8 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 cursor-pointer text-sm min-w-[8rem]"
+                    >
+                      @for (cc of countryCodes; track cc.iso; let i = $index) {
+                        <option [value]="i" class="bg-slate-900 text-white">{{ cc.flag }} {{ cc.country }} ({{ cc.code }})</option>
+                      }
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <!-- Phone Number Input -->
+                  <div class="relative flex-1 group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                      <span class="text-white/60 text-sm font-medium">{{ countryCodes[selectedCountryIndex()].code }}</span>
+                    </div>
+                    <input
+                      type="tel"
+                      [value]="phoneNumber()"
+                      (input)="phoneNumber.set(inputValue($event))"
+                      placeholder="Phone number"
+                      class="w-full pl-14 pr-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                      required
+                    />
+                  </div>
+                </div>
+                <p class="text-xs text-white/50 mt-2">Your phone number with country code — we auto-detected your region</p>
+              </div>
             </div>
 
             <div class="mt-8 flex justify-end">
               <button
                 (click)="nextStep()"
-                [disabled]="!displayName() || !slug()"
+                [disabled]="!displayName() || !slug() || !phoneNumber()"
                 class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
               >
                 <span>Continue</span>
@@ -395,6 +434,11 @@
               <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
                 <div class="text-sm text-white/60 mb-1">Your URL</div>
                 <div class="font-bold text-white text-lg">convozo.com/{{ slug() }}</div>
+              </div>
+
+              <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
+                <div class="text-sm text-white/60 mb-1">Phone Number</div>
+                <div class="font-bold text-white text-lg">{{ fullPhoneNumber() }}</div>
               </div>
 
               @if (bio()) {

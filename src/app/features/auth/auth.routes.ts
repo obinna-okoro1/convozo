@@ -8,15 +8,17 @@ import { Routes } from '@angular/router';
 export const AUTH_ROUTES: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent),
+    loadComponent: () => import('./components/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'signup',
-    loadComponent: () => import('./components/signup/signup.component').then(m => m.SignupComponent),
+    loadComponent: () =>
+      import('./components/signup/signup.component').then((m) => m.SignupComponent),
   },
   {
     path: 'callback',
-    loadComponent: () => import('./components/callback/callback.component').then(m => m.CallbackComponent),
+    loadComponent: () =>
+      import('./components/callback/callback.component').then((m) => m.CallbackComponent),
   },
   {
     path: '',

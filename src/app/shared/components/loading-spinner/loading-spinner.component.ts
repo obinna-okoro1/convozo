@@ -3,15 +3,16 @@
  * Reusable loading indicator for async operations
  */
 
-import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-loading-spinner',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './loading-spinner.component.html',
-  styleUrls: ['./loading-spinner.component.css']
+  styleUrls: ['./loading-spinner.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoadingSpinnerComponent {
   @Input() public size: 'small' | 'medium' | 'large' = 'medium';
@@ -22,7 +23,7 @@ export class LoadingSpinnerComponent {
     const sizes = {
       small: 'h-4 w-4',
       medium: 'h-8 w-8',
-      large: 'h-12 w-12'
+      large: 'h-12 w-12',
     };
     return sizes[this.size];
   }

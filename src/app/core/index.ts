@@ -14,7 +14,7 @@ export * from './services/analytics.service';
 export * from './services/response-template.service';
 
 // Models
-export * from './models';
+export type * from './models';
 
 // Constants
 export * from './constants';

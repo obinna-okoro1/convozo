@@ -10,17 +10,20 @@ import { authGuard } from '../../core/guards/auth.guard';
 export const CREATOR_ROUTES: Routes = [
   {
     path: 'dashboard',
-    loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    loadComponent: () =>
+      import('./components/dashboard/dashboard.component').then((m) => m.DashboardComponent),
     canActivate: [authGuard],
   },
   {
     path: 'settings',
-    loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent),
+    loadComponent: () =>
+      import('./components/settings/settings.component').then((m) => m.SettingsComponent),
     canActivate: [authGuard],
   },
   {
     path: 'onboarding',
-    loadComponent: () => import('./components/onboarding/onboarding.component').then(m => m.OnboardingComponent),
+    loadComponent: () =>
+      import('./components/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
     canActivate: [authGuard],
   },
   {

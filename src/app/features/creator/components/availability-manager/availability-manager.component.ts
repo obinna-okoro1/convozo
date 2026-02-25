@@ -4,11 +4,11 @@
  * Used inside the dashboard as a dedicated view tab
  */
 
-import { Component, OnInit, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CreatorService } from '../../services/creator.service';
 import { AvailabilitySlot, DayOfWeek } from '../../../../core/models';
+import { CreatorService } from '../../services/creator.service';
 
 interface DaySchedule {
   day: DayOfWeek;
@@ -46,10 +46,11 @@ for (let h = 0; h < 24; h++) {
   selector: 'app-availability-manager',
   imports: [CommonModule, FormsModule],
   templateUrl: './availability-manager.component.html',
-  styleUrls: ['./availability-manager.component.css']
+  styleUrls: ['./availability-manager.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AvailabilityManagerComponent implements OnInit {
-  @Input({ required: true }) creatorId!: string;
+  public readonly creatorId = input.required<string>();
 
   protected readonly loading = signal<boolean>(true);
   protected readonly saving = signal<boolean>(false);
@@ -59,86 +60,23 @@ export class AvailabilityManagerComponent implements OnInit {
 
   protected readonly timeOptions = TIME_OPTIONS;
 
+  protected readonly totalSlots = computed(() =>
+    this.schedule().reduce((sum, day) => sum + (day.enabled ? day.slots.length : 0), 0),
+  );
+
+  protected readonly activeDays = computed(() => this.schedule().filter((d) => d.enabled).length);
+
+  constructor(private readonly creatorService: CreatorService) {}
+
+  public ngOnInit(): void {
+    void this.loadAvailability();
+  }
+
   /**
    * Extract string value from a select/input event
    */
   protected inputValue(event: Event): string {
     return (event.target as HTMLSelectElement).value;
-  }
-
-  protected readonly totalSlots = computed(() =>
-    this.schedule().reduce((sum, day) => sum + (day.enabled ? day.slots.length : 0), 0)
-  );
-
-  protected readonly activeDays = computed(() =>
-    this.schedule().filter(d => d.enabled).length
-  );
-
-  constructor(private readonly creatorService: CreatorService) {}
-
-  async ngOnInit(): Promise<void> {
-    await this.loadAvailability();
-  }
-
-  /**
-   * Load existing availability from DB
-   */
-  private async loadAvailability(): Promise<void> {
-    try {
-      const { data, error } = await this.creatorService.getAvailabilitySlots(this.creatorId);
-
-      if (error) {
-        this.error.set('Failed to load availability');
-        this.initEmptySchedule();
-        return;
-      }
-
-      this.buildScheduleFromSlots(data || []);
-    } catch (err) {
-      this.error.set('Failed to load availability');
-      this.initEmptySchedule();
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-  /**
-   * Build schedule from DB availability slots
-   */
-  private buildScheduleFromSlots(slots: AvailabilitySlot[]): void {
-    const schedule: DaySchedule[] = DAY_LABELS.map(({ day, label, shortLabel }) => {
-      const daySlots = slots
-        .filter(s => s.day_of_week === day && s.is_active)
-        .map(s => ({
-          id: s.id,
-          startTime: s.start_time.substring(0, 5), // Ensure HH:MM format
-          endTime: s.end_time.substring(0, 5),
-        }));
-
-      return {
-        day,
-        label,
-        shortLabel,
-        enabled: daySlots.length > 0,
-        slots: daySlots.length > 0 ? daySlots : [{ startTime: '09:00', endTime: '17:00' }],
-      };
-    });
-
-    this.schedule.set(schedule);
-  }
-
-  /**
-   * Initialize empty schedule
-   */
-  private initEmptySchedule(): void {
-    const schedule: DaySchedule[] = DAY_LABELS.map(({ day, label, shortLabel }) => ({
-      day,
-      label,
-      shortLabel,
-      enabled: false,
-      slots: [{ startTime: '09:00', endTime: '17:00' }],
-    }));
-    this.schedule.set(schedule);
   }
 
   /**
@@ -165,7 +103,7 @@ export class AvailabilityManagerComponent implements OnInit {
     const lastSlot = day.slots[day.slots.length - 1];
 
     // Default new slot starts 1 hour after last slot ends
-    const lastEnd = lastSlot ? lastSlot.endTime : '09:00';
+    const lastEnd = day.slots.length > 0 ? lastSlot.endTime : '09:00';
     const endHour = parseInt(lastEnd.split(':')[0]) + 2;
     const newEnd = endHour < 24 ? `${endHour.toString().padStart(2, '0')}:00` : '23:30';
 
@@ -236,7 +174,7 @@ export class AvailabilityManagerComponent implements OnInit {
         return {
           ...day,
           enabled: source.enabled,
-          slots: source.slots.map(s => ({ ...s, id: undefined })),
+          slots: source.slots.map((s) => ({ ...s, id: undefined })),
         };
       }
       return day;
@@ -256,18 +194,18 @@ export class AvailabilityManagerComponent implements OnInit {
     try {
       // Build slots array from schedule
       const slots = this.schedule()
-        .filter(day => day.enabled)
-        .flatMap(day =>
-          day.slots.map(slot => ({
-            creator_id: this.creatorId,
+        .filter((day) => day.enabled)
+        .flatMap((day) =>
+          day.slots.map((slot) => ({
+            creator_id: this.creatorId(),
             day_of_week: day.day,
             start_time: slot.startTime,
             end_time: slot.endTime,
             is_active: true,
-          }))
+          })),
         );
 
-      const result = await this.creatorService.saveAvailabilitySlots(this.creatorId, slots);
+      const result = await this.creatorService.saveAvailabilitySlots(this.creatorId(), slots);
 
       if (result.success) {
         this.saved.set(true);
@@ -275,11 +213,13 @@ export class AvailabilityManagerComponent implements OnInit {
         await this.loadAvailability();
         // Show saved state after reload
         this.saved.set(true);
-        setTimeout(() => this.saved.set(false), 3000);
+        setTimeout(() => {
+          this.saved.set(false);
+        }, 3000);
       } else {
         this.error.set(result.error || 'Failed to save availability');
       }
-    } catch (err) {
+    } catch {
       this.error.set('Failed to save availability');
     } finally {
       this.saving.set(false);
@@ -293,6 +233,67 @@ export class AvailabilityManagerComponent implements OnInit {
     const [hours, minutes] = time.split(':').map(Number);
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return `${String(displayHour)}:${minutes.toString().padStart(2, '0')} ${period}`;
+  }
+
+  /**
+   * Load existing availability from DB
+   */
+  private async loadAvailability(): Promise<void> {
+    try {
+      const { data, error } = await this.creatorService.getAvailabilitySlots(this.creatorId());
+
+      if (error) {
+        this.error.set('Failed to load availability');
+        this.initEmptySchedule();
+        return;
+      }
+
+      this.buildScheduleFromSlots(data || []);
+    } catch {
+      this.error.set('Failed to load availability');
+      this.initEmptySchedule();
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  /**
+   * Build schedule from DB availability slots
+   */
+  private buildScheduleFromSlots(slots: AvailabilitySlot[]): void {
+    const schedule: DaySchedule[] = DAY_LABELS.map(({ day, label, shortLabel }) => {
+      const daySlots = slots
+        .filter((s) => s.day_of_week === day && s.is_active)
+        .map((s) => ({
+          id: s.id,
+          startTime: s.start_time.substring(0, 5), // Ensure HH:MM format
+          endTime: s.end_time.substring(0, 5),
+        }));
+
+      return {
+        day,
+        label,
+        shortLabel,
+        enabled: daySlots.length > 0,
+        slots: daySlots.length > 0 ? daySlots : [{ startTime: '09:00', endTime: '17:00' }],
+      };
+    });
+
+    this.schedule.set(schedule);
+  }
+
+  /**
+   * Initialize empty schedule
+   */
+  private initEmptySchedule(): void {
+    const schedule: DaySchedule[] = DAY_LABELS.map(({ day, label, shortLabel }) => ({
+      day,
+      label,
+      shortLabel,
+      enabled: false,
+      slots: [{ startTime: '09:00', endTime: '17:00' }],
+    }));
+    this.schedule.set(schedule);
   }
 }

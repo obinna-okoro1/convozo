@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SupabaseService } from './core/services/supabase.service';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
@@ -6,18 +6,17 @@ import { ToastContainerComponent } from './shared/components/toast-container/toa
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, ToastContainerComponent],
-  template: `
-    <router-outlet />
-    <app-toast-container />
-  `,
-  styleUrl: './app.css'
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
+// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class App implements OnInit {
   protected readonly title = 'Convozo';
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  ngOnInit(): void {
-    this.supabaseService.waitForSession();
+  public ngOnInit(): void {
+    void this.supabaseService.waitForSession();
   }
 }

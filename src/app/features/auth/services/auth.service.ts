@@ -5,9 +5,9 @@
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import type { User } from '@supabase/supabase-js';
-import { SupabaseService } from '../../../core/services/supabase.service';
+import { User } from '@supabase/supabase-js';
 import { ROUTES, ERROR_MESSAGES } from '../../../core/constants';
+import { SupabaseService } from '../../../core/services/supabase.service';
 import { FormValidators } from '../../../core/validators/form-validators';
 
 export interface OAuthUserData {
@@ -20,18 +20,21 @@ export interface OAuthUserData {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   constructor(
     private readonly supabaseService: SupabaseService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {}
 
   /**
    * Sign in with email and password
    */
-  public async signInWithPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  public async signInWithPassword(
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; error?: string }> {
     if (!FormValidators.isValidEmail(email)) {
       return { success: false, error: ERROR_MESSAGES.AUTH.INVALID_EMAIL };
     }
@@ -39,12 +42,14 @@ export class AuthService {
     try {
       const { data, error } = await this.supabaseService.client.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      if (data.user) {
+      if (data.user != null) {
         // Check if user has a creator profile
         const { data: creator } = await this.supabaseService.getCreatorByUserId(data.user.id);
 
@@ -65,7 +70,11 @@ export class AuthService {
   /**
    * Sign up new user with email and password
    */
-  public async signUp(email: string, password: string, fullName: string): Promise<{ success: boolean; error?: string }> {
+  public async signUp(
+    email: string,
+    password: string,
+    fullName: string,
+  ): Promise<{ success: boolean; error?: string }> {
     if (!FormValidators.isValidEmail(email)) {
       return { success: false, error: ERROR_MESSAGES.AUTH.INVALID_EMAIL };
     }
@@ -75,18 +84,20 @@ export class AuthService {
     }
 
     try {
-      const { data, error } = await this.supabaseService.client.auth.signUp({
+      const { error } = await this.supabaseService.client.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return { success: true };
     } catch (error) {
@@ -107,11 +118,13 @@ export class AuthService {
       const { error } = await this.supabaseService.client.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return { success: true };
     } catch (error) {
@@ -129,10 +142,12 @@ export class AuthService {
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-        }
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return { success: true };
     } catch (error) {
@@ -146,7 +161,8 @@ export class AuthService {
    */
   public async handleAuthCallback(): Promise<void> {
     // Exchange the URL token for a session instead of a blind timeout
-    const { data: sessionData, error: sessionError } = await this.supabaseService.client.auth.getSession();
+    const { data: sessionData, error: sessionError } =
+      await this.supabaseService.client.auth.getSession();
 
     if (sessionError) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
@@ -162,7 +178,7 @@ export class AuthService {
 
     // Extract OAuth user data for auto-import
     const oauthData = this.extractOAuthUserData(user);
-    
+
     // Store OAuth data in session storage for onboarding
     if (oauthData) {
       sessionStorage.setItem('oauth_user_data', JSON.stringify(oauthData));
@@ -182,34 +198,15 @@ export class AuthService {
   }
 
   /**
-   * Extract OAuth user data from Supabase user object
-   */
-  private extractOAuthUserData(user: User | null): OAuthUserData | null {
-    if (!user) return null;
-
-    const metadata = user.user_metadata ?? {};
-    const provider = user.app_metadata?.['provider'] as string | undefined;
-
-    const data: OAuthUserData = {
-      id: user.id,
-      email: user.email || '',
-      full_name: (metadata['full_name'] ?? metadata['name'] ?? '') as string,
-      avatar_url: (metadata['avatar_url'] ?? metadata['picture'] ?? '') as string,
-      provider,
-      provider_id: (metadata['provider_id'] ?? metadata['sub'] ?? '') as string,
-    };
-
-    return data;
-  }
-
-  /**
    * Get stored OAuth data from session
    */
   public getStoredOAuthData(): OAuthUserData | null {
     const stored = sessionStorage.getItem('oauth_user_data');
-    if (!stored) return null;
+    if (!stored) {
+      return null;
+    }
     try {
-      return JSON.parse(stored);
+      return JSON.parse(stored) as OAuthUserData;
     } catch {
       return null;
     }
@@ -236,5 +233,28 @@ export class AuthService {
     await this.supabaseService.client.auth.signOut();
     sessionStorage.removeItem('oauth_user_data');
     await this.router.navigate([ROUTES.AUTH.LOGIN]);
+  }
+
+  /**
+   * Extract OAuth user data from Supabase user object
+   */
+  private extractOAuthUserData(user: User | null): OAuthUserData | null {
+    if (!user) {
+      return null;
+    }
+
+    const metadata = user.user_metadata ?? {};
+    const provider = user.app_metadata?.provider;
+
+    const data: OAuthUserData = {
+      id: user.id,
+      email: user.email || '',
+      full_name: (metadata['full_name'] ?? metadata['name'] ?? '') as string,
+      avatar_url: (metadata['avatar_url'] ?? metadata['picture'] ?? '') as string,
+      provider,
+      provider_id: (metadata['provider_id'] ?? metadata['sub'] ?? '') as string,
+    };
+
+    return data;
   }
 }

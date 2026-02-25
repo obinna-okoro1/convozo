@@ -10,6 +10,7 @@ export interface Creator {
   profile_image_url: string | null;
   bio: string | null;
   slug: string;
+  phone_number: string;
   instagram_username: string | null;
   is_active: boolean;
   created_at: string;

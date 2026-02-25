@@ -9,5 +9,6 @@ export const environment = {
   },
   platformFeePercentage: 35, // 35% platform fee (Option A: Stripe fees come out of platform's cut, creator gets 65% flat)
   // VAPID key for push notifications (generate with: npx web-push generate-vapid-keys)
-  vapidPublicKey: 'BMUmrPyd-C_NfHyTfq2PzEiTFTYdRtx1tSFQM7eknpvNHmYdU3-i9AiEQzVVie3T8bh4iVO8L9zEivHsibsv3pc',
+  vapidPublicKey:
+    'BMUmrPyd-C_NfHyTfq2PzEiTFTYdRtx1tSFQM7eknpvNHmYdU3-i9AiEQzVVie3T8bh4iVO8L9zEivHsibsv3pc',
 };

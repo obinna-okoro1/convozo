@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-imports, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 

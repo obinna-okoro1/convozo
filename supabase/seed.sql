@@ -120,7 +120,7 @@ WHERE NOT EXISTS (
 
 -- Sample Creator 1: The Rock (Real Instagram Profile Data)
 -- Note: In production, use a third-party Instagram API service to fetch real-time data
-INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, is_active)
+INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, phone_number, is_active)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   '11111111-1111-1111-1111-111111111111',
@@ -130,6 +130,7 @@ VALUES (
   'builder of stuff cheat meal crusher tequila sipper og girl dad 💕',
   'https://i.pravatar.cc/400?img=33',
   'therock',
+  '+1 310-555-0199',
   true
 ) ON CONFLICT (user_id) DO NOTHING;
 
@@ -147,7 +148,7 @@ VALUES (
 
 -- Sample Creator 2: Cristiano Ronaldo (Real Instagram Profile Data)
 -- Note: In production, use a third-party Instagram API service to fetch real-time data
-INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, is_active)
+INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, phone_number, is_active)
 VALUES (
   '44444444-4444-4444-4444-444444444444',
   '22222222-2222-2222-2222-222222222222',
@@ -157,6 +158,7 @@ VALUES (
   'Passion & Joy ⚽️❤️',
   'https://i.pravatar.cc/400?img=12',
   'cristiano',
+  '+351 912-345-678',
   true
 ) ON CONFLICT (user_id) DO NOTHING;
 

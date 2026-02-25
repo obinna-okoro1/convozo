@@ -3,8 +3,8 @@
  * Handles new creator registration
  */
 
-import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -14,16 +14,17 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.css']
+  styleUrls: ['./signup.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignupComponent {
-  email = signal('');
-  password = signal('');
-  confirmPassword = signal('');
-  fullName = signal('');
-  loading = signal(false);
-  success = signal(false);
-  error = signal<string | null>(null);
+  protected readonly email = signal('');
+  protected readonly password = signal('');
+  protected readonly confirmPassword = signal('');
+  protected readonly fullName = signal('');
+  protected readonly loading = signal(false);
+  protected readonly success = signal(false);
+  protected readonly error = signal<string | null>(null);
 
   constructor(private readonly authService: AuthService) {}
 
@@ -34,7 +35,7 @@ export class SignupComponent {
     return (event.target as HTMLInputElement).value;
   }
 
-  async handleOAuthSignup(provider: 'google'): Promise<void> {
+  protected async handleOAuthSignup(provider: 'google'): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 
@@ -47,28 +48,30 @@ export class SignupComponent {
     // If successful, user will be redirected to OAuth flow
   }
 
-  updateEmail(value: string): void {
+  protected updateEmail(value: string): void {
     this.email.set(value);
     this.error.set(null);
   }
 
-  updatePassword(value: string): void {
+  protected updatePassword(value: string): void {
     this.password.set(value);
     this.error.set(null);
   }
 
-  updateConfirmPassword(value: string): void {
+  protected updateConfirmPassword(value: string): void {
     this.confirmPassword.set(value);
     this.error.set(null);
   }
 
-  updateFullName(value: string): void {
+  protected updateFullName(value: string): void {
     this.fullName.set(value);
     this.error.set(null);
   }
 
-  async handleSignup(): Promise<void> {
-    if (this.loading()) return;
+  protected async handleSignup(): Promise<void> {
+    if (this.loading()) {
+      return;
+    }
 
     // Validation
     if (!this.email() || !this.password() || !this.fullName()) {
@@ -89,11 +92,7 @@ export class SignupComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    const result = await this.authService.signUp(
-      this.email(),
-      this.password(),
-      this.fullName()
-    );
+    const result = await this.authService.signUp(this.email(), this.password(), this.fullName());
 
     this.loading.set(false);
 

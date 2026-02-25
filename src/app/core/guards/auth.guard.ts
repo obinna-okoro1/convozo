@@ -17,9 +17,9 @@ export const authGuard: CanActivateFn = async () => {
 
   // Wait for session to be restored from localStorage
   const user = await supabaseService.waitForSession();
-  
+
   if (!user) {
-    router.navigate(['/auth/login']);
+    void router.navigate(['/auth/login']);
     return false;
   }
 

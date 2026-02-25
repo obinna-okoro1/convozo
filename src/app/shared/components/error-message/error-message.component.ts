@@ -3,15 +3,16 @@
  * Displays user-friendly error messages
  */
 
-import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-error-message',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './error-message.component.html',
-  styleUrls: ['./error-message.component.css']
+  styleUrls: ['./error-message.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorMessageComponent {
   @Input() public title: string = 'Error';

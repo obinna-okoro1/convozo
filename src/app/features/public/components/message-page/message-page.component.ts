@@ -3,21 +3,32 @@
  * Now includes social proof for trust building
  */
 
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { SupabaseService } from '../../../../core/services/supabase.service';
-import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
-import { CreatorProfile, AvailabilitySlot, MessageType, CheckoutSessionPayload } from '../../../../core/models';
-import { FormValidators } from '../../../../core/validators/form-validators';
-import { APP_CONSTANTS, ERROR_MESSAGES } from '../../../../core/constants';
 import { environment } from '../../../../../environments/environment';
-import { SocialProofComponent, SocialProofData } from '../../../../shared/components/social-proof/social-proof.component';
-import { ToastService } from '../../../../shared/services/toast.service';
+import { ERROR_MESSAGES } from '../../../../core/constants';
+import {
+  CreatorProfile,
+  AvailabilitySlot,
+  MessageType,
+  CheckoutSessionPayload,
+} from '../../../../core/models';
+import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
+import { SupabaseService } from '../../../../core/services/supabase.service';
+import { FormValidators } from '../../../../core/validators/form-validators';
+import {
+  SocialProofComponent,
+  SocialProofData,
+} from '../../../../shared/components/social-proof/social-proof.component';
 import { TrustBannerComponent } from '../../../../shared/components/trust-banner/trust-banner.component';
+import { ToastService } from '../../../../shared/services/toast.service';
+import {
+  CallBookingFormComponent,
+  CallBookingFormData,
+} from '../call-booking-form/call-booking-form.component';
 import { CreatorProfileHeaderComponent } from '../creator-profile-header/creator-profile-header.component';
 import { MessageFormComponent, MessageFormData } from '../message-form/message-form.component';
-import { CallBookingFormComponent, CallBookingFormData } from '../call-booking-form/call-booking-form.component';
 
 @Component({
   selector: 'app-message-page',
@@ -30,15 +41,15 @@ import { CallBookingFormComponent, CallBookingFormData } from '../call-booking-f
     CallBookingFormComponent,
   ],
   templateUrl: './message-page.component.html',
-  styleUrls: ['./message-page.component.css']
+  styleUrls: ['./message-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessagePageComponent implements OnInit {
   // State signals
   protected readonly creator = signal<CreatorProfile | null>(null);
-  private readonly creatorSettings = signal<CreatorProfile['creator_settings'] | null>(null);
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
-  
+
   // Social proof data
   protected readonly socialProofData = signal<SocialProofData>({
     totalMessages: 0,
@@ -66,8 +77,11 @@ export class MessagePageComponent implements OnInit {
   protected readonly messagePriceCents = computed(() => this.settings()?.message_price ?? 0);
   protected readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
   protected readonly callDuration = computed(() => this.settings()?.call_duration ?? 30);
-  protected readonly responseExpectation = computed(() => this.settings()?.response_expectation ?? '24-48 hours');
+  protected readonly responseExpectation = computed(
+    () => this.settings()?.response_expectation ?? '24-48 hours',
+  );
 
+  private readonly creatorSettings = signal<CreatorProfile['creator_settings'] | null>(null);
   private stripe: Stripe | null = null;
 
   constructor(
@@ -75,10 +89,40 @@ export class MessagePageComponent implements OnInit {
     private readonly router: Router,
     private readonly supabaseService: SupabaseService,
     private readonly instagramService: InstagramPublicService,
-    private readonly toast: ToastService
+    private readonly toast: ToastService,
   ) {}
 
-  public async ngOnInit(): Promise<void> {
+  public ngOnInit(): void {
+    void this.initialize();
+  }
+
+  /**
+   * Handle message form submission from MessageFormComponent
+   */
+  protected async onMessageSubmit(formData: MessageFormData): Promise<void> {
+    if (!this.validateMessageForm(formData)) {
+      return;
+    }
+    await this.processCheckout(
+      formData.senderName,
+      formData.senderEmail,
+      formData.senderInstagram,
+      formData.messageContent,
+      'message',
+    );
+  }
+
+  /**
+   * Handle call booking submission from CallBookingFormComponent
+   */
+  protected async onCallBookingSubmit(formData: CallBookingFormData): Promise<void> {
+    if (!this.validateCallForm(formData)) {
+      return;
+    }
+    await this.processCallCheckout(formData);
+  }
+
+  private async initialize(): Promise<void> {
     // Handle ?tab=call query parameter for deep-linking
     const tab = this.route.snapshot.queryParamMap.get('tab');
     if (tab === 'call') {
@@ -116,27 +160,27 @@ export class MessagePageComponent implements OnInit {
   private async loadCreator(slug: string): Promise<void> {
     try {
       const { data, error } = await this.supabaseService.getCreatorBySlug(slug);
-      
+
       if (error || !data) {
         this.error.set('Creator not found');
         return;
       }
 
       this.creator.set(data as CreatorProfile);
-      
+
       // Load Instagram username if available
       if ((data as CreatorProfile).instagram_username) {
         this.instagramUsername.set((data as CreatorProfile).instagram_username);
       }
-      
+
       const settings = (data as CreatorProfile).creator_settings;
-      if (settings) {
+      if (settings != null) {
         this.creatorSettings.set(settings);
       }
-      
+
       // Load social proof data
       await this.loadSocialProofData((data as CreatorProfile).id);
-      
+
       // Load availability slots for call bookings
       await this.loadAvailabilitySlots((data as CreatorProfile).id);
     } catch {
@@ -156,23 +200,24 @@ export class MessagePageComponent implements OnInit {
         .select('id, is_handled, created_at, replied_at')
         .eq('creator_id', creatorId);
 
-      if (error || !messages) {
+      if (error != null || messages == null) {
         return;
       }
 
-      const totalMessages = messages.length;
+      const typedMessages = messages as { id: string; is_handled: boolean; created_at: string; replied_at: string | null }[];
+      const totalMessages = typedMessages.length;
 
       // Calculate response rate: messages that have been replied to
-      const replied = messages.filter(m => m.replied_at).length;
+      const replied = typedMessages.filter((m) => m.replied_at != null).length;
       const responseRate = totalMessages > 0 ? Math.round((replied / totalMessages) * 100) : 0;
 
       // Calculate average response time in hours (for messages that have a reply)
       let avgResponseTime = 24;
-      const repliedMessages = messages.filter(m => m.replied_at && m.created_at);
+      const repliedMessages = typedMessages.filter((m) => m.replied_at != null && m.created_at != null);
       if (repliedMessages.length > 0) {
         const totalHours = repliedMessages.reduce((sum, m) => {
           const created = new Date(m.created_at).getTime();
-          const replied = new Date(m.replied_at).getTime();
+          const replied = new Date(m.replied_at!).getTime();
           return sum + (replied - created) / (1000 * 60 * 60);
         }, 0);
         avgResponseTime = Math.max(1, Math.round(totalHours / repliedMessages.length));
@@ -203,28 +248,12 @@ export class MessagePageComponent implements OnInit {
         .order('day_of_week', { ascending: true })
         .order('start_time', { ascending: true });
 
-      if (!error && data) {
-        this.availabilitySlots.set(data);
+      if (error == null && data != null) {
+        this.availabilitySlots.set(data as AvailabilitySlot[]);
       }
     } catch (err) {
       console.error('Failed to load availability slots:', err);
     }
-  }
-
-  /**
-   * Handle message form submission from MessageFormComponent
-   */
-  protected async onMessageSubmit(formData: MessageFormData): Promise<void> {
-    if (!this.validateMessageForm(formData)) return;
-    await this.processCheckout(formData.senderName, formData.senderEmail, formData.senderInstagram, formData.messageContent, 'message');
-  }
-
-  /**
-   * Handle call booking submission from CallBookingFormComponent
-   */
-  protected async onCallBookingSubmit(formData: CallBookingFormData): Promise<void> {
-    if (!this.validateCallForm(formData)) return;
-    await this.processCallCheckout(formData);
   }
 
   /**
@@ -272,14 +301,22 @@ export class MessagePageComponent implements OnInit {
   /**
    * Process message checkout via Stripe
    */
-  private async processCheckout(senderName: string, senderEmail: string, senderInstagram: string, messageContent: string, messageType: MessageType): Promise<void> {
+  private async processCheckout(
+    senderName: string,
+    senderEmail: string,
+    senderInstagram: string,
+    messageContent: string,
+    messageType: MessageType,
+  ): Promise<void> {
     if (!this.stripe) {
       this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
       return;
     }
 
     const creatorData = this.creator();
-    if (!creatorData) return;
+    if (!creatorData) {
+      return;
+    }
 
     this.submitting.set(true);
     try {
@@ -324,7 +361,9 @@ export class MessagePageComponent implements OnInit {
     }
 
     const creatorData = this.creator();
-    if (!creatorData) return;
+    if (!creatorData) {
+      return;
+    }
 
     this.submitting.set(true);
     try {
