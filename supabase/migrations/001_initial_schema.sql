@@ -1,12 +1,9 @@
 -- Create tables for Convozo platform
 -- Run this migration in your Supabase SQL editor
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Creators table
 CREATE TABLE public.creators (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   display_name TEXT NOT NULL,
@@ -21,7 +18,7 @@ CREATE TABLE public.creators (
 
 -- Creator settings table
 CREATE TABLE public.creator_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID NOT NULL REFERENCES public.creators(id) ON DELETE CASCADE,
   has_tiered_pricing BOOLEAN DEFAULT false,
   fan_price INTEGER, -- in cents
@@ -36,7 +33,7 @@ CREATE TABLE public.creator_settings (
 
 -- Stripe accounts table
 CREATE TABLE public.stripe_accounts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID NOT NULL REFERENCES public.creators(id) ON DELETE CASCADE,
   stripe_account_id TEXT UNIQUE NOT NULL,
   charges_enabled BOOLEAN DEFAULT false,
@@ -50,7 +47,7 @@ CREATE TABLE public.stripe_accounts (
 
 -- Messages table
 CREATE TABLE public.messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID NOT NULL REFERENCES public.creators(id) ON DELETE CASCADE,
   sender_name TEXT NOT NULL,
   sender_email TEXT NOT NULL,
@@ -66,7 +63,7 @@ CREATE TABLE public.messages (
 
 -- Payments table
 CREATE TABLE public.payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   message_id UUID REFERENCES public.messages(id) ON DELETE SET NULL,
   creator_id UUID NOT NULL REFERENCES public.creators(id) ON DELETE CASCADE,
   stripe_checkout_session_id TEXT UNIQUE NOT NULL,

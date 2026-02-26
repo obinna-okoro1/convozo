@@ -20,7 +20,7 @@ ALTER TABLE public.messages ADD CONSTRAINT messages_message_type_check
 
 -- 4. Create availability slots table
 CREATE TABLE IF NOT EXISTS public.availability_slots (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID NOT NULL REFERENCES public.creators(id) ON DELETE CASCADE,
   day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6), -- 0 = Sunday, 6 = Saturday
   start_time TIME NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.availability_slots (
 
 -- 5. Create call bookings table
 CREATE TABLE IF NOT EXISTS public.call_bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   creator_id UUID NOT NULL REFERENCES public.creators(id) ON DELETE CASCADE,
   booker_name TEXT NOT NULL,
   booker_email TEXT NOT NULL,
