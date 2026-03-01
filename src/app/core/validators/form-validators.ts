@@ -36,4 +36,22 @@ export class FormValidators {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
   }
+
+  /**
+   * Sanitizes a slug value as the user types (strips invalid chars, forces lowercase)
+   */
+  public static sanitizeSlug(value: string): string {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-/, '');
+  }
+
+  /**
+   * Validates that a slug is in the correct format (lowercase alphanumeric + hyphens, min 2 chars)
+   */
+  public static isValidSlug(slug: string): boolean {
+    return /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug) && slug.length >= 2;
+  }
 }

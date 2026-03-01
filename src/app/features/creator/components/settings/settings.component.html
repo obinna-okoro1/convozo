@@ -159,15 +159,45 @@
                     type="text"
                     id="slug"
                     [value]="slug()"
-                    (input)="slug.set(inputValue($event))"
+                    (input)="updateSlug(inputValue($event))"
                     placeholder="yourname"
                     pattern="[a-z0-9-]+"
                     required
-                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                    class="w-full px-5 py-4 bg-white/5 border rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                    [ngClass]="slugStatus() === 'available' ? 'border-green-500/60 focus:ring-green-500' : slugStatus() === 'taken' || slugStatus() === 'invalid' ? 'border-red-500/60 focus:ring-red-500' : 'border-white/10 focus:ring-purple-500'"
                   />
+                  <!-- Status indicator inside input -->
+                  <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                    @if (slugStatus() === 'checking') {
+                      <svg class="w-5 h-5 text-white/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                    } @else if (slugStatus() === 'available') {
+                      <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    } @else if (slugStatus() === 'taken') {
+                      <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    } @else if (slugStatus() === 'invalid') {
+                      <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    }
+                  </div>
                 </div>
               </div>
-              <p class="text-xs text-white/50 mt-2">Only lowercase letters, numbers, and hyphens</p>
+              @if (slugStatus() === 'taken') {
+                <p class="text-xs text-red-400 mt-1">This URL is already taken — try a different one</p>
+              } @else if (slugStatus() === 'invalid' && slug()) {
+                <p class="text-xs text-amber-400 mt-1">Must be at least 2 characters: lowercase letters, numbers, and hyphens</p>
+              } @else if (slugStatus() === 'available') {
+                <p class="text-xs text-green-400 mt-1">This URL is available!</p>
+              } @else {
+                <p class="text-xs text-white/50 mt-1">Only lowercase letters, numbers, and hyphens</p>
+              }
             </div>
 
             <!-- Bio -->
@@ -187,78 +217,13 @@
             </div>
 
             <!-- Profile Picture -->
-            <div class="space-y-3">
-              <label class="block text-sm font-bold text-white">Profile Picture</label>
-              
-              @if (profileImagePreview()) {
-                <div class="mb-6 relative inline-block animate-scale-in group">
-                  <div class="relative">
-                    <img
-                      [src]="profileImagePreview()!"
-                      alt="Profile preview"
-                      class="w-40 h-40 rounded-2xl object-cover border-2 border-white/20 shadow-lg shadow-purple-500/20"
-                    />
-                    <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  <button
-                    type="button"
-                    (click)="removeProfileImage()"
-                    class="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-xl hover:scale-110 transition-all duration-300 shadow-lg shadow-red-500/50 flex items-center justify-center font-bold"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              } @else {
-                <div class="mb-6 w-40 h-40 rounded-2xl bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center group hover:border-purple-500/50 hover:bg-white/10 transition-all duration-300">
-                  <svg class="w-20 h-20 text-white/30 group-hover:text-purple-400 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              }
-
-              <!-- File Upload Controls -->
-              <div class="flex items-center gap-4">
-                <label
-                  for="profileImageUpload"
-                  class="group relative px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-semibold cursor-pointer hover:bg-white/20 transition-all duration-300 inline-flex items-center gap-3 shadow-lg hover:shadow-xl"
-                  [class.opacity-50]="uploading()"
-                  [class.cursor-not-allowed]="uploading()"
-                >
-                  @if (uploading()) {
-                    <svg class="animate-spin h-5 w-5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Uploading...</span>
-                  } @else {
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>{{ profileImagePreview() ? 'Change Photo' : 'Upload Photo' }}</span>
-                  }
-                </label>
-                <input
-                  type="file"
-                  id="profileImageUpload"
-                  accept="image/*"
-                  (change)="handleFileUpload($event)"
-                  [disabled]="uploading()"
-                  class="hidden"
-                />
-                @if (profileImagePreview()) {
-                  <button
-                    type="button"
-                    (click)="removeProfileImage()"
-                    class="px-6 py-3 rounded-xl font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
-                  >
-                    Remove
-                  </button>
-                }
-              </div>
-              <p class="text-xs text-white/50 mt-3">JPG, PNG or GIF. Max 2MB.</p>
-            </div>
+            <app-image-upload
+              [imageUrl]="profileImageUrl()"
+              [variant]="'large'"
+              [label]="'Profile Picture'"
+              (imageChanged)="onImageChanged($event)"
+              (uploadError)="onImageUploadError($event)"
+            />
 
             <!-- Instagram Username -->
             <div class="space-y-3">
@@ -306,7 +271,7 @@
               <button
                 type="button"
                 (click)="saveProfile()"
-                [disabled]="saving()"
+                [disabled]="saving() || !canSaveProfile()"
                 class="relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 active:scale-95 sm:hover:shadow-xl sm:hover:shadow-purple-500/60 sm:hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
               >
                 @if (saving()) {

@@ -9,10 +9,10 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@a
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
-import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
+import { ImageUploadComponent, ImageChangeEvent } from '../../../../shared/components/ui/image-upload/image-upload.component';
 
 /**
  * Country code entry for the phone number dropdown
@@ -164,7 +164,7 @@ const TIMEZONE_TO_COUNTRY: Record<string, string> = {
 
 @Component({
   selector: 'app-onboarding',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageUploadComponent],
   templateUrl: './onboarding.component.html',
   styleUrls: ['./onboarding.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -179,9 +179,9 @@ export class OnboardingComponent implements OnInit {
   protected readonly displayName = signal<string>('');
   protected readonly bio = signal<string>('');
   protected readonly slug = signal<string>('');
+  protected readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  protected readonly slugManuallyEdited = signal<boolean>(false);
   protected readonly profileImageUrl = signal<string>('');
-  protected readonly profileImagePreview = signal<string | null>(null);
-  protected readonly uploading = signal<boolean>(false);
   protected readonly instagramUsername = signal<string>(''); // Manual text input, not OAuth
 
   // Phone number
@@ -217,10 +217,23 @@ export class OnboardingComponent implements OnInit {
   // Constants
   protected readonly TOTAL_STEPS = 4;
 
+  // Slug check debounce
+  private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Computed: can proceed past step 1
+  protected readonly canProceedStep1 = computed(
+    () =>
+      !!this.displayName() &&
+      !!this.slug() &&
+      !!this.phoneNumber() &&
+      this.slugStatus() !== 'checking' &&
+      this.slugStatus() !== 'taken' &&
+      this.slugStatus() !== 'invalid',
+  );
+
   constructor(
     private readonly creatorService: CreatorService,
     private readonly authService: AuthService,
-    private readonly supabaseService: SupabaseService,
     private readonly router: Router,
   ) {}
 
@@ -265,76 +278,66 @@ export class OnboardingComponent implements OnInit {
   }
 
   /**
-   * Update display name and generate slug
+   * Update display name and auto-generate slug (unless manually edited)
    */
   protected updateDisplayName(value: string): void {
     this.displayName.set(value);
-    if (!this.slug()) {
-      this.slug.set(FormValidators.generateSlug(value));
+    if (!this.slugManuallyEdited()) {
+      const generated = FormValidators.generateSlug(value);
+      this.slug.set(generated);
+      this.debouncedSlugCheck(generated);
     }
   }
 
   /**
-   * Handle profile image file upload
+   * Update slug from direct user input (sanitize + check)
    */
-  protected async handleFileUpload(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      this.error.set('Please upload an image file');
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      this.error.set('Image must be less than 2MB');
-      return;
-    }
-
-    this.uploading.set(true);
-    this.error.set(null);
-
-    try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.profileImagePreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      const userId = this.authService.getCurrentUser()?.id;
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${String(Date.now())}.${fileExt ?? ''}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { data, error } = await this.supabaseService.uploadFile('public', filePath, file);
-      if (error) {
-        throw error;
-      }
-
-      if (data?.publicUrl) {
-        this.profileImageUrl.set(data.publicUrl);
-      }
-    } catch (err) {
-      this.error.set(err instanceof Error ? err.message : 'Failed to upload image');
-      this.profileImagePreview.set(null);
-    } finally {
-      this.uploading.set(false);
-    }
+  protected updateSlug(value: string): void {
+    const sanitized = FormValidators.sanitizeSlug(value);
+    this.slug.set(sanitized);
+    this.slugManuallyEdited.set(true);
+    this.debouncedSlugCheck(sanitized);
   }
 
   /**
-   * Remove profile image
+   * Debounced slug availability check
    */
-  protected removeProfileImage(): void {
-    this.profileImageUrl.set('');
-    this.profileImagePreview.set(null);
+  private debouncedSlugCheck(slug: string): void {
+    if (this.slugCheckTimer) {
+      clearTimeout(this.slugCheckTimer);
+    }
+
+    if (!slug || !FormValidators.isValidSlug(slug)) {
+      this.slugStatus.set(slug ? 'invalid' : 'idle');
+      return;
+    }
+
+    this.slugStatus.set('checking');
+    this.slugCheckTimer = setTimeout(() => {
+      void this.performSlugCheck(slug);
+    }, 400);
+  }
+
+  private async performSlugCheck(slug: string): Promise<void> {
+    // Guard: slug may have changed since the timer was set
+    if (this.slug() !== slug) return;
+
+    const { available } = await this.creatorService.checkSlugAvailability(slug);
+    // Guard: slug may have changed during the async call
+    if (this.slug() !== slug) return;
+
+    this.slugStatus.set(available ? 'available' : 'taken');
+  }
+
+  /**
+   * Handle image upload/remove from the shared ImageUploadComponent
+   */
+  protected onImageChanged(event: ImageChangeEvent): void {
+    this.profileImageUrl.set(event.url);
+  }
+
+  protected onImageUploadError(message: string): void {
+    this.error.set(message);
   }
 
   /**
@@ -365,6 +368,12 @@ export class OnboardingComponent implements OnInit {
       });
 
       if (creatorError || !creator) {
+        const errMsg = creatorError?.message ?? '';
+        if (errMsg.includes('unique') || errMsg.includes('duplicate') || errMsg.includes('slug')) {
+          this.slugStatus.set('taken');
+          this.currentStep.set(1); // go back to profile step
+          throw new Error('This URL slug is already taken — please go back and choose a different one');
+        }
         throw creatorError || new Error('Failed to create creator');
       }
 
@@ -475,12 +484,13 @@ export class OnboardingComponent implements OnInit {
     // Auto-fill form fields
     if (oauthData.full_name) {
       this.displayName.set(oauthData.full_name);
-      this.slug.set(FormValidators.generateSlug(oauthData.full_name));
+      const generated = FormValidators.generateSlug(oauthData.full_name);
+      this.slug.set(generated);
+      this.debouncedSlugCheck(generated);
     }
 
     if (oauthData.avatar_url) {
       this.profileImageUrl.set(oauthData.avatar_url);
-      this.profileImagePreview.set(oauthData.avatar_url);
     }
   }
 

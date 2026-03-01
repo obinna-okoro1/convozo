@@ -4,16 +4,18 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Creator, CreatorSettings, StripeAccount } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
+import { FormValidators } from '../../../../core/validators/form-validators';
 import { CreatorService } from '../../services/creator.service';
+import { ImageUploadComponent, ImageChangeEvent } from '../../../../shared/components/ui/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ImageUploadComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +23,6 @@ import { CreatorService } from '../../services/creator.service';
 export class SettingsComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
-  protected readonly uploading = signal(false);
   protected readonly success = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly activeTab = signal<'profile' | 'pricing' | 'payments'>('profile');
@@ -30,11 +31,24 @@ export class SettingsComponent implements OnInit {
   // Profile fields
   protected readonly displayName = signal('');
   protected readonly slug = signal('');
+  protected readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  private originalSlug = '';
+  private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
   protected readonly bio = signal('');
   protected readonly profileImageUrl = signal('');
-  protected readonly profileImagePreview = signal<string | null>(null);
   protected readonly phoneNumber = signal('');
   protected readonly instagramUsername = signal(''); // Manual Instagram handle input
+
+  // Computed: can save profile
+  protected readonly canSaveProfile = computed(
+    () =>
+      !!this.displayName() &&
+      !!this.slug() &&
+      !!this.phoneNumber() &&
+      this.slugStatus() !== 'checking' &&
+      this.slugStatus() !== 'taken' &&
+      this.slugStatus() !== 'invalid',
+  );
 
   // Pricing fields
   protected readonly messagePrice = signal(1000); // in cents
@@ -79,67 +93,53 @@ export class SettingsComponent implements OnInit {
     return (event.target as HTMLInputElement).checked;
   }
 
-  protected async handleFileUpload(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      this.error.set('Please upload an image file');
-      return;
-    }
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      this.error.set('Image must be less than 2MB');
-      return;
-    }
-
-    this.uploading.set(true);
-    this.error.set(null);
-
-    try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.profileImagePreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Upload to Supabase Storage
-      const userId = this.supabaseService.getCurrentUser()?.id;
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-
-      const fileExt = file.name.split('.').pop() ?? 'jpg';
-      const fileName = `${userId}-${String(Date.now())}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { data, error } = await this.supabaseService.uploadFile('public', filePath, file);
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.publicUrl) {
-        this.profileImageUrl.set(data.publicUrl);
-      }
-    } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Failed to upload image');
-      this.profileImagePreview.set(null);
-    } finally {
-      this.uploading.set(false);
-    }
+  protected onImageChanged(event: ImageChangeEvent): void {
+    this.profileImageUrl.set(event.url);
   }
 
-  protected removeProfileImage(): void {
-    this.profileImageUrl.set('');
-    this.profileImagePreview.set(null);
+  protected onImageUploadError(message: string): void {
+    this.error.set(message);
+  }
+
+  /**
+   * Update slug from direct user input (sanitize + check availability)
+   */
+  protected updateSlug(value: string): void {
+    const sanitized = FormValidators.sanitizeSlug(value);
+    this.slug.set(sanitized);
+    this.debouncedSlugCheck(sanitized);
+  }
+
+  private debouncedSlugCheck(slug: string): void {
+    if (this.slugCheckTimer) {
+      clearTimeout(this.slugCheckTimer);
+    }
+
+    // If unchanged from the saved value, mark idle (it's their own slug)
+    if (slug === this.originalSlug) {
+      this.slugStatus.set('idle');
+      return;
+    }
+
+    if (!slug || !FormValidators.isValidSlug(slug)) {
+      this.slugStatus.set(slug ? 'invalid' : 'idle');
+      return;
+    }
+
+    this.slugStatus.set('checking');
+    this.slugCheckTimer = setTimeout(() => {
+      void this.performSlugCheck(slug);
+    }, 400);
+  }
+
+  private async performSlugCheck(slug: string): Promise<void> {
+    if (this.slug() !== slug) return;
+
+    const creatorId = this.creator()?.id;
+    const { available } = await this.creatorService.checkSlugAvailability(slug, creatorId);
+    if (this.slug() !== slug) return;
+
+    this.slugStatus.set(available ? 'available' : 'taken');
   }
 
   protected setTab(tab: 'profile' | 'pricing' | 'payments'): void {
@@ -149,8 +149,8 @@ export class SettingsComponent implements OnInit {
   }
 
   protected async saveProfile(): Promise<void> {
-    if (!this.displayName() || !this.slug() || !this.phoneNumber()) {
-      this.error.set('Display name, slug, and phone number are required');
+    if (!this.canSaveProfile()) {
+      this.error.set('Please fix the errors above before saving');
       return;
     }
 
@@ -171,12 +171,21 @@ export class SettingsComponent implements OnInit {
     this.saving.set(false);
 
     if (updated.data != null && updated.error == null) {
+      this.originalSlug = this.slug(); // update reference after successful save
+      this.slugStatus.set('idle');
       this.success.set(true);
       setTimeout(() => {
         this.success.set(false);
       }, 3000);
     } else {
-      this.error.set('Failed to update profile');
+      // Check for unique violation
+      const errMsg = updated.error?.message ?? '';
+      if (errMsg.includes('unique') || errMsg.includes('duplicate') || errMsg.includes('slug')) {
+        this.slugStatus.set('taken');
+        this.error.set('This slug is already taken — please choose a different one');
+      } else {
+        this.error.set('Failed to update profile');
+      }
     }
   }
 
@@ -255,13 +264,11 @@ export class SettingsComponent implements OnInit {
       this.creator.set(creatorData);
       this.displayName.set(creatorData.display_name);
       this.slug.set(creatorData.slug);
+      this.originalSlug = creatorData.slug;
       this.bio.set(creatorData.bio || '');
       this.profileImageUrl.set(creatorData.profile_image_url || '');
       this.phoneNumber.set(creatorData.phone_number || '');
       this.instagramUsername.set(creatorData.instagram_username || '');
-      if (creatorData.profile_image_url) {
-        this.profileImagePreview.set(creatorData.profile_image_url);
-      }
 
       const settingsData = await this.creatorService.getCreatorSettings(creatorData.id);
       if (settingsData.data) {

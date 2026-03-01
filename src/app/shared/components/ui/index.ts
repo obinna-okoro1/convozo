@@ -10,3 +10,4 @@ export * from './badge/badge.component';
 export * from './avatar/avatar.component';
 export * from './spinner/spinner.component';
 export * from './empty-state/empty-state.component';
+export * from './image-upload/image-upload.component';

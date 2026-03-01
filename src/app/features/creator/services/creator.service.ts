@@ -228,6 +228,34 @@ export class CreatorService {
   }
 
   /**
+   * Check if a slug is available (not taken by another creator).
+   * Pass excludeCreatorId to exclude the current creator's own slug (for settings edits).
+   */
+  public async checkSlugAvailability(
+    slug: string,
+    excludeCreatorId?: string,
+  ): Promise<{ available: boolean; error?: string }> {
+    try {
+      let query = this.supabaseService.client
+        .from('creators')
+        .select('id', { count: 'exact', head: true })
+        .eq('slug', slug);
+
+      if (excludeCreatorId) {
+        query = query.neq('id', excludeCreatorId);
+      }
+
+      const { count, error } = await query;
+      if (error) {
+        return { available: false, error: error.message };
+      }
+      return { available: (count ?? 0) === 0 };
+    } catch {
+      return { available: false, error: 'Failed to check slug availability' };
+    }
+  }
+
+  /**
    * Build public URL for creator
    */
   public buildPublicUrl(slug: string | undefined): string {
