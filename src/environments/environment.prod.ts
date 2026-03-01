@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   supabase: {
     url: 'https://pfmscnpmpwxpdlrbeokb.supabase.co',
-    anonKey: 'sb_publishable_wZx16RmR-KBGpS-ro4DXpg_mvw7OVX-',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmbXNjbnBtcHd4cGRscmJlb2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzQyODcsImV4cCI6MjA4NzcxMDI4N30.tb4sFRVGfGvQOzuDQFK_GTKhJODWfQKrzc5zbLtCy9k',
   },
   stripe: {
     publishableKey: 'pk_test_51T07tc1goEV72lO64Tlj9nAOCsOEeFH4N94ZOtH8fLhUnVRwy1N85DxlGkxXA8twVQBAY7QYKYksY037qmmCAx1p00xIU0qziX',

@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
@@ -7,14 +8,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 });
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('APP_URL') || 'http://localhost:4200',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
 
 // Rate limiting store (in-memory, per-instance)
 // In production, use Redis or similar distributed cache
@@ -43,9 +38,10 @@ function checkRateLimit(email: string): boolean {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const corsResponse = handleCors(req);
+  if (corsResponse) return corsResponse;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const { creator_slug, message_content, sender_name, sender_email, sender_instagram, message_type, price } = 
@@ -133,7 +129,8 @@ Deno.serve(async (req) => {
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
     const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
-    const appUrl = Deno.env.get('APP_URL') || 'http://localhost:4200';
+    // Hardcoded so Stripe redirects work even if APP_URL secret resets
+    const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
     // Check if using test Stripe account (for local development)
     const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_');
