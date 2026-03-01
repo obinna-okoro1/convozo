@@ -106,7 +106,7 @@ export class ImageUploadComponent {
       if (!userId) throw new Error('User not authenticated');
 
       const fileName = `${userId}-${String(Date.now())}.jpg`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `avatars/${userId}/${fileName}`;
 
       const { data, error } = await this.supabaseService.uploadFile('public', filePath, compressed);
       if (error) throw error;
