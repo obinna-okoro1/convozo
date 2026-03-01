@@ -31,6 +31,20 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'privacy',
+    loadComponent: () =>
+      import('./features/public/components/privacy-policy/privacy-policy.component').then(
+        (m) => m.PrivacyPolicyComponent,
+      ),
+  },
+  {
+    path: 'terms',
+    loadComponent: () =>
+      import('./features/public/components/terms-of-service/terms-of-service.component').then(
+        (m) => m.TermsOfServiceComponent,
+      ),
+  },
+  {
     path: ':slug',
     loadComponent: () =>
       import('./features/public/components/message-page/message-page.component').then(

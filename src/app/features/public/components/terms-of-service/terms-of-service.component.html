@@ -1,0 +1,249 @@
+<div class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-300">
+  <!-- Header -->
+  <header class="border-b border-white/10">
+    <div class="container mx-auto px-4 py-6 flex items-center justify-between">
+      <a routerLink="/home" class="flex items-center space-x-3">
+        <img src="assets/logo.png" alt="Convozo" class="w-[2.5rem] h-[2.5rem] rounded-xl shadow-lg" />
+        <span class="text-xl font-bold text-white">Convozo</span>
+      </a>
+      <a routerLink="/home"
+        class="text-sm text-slate-400 hover:text-white transition-colors">
+        ← Back to Home
+      </a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="container mx-auto px-4 py-12 max-w-[50rem]">
+    <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Terms of Service</h1>
+    <p class="text-slate-400 text-sm mb-10">Last updated: {{ lastUpdated }}</p>
+
+    <!-- Introduction -->
+    <section class="mb-10">
+      <p class="leading-relaxed">
+        Welcome to Convozo. These Terms of Service ("Terms") govern your access to and use of
+        the Convozo platform at
+        <a href="https://convozo.com" class="text-purple-400 hover:text-purple-300 underline">convozo.com</a>
+        (the "Platform"), operated by Convozo ("we," "us," or "our"). By creating an account
+        or using the Platform, you agree to be bound by these Terms. If you do not agree, do
+        not use the Platform.
+      </p>
+    </section>
+
+    <!-- 1. Eligibility -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">1. Eligibility</h2>
+      <p>
+        You must be at least 18 years old to use Convozo. By using the Platform, you represent
+        and warrant that you meet this age requirement and have the legal capacity to enter
+        into these Terms.
+      </p>
+    </section>
+
+    <!-- 2. Account Registration -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">2. Account Registration</h2>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>You may register using an email/password or via Google OAuth.</li>
+        <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+        <li>You must provide accurate and complete information during registration.</li>
+        <li>You are solely responsible for all activity that occurs under your account.</li>
+        <li>You must notify us immediately of any unauthorized access to your account.</li>
+      </ul>
+    </section>
+
+    <!-- 3. Platform Description -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">3. Platform Description</h2>
+      <p class="mb-4">
+        Convozo is a platform that connects fans with creators and influencers. The Platform
+        offers the following services:
+      </p>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li><strong class="text-white">Paid Messaging:</strong> Fans can send paid messages to Creators at prices set by each Creator.</li>
+        <li><strong class="text-white">Call Bookings:</strong> Fans can book and pay for calls with Creators at Creator-defined rates.</li>
+        <li><strong class="text-white">Creator Profiles:</strong> Creators can set up public profiles with a custom URL to receive messages and call bookings.</li>
+      </ul>
+    </section>
+
+    <!-- 4. User Roles -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">4. User Roles</h2>
+
+      <h3 class="text-lg font-medium text-white mb-2">4.1 Creators</h3>
+      <ul class="list-disc list-inside space-y-2 mb-4 ml-4">
+        <li>Creators set their own pricing for messages and calls.</li>
+        <li>Creators must connect a Stripe account to receive payouts.</li>
+        <li>Creators are responsible for responding to paid messages in a timely manner.</li>
+        <li>Creators must comply with all applicable laws and regulations in their jurisdiction.</li>
+      </ul>
+
+      <h3 class="text-lg font-medium text-white mb-2">4.2 Fans</h3>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>Fans pay the price set by the Creator for messages and calls.</li>
+        <li>Fans understand that sending a paid message does not guarantee a response, though Creators are encouraged to reply.</li>
+        <li>Fans must not send abusive, harassing, or illegal content.</li>
+      </ul>
+    </section>
+
+    <!-- 5. Payments & Fees -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">5. Payments &amp; Fees</h2>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>All payments are processed securely through <strong class="text-white">Stripe</strong>.</li>
+        <li>Convozo charges a <strong class="text-white">platform fee of 35%</strong> on each transaction. The Creator receives the remaining 65% minus Stripe's processing fees.</li>
+        <li>Prices displayed are set by Creators and may change at any time.</li>
+        <li>Payouts to Creators are handled via Stripe Connect and are subject to Stripe's payout schedule and terms.</li>
+        <li>All fees are in the currency configured by the Creator.</li>
+      </ul>
+    </section>
+
+    <!-- 6. Refund Policy -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">6. No Refund Policy</h2>
+      <p class="mb-4">
+        All payments made on Convozo are <strong class="text-white">final and non-refundable</strong>.
+        By completing a payment, you acknowledge and agree to the following:
+      </p>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li><strong class="text-white">Paid Messages:</strong> All payments for messages are non-refundable, regardless of whether the Creator responds.</li>
+        <li><strong class="text-white">Call Bookings:</strong> All payments for call bookings are non-refundable, including in cases of cancellation or no-show by either party.</li>
+        <li>Convozo does not process refunds under any circumstances. By using the Platform, you accept this no-refund policy in its entirety.</li>
+      </ul>
+    </section>
+
+    <!-- 7. Prohibited Conduct -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">7. Prohibited Conduct</h2>
+      <p class="mb-4">You agree not to:</p>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>Use the Platform for any illegal or unauthorized purpose.</li>
+        <li>Send messages containing harassment, threats, hate speech, or explicit content.</li>
+        <li>Impersonate another person or misrepresent your identity.</li>
+        <li>Attempt to gain unauthorized access to other accounts or Platform systems.</li>
+        <li>Use bots, scrapers, or automated tools to interact with the Platform.</li>
+        <li>Interfere with or disrupt the Platform's infrastructure or services.</li>
+        <li>Circumvent payment processing or attempt to defraud the Platform or other users.</li>
+        <li>Upload malware, viruses, or other harmful code.</li>
+      </ul>
+    </section>
+
+    <!-- 8. Content & Intellectual Property -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">8. Content &amp; Intellectual Property</h2>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>You retain ownership of content you create and post on the Platform.</li>
+        <li>By posting content, you grant Convozo a non-exclusive, worldwide, royalty-free license to display, distribute, and store your content solely for the purpose of operating the Platform.</li>
+        <li>You must not upload content that infringes on the intellectual property rights of others.</li>
+        <li>Convozo's name, logo, and branding are our intellectual property and may not be used without permission.</li>
+      </ul>
+    </section>
+
+    <!-- 9. Account Suspension & Termination -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">9. Account Suspension &amp; Termination</h2>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>We reserve the right to suspend or terminate your account at our sole discretion if you violate these Terms.</li>
+        <li>You may delete your account at any time through your account settings.</li>
+        <li>Upon termination, your right to use the Platform ceases immediately.</li>
+        <li>We may retain certain data as required by law or for legitimate business purposes (see our
+          <a routerLink="/privacy" class="text-purple-400 hover:text-purple-300 underline">Privacy Policy</a>).
+        </li>
+      </ul>
+    </section>
+
+    <!-- 10. Disclaimers -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">10. Disclaimers</h2>
+      <div class="bg-slate-800/50 border border-white/10 rounded-xl p-6">
+        <p class="mb-4">
+          THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
+          EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF
+          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+        </p>
+        <ul class="list-disc list-inside space-y-2 ml-4">
+          <li>We do not guarantee that the Platform will be uninterrupted, error-free, or secure.</li>
+          <li>We are not responsible for the content of messages exchanged between users.</li>
+          <li>We do not endorse or verify the identity of Creators on the Platform.</li>
+          <li>We are not a party to the transaction between Fans and Creators — we provide the platform and payment infrastructure.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 11. Limitation of Liability -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">11. Limitation of Liability</h2>
+      <div class="bg-slate-800/50 border border-white/10 rounded-xl p-6">
+        <p>
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW, CONVOZO SHALL NOT BE LIABLE FOR ANY
+          INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS
+          OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF
+          DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES RESULTING FROM: (A) YOUR USE OF
+          OR INABILITY TO USE THE PLATFORM; (B) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY
+          ON THE PLATFORM; (C) UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR CONTENT OR
+          TRANSMISSIONS. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CONVOZO'S
+          TOTAL AGGREGATE LIABILITY FOR ANY AND ALL CLAIMS ARISING OUT OF OR RELATING TO
+          THESE TERMS OR YOUR USE OF THE PLATFORM SHALL BE ZERO (₹0 / $0). YOU ACKNOWLEDGE
+          THAT THE PLATFORM IS PROVIDED FREE OF CHARGE TO CREATORS AND THAT ALL PAYMENTS
+          ARE TRANSACTIONS BETWEEN FANS AND CREATORS FACILITATED THROUGH STRIPE — CONVOZO
+          ASSUMES NO LIABILITY FOR SUCH TRANSACTIONS.
+        </p>
+      </div>
+    </section>
+
+    <!-- 12. Indemnification -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">12. Indemnification</h2>
+      <p>
+        You agree to indemnify, defend, and hold harmless Convozo and its officers, directors,
+        employees, and agents from any claims, damages, losses, liabilities, and expenses
+        (including attorneys' fees) arising out of or related to your use of the Platform,
+        your violation of these Terms, or your violation of any rights of another party.
+      </p>
+    </section>
+
+    <!-- 13. Governing Law -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">13. Governing Law</h2>
+      <p>
+        These Terms shall be governed by and construed in accordance with the laws of India,
+        without regard to its conflict of law provisions. Any disputes arising from these Terms
+        shall be resolved through binding arbitration or in the courts of competent jurisdiction
+        in India.
+      </p>
+    </section>
+
+    <!-- 14. Changes to These Terms -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">14. Changes to These Terms</h2>
+      <p>
+        We may modify these Terms at any time. We will notify users of material changes by
+        posting the updated Terms on this page and updating the "Last updated" date.
+        Your continued use of the Platform after changes constitutes acceptance of the
+        revised Terms.
+      </p>
+    </section>
+
+    <!-- 15. Contact Us -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-white mb-4">15. Contact Us</h2>
+      <p>
+        If you have questions about these Terms, please contact us at:
+      </p>
+      <p class="mt-2">
+        <a href="mailto:support@convozo.com" class="text-purple-400 hover:text-purple-300 underline">support&#64;convozo.com</a>
+      </p>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 py-8">
+    <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-400">
+      <span>© {{ currentYear }} Convozo. All rights reserved.</span>
+      <div class="flex gap-6">
+        <a routerLink="/terms" class="text-white">Terms of Service</a>
+        <a routerLink="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+</div>
