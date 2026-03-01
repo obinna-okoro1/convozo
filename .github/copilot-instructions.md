@@ -26,3 +26,17 @@
 - Mobile-first responsive design: base styles for mobile, then `sm:`, `lg:` breakpoints.
 - Touch-friendly: minimum 44×44 target sizes for interactive elements (use `min-w-[2.75rem] min-h-[2.75rem]`).
 - All components are standalone (no NgModules).
+- Password policy: **8-character minimum**, enforced on both client and server.
+
+## Environment Separation
+
+- `supabase/.env` → **local dev only** (read by `supabase functions serve`)
+- `supabase secrets set` → **production only** (stored in Supabase remote vault)
+- `supabase/.env.production` → **reference file** (committed, placeholder values only)
+- **Never** run `supabase secrets set --env-file supabase/.env`
+
+## Deployment
+
+- Frontend: `npx wrangler pages deploy dist/convozo-app/browser --project-name=convozo`
+- Backend: `supabase db push && supabase functions deploy`
+- Secrets: `supabase secrets set KEY=VALUE` (one at a time, never from file)

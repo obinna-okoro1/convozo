@@ -79,8 +79,8 @@ export class AuthService {
       return { success: false, error: ERROR_MESSAGES.AUTH.INVALID_EMAIL };
     }
 
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters' };
+    if (password.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters' };
     }
 
     try {

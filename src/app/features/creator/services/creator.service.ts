@@ -354,6 +354,8 @@ export class CreatorService {
     callPrice?: number;
     callDuration?: number;
     callsEnabled: boolean;
+    followBackPrice?: number;
+    followBackEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -365,6 +367,8 @@ export class CreatorService {
         call_price: data.callPrice,
         call_duration: data.callDuration,
         calls_enabled: data.callsEnabled,
+        follow_back_price: data.followBackPrice,
+        follow_back_enabled: data.followBackEnabled,
         response_expectation: data.responseExpectation,
       })
       .select()
@@ -383,6 +387,8 @@ export class CreatorService {
     callPrice?: number;
     callDuration?: number;
     callsEnabled: boolean;
+    followBackPrice?: number;
+    followBackEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -393,6 +399,8 @@ export class CreatorService {
         call_price: data.callPrice,
         call_duration: data.callDuration,
         calls_enabled: data.callsEnabled,
+        follow_back_price: data.followBackPrice,
+        follow_back_enabled: data.followBackEnabled,
         response_expectation: data.responseExpectation,
       })
       .eq('id', data.settingsId)

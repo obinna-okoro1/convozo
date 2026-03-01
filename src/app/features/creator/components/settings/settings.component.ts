@@ -55,6 +55,8 @@ export class SettingsComponent implements OnInit {
   protected readonly callPrice = signal(5000); // in cents
   protected readonly callDuration = signal(30); // in minutes
   protected readonly callsEnabled = signal(false);
+  protected readonly followBackPrice = signal(2000); // in cents
+  protected readonly followBackEnabled = signal(false);
   protected readonly responseExpectation = signal('');
 
   protected readonly creator = signal<Creator | null>(null);
@@ -200,6 +202,8 @@ export class SettingsComponent implements OnInit {
       callPrice: this.callsEnabled() ? this.callPrice() : undefined,
       callDuration: this.callsEnabled() ? this.callDuration() : undefined,
       callsEnabled: this.callsEnabled(),
+      followBackPrice: this.followBackEnabled() ? this.followBackPrice() : undefined,
+      followBackEnabled: this.followBackEnabled(),
       responseExpectation: this.responseExpectation() || '',
     });
 
@@ -277,6 +281,8 @@ export class SettingsComponent implements OnInit {
         this.callPrice.set(settingsData.data.call_price ?? 5000);
         this.callDuration.set(settingsData.data.call_duration ?? 30);
         this.callsEnabled.set(settingsData.data.calls_enabled);
+        this.followBackPrice.set(settingsData.data.follow_back_price ?? 2000);
+        this.followBackEnabled.set(settingsData.data.follow_back_enabled);
         this.responseExpectation.set(settingsData.data.response_expectation || '');
       }
 

@@ -5,6 +5,7 @@
 ### Authentication
 
 - **Multiple auth methods** — Google OAuth, magic link (passwordless), and email/password
+- **Password policy** — minimum 8 characters, enforced on both client and server
 - **Session management** — handled by Supabase Auth with automatic expiration
 - **Proper callback handling** — `getSession()` call instead of arbitrary timeouts to avoid race conditions
 - **OAuth data extraction** — typed against Supabase `User` interface, no `any` types
@@ -19,21 +20,25 @@
 ### Payments
 
 - **PCI compliance** — Stripe handles all card data; no sensitive payment info touches our servers
-- **Webhook signature verification** — all Stripe webhook payloads are verified before processing
+- **Webhook signature verification** — all Stripe webhook payloads are verified using `SubtleCryptoProvider` (Deno-compatible)
+- **Webhook idempotency** — duplicate event IDs are rejected to prevent double-processing
 - **Server-side price validation** — Edge Functions verify amounts against creator settings before creating checkout sessions
+- **Metadata truncation** — all Stripe metadata values are `.slice(0, 490)` to stay under the 500-character limit
 - **Connect Express** — creators onboard directly with Stripe; Convozo never holds creator funds
 
 ### Input Validation
 
 - **Client-side** — RFC 5322 email regex, message length limits (1000 chars), required field checks via `FormValidators`
 - **Server-side** — Edge Functions validate all inputs (type checking, required fields, format validation)
-- **Rate limiting** — 10 requests per hour per email address on checkout session creation (in-memory store in Edge Functions)
+- **Rate limiting** — checkout sessions: 10 requests/hour per email; reply emails: 20 requests/hour per creator (in-memory stores)
 - **SQL injection prevention** — all database operations go through the Supabase client SDK (parameterised queries)
 
 ### Storage
 
-- **Supabase Storage with RLS** — authenticated users can upload to `avatars/` folder only
-- **File validation** — client-side: images only, 2 MB max. File paths include user ID to prevent overwrites
+- **Supabase Storage with RLS** — authenticated users can upload to their own `avatars/{user_id}/` subfolder only
+- **File size limit** — 5 MB max enforced at the database level via RLS policy
+- **MIME type restriction** — only `image/jpeg`, `image/png`, `image/webp`, and `image/gif` allowed (enforced via RLS policy)
+- **Client-side validation** — images only, 2 MB max with automatic compression before upload
 - **Public read, authenticated write** — public bucket for serving, RLS policies for upload/update/delete
 
 ### Frontend
@@ -43,13 +48,22 @@
 - **CORS** — Edge Functions set appropriate CORS headers
 - **Wildcard route** — `**` catch-all redirects unknown paths to `/home`
 
+### Environment Separation
+
+- **Local dev** — `supabase/.env` file, read by `supabase functions serve` only
+- **Production** — `supabase secrets set`, stored in Supabase's remote vault
+- **Reference file** — `supabase/.env.production` (committed to git with placeholder values) documents required production secrets
+- **Gitignored** — `.env`, `.env.local`, `.env.keys`, `.env.*.local` are all in `.gitignore`
+
 ## Production Hardening Checklist
 
-Before going live, address these items:
-
-- [ ] **HTTPS everywhere** — enforce TLS on frontend host and Supabase project
-- [ ] **Environment secrets** — ensure `.env`, `.env.local`, and `supabase/.env` are never committed (already in `.gitignore`)
-- [ ] **Rate limiting** — current implementation is in-memory per Edge Function instance; replace with Redis or Supabase table for persistent rate limiting across instances
+- [x] **HTTPS everywhere** — enforced via Cloudflare Pages (frontend) and Supabase (backend)
+- [x] **Environment secrets** — `.env` files gitignored; production uses `supabase secrets set`; `.env.production` reference file committed
+- [x] **Storage hardening** — 5 MB file size limit, image-only MIME types, user-scoped upload paths (migration 012)
+- [x] **Webhook security** — signature verification with `SubtleCryptoProvider`, idempotency checks, metadata truncation
+- [x] **Rate limiting** — checkout sessions (10/hr per email), reply emails (20/hr per creator)
+- [x] **Password policy** — 8-character minimum enforced on signup
+- [ ] **Persistent rate limiting** — current implementation is in-memory per Edge Function instance; replace with Redis or Supabase table for rate limiting across instances
 - [ ] **CSP headers** — add Content-Security-Policy headers to restrict script/style sources
 - [ ] **Abuse monitoring** — set up alerts for unusual checkout session volume or failed webhook deliveries
 - [ ] **Stripe live mode** — switch from test keys to live keys; verify webhook endpoint is using live signing secret

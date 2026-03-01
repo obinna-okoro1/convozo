@@ -46,3 +46,7 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+.env.keys
+.env.*.local
+# Allow the production reference file (contains only placeholder values)
+!supabase/.env.production

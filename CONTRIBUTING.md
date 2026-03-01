@@ -99,3 +99,27 @@ npm test         # Must pass all tests
 ```
 
 The only acceptable build warning is the initial bundle size budget (currently ~507 kB vs 500 kB budget).
+
+## Deployment
+
+```bash
+# Frontend (Cloudflare Pages)
+npm run build
+npx wrangler pages deploy dist/convozo-app/browser --project-name=convozo
+
+# Supabase (migrations + Edge Functions)
+supabase db push
+supabase functions deploy
+
+# Set production secrets INDIVIDUALLY (never use --env-file)
+supabase secrets set KEY=VALUE
+```
+
+> **⚠️ Never** run `supabase secrets set --env-file supabase/.env` — that overwrites production with localhost values. See `supabase/.env.production` for the list of required production secrets.
+
+## Key Rules
+
+- **Password policy** — 8-character minimum, enforced on client and server
+- **Units** — always use `rem` instead of `px` (see `.github/copilot-instructions.md`)
+- **No NgModules** — every component is standalone
+- **Signals over RxJS** — use `signal()`, `computed()`, `input()`, `output()` for component state

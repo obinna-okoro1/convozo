@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     // Get creator info
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price)')
+      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price, follow_back_price, follow_back_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -106,14 +106,33 @@ Deno.serve(async (req) => {
     }
 
     // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
-    const settings = creator.creator_settings as { message_price: number } | null;
+    const settings = creator.creator_settings as { message_price: number; follow_back_price: number | null; follow_back_enabled: boolean } | null;
     if (!settings?.message_price || settings.message_price < 100) {
       return new Response(
         JSON.stringify({ error: 'Creator pricing not configured' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    const serverPrice = settings.message_price;
+
+    // Normalise message_type to match DB constraint ('message' | 'call' | 'follow_back')
+    const validMessageType = message_type === 'call' ? 'call' : message_type === 'follow_back' ? 'follow_back' : 'message';
+
+    // Determine the correct price based on type
+    let serverPrice = settings.message_price;
+    let productName = `Paid DM to ${creator.display_name}`;
+    let productDescription = 'Priority direct message';
+
+    if (validMessageType === 'follow_back') {
+      if (!settings.follow_back_enabled || !settings.follow_back_price || settings.follow_back_price < 100) {
+        return new Response(
+          JSON.stringify({ error: 'Follow-back requests are not enabled for this creator' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      serverPrice = settings.follow_back_price;
+      productName = `Follow-Back Request to ${creator.display_name}`;
+      productDescription = 'Request a follow-back on Instagram';
+    }
 
     // PostgREST returns one-to-one relationships as objects, not arrays
     const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
@@ -123,9 +142,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Normalise message_type to match DB constraint ('message' | 'call')
-    const validMessageType = message_type === 'call' ? 'call' : 'message';
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
     const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
@@ -143,8 +159,8 @@ Deno.serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `Paid DM to ${creator.display_name}`,
-              description: 'Priority direct message',
+              name: productName,
+              description: productDescription,
             },
             unit_amount: serverPrice,
           },
@@ -157,10 +173,10 @@ Deno.serve(async (req) => {
       customer_email: sender_email,
       metadata: {
         creator_id: creator.id,
-        message_content,
-        sender_name,
+        message_content: message_content.slice(0, 490),
+        sender_name: sender_name.slice(0, 490),
         sender_email,
-        sender_instagram: sender_instagram || '',
+        sender_instagram: (sender_instagram || '').slice(0, 490),
         message_type: validMessageType,
         amount: serverPrice.toString(),
       },

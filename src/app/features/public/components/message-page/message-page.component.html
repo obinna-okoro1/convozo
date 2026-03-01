@@ -55,11 +55,6 @@
           </div>
         }
 
-        <!-- Social Proof Section -->
-        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl mb-8 animate-slide-up p-6 shadow-xl" style="animation-delay: 50ms">
-          <app-social-proof [data]="socialProofData()" />
-        </div>
-
         <!-- Instagram Profile Section -->
         @if (instagramUsername()) {
           <div class="mb-8 animate-slide-up" style="animation-delay: 100ms;">
@@ -72,7 +67,7 @@
                     </svg>
                   </div>
                   <div>
-                    <p class="text-sm text-slate-400 mb-1">Follow on Instagram</p>
+                    <p class="text-sm text-slate-400 mb-1">Influencer Instagram</p>
                     <p class="text-xl font-bold text-white group-hover:text-pink-300 transition-colors">{{ '@' + instagramUsername() }}</p>
                   </div>
                 </div>
@@ -82,7 +77,7 @@
                   rel="noopener noreferrer"
                   class="px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-600 hover:from-pink-500 hover:to-orange-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105 flex items-center gap-2"
                 >
-                  <span>Follow</span>
+                  <span>Preview</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -92,8 +87,8 @@
           </div>
         }
 
-        <!-- Tabs (only if calls are enabled) -->
-        @if (settings()?.calls_enabled) {
+        <!-- Tabs (show when calls or follow-back is enabled) -->
+        @if (settings()?.calls_enabled || followBackEnabled()) {
           <div class="mb-6 animate-slide-up overflow-hidden" style="animation-delay: 150ms;">
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-2 flex gap-2">
               <button
@@ -107,31 +102,53 @@
                 [class.shadow-purple-500/50]="activeTab() === 'message'"
                 [class.text-slate-400]="activeTab() !== 'message'"
                 [class.hover:text-white]="activeTab() !== 'message'"
-                class="flex-1 px-6 py-4 font-semibold text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-2"
+                class="flex-1 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span>Send Message</span>
+                <span>Message</span>
               </button>
-              <button
-                type="button"
-                (click)="activeTab.set('call')"
-                [class.bg-gradient-to-r]="activeTab() === 'call'"
-                [class.from-purple-600]="activeTab() === 'call'"
-                [class.to-pink-600]="activeTab() === 'call'"
-                [class.text-white]="activeTab() === 'call'"
-                [class.shadow-lg]="activeTab() === 'call'"
-                [class.shadow-purple-500/50]="activeTab() === 'call'"
-                [class.text-slate-400]="activeTab() !== 'call'"
-                [class.hover:text-white]="activeTab() !== 'call'"
-                class="flex-1 px-6 py-4 font-semibold text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span>Book a Call</span>
-              </button>
+              @if (followBackEnabled()) {
+                <button
+                  type="button"
+                  (click)="activeTab.set('follow_back')"
+                  [class.bg-gradient-to-r]="activeTab() === 'follow_back'"
+                  [class.from-purple-600]="activeTab() === 'follow_back'"
+                  [class.to-pink-600]="activeTab() === 'follow_back'"
+                  [class.text-white]="activeTab() === 'follow_back'"
+                  [class.shadow-lg]="activeTab() === 'follow_back'"
+                  [class.shadow-purple-500/50]="activeTab() === 'follow_back'"
+                  [class.text-slate-400]="activeTab() !== 'follow_back'"
+                  [class.hover:text-white]="activeTab() !== 'follow_back'"
+                  class="flex-1 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2"
+                >
+                  <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  <span>Follow Back</span>
+                </button>
+              }
+              @if (settings()?.calls_enabled) {
+                <button
+                  type="button"
+                  (click)="activeTab.set('call')"
+                  [class.bg-gradient-to-r]="activeTab() === 'call'"
+                  [class.from-purple-600]="activeTab() === 'call'"
+                  [class.to-pink-600]="activeTab() === 'call'"
+                  [class.text-white]="activeTab() === 'call'"
+                  [class.shadow-lg]="activeTab() === 'call'"
+                  [class.shadow-purple-500/50]="activeTab() === 'call'"
+                  [class.text-slate-400]="activeTab() !== 'call'"
+                  [class.hover:text-white]="activeTab() !== 'call'"
+                  class="flex-1 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2"
+                >
+                  <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span>Book a Call</span>
+                </button>
+              }
             </div>
           </div>
         }
@@ -145,6 +162,19 @@
               [responseExpectation]="responseExpectation()"
               [submitting]="submitting()"
               (formSubmit)="onMessageSubmit($event)"
+            />
+          </div>
+        }
+
+        <!-- Follow-Back Request Form (reuses message form with different price) -->
+        @if (activeTab() === 'follow_back' && followBackEnabled()) {
+          <div class="animate-slide-up" style="animation-delay: 200ms;">
+            <app-message-form
+              [priceCents]="followBackPriceCents()"
+              [creatorName]="creator()?.display_name ?? ''"
+              [responseExpectation]="responseExpectation()"
+              [submitting]="submitting()"
+              (formSubmit)="onFollowBackSubmit($event)"
             />
           </div>
         }

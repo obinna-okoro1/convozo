@@ -1,6 +1,5 @@
 /**
- * Message page component with proper access modifiers and clean architecture
- * Now includes social proof for trust building
+ * Message page component — public-facing page where fans send paid messages or book calls.
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
@@ -17,10 +16,6 @@ import {
 import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
-import {
-  SocialProofComponent,
-  SocialProofData,
-} from '../../../../shared/components/social-proof/social-proof.component';
 import { TrustBannerComponent } from '../../../../shared/components/trust-banner/trust-banner.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import {
@@ -34,7 +29,6 @@ import { MessageFormComponent, MessageFormData } from '../message-form/message-f
   selector: 'app-message-page',
   imports: [
     RouterLink,
-    SocialProofComponent,
     TrustBannerComponent,
     CreatorProfileHeaderComponent,
     MessageFormComponent,
@@ -50,14 +44,6 @@ export class MessagePageComponent implements OnInit {
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
 
-  // Social proof data
-  protected readonly socialProofData = signal<SocialProofData>({
-    totalMessages: 0,
-    responseRate: 0,
-    avgResponseTime: 24,
-    verifiedCreator: false,
-  });
-
   // Availability data
   protected readonly availabilitySlots = signal<AvailabilitySlot[]>([]);
 
@@ -69,12 +55,14 @@ export class MessagePageComponent implements OnInit {
   });
 
   // UI state
-  protected readonly activeTab = signal<'message' | 'call'>('message');
+  protected readonly activeTab = signal<'message' | 'call' | 'follow_back'>('message');
   protected readonly submitting = signal<boolean>(false);
 
   // Computed values
   protected readonly settings = computed(() => this.creatorSettings());
   protected readonly messagePriceCents = computed(() => this.settings()?.message_price ?? 0);
+  protected readonly followBackPriceCents = computed(() => this.settings()?.follow_back_price ?? 0);
+  protected readonly followBackEnabled = computed(() => this.settings()?.follow_back_enabled ?? false);
   protected readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
   protected readonly callDuration = computed(() => this.settings()?.call_duration ?? 30);
   protected readonly responseExpectation = computed(
@@ -109,6 +97,22 @@ export class MessagePageComponent implements OnInit {
       formData.senderInstagram,
       formData.messageContent,
       'message',
+    );
+  }
+
+  /**
+   * Handle follow-back request submission — uses the same message flow with different pricing
+   */
+  protected async onFollowBackSubmit(formData: MessageFormData): Promise<void> {
+    if (!this.validateMessageForm(formData)) {
+      return;
+    }
+    await this.processCheckout(
+      formData.senderName,
+      formData.senderEmail,
+      formData.senderInstagram,
+      formData.messageContent,
+      'follow_back',
     );
   }
 
@@ -178,60 +182,12 @@ export class MessagePageComponent implements OnInit {
         this.creatorSettings.set(settings);
       }
 
-      // Load social proof data
-      await this.loadSocialProofData((data as CreatorProfile).id);
-
       // Load availability slots for call bookings
       await this.loadAvailabilitySlots((data as CreatorProfile).id);
     } catch {
       this.error.set('Failed to load creator');
     } finally {
       this.loading.set(false);
-    }
-  }
-
-  /**
-   * Load real social proof data for the creator from the database
-   */
-  private async loadSocialProofData(creatorId: string): Promise<void> {
-    try {
-      const { data: messages, error } = await this.supabaseService.client
-        .from('messages')
-        .select('id, is_handled, created_at, replied_at')
-        .eq('creator_id', creatorId);
-
-      if (error != null || messages == null) {
-        return;
-      }
-
-      const typedMessages = messages as { id: string; is_handled: boolean; created_at: string; replied_at: string | null }[];
-      const totalMessages = typedMessages.length;
-
-      // Calculate response rate: messages that have been replied to
-      const replied = typedMessages.filter((m) => m.replied_at != null).length;
-      const responseRate = totalMessages > 0 ? Math.round((replied / totalMessages) * 100) : 0;
-
-      // Calculate average response time in hours (for messages that have a reply)
-      let avgResponseTime = 24;
-      const repliedMessages = typedMessages.filter((m) => m.replied_at != null && m.created_at != null);
-      if (repliedMessages.length > 0) {
-        const totalHours = repliedMessages.reduce((sum, m) => {
-          const created = new Date(m.created_at).getTime();
-          const replied = new Date(m.replied_at!).getTime();
-          return sum + (replied - created) / (1000 * 60 * 60);
-        }, 0);
-        avgResponseTime = Math.max(1, Math.round(totalHours / repliedMessages.length));
-      }
-
-      this.socialProofData.set({
-        totalMessages,
-        responseRate,
-        avgResponseTime,
-        verifiedCreator: true,
-        joinedDate: this.creator()?.created_at || new Date().toISOString(),
-      });
-    } catch {
-      // Silently fail — social proof is not critical
     }
   }
 
@@ -320,13 +276,15 @@ export class MessagePageComponent implements OnInit {
 
     this.submitting.set(true);
     try {
+      const priceCents = messageType === 'follow_back' ? this.followBackPriceCents() : this.messagePriceCents();
+
       const payload: CheckoutSessionPayload = {
         creator_slug: creatorData.slug,
         message_content: messageContent,
         sender_name: senderName,
         sender_email: senderEmail,
         message_type: messageType,
-        price: this.messagePriceCents(),
+        price: priceCents,
       };
 
       // Only include sender_instagram if provided

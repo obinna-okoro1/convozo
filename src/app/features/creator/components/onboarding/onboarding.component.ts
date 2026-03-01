@@ -202,6 +202,8 @@ export class OnboardingComponent implements OnInit {
   protected readonly callPrice = signal<number>(5000); // in cents ($50)
   protected readonly callDuration = signal<number>(30); // minutes
   protected readonly callsEnabled = signal<boolean>(false);
+  protected readonly followBackEnabled = signal<boolean>(false);
+  protected readonly followBackPrice = signal<number>(2000); // in cents ($20)
   protected readonly responseExpectation = signal<string>(
     APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
   );
@@ -384,6 +386,8 @@ export class OnboardingComponent implements OnInit {
         callPrice: this.callsEnabled() ? this.callPrice() : undefined,
         callDuration: this.callsEnabled() ? this.callDuration() : undefined,
         callsEnabled: this.callsEnabled(),
+        followBackPrice: this.followBackEnabled() ? this.followBackPrice() : undefined,
+        followBackEnabled: this.followBackEnabled(),
         responseExpectation: this.responseExpectation(),
       });
 
@@ -394,7 +398,15 @@ export class OnboardingComponent implements OnInit {
       // Move to Stripe Connect step
       this.nextStep();
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
+      const msg = err instanceof Error ? err.message : '';
+      // Don't leak raw database errors to the user
+      if (msg.includes('row-level security') || msg.includes('violates') || msg.includes('constraint')) {
+        this.error.set('Something went wrong saving your profile. Please log out and try again.');
+      } else if (msg) {
+        this.error.set(msg);
+      } else {
+        this.error.set(ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
+      }
     } finally {
       this.loading.set(false);
     }

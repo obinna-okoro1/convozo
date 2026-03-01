@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { sendEmail, messageConfirmationEmail, callBookingConfirmationEmail, newMessageNotificationEmail, newCallBookingNotificationEmail } from '../_shared/email.ts';
 
+// v2 - security hardening deploy
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
   httpClient: Stripe.createFetchHttpClient(),
@@ -145,7 +146,7 @@ Deno.serve(async (req) => {
 
         // Use Stripe-authoritative amount, not metadata (prevents manipulation)
         const amountInCents = session.amount_total || 0;
-        const validMessageType = message_type === 'call' ? 'call' : 'message';
+        const validMessageType = ['message', 'call', 'follow_back'].includes(message_type) ? message_type : 'message';
 
         // Create the message only after payment succeeds
         const { data: message, error: messageError } = await supabase
