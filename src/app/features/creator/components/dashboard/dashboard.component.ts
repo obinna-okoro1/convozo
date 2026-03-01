@@ -199,7 +199,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   protected openReplyModal(message: Message): void {
     this.selectedMessage.set(message);
-    this.replyContent.set(message.reply_content || '');
+    this.replyContent.set('');
     this.showReplyModal.set(true);
   }
 

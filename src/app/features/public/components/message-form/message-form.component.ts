@@ -28,6 +28,7 @@ export class MessageFormComponent {
   public readonly creatorName = input.required<string>();
   public readonly responseExpectation = input<string>('24-48 hours');
   public readonly submitting = input<boolean>(false);
+  public readonly productType = input<'message' | 'follow_back'>('message');
 
   public readonly formSubmit = output<MessageFormData>();
 
@@ -41,6 +42,38 @@ export class MessageFormComponent {
   );
 
   protected readonly charCount = computed(() => this.messageContent.length);
+
+  protected readonly isFollowBack = computed(() => this.productType() === 'follow_back');
+
+  protected readonly productLabel = computed(() =>
+    this.isFollowBack() ? 'Follow-Back Request' : 'Priority Message',
+  );
+
+  protected readonly priceUnit = computed(() =>
+    this.isFollowBack() ? 'per request' : 'per message',
+  );
+
+  protected readonly messageLabel = computed(() =>
+    this.isFollowBack() ? 'Your Note' : 'Your Message',
+  );
+
+  protected readonly messagePlaceholder = computed(() =>
+    this.isFollowBack()
+      ? 'Tell them why you\'d love a follow-back...'
+      : 'Share your thoughts, questions, or feedback...',
+  );
+
+  protected readonly inboxNote = computed(() =>
+    this.isFollowBack()
+      ? `Sent directly to ${this.creatorName()}`
+      : `Sent directly to ${this.creatorName()}'s inbox`,
+  );
+
+  protected readonly submitLabel = computed(() =>
+    this.isFollowBack()
+      ? `Pay $${this.priceInDollars()} & Request Follow-Back`
+      : `Pay $${this.priceInDollars()} & Send Message`,
+  );
 
   protected onSubmit(): void {
     this.formSubmit.emit({

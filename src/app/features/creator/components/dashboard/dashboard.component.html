@@ -663,15 +663,17 @@
 
               <!-- Actions -->
               <div class="flex gap-4">
-                <button
-                  (click)="openReplyModal(selectedMessage()!)"
-                  class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-base hover:scale-105 transition-all duration-300 shadow-lg shadow-purple-500/50 flex items-center justify-center gap-3"
-                >
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                  </svg>
-                  {{ selectedMessage()?.reply_content ? 'Edit Reply' : 'Reply to Message' }}
-                </button>
+                @if (!selectedMessage()?.reply_content) {
+                  <button
+                    (click)="openReplyModal(selectedMessage()!)"
+                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-base hover:scale-105 transition-all duration-300 shadow-lg shadow-purple-500/50 flex items-center justify-center gap-3"
+                  >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    Reply to Message
+                  </button>
+                }
                 @if (!selectedMessage()?.is_handled) {
                   <button
                     (click)="markAsHandled(selectedMessage()!)"
