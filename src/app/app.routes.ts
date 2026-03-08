@@ -46,10 +46,22 @@ export const routes: Routes = [
   },
   {
     path: ':slug',
-    loadComponent: () =>
-      import('./features/public/components/message-page/message-page.component').then(
-        (m) => m.MessagePageComponent,
-      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/link-in-bio/pages/creator-page/creator-page.component').then(
+            (m) => m.CreatorPageComponent,
+          ),
+      },
+      {
+        path: 'message',
+        loadComponent: () =>
+          import('./features/public/components/message-page/message-page.component').then(
+            (m) => m.MessagePageComponent,
+          ),
+      },
+    ],
   },
   {
     path: '**',

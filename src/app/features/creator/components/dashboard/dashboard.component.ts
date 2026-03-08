@@ -27,6 +27,7 @@ import { CreatorService } from '../../services/creator.service';
 import { AnalyticsDashboardComponent } from '../analytics-dashboard/analytics-dashboard.component';
 import { AvailabilityManagerComponent } from '../availability-manager/availability-manager.component';
 import { TemplatePickerComponent } from '../template-picker/template-picker.component';
+import { EditLinksComponent } from '../../../link-in-bio/pages/edit-links/edit-links.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,6 +38,7 @@ import { TemplatePickerComponent } from '../template-picker/template-picker.comp
     AnalyticsDashboardComponent,
     TemplatePickerComponent,
     AvailabilityManagerComponent,
+    EditLinksComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
@@ -63,7 +65,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly showTemplatePicker = signal<boolean>(false);
 
   // View state (dashboard overview vs inbox vs analytics vs bookings vs availability)
-  protected readonly activeView = signal<'dashboard' | 'inbox' | 'analytics' | 'bookings' | 'availability'>(
+  protected readonly activeView = signal<'dashboard' | 'inbox' | 'analytics' | 'bookings' | 'availability' | 'links'>(
     'dashboard',
   );
 

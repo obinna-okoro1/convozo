@@ -15,6 +15,14 @@ export const CREATOR_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'links',
+    loadComponent: () =>
+      import('../link-in-bio/pages/edit-links/edit-links.component').then(
+        (m) => m.EditLinksComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./components/settings/settings.component').then((m) => m.SettingsComponent),

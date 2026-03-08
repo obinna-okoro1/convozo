@@ -144,3 +144,27 @@ export interface StripeAccountStatus {
   details_submitted: boolean;
   onboarding_completed: boolean;
 }
+
+// ── Link-in-Bio ──────────────────────────────────────────────────────
+
+export interface CreatorLink {
+  id: string;
+  creator_id: string;
+  title: string;
+  url: string;
+  icon: string | null;
+  position: number;
+  is_active: boolean;
+  click_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LinkClick {
+  id: string;
+  link_id: string;
+  creator_id: string;
+  referrer: string | null;
+  user_agent: string | null;
+  created_at: string;
+}

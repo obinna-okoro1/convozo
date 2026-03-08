@@ -364,6 +364,79 @@ VALUES (
   NOW() - INTERVAL '2 hours'
 );
 
+-- Set theme colors on creators
+UPDATE public.creators SET theme_color = '#7c3aed' WHERE id = '33333333-3333-3333-3333-333333333333';
+UPDATE public.creators SET theme_color = '#e11d48' WHERE id = '44444444-4444-4444-4444-444444444444';
+
+-- Sample Links for Sarah Johnson (Dwayne Johnson)
+INSERT INTO public.creator_links (id, creator_id, title, url, icon, position, is_active, click_count, created_at)
+VALUES
+  ('aaaaaaaa-0001-0001-0001-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'My YouTube Channel', 'https://youtube.com/@therock', 'youtube', 0, true, 4820,
+   NOW() - INTERVAL '30 days'),
+  ('aaaaaaaa-0002-0002-0002-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'Follow me on Instagram', 'https://instagram.com/therock', 'instagram', 1, true, 3150,
+   NOW() - INTERVAL '28 days'),
+  ('aaaaaaaa-0003-0003-0003-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'TikTok', 'https://tiktok.com/@therock', 'tiktok', 2, true, 2740,
+   NOW() - INTERVAL '25 days'),
+  ('aaaaaaaa-0004-0004-0004-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'Teremana Tequila', 'https://teremana.com', null, 3, true, 1580,
+   NOW() - INTERVAL '20 days'),
+  ('aaaaaaaa-0005-0005-0005-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'My Twitter / X', 'https://x.com/therock', 'twitter', 4, true, 960,
+   NOW() - INTERVAL '18 days'),
+  ('aaaaaaaa-0006-0006-0006-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'Listen on Spotify', 'https://open.spotify.com/artist/therock', 'spotify', 5, true, 430,
+   NOW() - INTERVAL '10 days'),
+  ('aaaaaaaa-0007-0007-0007-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333',
+   'Support on Patreon', 'https://patreon.com/therock', 'patreon', 6, false, 85,
+   NOW() - INTERVAL '5 days');
+
+-- Sample Links for Mike Chen (Cristiano Ronaldo)
+INSERT INTO public.creator_links (id, creator_id, title, url, icon, position, is_active, click_count, created_at)
+VALUES
+  ('bbbbbbbb-0001-0001-0001-bbbbbbbbbbbb', '44444444-4444-4444-4444-444444444444',
+   'My YouTube', 'https://youtube.com/@cristiano', 'youtube', 0, true, 7200,
+   NOW() - INTERVAL '45 days'),
+  ('bbbbbbbb-0002-0002-0002-bbbbbbbbbbbb', '44444444-4444-4444-4444-444444444444',
+   'Instagram', 'https://instagram.com/cristiano', 'instagram', 1, true, 12400,
+   NOW() - INTERVAL '40 days'),
+  ('bbbbbbbb-0003-0003-0003-bbbbbbbbbbbb', '44444444-4444-4444-4444-444444444444',
+   'Follow on X', 'https://x.com/cristiano', 'twitter', 2, true, 3800,
+   NOW() - INTERVAL '35 days'),
+  ('bbbbbbbb-0004-0004-0004-bbbbbbbbbbbb', '44444444-4444-4444-4444-444444444444',
+   'CR7 on Facebook', 'https://facebook.com/cristiano', 'facebook', 3, true, 2100,
+   NOW() - INTERVAL '30 days'),
+  ('bbbbbbbb-0005-0005-0005-bbbbbbbbbbbb', '44444444-4444-4444-4444-444444444444',
+   'My Official Website', 'https://www.cristianoronaldo.com', null, 4, true, 950,
+   NOW() - INTERVAL '20 days');
+
+-- Sample Link Clicks (recent activity for Sarah's YouTube link)
+INSERT INTO public.link_clicks (link_id, creator_id, referrer, user_agent, created_at)
+SELECT
+  'aaaaaaaa-0001-0001-0001-aaaaaaaaaaaa',
+  '33333333-3333-3333-3333-333333333333',
+  CASE (random() * 3)::int
+    WHEN 0 THEN 'https://instagram.com'
+    WHEN 1 THEN 'https://google.com'
+    WHEN 2 THEN null
+    ELSE 'https://twitter.com'
+  END,
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+  NOW() - (random() * INTERVAL '30 days')
+FROM generate_series(1, 25);
+
+-- Sample Link Clicks for Sarah's Instagram link
+INSERT INTO public.link_clicks (link_id, creator_id, referrer, user_agent, created_at)
+SELECT
+  'aaaaaaaa-0002-0002-0002-aaaaaaaaaaaa',
+  '33333333-3333-3333-3333-333333333333',
+  null,
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+  NOW() - (random() * INTERVAL '30 days')
+FROM generate_series(1, 15);
+
 -- Output summary
 SELECT 'Seed data inserted successfully!' as message;
 SELECT '✅ Created 2 test users (password: sample123)' as info_1;
@@ -372,6 +445,8 @@ SELECT '✅ Created 5 sample messages' as info_3;
 SELECT '✅ Created 5 sample payments' as info_4;
 SELECT '✅ Created availability slots for Sarah' as info_5;
 SELECT '✅ Created 1 sample call booking' as info_6;
+SELECT '✅ Created 12 sample links (7 for Sarah, 5 for Mike)' as info_7;
+SELECT '✅ Created 40 sample link clicks' as info_8;
 SELECT '' as separator;
 SELECT 'Test Users:' as users_header;
 SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min (enabled)' as user_1;
