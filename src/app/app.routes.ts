@@ -4,6 +4,7 @@
  */
 
 import { Routes } from '@angular/router';
+import { MessagePageStateService } from './features/public/components/message-page/message-page-state.service';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -46,22 +47,15 @@ export const routes: Routes = [
   },
   {
     path: ':slug',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./features/link-in-bio/pages/creator-page/creator-page.component').then(
-            (m) => m.CreatorPageComponent,
-          ),
-      },
-      {
-        path: 'message',
-        loadComponent: () =>
-          import('./features/public/components/message-page/message-page.component').then(
-            (m) => m.MessagePageComponent,
-          ),
-      },
-    ],
+    loadComponent: () =>
+      import('./features/public/components/message-page/message-page.component').then(
+        (m) => m.MessagePageComponent,
+      ),
+    providers: [MessagePageStateService],
+    loadChildren: () =>
+      import('./features/public/components/message-page/message-page.routes').then(
+        (m) => m.MESSAGE_PAGE_ROUTES,
+      ),
   },
   {
     path: '**',

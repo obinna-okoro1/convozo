@@ -55,6 +55,7 @@ export class AvailabilityManagerComponent implements OnInit {
   protected readonly loading = signal<boolean>(true);
   protected readonly saving = signal<boolean>(false);
   protected readonly saved = signal<boolean>(false);
+  protected readonly hasChanges = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
   protected readonly schedule = signal<DaySchedule[]>([]);
 
@@ -90,6 +91,7 @@ export class AvailabilityManagerComponent implements OnInit {
       enabled: !updated[dayIndex].enabled,
     };
     this.schedule.set(updated);
+    this.hasChanges.set(true);
     this.saved.set(false);
   }
 
@@ -110,6 +112,7 @@ export class AvailabilityManagerComponent implements OnInit {
     day.slots = [...day.slots, { startTime: lastEnd, endTime: newEnd }];
     updated[dayIndex] = day;
     this.schedule.set(updated);
+    this.hasChanges.set(true);
     this.saved.set(false);
   }
 
@@ -129,6 +132,7 @@ export class AvailabilityManagerComponent implements OnInit {
 
     updated[dayIndex] = day;
     this.schedule.set(updated);
+    this.hasChanges.set(true);
     this.saved.set(false);
   }
 
@@ -144,6 +148,7 @@ export class AvailabilityManagerComponent implements OnInit {
     day.slots = slots;
     updated[dayIndex] = day;
     this.schedule.set(updated);
+    this.hasChanges.set(true);
     this.saved.set(false);
   }
 
@@ -159,6 +164,7 @@ export class AvailabilityManagerComponent implements OnInit {
     day.slots = slots;
     updated[dayIndex] = day;
     this.schedule.set(updated);
+    this.hasChanges.set(true);
     this.saved.set(false);
   }
 
@@ -180,6 +186,7 @@ export class AvailabilityManagerComponent implements OnInit {
       return day;
     });
     this.schedule.set(updated);
+    this.hasChanges.set(true);
     this.saved.set(false);
   }
 
@@ -208,6 +215,7 @@ export class AvailabilityManagerComponent implements OnInit {
       const result = await this.creatorService.saveAvailabilitySlots(this.creatorId(), slots);
 
       if (result.success) {
+        this.hasChanges.set(false);
         this.saved.set(true);
         // Reload to get fresh IDs
         await this.loadAvailability();

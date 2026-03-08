@@ -118,6 +118,9 @@ const STORAGE_KEY = 'convozo_response_templates';
   providedIn: 'root',
 })
 export class ResponseTemplateService {
+  public readonly currentCreatorId = signal<string>('');
+  public readonly currentCreatorName = signal<string>('');
+
   public readonly allTemplates = computed(() => this.templates());
   public readonly favoriteTemplates = computed(() => this.templates().filter((t) => t.is_favorite));
 
@@ -152,7 +155,12 @@ export class ResponseTemplateService {
   /**
    * Initialize templates for a creator
    */
-  public initializeTemplates(creatorId: string): void {
+  public initializeTemplates(creatorId: string, creatorName?: string): void {
+    this.currentCreatorId.set(creatorId);
+    if (creatorName !== undefined) {
+      this.currentCreatorName.set(creatorName);
+    }
+
     // Check if already initialized
     if (this.templates().length > 0) {
       return;

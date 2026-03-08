@@ -6,7 +6,7 @@
     <div class="absolute -bottom-8 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
   </div>
 
-  @if (loading()) {
+  @if (state.loading()) {
     <div class="flex items-center justify-center min-h-screen relative z-10">
       <div class="text-center">
         <div class="relative inline-block">
@@ -19,7 +19,7 @@
         <p class="text-slate-300 text-lg font-medium animate-pulse">Loading exclusive access...</p>
       </div>
     </div>
-  } @else if (error()) {
+  } @else if (state.error()) {
     <div class="flex items-center justify-center min-h-screen px-4 relative z-10">
       <div class="text-center max-w-md">
         <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-500/50">
@@ -40,158 +40,24 @@
   } @else {
     <div class="container mx-auto px-4 py-8 relative z-10">
       <div class="max-w-4xl mx-auto">
-        <!-- Trust Banner -->
-        <div class="mb-6 animate-fade-in">
-          <app-trust-banner />
-        </div>
 
         <!-- Creator Profile Header -->
-        @if (creator(); as creatorData) {
+        @if (state.creator(); as creatorData) {
           <div class="mb-8 animate-slide-up">
             <app-creator-profile-header
               [creator]="creatorData"
-              [responseExpectation]="responseExpectation()"
+              [responseExpectation]="state.responseExpectation()"
             />
           </div>
         }
 
-        <!-- Instagram Profile Section -->
-        @if (instagramUsername()) {
-          <div class="mb-8 animate-slide-up" style="animation-delay: 100ms;">
-            <div class="bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-orange-500/10 backdrop-blur-2xl border border-pink-500/20 rounded-3xl p-6 shadow-xl hover:shadow-pink-500/20 transition-all duration-500 group">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                  <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm text-slate-400 mb-1">Influencer Instagram</p>
-                    <p class="text-xl font-bold text-white group-hover:text-pink-300 transition-colors">{{ '@' + instagramUsername() }}</p>
-                  </div>
-                </div>
-                <a
-                  [href]="instagramProfileUrl()"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-600 hover:from-pink-500 hover:to-orange-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105 flex items-center gap-2"
-                >
-                  <span>Preview</span>
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        }
+        <!-- Tabs -->
+        <app-message-page-tabs />
 
-        <!-- Tabs (show when calls or follow-back is enabled) -->
-        @if (settings()?.calls_enabled || followBackEnabled()) {
-          <div class="mb-6 animate-slide-up overflow-hidden" style="animation-delay: 150ms;">
-            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-2 flex gap-2">
-              <button
-                type="button"
-                (click)="activeTab.set('message')"
-                [class.bg-gradient-to-r]="activeTab() === 'message'"
-                [class.from-purple-600]="activeTab() === 'message'"
-                [class.to-pink-600]="activeTab() === 'message'"
-                [class.text-white]="activeTab() === 'message'"
-                [class.shadow-lg]="activeTab() === 'message'"
-                [class.shadow-purple-500/50]="activeTab() === 'message'"
-                [class.text-slate-400]="activeTab() !== 'message'"
-                [class.hover:text-white]="activeTab() !== 'message'"
-                class="flex-1 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2"
-              >
-                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span>Message</span>
-              </button>
-              @if (followBackEnabled()) {
-                <button
-                  type="button"
-                  (click)="activeTab.set('follow_back')"
-                  [class.bg-gradient-to-r]="activeTab() === 'follow_back'"
-                  [class.from-purple-600]="activeTab() === 'follow_back'"
-                  [class.to-pink-600]="activeTab() === 'follow_back'"
-                  [class.text-white]="activeTab() === 'follow_back'"
-                  [class.shadow-lg]="activeTab() === 'follow_back'"
-                  [class.shadow-purple-500/50]="activeTab() === 'follow_back'"
-                  [class.text-slate-400]="activeTab() !== 'follow_back'"
-                  [class.hover:text-white]="activeTab() !== 'follow_back'"
-                  class="flex-1 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2"
-                >
-                  <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                  </svg>
-                  <span>Follow Back Request</span>
-                </button>
-              }
-              @if (settings()?.calls_enabled) {
-                <button
-                  type="button"
-                  (click)="activeTab.set('call')"
-                  [class.bg-gradient-to-r]="activeTab() === 'call'"
-                  [class.from-purple-600]="activeTab() === 'call'"
-                  [class.to-pink-600]="activeTab() === 'call'"
-                  [class.text-white]="activeTab() === 'call'"
-                  [class.shadow-lg]="activeTab() === 'call'"
-                  [class.shadow-purple-500/50]="activeTab() === 'call'"
-                  [class.text-slate-400]="activeTab() !== 'call'"
-                  [class.hover:text-white]="activeTab() !== 'call'"
-                  class="flex-1 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2"
-                >
-                  <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span>Book a Call</span>
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Message Form -->
-        @if (activeTab() === 'message') {
-          <div class="animate-slide-up" style="animation-delay: 200ms;">
-            <app-message-form
-              [priceCents]="messagePriceCents()"
-              [creatorName]="creator()?.display_name ?? ''"
-              [responseExpectation]="responseExpectation()"
-              [submitting]="submitting()"
-              (formSubmit)="onMessageSubmit($event)"
-            />
-          </div>
-        }
-
-        <!-- Follow-Back Request Form (reuses message form with different price) -->
-        @if (activeTab() === 'follow_back' && followBackEnabled()) {
-          <div class="animate-slide-up" style="animation-delay: 200ms;">
-            <app-message-form
-              [priceCents]="followBackPriceCents()"
-              [creatorName]="creator()?.display_name ?? ''"
-              [submitting]="submitting()"
-              productType="follow_back"
-              (formSubmit)="onFollowBackSubmit($event)"
-            />
-          </div>
-        }
-
-        <!-- Call Booking Form -->
-        @if (activeTab() === 'call' && settings()?.calls_enabled) {
-          <div class="animate-slide-up" style="animation-delay: 200ms;">
-            <app-call-booking-form
-              [priceCents]="callPriceCents()"
-              [callDuration]="callDuration()"
-              [creatorName]="creator()?.display_name ?? ''"
-              [availabilitySlots]="availabilitySlots()"
-              [submitting]="submitting()"
-              (formSubmit)="onCallBookingSubmit($event)"
-            />
-          </div>
-        }
+        <!-- Routed View Content -->
+        <div class="animate-slide-up" style="animation-delay: 200ms;">
+          <router-outlet />
+        </div>
 
         <!-- Footer -->
         <div class="text-center mt-8 text-sm text-slate-400">

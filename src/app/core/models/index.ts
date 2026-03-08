@@ -21,11 +21,13 @@ export interface CreatorSettings {
   id: string;
   creator_id: string;
   message_price: number;
+  messages_enabled: boolean;
   call_price: number | null;
   call_duration: number | null;
   calls_enabled: boolean;
   follow_back_price: number | null;
   follow_back_enabled: boolean;
+  tips_enabled: boolean;
   response_expectation: string | null;
   auto_reply_text: string | null;
   created_at: string;
@@ -64,7 +66,7 @@ export interface CreatorProfile extends Creator {
   creator_settings: CreatorSettings;
 }
 
-export type MessageType = 'message' | 'call' | 'follow_back';
+export type MessageType = 'message' | 'call' | 'follow_back' | 'support';
 export type FilterStatus = 'all' | 'unhandled' | 'handled';
 export type CallBookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 6 = Saturday

@@ -4,7 +4,14 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, OnInit, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ResponseTemplateService,
@@ -27,9 +34,6 @@ import {
   ],
 })
 export class TemplatePickerComponent implements OnInit {
-  public readonly creatorId = input<string>('');
-  public readonly creatorName = input<string>('');
-
   public readonly templateSelected = output<string>();
   public readonly closed = output();
 
@@ -68,7 +72,7 @@ export class TemplatePickerComponent implements OnInit {
   constructor(private readonly templateService: ResponseTemplateService) {}
 
   public ngOnInit(): void {
-    const creatorId = this.creatorId();
+    const creatorId = this.templateService.currentCreatorId();
     if (creatorId) {
       this.templateService.initializeTemplates(creatorId);
     }
@@ -84,8 +88,8 @@ export class TemplatePickerComponent implements OnInit {
   protected selectTemplate(template: ResponseTemplate): void {
     const variables = {
       sender_name: '{sender_name}', // Will be replaced by the caller
-      creator_name: this.creatorName() || '{creator_name}',
-      call_booking_link: window.location.origin + '/' + '{slug}' + '?tab=call',
+      creator_name: this.templateService.currentCreatorName() || '{creator_name}',
+      call_booking_link: window.location.origin + '/' + '{slug}' + '/call',
     };
 
     const content = this.templateService.applyTemplate(template, variables);
@@ -105,7 +109,7 @@ export class TemplatePickerComponent implements OnInit {
 
     this.templateService.createTemplate({
       ...this.newTemplate,
-      creator_id: this.creatorId(),
+      creator_id: this.templateService.currentCreatorId(),
     });
 
     // Reset form

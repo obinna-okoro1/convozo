@@ -76,7 +76,9 @@ function loadImage(file: File): Promise<HTMLImageElement> {
       URL.revokeObjectURL(img.src);
       resolve(img);
     };
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+    };
     img.src = URL.createObjectURL(file);
   });
 }

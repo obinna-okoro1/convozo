@@ -1,0 +1,5 @@
+<app-inbox-panel
+  [messages]="state.messages()"
+  (markHandled)="state.markAsHandled($event)"
+  (confirmDelete)="state.confirmDelete($event)"
+/>

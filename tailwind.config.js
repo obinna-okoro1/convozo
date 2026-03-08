@@ -6,7 +6,28 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Premium neutral palette
+        // ─── Semantic Surface Tokens (dark-first) ───
+        surface: {
+          DEFAULT: '#0f0d1a',              // Page background
+          raised:  'rgba(255,255,255,0.05)', // Card / raised surface
+          overlay: 'rgba(255,255,255,0.10)', // Elevated overlays
+          border:  'rgba(255,255,255,0.10)', // Standard border
+          hover:   'rgba(255,255,255,0.15)', // Hover state
+        },
+        // Semantic Text Tokens
+        content: {
+          DEFAULT:   '#ffffff',
+          secondary: '#94a3b8',             // slate-400
+          muted:     '#64748b',             // slate-500
+          inverse:   '#0f172a',             // For light surfaces
+        },
+        // Accent (pink gradient endpoint)
+        accent: {
+          400: '#f472b6',
+          500: '#ec4899',
+          600: '#db2777',
+        },
+        // Premium neutral palette (kept for compatibility)
         neutral: {
           50: '#fafafa',
           100: '#f5f5f5',

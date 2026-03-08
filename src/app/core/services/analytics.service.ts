@@ -355,5 +355,4 @@ export class AnalyticsService {
       messageTypeBreakdown: [],
     };
   }
-
 }

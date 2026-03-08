@@ -1,0 +1,104 @@
+<div class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 animate-fade-in">
+  <div class="bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl shadow-purple-500/20 animate-scale-in relative border border-white/10 max-h-[95vh] overflow-y-auto" style="animation-delay: 50ms">
+    <!-- Modal Header -->
+    <div class="flex items-start justify-between p-4 sm:p-6 lg:p-8 pb-4 sm:pb-6 border-b border-white/10">
+      <div class="flex-1 min-w-0 pr-2">
+        <h3 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">Reply to Message</h3>
+        <p class="text-sm sm:text-base text-slate-300 truncate">{{ message()?.sender_name }} • <span class="text-slate-400">{{ message()?.sender_email }}</span></p>
+      </div>
+      <button
+        (click)="close()"
+        [disabled]="sendingReply()"
+        class="text-slate-400 hover:text-white transition-all duration-300 p-2 hover:bg-white/10 rounded-lg sm:rounded-xl flex-shrink-0"
+      >
+        <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Original Message -->
+    <div class="p-4 sm:p-6 lg:p-8 bg-white/5 backdrop-blur-xl border-b border-white/10">
+      <div class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2 sm:mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        </svg>
+        Original Message
+      </div>
+      <div class="text-sm sm:text-base text-slate-200 leading-relaxed bg-white/5 p-4 sm:p-5 rounded-lg sm:rounded-xl border border-white/10">
+        {{ message()?.message_content }}
+      </div>
+    </div>
+
+    <!-- Reply Form -->
+    <div class="p-4 sm:p-6 lg:p-8">
+      <div class="flex items-center justify-between mb-4">
+        <label class="text-sm font-bold text-white uppercase tracking-wide">Your Reply</label>
+        <button
+          (click)="openTemplatePicker()"
+          class="text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-500 hover:to-pink-500 font-bold flex items-center gap-2 transition-all duration-300"
+        >
+          <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          Use Template
+        </button>
+      </div>
+      <textarea
+        [value]="replyContent()"
+        (input)="replyContent.set(inputValue($event))"
+        rows="8"
+        class="w-full bg-white/5 backdrop-blur-xl border border-white/20 text-white px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none placeholder-slate-500 text-base leading-relaxed"
+        placeholder="Type your thoughtful reply here..."
+        [disabled]="sendingReply()"
+      ></textarea>
+      <div class="flex items-center justify-between mt-3">
+        <p class="text-xs text-slate-400 font-medium">
+          {{ replyContent().length }} characters
+        </p>
+        @if (replyContent().length === 0) {
+          <p class="text-xs text-red-400 font-semibold">⚠️ Reply cannot be empty</p>
+        }
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-4 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6 border-t border-white/10 bg-white/5">
+      <button
+        (click)="close()"
+        [disabled]="sendingReply()"
+        class="bg-white/5 backdrop-blur-xl border border-white/10 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg sm:rounded-xl font-semibold active:scale-95 sm:hover:scale-105 transition-all duration-300 hover:bg-white/10 hover:border-white/20 text-sm sm:text-base"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="sendReply()"
+        [disabled]="sendingReply() || !replyContent().trim()"
+        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-lg sm:rounded-xl font-bold active:scale-95 sm:hover:scale-105 transition-all duration-300 shadow-lg shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+      >
+        @if (sendingReply()) {
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Sending Reply...
+        } @else {
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          Send Reply
+        }
+      </button>
+    </div>
+
+    <!-- Template Picker Overlay -->
+    @if (showTemplatePicker()) {
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center rounded-3xl">
+        <app-template-picker
+          (templateSelected)="onTemplateSelected($event)"
+          (closed)="showTemplatePicker.set(false)"
+        />
+      </div>
+    }
+  </div>
+</div>

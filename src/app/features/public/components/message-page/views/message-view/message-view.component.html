@@ -1,0 +1,7 @@
+<app-message-form
+  [priceCents]="state.messagePriceCents()"
+  [creatorName]="state.creator()?.display_name ?? ''"
+  [responseExpectation]="state.responseExpectation()"
+  [submitting]="state.submitting()"
+  (formSubmit)="onMessageSubmit($event)"
+/>

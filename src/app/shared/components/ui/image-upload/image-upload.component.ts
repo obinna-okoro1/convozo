@@ -13,14 +13,8 @@
  *   />
  */
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-  signal,
-} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { compressImage } from '../../../utils/image.utils';
 
@@ -42,30 +36,30 @@ export class ImageUploadComponent {
    * Current image URL – drives the preview.
    * Pass the parent's stored URL so the preview shows on load.
    */
-  readonly imageUrl = input<string>('');
+  public readonly imageUrl = input<string>('');
 
   /**
    * Visual variant.
    *   - `compact`  → small 5rem thumbnail (onboarding style)
    *   - `large`    → large 10rem thumbnail (settings style)
    */
-  readonly variant = input<'compact' | 'large'>('compact');
+  public readonly variant = input<'compact' | 'large'>('compact');
 
   /** Label shown above the upload area. */
-  readonly label = input<string>('Profile Photo');
+  public readonly label = input<string>('Profile Photo');
 
   /** Emits whenever the stored URL changes (upload or remove). */
-  readonly imageChanged = output<ImageChangeEvent>();
+  public readonly imageChanged = output<ImageChangeEvent>();
 
   /** Emits user-facing error strings. */
-  readonly uploadError = output<string>();
+  public readonly uploadError = output<string>();
 
   /* internal state */
   protected readonly uploading = signal(false);
   protected readonly preview = signal<string | null>(null);
 
   private static idCounter = 0;
-  protected readonly inputId = `img-upload-${++ImageUploadComponent.idCounter}`;
+  protected readonly inputId = `img-upload-${String(++ImageUploadComponent.idCounter)}`;
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
@@ -85,7 +79,9 @@ export class ImageUploadComponent {
   protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (!file.type.startsWith('image/')) {
       this.uploadError.emit('Please upload an image file');
@@ -99,17 +95,23 @@ export class ImageUploadComponent {
 
       // Show local preview immediately
       const reader = new FileReader();
-      reader.onload = (e) => this.preview.set(e.target?.result as string);
+      reader.onload = (e) => {
+        this.preview.set(e.target?.result as string);
+      };
       reader.readAsDataURL(compressed);
 
       const userId = this.supabaseService.getCurrentUser()?.id;
-      if (!userId) throw new Error('User not authenticated');
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
 
       const fileName = `${userId}-${String(Date.now())}.jpg`;
       const filePath = `avatars/${userId}/${fileName}`;
 
       const { data, error } = await this.supabaseService.uploadFile('public', filePath, compressed);
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data?.publicUrl) {
         this.imageChanged.emit({ url: data.publicUrl });

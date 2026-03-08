@@ -1,0 +1,147 @@
+<div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl animate-fade-in">
+  <div class="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
+    <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50 flex-shrink-0">
+      <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
+      </svg>
+    </div>
+    <div class="min-w-0">
+      <h2 class="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Payment Settings</h2>
+      <p class="text-white/60 text-xs sm:text-sm mt-0.5 sm:mt-1 hidden sm:block">Manage your Stripe account and payouts</p>
+    </div>
+  </div>
+  
+  @if (state.stripeAccount()) {
+    <!-- Stripe Connected Success -->
+    <div class="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 backdrop-blur-2xl rounded-2xl p-8 mb-8 shadow-lg shadow-emerald-500/20">
+      <div class="flex items-start gap-5">
+        <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/50">
+          <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-white mb-2">✓ Stripe Connected</h3>
+          <p class="text-emerald-200 mb-4">Your Stripe account is connected and ready to receive payments.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white/10 rounded-xl p-4 border border-white/10">
+              <span class="text-emerald-300 font-semibold block mb-1">Account ID</span>
+              <span class="text-white font-mono text-xs">{{ state.stripeAccount()?.stripe_account_id }}</span>
+            </div>
+            <div class="bg-white/10 rounded-xl p-4 border border-white/10">
+              <span class="text-emerald-300 font-semibold block mb-1">Status</span>
+              <span class="text-white">
+                @if (state.stripeAccount()?.charges_enabled && state.stripeAccount()?.payouts_enabled) {
+                  <span class="inline-flex items-center gap-2">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                    Fully Active
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center gap-2">
+                    <span class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                    Incomplete
+                  </span>
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payout Info -->
+    <div class="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl p-8 mb-8 shadow-lg">
+      <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        How Payouts Work
+      </h3>
+      <div class="space-y-4">
+        <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <span class="text-white/90">You earn <strong class="text-white font-bold">65% of each payment</strong> directly — Stripe fees come out of our cut, not yours</span>
+        </div>
+        <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <span class="text-white/90">Convozo takes a <strong class="text-white font-bold">35% platform fee</strong> which covers Stripe processing fees and keeps the service running</span>
+        </div>
+        <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <span class="text-white/90">Payouts are sent directly to your bank account <strong class="text-white font-bold">within 2-3 business days</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reconnect/Manage Buttons -->
+    <div class="flex gap-4">
+      <button
+        (click)="state.connectStripe()"
+        [disabled]="state.stripeConnecting()"
+        class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+      >
+        @if (state.stripeConnecting()) {
+          <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Connecting...
+        } @else {
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Reconnect Stripe
+        }
+      </button>
+    </div>
+  } @else {
+    <!-- Stripe Not Connected Warning -->
+    <div class="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-2xl p-8 mb-8 shadow-lg shadow-yellow-500/20">
+      <div class="flex items-start gap-5">
+        <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/50">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-white mb-3">⚠️ Stripe Not Connected</h3>
+          <p class="text-yellow-200 mb-6 leading-relaxed">You need to connect your Stripe account to receive payments. Without this, fans won't be able to send you paid messages or book calls.</p>
+          
+          <button
+            (click)="state.connectStripe()"
+            [disabled]="state.stripeConnecting()"
+            class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
+          >
+            @if (state.stripeConnecting()) {
+              <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Connecting...
+            } @else {
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
+              </svg>
+              Connect Stripe Account
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

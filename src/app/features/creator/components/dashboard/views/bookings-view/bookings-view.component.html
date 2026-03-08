@@ -1,0 +1,6 @@
+<app-bookings-panel
+  [bookings]="state.callBookings()"
+  (markCompleted)="state.markBookingCompleted($event)"
+  (cancelBooking)="state.cancelBooking($event)"
+  (confirmDelete)="state.confirmDelete($event)"
+/>

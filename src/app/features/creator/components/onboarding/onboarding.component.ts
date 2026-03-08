@@ -10,9 +10,13 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 import { FormValidators } from '../../../../core/validators/form-validators';
+import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
+import {
+  ImageUploadComponent,
+  ImageChangeEvent,
+} from '../../../../shared/components/ui/image-upload/image-upload.component';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
-import { ImageUploadComponent, ImageChangeEvent } from '../../../../shared/components/ui/image-upload/image-upload.component';
 
 /**
  * Country code entry for the phone number dropdown
@@ -164,7 +168,7 @@ const TIMEZONE_TO_COUNTRY: Record<string, string> = {
 
 @Component({
   selector: 'app-onboarding',
-  imports: [CommonModule, FormsModule, ImageUploadComponent],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, AnimatedBackgroundComponent],
   templateUrl: './onboarding.component.html',
   styleUrls: ['./onboarding.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -179,7 +183,9 @@ export class OnboardingComponent implements OnInit {
   protected readonly displayName = signal<string>('');
   protected readonly bio = signal<string>('');
   protected readonly slug = signal<string>('');
-  protected readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  protected readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>(
+    'idle',
+  );
   protected readonly slugManuallyEdited = signal<boolean>(false);
   protected readonly profileImageUrl = signal<string>('');
   protected readonly instagramUsername = signal<string>(''); // Manual text input, not OAuth
@@ -305,7 +311,7 @@ export class OnboardingComponent implements OnInit {
    * Debounced slug availability check
    */
   private debouncedSlugCheck(slug: string): void {
-    if (this.slugCheckTimer) {
+    if (this.slugCheckTimer != null) {
       clearTimeout(this.slugCheckTimer);
     }
 
@@ -322,11 +328,15 @@ export class OnboardingComponent implements OnInit {
 
   private async performSlugCheck(slug: string): Promise<void> {
     // Guard: slug may have changed since the timer was set
-    if (this.slug() !== slug) return;
+    if (this.slug() !== slug) {
+      return;
+    }
 
     const { available } = await this.creatorService.checkSlugAvailability(slug);
     // Guard: slug may have changed during the async call
-    if (this.slug() !== slug) return;
+    if (this.slug() !== slug) {
+      return;
+    }
 
     this.slugStatus.set(available ? 'available' : 'taken');
   }
@@ -374,7 +384,9 @@ export class OnboardingComponent implements OnInit {
         if (errMsg.includes('unique') || errMsg.includes('duplicate') || errMsg.includes('slug')) {
           this.slugStatus.set('taken');
           this.currentStep.set(1); // go back to profile step
-          throw new Error('This URL slug is already taken — please go back and choose a different one');
+          throw new Error(
+            'This URL slug is already taken — please go back and choose a different one',
+          );
         }
         throw creatorError || new Error('Failed to create creator');
       }
@@ -400,7 +412,11 @@ export class OnboardingComponent implements OnInit {
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       // Don't leak raw database errors to the user
-      if (msg.includes('row-level security') || msg.includes('violates') || msg.includes('constraint')) {
+      if (
+        msg.includes('row-level security') ||
+        msg.includes('violates') ||
+        msg.includes('constraint')
+      ) {
         this.error.set('Something went wrong saving your profile. Please log out and try again.');
       } else if (msg) {
         this.error.set(msg);

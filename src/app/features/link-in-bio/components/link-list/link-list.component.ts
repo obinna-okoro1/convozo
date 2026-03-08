@@ -11,26 +11,12 @@ import { LinkButtonComponent } from '../link-button/link-button.component';
   selector: 'app-link-list',
   standalone: true,
   imports: [LinkButtonComponent],
-  template: `
-    <div class="flex flex-col gap-3 w-full">
-      @for (link of links(); track link.id) {
-        <app-link-button
-          [link]="link"
-          [themeColor]="themeColor()"
-          (clicked)="linkClicked.emit($event)"
-        />
-      } @empty {
-        <div class="text-center py-8">
-          <p class="text-slate-500 text-sm">No links yet</p>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './link-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LinkListComponent {
-  readonly links = input.required<CreatorLink[]>();
-  readonly themeColor = input<string | null>(null);
+  public readonly links = input.required<CreatorLink[]>();
+  public readonly themeColor = input<string | null>(null);
 
-  readonly linkClicked = output<CreatorLink>();
+  public readonly linkClicked = output<CreatorLink>();
 }

@@ -7,12 +7,13 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AnimatedBackgroundComponent],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

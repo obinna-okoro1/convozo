@@ -1,0 +1,26 @@
+<div class="flex gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 lg:mb-8 shadow-lg animate-slide-up overflow-x-auto scrollbar-hide">
+  @for (tab of tabs; track tab.path) {
+    <a
+      [routerLink]="tab.path"
+      routerLinkActive="tab-active"
+      #rla="routerLinkActive"
+      [class]="rla.isActive
+        ? 'flex-1 py-2.5 sm:py-3 lg:py-4 px-3 sm:px-4 lg:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl shadow-lg shadow-purple-500/50 font-bold text-white transition-all duration-300 transform active:scale-95 sm:hover:scale-[1.02]'
+        : 'flex-1 py-2.5 sm:py-3 lg:py-4 px-3 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300'"
+    >
+      <span class="flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap text-xs sm:text-sm lg:text-base">
+        @if (tab.iconFill) {
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path [attr.d]="tab.iconPath" />
+          </svg>
+        } @else {
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="tab.iconPath" />
+          </svg>
+        }
+        <span class="hidden sm:inline">{{ tab.label }}</span>
+        <span class="sm:hidden">{{ tab.mobileLabel }}</span>
+      </span>
+    </a>
+  }
+</div>

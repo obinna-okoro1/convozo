@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     // Get creator info
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price, follow_back_price, follow_back_enabled)')
+      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     }
 
     // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
-    const settings = creator.creator_settings as { message_price: number; follow_back_price: number | null; follow_back_enabled: boolean } | null;
+    const settings = creator.creator_settings as { message_price: number; follow_back_price: number | null; follow_back_enabled: boolean; tips_enabled: boolean } | null;
     if (!settings?.message_price || settings.message_price < 100) {
       return new Response(
         JSON.stringify({ error: 'Creator pricing not configured' }),
@@ -114,8 +114,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Normalise message_type to match DB constraint ('message' | 'call' | 'follow_back')
-    const validMessageType = message_type === 'call' ? 'call' : message_type === 'follow_back' ? 'follow_back' : 'message';
+    // Normalise message_type to match DB constraint ('message' | 'call' | 'follow_back' | 'support')
+    const validTypes = ['message', 'call', 'follow_back', 'support'];
+    const validMessageType = validTypes.includes(message_type) ? message_type : 'message';
 
     // Determine the correct price based on type
     let serverPrice = settings.message_price;
@@ -132,6 +133,26 @@ Deno.serve(async (req) => {
       serverPrice = settings.follow_back_price;
       productName = `Follow-Back Request to ${creator.display_name}`;
       productDescription = 'Request a follow-back on Instagram';
+    }
+
+    if (validMessageType === 'support') {
+      if (!settings.tips_enabled) {
+        return new Response(
+          JSON.stringify({ error: 'Fan support is not enabled for this creator' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      // For tips, use the client-sent price (fan chooses the amount) with a $1 minimum
+      const tipAmount = typeof price === 'number' ? price : 0;
+      if (tipAmount < 100) {
+        return new Response(
+          JSON.stringify({ error: 'Minimum support amount is $1.00' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      serverPrice = tipAmount;
+      productName = `Support for ${creator.display_name}`;
+      productDescription = 'Fan support / tip';
     }
 
     // PostgREST returns one-to-one relationships as objects, not arrays

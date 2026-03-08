@@ -4,8 +4,7 @@
  */
 
 // Components
-export * from './components/loading-spinner/loading-spinner.component';
-export * from './components/error-message/error-message.component';
+export * from './components/animated-background/animated-background.component';
 
 // Utils
 export * from './utils/date.utils';

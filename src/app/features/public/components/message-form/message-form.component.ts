@@ -59,7 +59,7 @@ export class MessageFormComponent {
 
   protected readonly messagePlaceholder = computed(() =>
     this.isFollowBack()
-      ? 'Tell them why you\'d love a follow-back...'
+      ? "Tell them why you'd love a follow-back..."
       : 'Share your thoughts, questions, or feedback...',
   );
 
@@ -71,8 +71,8 @@ export class MessageFormComponent {
 
   protected readonly submitLabel = computed(() =>
     this.isFollowBack()
-      ? `Pay $${this.priceInDollars()} & Request Follow-Back`
-      : `Pay $${this.priceInDollars()} & Send Message`,
+      ? `Pay $${String(this.priceInDollars())} & Request Follow-Back`
+      : `Pay $${String(this.priceInDollars())} & Send Message`,
   );
 
   protected onSubmit(): void {

@@ -75,7 +75,7 @@ export class LinkService {
     creatorId: string,
     link: { title: string; url: string; icon: string | null; position: number },
   ): Promise<SupabaseResponse<CreatorLink>> {
-    const { data, error } = await this.supabaseService.client
+    const response = (await this.supabaseService.client
       .from('creator_links')
       .insert({
         creator_id: creatorId,
@@ -85,9 +85,9 @@ export class LinkService {
         position: link.position,
       })
       .select()
-      .single();
+      .single()) as unknown as SupabaseResponse<CreatorLink>;
 
-    return { data: data as CreatorLink | null, error };
+    return response;
   }
 
   /**
@@ -97,14 +97,14 @@ export class LinkService {
     linkId: string,
     updates: Partial<Pick<CreatorLink, 'title' | 'url' | 'icon' | 'position' | 'is_active'>>,
   ): Promise<SupabaseResponse<CreatorLink>> {
-    const { data, error } = await this.supabaseService.client
+    const response = (await this.supabaseService.client
       .from('creator_links')
       .update(updates)
       .eq('id', linkId)
       .select()
-      .single();
+      .single()) as unknown as SupabaseResponse<CreatorLink>;
 
-    return { data: data as CreatorLink | null, error };
+    return response;
   }
 
   /**
@@ -155,7 +155,7 @@ export class LinkService {
       .eq('creator_id', creatorId)
       .gte('created_at', since.toISOString());
 
-    if (error || !data) {
+    if (error != null) {
       return { data: null, error };
     }
 
