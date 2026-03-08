@@ -547,4 +547,25 @@ export class CreatorService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };
   }
+
+  /**
+   * Delete a message
+   */
+  public async deleteMessage(messageId: string): Promise<SupabaseResponse<void>> {
+    const { error } = await this.supabaseService.client
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
+
+    return { data: undefined, error };
+  }
+
+  public async deleteCallBooking(bookingId: string): Promise<SupabaseResponse<void>> {
+    const { error } = await this.supabaseService.client
+      .from('call_bookings')
+      .delete()
+      .eq('id', bookingId);
+
+    return { data: undefined, error };
+  }
 }

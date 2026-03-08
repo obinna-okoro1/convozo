@@ -62,10 +62,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Template picker state
   protected readonly showTemplatePicker = signal<boolean>(false);
 
-  // View state (inbox vs analytics vs bookings vs availability)
-  protected readonly activeView = signal<'inbox' | 'analytics' | 'bookings' | 'availability'>(
-    'inbox',
+  // View state (dashboard overview vs inbox vs analytics vs bookings vs availability)
+  protected readonly activeView = signal<'dashboard' | 'inbox' | 'analytics' | 'bookings' | 'availability'>(
+    'dashboard',
   );
+
+  // Delete confirmation state
+  protected readonly showDeleteConfirm = signal<boolean>(false);
+  protected readonly messageToDelete = signal<Message | CallBooking | null>(null);
+  protected readonly deleting = signal<boolean>(false);
+
+  // Computed property to safely get the name from the item to delete
+  protected readonly itemToDeleteName = computed(() => {
+    const item = this.messageToDelete();
+    if (!item) return '';
+    
+    // Check if it's a Message (has message_content) or CallBooking (has booker_name)
+    if ('message_content' in item) {
+      return (item as Message).sender_name;
+    } else {
+      return (item as CallBooking).booker_name;
+    }
+  });
+
+  // Computed property to check if the item to delete is a message
+  protected readonly isItemToDeleteMessage = computed(() => {
+    const item = this.messageToDelete();
+    return item && 'message_content' in item;
+  });
 
   // Push notifications
   protected readonly pushEnabled = signal<boolean>(false);
@@ -73,6 +97,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Filter state
   protected readonly filterStatus = signal<FilterStatus>('all');
+  protected readonly bookingFilterStatus = signal<'all' | 'confirmed' | 'completed' | 'cancelled'>('all');
+
+  // Mobile modal state
+  protected readonly showMessageModal = signal<boolean>(false);
+  protected readonly showBookingModal = signal<boolean>(false);
 
   // Computed values — revenue includes both messages and call bookings
   protected readonly stats = computed<MessageStats>(() => {
@@ -108,9 +137,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const bookings = this.callBookings();
     const confirmed = bookings.filter((b) => b.status === 'confirmed').length;
     const completed = bookings.filter((b) => b.status === 'completed').length;
+    const cancelled = bookings.filter((b) => b.status === 'cancelled').length;
     const totalRevenue =
       Math.round((bookings.reduce((sum, b) => sum + (b.amount_paid ?? 0), 0) / 100) * 100) / 100;
-    return { total: bookings.length, confirmed, completed, totalRevenue };
+    return { total: bookings.length, confirmed, completed, cancelled, totalRevenue };
+  });
+
+  // Filtered bookings based on status
+  protected readonly filteredBookings = computed(() => {
+    const bookings = this.callBookings();
+    const status = this.bookingFilterStatus();
+    if (status === 'confirmed') {
+      return bookings.filter((b) => b.status === 'confirmed');
+    } else if (status === 'completed') {
+      return bookings.filter((b) => b.status === 'completed');
+    } else if (status === 'cancelled') {
+      return bookings.filter((b) => b.status === 'cancelled');
+    }
+    return bookings;
   });
 
   private queryParamsSubscription?: Subscription;
@@ -160,6 +204,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle booking filter status change
+   */
+  protected onBookingFilterChange(event: Event): void {
+    this.bookingFilterStatus.set((event.target as HTMLSelectElement).value as 'all' | 'confirmed' | 'completed' | 'cancelled');
+  }
+
+  /**
    * Toggle push notifications
    */
   protected async togglePushNotifications(): Promise<void> {
@@ -188,10 +239,63 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Select a message
+   * Handle message click - responsive behavior
+   */
+  protected handleMessageClick(message: Message): void {
+    this.selectedMessage.set(message);
+    
+    // On mobile (width < 1024px), show modal
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      this.showMessageModal.set(true);
+    }
+    
+    // Mark as handled if not already
+    if (!message.is_handled) {
+      this.markAsHandled(message);
+    }
+  }
+
+  /**
+   * Close message modal (mobile)
+   */
+  protected closeMessageModal(): void {
+    this.showMessageModal.set(false);
+  }
+
+  /**
+   * Open reply modal from mobile modal
+   */
+  protected openReplyModalFromMobile(message: Message): void {
+    this.closeMessageModal();
+    this.openReplyModal(message);
+  }
+
+  /**
+   * Mark as handled from mobile modal
+   */
+  protected markAsHandledFromMobile(message: Message): void {
+    this.closeMessageModal();
+    this.markAsHandled(message);
+  }
+
+  /**
+   * Confirm delete from mobile modal
+   */
+  protected confirmDeleteFromMobile(message: Message): void {
+    this.closeMessageModal();
+    this.confirmDelete(message);
+  }
+
+  /**
+   * Select a message and mark as handled if needed
    */
   protected selectMessage(message: Message): void {
     this.selectedMessage.set(message);
+    
+    // Mark as handled if it's not already
+    if (!message.is_handled) {
+      this.markAsHandled(message);
+    }
   }
 
   /**
@@ -299,10 +403,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Select a call booking
+   * Select a call booking (desktop only, e.g. from overview)
    */
   protected selectBooking(booking: CallBooking): void {
     this.selectedBooking.set(booking);
+  }
+
+  /**
+   * Handle booking click - responsive behavior
+   */
+  protected handleBookingClick(booking: CallBooking): void {
+    this.selectedBooking.set(booking);
+
+    // On mobile (width < 1024px), show modal
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      this.showBookingModal.set(true);
+    }
+  }
+
+  /**
+   * Close booking modal (mobile)
+   */
+  protected closeBookingModal(): void {
+    this.showBookingModal.set(false);
+  }
+
+  /**
+   * Mark booking completed from mobile modal
+   */
+  protected markBookingCompletedFromMobile(booking: CallBooking): void {
+    this.closeBookingModal();
+    this.markBookingCompleted(booking);
+  }
+
+  /**
+   * Cancel booking from mobile modal
+   */
+  protected cancelBookingFromMobile(booking: CallBooking): void {
+    this.closeBookingModal();
+    this.cancelBooking(booking);
+  }
+
+  /**
+   * Confirm delete booking from mobile modal
+   */
+  protected confirmDeleteBookingFromMobile(booking: CallBooking): void {
+    this.closeBookingModal();
+    this.confirmDelete(booking);
   }
 
   /**
@@ -432,6 +579,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * Delete functionality for messages and call bookings
+   */
+  protected confirmDelete(item: Message | CallBooking): void {
+    this.messageToDelete.set(item);
+    this.showDeleteConfirm.set(true);
+  }
+
+  protected async deleteMessage(): Promise<void> {
+    const item = this.messageToDelete();
+    if (!item) return;
+
+    this.deleting.set(true);
+    try {
+      // Check if it's a message or call booking by checking for message_content property
+      const isMessage = 'message_content' in item;
+      
+      if (isMessage) {
+        await this.creatorService.deleteMessage(item.id);
+        // Remove from local state
+        this.messages.update(messages => messages.filter(m => m.id !== item.id));
+        // Clear selection if this was the selected message
+        if (this.selectedMessage()?.id === item.id) {
+          this.selectedMessage.set(null);
+        }
+      } else {
+        await this.creatorService.deleteCallBooking(item.id);
+        // Remove from local state
+        this.callBookings.update(bookings => bookings.filter(b => b.id !== item.id));
+        // Clear selection if this was the selected booking
+        if (this.selectedBooking()?.id === item.id) {
+          this.selectedBooking.set(null);
+        }
+      }
+
+      this.toast.success(`${isMessage ? 'Message' : 'Call booking'} deleted successfully`);
+    } catch (err) {
+      this.toast.error(err instanceof Error ? err.message : 'Failed to delete item');
+    } finally {
+      this.deleting.set(false);
+      this.showDeleteConfirm.set(false);
+      this.messageToDelete.set(null);
+    }
+  }
+
+  protected cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.messageToDelete.set(null);
   }
 
   /**
