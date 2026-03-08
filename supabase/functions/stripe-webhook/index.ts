@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
         }
 
         // Create payment record linked to the message
-        const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
+        const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
         const platformFee = Math.floor(amountInCents * (platformFeePercentage / 100));
         const creatorAmount = amountInCents - platformFee;
 

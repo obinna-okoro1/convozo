@@ -351,11 +351,13 @@ export class CreatorService {
   public async createCreatorSettings(data: {
     creatorId: string;
     messagePrice: number;
+    messagesEnabled: boolean;
     callPrice?: number;
     callDuration?: number;
     callsEnabled: boolean;
     followBackPrice?: number;
     followBackEnabled: boolean;
+    tipsEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -364,11 +366,13 @@ export class CreatorService {
       .insert({
         creator_id: data.creatorId,
         message_price: data.messagePrice,
+        messages_enabled: data.messagesEnabled,
         call_price: data.callPrice,
         call_duration: data.callDuration,
         calls_enabled: data.callsEnabled,
         follow_back_price: data.followBackPrice,
         follow_back_enabled: data.followBackEnabled,
+        tips_enabled: data.tipsEnabled,
         response_expectation: data.responseExpectation,
       })
       .select()

@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
+    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
     // Hardcoded so Stripe redirects work even if APP_URL secret resets
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';

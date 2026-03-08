@@ -4,7 +4,16 @@
  * Conditionally shows follow-back and call tabs based on creator settings.
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MessagePageStateService } from '../message-page-state.service';
 
@@ -22,6 +31,27 @@ interface Tab {
 })
 export class MessagePageTabsComponent {
   private readonly state = inject(MessagePageStateService);
+
+  readonly scrollContainer = viewChild<ElementRef<HTMLDivElement>>('scrollContainer');
+  readonly canScrollLeft = signal(false);
+  readonly canScrollRight = signal(false);
+
+  constructor() {
+    afterNextRender(() => this.updateScrollIndicators());
+  }
+
+  onScroll(): void {
+    this.updateScrollIndicators();
+  }
+
+  private updateScrollIndicators(): void {
+    const el = this.scrollContainer()?.nativeElement;
+    if (!el) return;
+    this.canScrollLeft.set(el.scrollLeft > 0);
+    this.canScrollRight.set(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+    );
+  }
 
   readonly visibleTabs = computed<Tab[]>(() => {
     const tabs: Tab[] = [

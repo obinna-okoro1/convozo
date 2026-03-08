@@ -205,11 +205,13 @@ export class OnboardingComponent implements OnInit {
 
   // Pricing form data
   protected readonly messagePrice = signal<number>(1000); // in cents ($10)
+  protected readonly messagesEnabled = signal<boolean>(false);
   protected readonly callPrice = signal<number>(5000); // in cents ($50)
   protected readonly callDuration = signal<number>(30); // minutes
   protected readonly callsEnabled = signal<boolean>(false);
   protected readonly followBackEnabled = signal<boolean>(false);
   protected readonly followBackPrice = signal<number>(2000); // in cents ($20)
+  protected readonly tipsEnabled = signal<boolean>(false);
   protected readonly responseExpectation = signal<string>(
     APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
   );
@@ -395,11 +397,13 @@ export class OnboardingComponent implements OnInit {
       const { error: settingsError } = await this.creatorService.createCreatorSettings({
         creatorId: creator.id,
         messagePrice: this.messagePrice(),
+        messagesEnabled: this.messagesEnabled(),
         callPrice: this.callsEnabled() ? this.callPrice() : undefined,
         callDuration: this.callsEnabled() ? this.callDuration() : undefined,
         callsEnabled: this.callsEnabled(),
         followBackPrice: this.followBackEnabled() ? this.followBackPrice() : undefined,
         followBackEnabled: this.followBackEnabled(),
+        tipsEnabled: this.tipsEnabled(),
         responseExpectation: this.responseExpectation(),
       });
 

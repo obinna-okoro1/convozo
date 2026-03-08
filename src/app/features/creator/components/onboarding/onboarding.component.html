@@ -39,7 +39,7 @@
                 2
               }
             </div>
-            <span [class]="currentStep() >= 2 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Pricing</span>
+            <span [class]="currentStep() >= 2 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Monetization</span>
           </div>
           <div [class]="currentStep() >= 3 ? 'w-12 h-1 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-12 h-1 rounded-full transition-all duration-500 bg-white/10'"></div>
           <div class="flex items-center">
@@ -263,29 +263,49 @@
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Set your pricing</h2>
-                <p class="text-white/60 text-sm mt-1">Configure your rates and booking options</p>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Set up monetization</h2>
+                <p class="text-white/60 text-sm mt-1">Enable channels and set your rates</p>
               </div>
             </div>
             
             <div class="space-y-8">
-              <!-- Message Price -->
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Message Price (USD) *</label>
-                <div class="flex items-center gap-4">
-                  <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
-                  <div class="relative flex-1 group">
-                    <input
-                      type="number"
-                      [value]="messagePrice() / 100"
-                      (input)="messagePrice.set(inputNumber($event) * 100)"
-                      min="1"
-                      step="1"
-                      class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                    />
+              <!-- Paid Messages -->
+              <div>
+                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+                  <div>
+                    <h3 class="font-bold text-white text-lg">💬 Paid Messages</h3>
+                    <p class="text-sm text-white/60 mt-1">Allow fans to send you paid messages</p>
                   </div>
+                  <label class="relative inline-flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      [checked]="messagesEnabled()"
+                      (change)="messagesEnabled.set(inputChecked($event))"
+                      class="sr-only peer"
+                    />
+                    <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
+                  </label>
                 </div>
-                <p class="text-xs text-white/50 mt-2">Price per message in USD</p>
+
+                @if (messagesEnabled()) {
+                  <div class="space-y-3 animate-fade-in">
+                    <label class="block text-sm font-bold text-white">Message Price (USD) *</label>
+                    <div class="flex items-center gap-4">
+                      <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
+                      <div class="relative flex-1 group">
+                        <input
+                          type="number"
+                          [value]="messagePrice() / 100"
+                          (input)="messagePrice.set(inputNumber($event) * 100)"
+                          min="1"
+                          step="1"
+                          class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                        />
+                      </div>
+                    </div>
+                    <p class="text-xs text-white/50 mt-2">Price per message in USD</p>
+                  </div>
+                }
               </div>
 
               <!-- Call Settings -->
@@ -384,6 +404,25 @@
                 }
               </div>
 
+              <!-- Fan Support / Tips -->
+              <div class="border-t border-white/10 pt-8">
+                <div class="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10">
+                  <div>
+                    <h3 class="font-bold text-white text-lg">❤️ Fan Support</h3>
+                    <p class="text-sm text-white/60 mt-1">Let fans tip you with any amount they choose</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      [checked]="tipsEnabled()"
+                      (change)="tipsEnabled.set(inputChecked($event))"
+                      class="sr-only peer"
+                    />
+                    <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
+                  </label>
+                </div>
+              </div>
+
               <!-- Response Expectation -->
               <div class="space-y-3">
                 <label class="block text-sm font-bold text-white">Response Time Expectation</label>
@@ -458,13 +497,21 @@
               }
 
               <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
-                <div class="text-sm text-white/60 mb-2">Pricing</div>
-                <div class="font-bold text-white text-lg">Messages: ${{ messagePrice() / 100 }}</div>
+                <div class="text-sm text-white/60 mb-2">Monetization</div>
+                @if (messagesEnabled()) {
+                  <div class="font-bold text-white text-lg">Messages: ${{ messagePrice() / 100 }}</div>
+                }
                 @if (callsEnabled()) {
                   <div class="font-bold text-white mt-1">Calls: ${{ callPrice() / 100 }} ({{ callDuration() }} min)</div>
                 }
                 @if (followBackEnabled()) {
                   <div class="font-bold text-white mt-1">Follow-Back: ${{ followBackPrice() / 100 }}</div>
+                }
+                @if (tipsEnabled()) {
+                  <div class="font-bold text-white mt-1">Fan Support: Enabled</div>
+                }
+                @if (!messagesEnabled() && !callsEnabled() && !followBackEnabled() && !tipsEnabled()) {
+                  <div class="text-white/40 italic">No channels enabled — you can enable them later in Settings</div>
                 }
               </div>
 
@@ -547,7 +594,7 @@
                 <div class="flex-1">
                   <p class="font-bold text-white mb-1">Why do I need Stripe?</p>
                   <p class="text-blue-200 text-sm leading-relaxed">
-                    Stripe processes all payments securely. You'll receive 65% of each payment directly to your bank account. Convozo takes a 35% platform fee which covers all Stripe processing fees — so what you see is what you get.
+                    Stripe processes all payments securely. You'll receive 78% of each payment directly to your bank account. Convozo takes a 22% platform fee which covers all Stripe processing fees — so what you see is what you get.
                   </p>
                 </div>
               </div>

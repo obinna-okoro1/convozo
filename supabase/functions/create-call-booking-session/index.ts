@@ -125,8 +125,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Calculate platform fee (35%) — using server-authoritative price
-    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '35');
+    // Calculate platform fee (22%) — using server-authoritative price
+    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
