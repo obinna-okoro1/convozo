@@ -15,6 +15,10 @@ import {
   ImageUploadComponent,
   ImageChangeEvent,
 } from '../../../../shared/components/ui/image-upload/image-upload.component';
+import {
+  SearchableSelectComponent,
+  SelectOption,
+} from '../../../../shared/components/ui/searchable-select/searchable-select.component';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
@@ -169,7 +173,7 @@ const TIMEZONE_TO_COUNTRY: Record<string, string> = {
 
 @Component({
   selector: 'app-onboarding',
-  imports: [CommonModule, FormsModule, ImageUploadComponent, AnimatedBackgroundComponent],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, AnimatedBackgroundComponent, SearchableSelectComponent],
   templateUrl: './onboarding.component.html',
   styleUrls: ['./onboarding.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -195,6 +199,14 @@ export class OnboardingComponent implements OnInit {
   protected readonly countryCodes = COUNTRY_CODES;
   protected readonly selectedCountryIndex = signal<number>(0); // index into COUNTRY_CODES
   protected readonly phoneNumber = signal<string>(''); // local number without country code
+
+  protected readonly countryCodeOptions: SelectOption[] = COUNTRY_CODES.map((cc, i) => ({
+    value: String(i),
+    label: `${cc.flag} ${cc.country} (${cc.code})`,
+  }));
+
+  protected readonly String = String;
+
   protected readonly fullPhoneNumber = computed(() => {
     const country = COUNTRY_CODES[this.selectedCountryIndex()];
     const local = this.phoneNumber().trim();
@@ -223,6 +235,15 @@ export class OnboardingComponent implements OnInit {
   protected readonly bankCode = signal<string>('');
   protected readonly accountNumber = signal<string>('');
   protected readonly paymentCountry = signal<string>('NG');
+
+  protected readonly paymentCountryOptions: SelectOption[] = [
+    { value: 'NG', label: '🇳🇬 Nigeria' },
+    { value: 'GH', label: '🇬🇭 Ghana' },
+    { value: 'KE', label: '🇰🇪 Kenya' },
+    { value: 'ZA', label: '🇿🇦 South Africa' },
+    { value: 'TZ', label: '🇹🇿 Tanzania' },
+    { value: 'UG', label: '🇺🇬 Uganda' },
+  ];
 
   // OAuth import indicator
   protected readonly hasOAuthData = signal<boolean>(false);

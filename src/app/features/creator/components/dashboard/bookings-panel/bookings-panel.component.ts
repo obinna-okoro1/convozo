@@ -8,10 +8,14 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CallBooking } from '../../../../../core/models';
+import {
+  SearchableSelectComponent,
+  SelectOption,
+} from '../../../../../shared/components/ui/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-bookings-panel',
-  imports: [CommonModule],
+  imports: [CommonModule, SearchableSelectComponent],
   templateUrl: './bookings-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -51,13 +55,19 @@ export class BookingsPanelComponent {
     return bookings;
   });
 
-  protected onBookingFilterChange(event: Event): void {
+  protected readonly bookingFilterOptions = computed<SelectOption[]>(() => {
+    const s = this.bookingStats();
+    return [
+      { value: 'all', label: `All (${s.total})` },
+      { value: 'confirmed', label: `Confirmed (${s.confirmed})` },
+      { value: 'completed', label: `Completed (${s.completed})` },
+      { value: 'cancelled', label: `Cancelled (${s.cancelled})` },
+    ];
+  });
+
+  protected onBookingFilterChange(value: string): void {
     this.bookingFilterStatus.set(
-      (event.target as HTMLSelectElement).value as
-        | 'all'
-        | 'confirmed'
-        | 'completed'
-        | 'cancelled',
+      value as 'all' | 'confirmed' | 'completed' | 'cancelled',
     );
   }
 

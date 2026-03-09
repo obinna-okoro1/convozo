@@ -116,28 +116,24 @@
                   @for (slot of day.slots; track $index; let j = $index) {
                     <div class="flex items-center gap-3 flex-wrap">
                       <!-- Start Time -->
-                      <select
+                      <app-searchable-select
+                        [options]="timeSelectOptions"
                         [value]="slot.startTime"
-                        (change)="updateStartTime(i, j, inputValue($event))"
-                        class="bg-white/5 border border-white/10 text-white px-3 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer backdrop-blur-xl hover:bg-white/10 transition-all duration-200 appearance-none min-w-[6.875rem]"
-                      >
-                        @for (time of timeOptions; track time) {
-                          <option [value]="time" class="bg-slate-900 text-white">{{ formatTime(time) }}</option>
-                        }
-                      </select>
+                        (valueChange)="updateStartTime(i, j, $event)"
+                        placeholder="Start"
+                        size="sm"
+                      />
 
                       <span class="text-slate-400 text-sm font-medium">to</span>
 
                       <!-- End Time -->
-                      <select
+                      <app-searchable-select
+                        [options]="timeSelectOptions"
                         [value]="slot.endTime"
-                        (change)="updateEndTime(i, j, inputValue($event))"
-                        class="bg-white/5 border border-white/10 text-white px-3 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer backdrop-blur-xl hover:bg-white/10 transition-all duration-200 appearance-none min-w-[6.875rem]"
-                      >
-                        @for (time of timeOptions; track time) {
-                          <option [value]="time" class="bg-slate-900 text-white">{{ formatTime(time) }}</option>
-                        }
-                      </select>
+                        (valueChange)="updateEndTime(i, j, $event)"
+                        placeholder="End"
+                        size="sm"
+                      />
 
                       <!-- Remove Slot Button -->
                       @if (day.slots.length > 1) {

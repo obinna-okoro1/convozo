@@ -9,6 +9,10 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } f
 import { FormsModule } from '@angular/forms';
 import { AvailabilitySlot, DayOfWeek } from '../../../../core/models';
 import { CreatorService } from '../../services/creator.service';
+import {
+  SearchableSelectComponent,
+  SelectOption,
+} from '../../../../shared/components/ui/searchable-select/searchable-select.component';
 
 interface DaySchedule {
   day: DayOfWeek;
@@ -44,7 +48,7 @@ for (let h = 0; h < 24; h++) {
 
 @Component({
   selector: 'app-availability-manager',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   templateUrl: './availability-manager.component.html',
   styleUrls: ['./availability-manager.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +64,13 @@ export class AvailabilityManagerComponent implements OnInit {
   protected readonly schedule = signal<DaySchedule[]>([]);
 
   protected readonly timeOptions = TIME_OPTIONS;
+
+  protected readonly timeSelectOptions: SelectOption[] = TIME_OPTIONS.map((t) => {
+    const [hours, minutes] = t.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    return { value: t, label: `${String(displayHour)}:${minutes.toString().padStart(2, '0')} ${period}` };
+  });
 
   protected readonly totalSlots = computed(() =>
     this.schedule().reduce((sum, day) => sum + (day.enabled ? day.slots.length : 0), 0),

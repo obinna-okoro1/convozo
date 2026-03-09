@@ -203,21 +203,13 @@
                 <label class="block text-sm font-bold text-white">Phone Number *</label>
                 <div class="flex flex-col sm:flex-row items-stretch gap-2">
                   <!-- Country Code Dropdown -->
-                  <div class="relative group">
-                    <select
-                      [value]="selectedCountryIndex()"
-                      (change)="selectedCountryIndex.set(+inputValue($event))"
-                      class="appearance-none w-full sm:w-auto h-full pl-3 pr-8 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 cursor-pointer text-base sm:min-w-[8rem]"
-                    >
-                      @for (cc of countryCodes; track cc.iso; let i = $index) {
-                        <option [value]="i" class="bg-slate-900 text-white">{{ cc.flag }} {{ cc.country }} ({{ cc.code }})</option>
-                      }
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+                  <div class="sm:min-w-[10rem]">
+                    <app-searchable-select
+                      [options]="countryCodeOptions"
+                      [value]="String(selectedCountryIndex())"
+                      (valueChange)="selectedCountryIndex.set(+$event)"
+                      placeholder="Country"
+                    />
                   </div>
                   <!-- Phone Number Input -->
                   <div class="relative flex-1 group">
@@ -604,25 +596,12 @@
             <div class="space-y-6 mb-8">
               <div class="space-y-3">
                 <label class="block text-sm font-bold text-white">Country *</label>
-                <div class="relative group">
-                  <select
-                    [value]="paymentCountry()"
-                    (change)="paymentCountry.set(inputValue($event))"
-                    class="appearance-none w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 cursor-pointer"
-                  >
-                    <option value="NG" class="bg-slate-900 text-white">🇳🇬 Nigeria</option>
-                    <option value="GH" class="bg-slate-900 text-white">🇬🇭 Ghana</option>
-                    <option value="KE" class="bg-slate-900 text-white">🇰🇪 Kenya</option>
-                    <option value="ZA" class="bg-slate-900 text-white">🇿🇦 South Africa</option>
-                    <option value="TZ" class="bg-slate-900 text-white">🇹🇿 Tanzania</option>
-                    <option value="UG" class="bg-slate-900 text-white">🇺🇬 Uganda</option>
-                  </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                    <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
+                <app-searchable-select
+                  [options]="paymentCountryOptions"
+                  [value]="paymentCountry()"
+                  (valueChange)="paymentCountry.set($event)"
+                  [searchable]="false"
+                />
               </div>
 
               <div class="space-y-3">

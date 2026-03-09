@@ -83,19 +83,12 @@
         <div class="space-y-4">
           <div>
             <label for="upd-country" class="block text-sm font-medium text-white/70 mb-1.5">Country</label>
-            <select
-              id="upd-country"
-              [ngModel]="country()"
-              (ngModelChange)="country.set($event)"
-              class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-            >
-              <option value="NG" class="bg-gray-900">🇳🇬 Nigeria</option>
-              <option value="GH" class="bg-gray-900">🇬🇭 Ghana</option>
-              <option value="KE" class="bg-gray-900">🇰🇪 Kenya</option>
-              <option value="ZA" class="bg-gray-900">🇿🇦 South Africa</option>
-              <option value="TZ" class="bg-gray-900">🇹🇿 Tanzania</option>
-              <option value="UG" class="bg-gray-900">🇺🇬 Uganda</option>
-            </select>
+            <app-searchable-select
+              [options]="countryOptions"
+              [value]="country()"
+              (valueChange)="country.set($event)"
+              [searchable]="false"
+            />
           </div>
           <div>
             <label for="upd-bank" class="block text-sm font-medium text-white/70 mb-1.5">Bank</label>
@@ -113,17 +106,12 @@
                 <button (click)="loadBanks(country())" class="text-purple-400 hover:underline text-xs ml-2">Retry</button>
               </div>
             } @else {
-              <select
-                id="upd-bank"
-                [ngModel]="bankCode()"
-                (ngModelChange)="bankCode.set($event)"
-                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              >
-                <option value="" class="bg-gray-900">Select your bank</option>
-                @for (bank of banks(); track bank.id) {
-                  <option [value]="bank.code" class="bg-gray-900">{{ bank.name }}</option>
-                }
-              </select>
+              <app-searchable-select
+                [options]="bankSelectOptions()"
+                [value]="bankCode()"
+                (valueChange)="bankCode.set($event)"
+                placeholder="Select your bank"
+              />
             }
           </div>
           <div>
@@ -256,19 +244,12 @@
       <div class="space-y-4">
         <div>
           <label for="new-country" class="block text-sm font-medium text-white/70 mb-1.5">Country</label>
-          <select
-            id="new-country"
-            [ngModel]="country()"
-            (ngModelChange)="country.set($event)"
-            class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-          >
-            <option value="NG" class="bg-gray-900">🇳🇬 Nigeria</option>
-            <option value="GH" class="bg-gray-900">🇬🇭 Ghana</option>
-            <option value="KE" class="bg-gray-900">🇰🇪 Kenya</option>
-            <option value="ZA" class="bg-gray-900">🇿🇦 South Africa</option>
-            <option value="TZ" class="bg-gray-900">🇹🇿 Tanzania</option>
-            <option value="UG" class="bg-gray-900">🇺🇬 Uganda</option>
-          </select>
+          <app-searchable-select
+            [options]="countryOptions"
+            [value]="country()"
+            (valueChange)="country.set($event)"
+            [searchable]="false"
+          />
         </div>
         <div>
           <label for="new-bank" class="block text-sm font-medium text-white/70 mb-1.5">Bank</label>
@@ -286,17 +267,12 @@
               <button (click)="loadBanks(country())" class="text-purple-400 hover:underline text-xs ml-2">Retry</button>
             </div>
           } @else {
-            <select
-              id="new-bank"
-              [ngModel]="bankCode()"
-              (ngModelChange)="bankCode.set($event)"
-              class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-            >
-              <option value="" class="bg-gray-900">Select your bank</option>
-              @for (bank of banks(); track bank.id) {
-                <option [value]="bank.code" class="bg-gray-900">{{ bank.name }}</option>
-              }
-            </select>
+            <app-searchable-select
+              [options]="bankSelectOptions()"
+              [value]="bankCode()"
+              (valueChange)="bankCode.set($event)"
+              placeholder="Select your bank"
+            />
           }
         </div>
         <div>

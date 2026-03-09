@@ -8,16 +8,13 @@
           <h2 class="text-2xl font-bold text-white mb-1">Call Bookings</h2>
           <p class="text-sm text-slate-400">{{ bookingStats().total }} total bookings</p>
         </div>
-        <select
+        <app-searchable-select
+          [options]="bookingFilterOptions()"
           [value]="bookingFilterStatus()"
-          (change)="onBookingFilterChange($event)"
-          class="bg-white/5 backdrop-blur-xl border border-white/20 text-white px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
-        >
-          <option value="all" class="bg-slate-900">All ({{ bookingStats().total }})</option>
-          <option value="confirmed" class="bg-slate-900">Confirmed ({{ bookingStats().confirmed }})</option>
-          <option value="completed" class="bg-slate-900">Completed ({{ bookingStats().completed }})</option>
-          <option value="cancelled" class="bg-slate-900">Cancelled ({{ bookingStats().cancelled }})</option>
-        </select>
+          (valueChange)="onBookingFilterChange($event)"
+          [searchable]="false"
+          size="sm"
+        />
       </div>
 
       <!-- Bookings List with Scroll -->

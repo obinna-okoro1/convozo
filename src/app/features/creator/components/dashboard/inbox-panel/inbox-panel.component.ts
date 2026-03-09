@@ -11,10 +11,14 @@ import { Message, MessageStats, FilterStatus } from '../../../../../core/models'
 import { CreatorService } from '../../../services/creator.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { ReplyModalComponent } from '../reply-modal/reply-modal.component';
+import {
+  SearchableSelectComponent,
+  SelectOption,
+} from '../../../../../shared/components/ui/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-inbox-panel',
-  imports: [CommonModule, ReplyModalComponent],
+  imports: [CommonModule, ReplyModalComponent, SearchableSelectComponent],
   templateUrl: './inbox-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -51,8 +55,17 @@ export class InboxPanelComponent {
     return msgs;
   });
 
-  protected onFilterChange(event: Event): void {
-    this.filterStatus.set((event.target as HTMLSelectElement).value as FilterStatus);
+  protected readonly filterOptions = computed<SelectOption[]>(() => {
+    const s = this.stats();
+    return [
+      { value: 'all', label: `All (${s.total})` },
+      { value: 'unhandled', label: `Unhandled (${s.unhandled})` },
+      { value: 'handled', label: `Handled (${s.handled})` },
+    ];
+  });
+
+  protected onFilterChange(value: string): void {
+    this.filterStatus.set(value as FilterStatus);
   }
 
   protected handleMessageClick(message: Message): void {

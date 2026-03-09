@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../../../../../core/services/supabase.service';
 import { SettingsStateService } from '../../settings-state.service';
+import {
+  SearchableSelectComponent,
+  SelectOption,
+} from '../../../../../../shared/components/ui/searchable-select/searchable-select.component';
 
 interface FlutterwaveBank {
   id: string;
@@ -11,7 +15,7 @@ interface FlutterwaveBank {
 
 @Component({
   selector: 'app-payments-view',
-  imports: [FormsModule],
+  imports: [FormsModule, SearchableSelectComponent],
   templateUrl: './payments-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -26,6 +30,20 @@ export class PaymentsViewComponent {
   protected readonly banks = signal<FlutterwaveBank[]>([]);
   protected readonly banksLoading = signal(false);
   protected readonly banksError = signal<string | null>(null);
+
+  protected readonly countryOptions: SelectOption[] = [
+    { value: 'NG', label: '🇳🇬 Nigeria' },
+    { value: 'GH', label: '🇬🇭 Ghana' },
+    { value: 'KE', label: '🇰🇪 Kenya' },
+    { value: 'ZA', label: '🇿🇦 South Africa' },
+    { value: 'TZ', label: '🇹🇿 Tanzania' },
+    { value: 'UG', label: '🇺🇬 Uganda' },
+  ];
+
+  protected readonly bankSelectOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Select your bank' },
+    ...this.banks().map((b) => ({ value: b.code, label: b.name })),
+  ]);
 
   // Account verification state
   protected readonly verifying = signal(false);

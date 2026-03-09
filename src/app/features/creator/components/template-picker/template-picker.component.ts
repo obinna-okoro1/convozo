@@ -18,11 +18,15 @@ import {
   ResponseTemplate,
   TemplateCategory,
 } from '../../../../core/services/response-template.service';
+import {
+  SearchableSelectComponent,
+  SelectOption,
+} from '../../../../shared/components/ui/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-template-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   templateUrl: './template-picker.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
@@ -68,6 +72,15 @@ export class TemplatePickerComponent implements OnInit {
     category: 'General',
     is_favorite: false,
   };
+
+  protected readonly categoryOptions: SelectOption[] = [
+    { value: 'General', label: 'General' },
+    { value: 'Business', label: 'Business' },
+    { value: 'Advice', label: 'Advice' },
+    { value: 'Follow-up', label: 'Follow-up' },
+    { value: 'Decline', label: 'Decline' },
+    { value: 'Other', label: 'Other' },
+  ];
 
   constructor(private readonly templateService: ResponseTemplateService) {}
 
