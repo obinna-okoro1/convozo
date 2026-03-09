@@ -48,7 +48,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Shell-only UI state
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
-  protected readonly stripeSetupIncomplete = signal<boolean>(false);
+  protected readonly paymentSetupIncomplete = signal<boolean>(false);
 
   // Push notifications
   protected readonly pushEnabled = signal<boolean>(false);
@@ -143,8 +143,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   private subscribeToQueryParams(): void {
     this.queryParamsSubscription = this.route.queryParams.subscribe((params) => {
-      if (params['stripe_setup'] === 'incomplete') {
-        this.stripeSetupIncomplete.set(true);
+      if (params['payment_setup'] === 'incomplete') {
+        this.paymentSetupIncomplete.set(true);
       }
       if (params['view'] === 'availability') {
         void this.router.navigate(['availability'], { relativeTo: this.route });

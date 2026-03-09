@@ -366,14 +366,39 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# Stripe webhook must bypass JWT auth — Stripe authenticates via its own signature
-[functions.stripe-webhook]
-verify_jwt = false
+# All functions handle their own authentication internally (via supabase.auth.getUser)
+# or are public endpoints. Disabling gateway JWT verification prevents stale-token 401s
+# while keeping security intact — each function still validates the caller.
+
+[functions.flutterwave-webhook]
+verify_jwt = false  # Flutterwave authenticates via verif-hash header
+
+[functions.get-banks]
+verify_jwt = false  # Public — proxies Flutterwave /v3/banks
+
+[functions.resolve-account]
+verify_jwt = false  # Public — proxies Flutterwave /v3/accounts/resolve
+
+[functions.create-connect-account]
+verify_jwt = false  # Auth handled internally via getUser(token)
+
+[functions.verify-connect-account]
+verify_jwt = false  # Auth handled internally via getUser(token)
+
+[functions.send-reply-email]
+verify_jwt = false  # Auth handled internally via getUser(token)
+
+[functions.create-checkout-session]
+verify_jwt = false  # Public — fans pay without being logged in
+
+[functions.create-call-booking-session]
+verify_jwt = false  # Public — fans book calls without being logged in
 
 [edge_runtime.secrets]
-STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
-STRIPE_PUBLISHABLE_KEY = "env(STRIPE_PUBLISHABLE_KEY)"
-STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
+FLW_SECRET_KEY = "env(FLW_SECRET_KEY)"
+FLW_PUBLIC_KEY = "env(FLW_PUBLIC_KEY)"
+FLW_ENCRYPTION_KEY = "env(FLW_ENCRYPTION_KEY)"
+FLW_WEBHOOK_HASH = "env(FLW_WEBHOOK_HASH)"
 APP_URL = "env(APP_URL)"
 PLATFORM_FEE_PERCENTAGE = "env(PLATFORM_FEE_PERCENTAGE)"
 

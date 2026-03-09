@@ -1,18 +1,18 @@
 # Convozo
 
-A creator monetization platform that lets influencers earn from their audience through paid messages and video call bookings. Built with Angular 21, Supabase, and Stripe Connect.
+A creator monetization platform that lets influencers earn from their audience through paid messages and video call bookings. Built with Angular 21, Supabase, and Flutterwave.
 
 ## Product
 
-Creators sign up, set their prices, and get a public link (`convozo.com/yourname`). Fans visit the link, pay via Stripe Checkout, and send a message or book a call. Creators manage everything from a single dashboard.
+Creators sign up, set their prices, and get a public link (`convozo.com/yourname`). Fans visit the link, pay via Flutterwave, and send a message or book a call. Creators manage everything from a single dashboard.
 
-**Revenue model:** 65 / 35 split — creators keep 65%, Convozo takes 35%. Stripe processing fees come out of the platform's cut.
+**Revenue model:** 78 / 22 split — creators keep 78%, Convozo takes 22%. Flutterwave processing fees come out of the platform's cut.
 
 ### User Flows
 
 ```
-Fan → /:slug → Pay via Stripe → Message delivered to creator inbox
-Creator → Sign up → Onboarding → Connect Stripe → Dashboard
+Fan → /:slug → Pay via Flutterwave → Message delivered to creator inbox
+Creator → Sign up → Onboarding → Add bank details → Dashboard
 Creator → Dashboard → View messages → Reply (email notification sent)
 ```
 
@@ -21,7 +21,7 @@ Creator → Dashboard → View messages → Reply (email notification sent)
 - **Public message page** — custom slug, pricing card, trust indicators, social proof
 - **Video call bookings** — weekly availability schedule, call pricing, booking form
 - **Creator dashboard** — inbox with filters, reply modal, response templates, analytics
-- **Stripe Connect** — Express onboarding, checkout sessions, webhook handling
+- **Flutterwave payments** — subaccount onboarding, redirect-based checkout, webhook handling
 - **OAuth & email auth** — Google OAuth, magic link, password login
 - **Push notifications** — web push via VAPID keys
 - **Profile uploads** — avatar upload to Supabase Storage
@@ -33,7 +33,7 @@ Creator → Dashboard → View messages → Reply (email notification sent)
 |-------|-----------|
 | Frontend | Angular 21 (Standalone components, Signals, lazy routes) |
 | Backend | Supabase (PostgreSQL, Auth, RLS, Edge Functions, Storage) |
-| Payments | Stripe Checkout + Stripe Connect Express |
+| Payments | Flutterwave Standard + Subaccounts (split payments) |
 | Styling | Tailwind CSS 3 |
 | Testing | Vitest |
 
@@ -44,7 +44,7 @@ Creator → Dashboard → View messages → Reply (email notification sent)
 - Node.js 18+
 - Docker (for local Supabase)
 - Supabase CLI (`brew install supabase/tap/supabase`)
-- Stripe account with Connect enabled
+- Flutterwave account (get test keys from https://dashboard.flutterwave.com/settings/apis)
 
 ### Local Development
 
@@ -78,10 +78,10 @@ export const environment = {
     url: 'http://127.0.0.1:54321',
     anonKey: 'YOUR_LOCAL_ANON_KEY',
   },
-  stripe: {
-    publishableKey: 'pk_test_...',
+  flutterwave: {
+    publicKey: 'FLWPUBK_TEST-...',
   },
-  platformFeePercentage: 35,
+  platformFeePercentage: 22,
   vapidPublicKey: 'YOUR_VAPID_PUBLIC_KEY',
 };
 ```
@@ -90,9 +90,10 @@ export const environment = {
 
 ```env
 # Local dev only — see supabase/.env.example for template
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...        # from `stripe listen --forward-to`
+FLW_SECRET_KEY=FLWSECK_TEST-...
+FLW_PUBLIC_KEY=FLWPUBK_TEST-...
+FLW_ENCRYPTION_KEY=FLWSECK_TEST...
+FLW_WEBHOOK_HASH=your_webhook_hash
 PLATFORM_FEE_PERCENTAGE=22
 APP_URL=http://localhost:4200
 RESEND_API_KEY=re_...
@@ -147,28 +148,20 @@ src/app/
 └── app.ts                       # Root component with <router-outlet>
 
 supabase/
-├── migrations/                  # 12 sequential SQL migrations
+├── migrations/                  # Sequential SQL migrations
 │   ├── 001_initial_schema.sql
-│   ├── 002_rls_policies.sql
-│   ├── 003_storage_buckets.sql
-│   ├── 004_simplify_pricing_add_calls.sql
-│   ├── 005_add_instagram_username.sql
-│   ├── 006_availability_rls_policies.sql
-│   ├── 007_fix_call_bookings.sql
-│   ├── 008_add_sender_instagram.sql
-│   ├── 009_enable_realtime.sql
-│   ├── 010_message_idempotency.sql
+│   ├── ...
 │   ├── 011_add_phone_number.sql
-│   └── 012_security_hardening.sql
+│   └── 012_stripe_to_flutterwave.sql
 ├── functions/                   # Deno Edge Functions
 │   ├── _shared/                 # Shared utilities
 │   │   ├── cors.ts              # CORS headers helper
 │   │   └── email.ts             # Resend email utility & branded templates
-│   ├── create-checkout-session/ # Stripe Checkout for messages
-│   ├── create-call-booking-session/ # Stripe Checkout for calls
-│   ├── create-connect-account/  # Stripe Connect Express onboarding
-│   ├── verify-connect-account/  # Verify Stripe account status
-│   ├── stripe-webhook/          # Handle payment events & send emails
+│   ├── create-checkout-session/ # Flutterwave payment for messages
+│   ├── create-call-booking-session/ # Flutterwave payment for calls
+│   ├── create-connect-account/  # Flutterwave subaccount onboarding
+│   ├── verify-connect-account/  # Verify Flutterwave subaccount status
+│   ├── flutterwave-webhook/     # Handle Flutterwave payment events & send emails
 │   └── send-reply-email/        # Creator reply → email to sender
 ├── .env                         # Local dev secrets (gitignored)
 ├── .env.example                 # Template for local dev secrets
@@ -182,7 +175,7 @@ supabase/
 |-------|---------|
 | `creators` | Creator profiles (name, slug, bio, avatar, instagram) |
 | `creator_settings` | Pricing config (message_price, call_price, calls_enabled) |
-| `stripe_accounts` | Stripe Connect account status |
+| `flutterwave_subaccounts` | Flutterwave subaccount status & bank details |
 | `messages` | Paid messages from fans |
 | `payments` | Payment transaction records |
 | `availability_slots` | Weekly call availability schedule |
@@ -242,8 +235,10 @@ supabase functions deploy
 
 # Set production secrets (one at a time — NEVER use --env-file)
 supabase secrets set APP_URL=https://convozo.com
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
+supabase secrets set FLW_SECRET_KEY=FLWSECK-...
+supabase secrets set FLW_PUBLIC_KEY=FLWPUBK-...
+supabase secrets set FLW_ENCRYPTION_KEY=FLWSECK_TEST...
+supabase secrets set FLW_WEBHOOK_HASH=your_production_webhook_hash
 supabase secrets set PLATFORM_FEE_PERCENTAGE=22
 supabase secrets set RESEND_API_KEY=re_...
 supabase secrets set RESEND_FROM_ADDRESS="Convozo <noreply@convozo.com>"
@@ -254,14 +249,13 @@ supabase secrets list
 
 > **⚠️ Critical:** Always set secrets individually. Running `supabase secrets set --env-file supabase/.env` would push localhost values to production. See `supabase/.env.production` for a reference of required production secrets.
 
-### Stripe
+### Flutterwave
 
-1. Enable Connect in your Stripe dashboard
-2. Set redirect URLs for Connect onboarding (success → `/creator/dashboard`, failure → `/creator/onboarding`)
-3. Create a webhook endpoint pointing to `https://pfmscnpmpwxpdlrbeokb.supabase.co/functions/v1/stripe-webhook`
-4. Subscribe to `checkout.session.completed` events
-5. Copy the webhook signing secret and set it via `supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`
-6. Update `environment.prod.ts` with your live publishable key
+1. Create a Flutterwave account at [dashboard.flutterwave.com](https://dashboard.flutterwave.com)
+2. Get your API keys from Settings → API → Secret Key, Public Key, Encryption Key
+3. Create a webhook endpoint pointing to `https://pfmscnpmpwxpdlrbeokb.supabase.co/functions/v1/flutterwave-webhook`
+4. Set a webhook hash in Settings → Webhooks and save it as `FLW_WEBHOOK_HASH`
+5. Set production secrets via `supabase secrets set FLW_SECRET_KEY=... FLW_PUBLIC_KEY=... FLW_WEBHOOK_HASH=...`
 
 ### Production Environment
 
@@ -274,10 +268,10 @@ export const environment = {
     url: 'https://pfmscnpmpwxpdlrbeokb.supabase.co',
     anonKey: 'YOUR_ANON_KEY',
   },
-  stripe: {
-    publishableKey: 'pk_live_...',
+  flutterwave: {
+    publicKey: 'FLWPUBK-...',
   },
-  platformFeePercentage: 35,
+  platformFeePercentage: 22,
   vapidPublicKey: 'YOUR_VAPID_PUBLIC_KEY',
 };
 ```

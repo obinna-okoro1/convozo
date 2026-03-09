@@ -10,12 +10,12 @@ import {
   Creator,
   CreatorSettings,
   Message,
-  StripeAccount,
+  FlutterwaveSubaccount,
   CheckoutSessionPayload,
   CallBookingPayload,
   EdgeFunctionResponse,
-  StripeConnectResponse,
-  StripeAccountStatus,
+  FlutterwaveSubaccountResponse,
+  FlutterwaveSubaccountStatus,
 } from '../models';
 
 interface SupabaseResponse<T> {
@@ -234,51 +234,51 @@ export class SupabaseService {
     return { data: data as CreatorSettings | null, error };
   }
 
-  // ==================== STRIPE ACCOUNT METHODS ====================
+  // ==================== FLUTTERWAVE SUBACCOUNT METHODS ====================
 
   /**
-   * Get Stripe account by creator ID
+   * Get Flutterwave subaccount by creator ID
    */
-  public async getStripeAccount(creatorId: string): Promise<SupabaseResponse<StripeAccount>> {
+  public async getFlutterwaveSubaccount(creatorId: string): Promise<SupabaseResponse<FlutterwaveSubaccount>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
-      .from('stripe_accounts')
+      .from('flutterwave_subaccounts')
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    return { data: data as StripeAccount | null, error };
+    return { data: data as FlutterwaveSubaccount | null, error };
   }
 
   /**
-   * Create Stripe account record
+   * Create Flutterwave subaccount record
    */
-  public async createStripeAccount(
-    account: Partial<StripeAccount>,
-  ): Promise<SupabaseResponse<StripeAccount>> {
+  public async createFlutterwaveSubaccount(
+    account: Partial<FlutterwaveSubaccount>,
+  ): Promise<SupabaseResponse<FlutterwaveSubaccount>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
-      .from('stripe_accounts')
+      .from('flutterwave_subaccounts')
       .insert(account)
       .select()
       .single();
-    return { data: data as StripeAccount | null, error };
+    return { data: data as FlutterwaveSubaccount | null, error };
   }
 
   /**
-   * Update Stripe account record
+   * Update Flutterwave subaccount record
    */
-  public async updateStripeAccount(
+  public async updateFlutterwaveSubaccount(
     id: string,
-    updates: Partial<StripeAccount>,
-  ): Promise<SupabaseResponse<StripeAccount>> {
+    updates: Partial<FlutterwaveSubaccount>,
+  ): Promise<SupabaseResponse<FlutterwaveSubaccount>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
-      .from('stripe_accounts')
+      .from('flutterwave_subaccounts')
       .update(updates)
       .eq('id', id)
       .select()
       .single();
-    return { data: data as StripeAccount | null, error };
+    return { data: data as FlutterwaveSubaccount | null, error };
   }
 
   // ==================== MESSAGE METHODS ====================
@@ -315,11 +315,11 @@ export class SupabaseService {
   // ==================== EDGE FUNCTION METHODS ====================
 
   /**
-   * Create Stripe checkout session via Edge Function
+   * Create checkout session via Edge Function (Flutterwave)
    */
   public async createCheckoutSession(
     payload: CheckoutSessionPayload,
-  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
+  ): Promise<EdgeFunctionResponse<{ url: string; tx_ref: string }>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-checkout-session', {
       body: payload,
@@ -329,11 +329,11 @@ export class SupabaseService {
   }
 
   /**
-   * Create call booking checkout session via Edge Function
+   * Create call booking checkout session via Edge Function (Flutterwave)
    */
   public async createCallBookingSession(
     payload: CallBookingPayload,
-  ): Promise<EdgeFunctionResponse<{ url: string }>> {
+  ): Promise<EdgeFunctionResponse<{ url: string; tx_ref: string }>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-call-booking-session', {
       body: payload,
@@ -358,30 +358,62 @@ export class SupabaseService {
   }
 
   /**
-   * Create Stripe Connect account via Edge Function
+   * Create Flutterwave subaccount via Edge Function
    */
   public async createConnectAccount(
     creatorId: string,
     email: string,
     displayName: string,
-  ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
+    bankCode?: string,
+    accountNumber?: string,
+    country?: string,
+  ): Promise<EdgeFunctionResponse<FlutterwaveSubaccountResponse>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-connect-account', {
-      body: { creator_id: creatorId, email, display_name: displayName },
+      body: { creator_id: creatorId, email, display_name: displayName, bank_code: bankCode, account_number: accountNumber, country },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };
   }
 
   /**
-   * Verify Stripe Connect account status via Edge Function
+   * Verify Flutterwave subaccount status via Edge Function
    */
   public async verifyConnectAccount(
-    accountId: string,
-  ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
+    subaccountId: string,
+  ): Promise<EdgeFunctionResponse<FlutterwaveSubaccountStatus>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('verify-connect-account', {
-      body: { account_id: accountId },
+      body: { subaccount_id: subaccountId },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
+
+  /**
+   * Get supported banks for a country via Edge Function
+   */
+  public async getBanks(
+    country: string,
+  ): Promise<EdgeFunctionResponse<{ id: string; code: string; name: string }[]>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client.functions.invoke('get-banks', {
+      body: { country },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
+
+  /**
+   * Verify a bank account number via Edge Function (Flutterwave /v3/accounts/resolve)
+   */
+  public async resolveAccount(
+    accountNumber: string,
+    accountBank: string,
+  ): Promise<EdgeFunctionResponse<{ account_name: string; account_number: string }>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client.functions.invoke('resolve-account', {
+      body: { account_number: accountNumber, account_bank: accountBank },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };

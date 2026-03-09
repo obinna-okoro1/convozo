@@ -16,7 +16,7 @@
 
 - Angular 21 (standalone components, signals, lazy routes)
 - Supabase (PostgreSQL, Edge Functions with Deno, Realtime, Storage)
-- Stripe Connect (Express accounts, webhooks)
+- Flutterwave (subaccounts, webhooks, Standard payments)
 - Tailwind CSS (utility-first, dark theme, mobile-first responsive design)
 - PWA (manifest.json, service worker)
 

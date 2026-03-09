@@ -1,7 +1,7 @@
 /**
  * Settings State Service
  * Shared state for the settings shell and child route components.
- * Holds creator data, settings, Stripe account, and form-level state.
+ * Holds creator data, settings, Flutterwave subaccount, and form-level state.
  */
 
 import { computed, Injectable, signal } from '@angular/core';
@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 import {
   Creator,
   CreatorSettings,
-  StripeAccount,
+  FlutterwaveSubaccount,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -20,14 +20,14 @@ export class SettingsStateService {
   // ── Core data ──────────────────────────────────────────────────────
   readonly creator = signal<Creator | null>(null);
   readonly settings = signal<CreatorSettings | null>(null);
-  readonly stripeAccount = signal<StripeAccount | null>(null);
+  readonly paymentAccount = signal<FlutterwaveSubaccount | null>(null);
 
   // ── Shared UI state ────────────────────────────────────────────────
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly success = signal(false);
   readonly error = signal<string | null>(null);
-  readonly stripeConnecting = signal(false);
+  readonly paymentConnecting = signal(false);
 
   // ── Profile fields ─────────────────────────────────────────────────
   readonly displayName = signal('');
@@ -267,16 +267,16 @@ export class SettingsStateService {
     }
   }
 
-  // ── Stripe actions ─────────────────────────────────────────────────
+  // ── Payment actions ────────────────────────────────────────────────
 
-  async connectStripe(): Promise<void> {
-    this.stripeConnecting.set(true);
+  async connectPayment(bankCode: string, accountNumber: string, country: string): Promise<void> {
+    this.paymentConnecting.set(true);
     this.error.set(null);
 
     const creator = this.creator();
     if (!creator) {
       this.error.set('Creator profile not found');
-      this.stripeConnecting.set(false);
+      this.paymentConnecting.set(false);
       return;
     }
 
@@ -284,25 +284,40 @@ export class SettingsStateService {
       const { data: { user } } = await this.supabaseService.client.auth.getUser();
       if (!user) {
         this.error.set('Your session has expired. Please sign in again.');
-        this.stripeConnecting.set(false);
+        this.paymentConnecting.set(false);
         return;
       }
-      const { data, error } = await this.creatorService.createStripeConnectAccount(
+      const { data, error } = await this.creatorService.createFlutterwaveSubaccount(
         creator.id,
         user.email || '',
         creator.display_name,
+        bankCode,
+        accountNumber,
+        country,
       );
 
-      if (error != null || !data?.url) {
-        throw new Error(
-          error instanceof Error ? error.message : 'Failed to create Stripe Connect account',
-        );
+      if (error != null) {
+        // Edge function errors: extract the message from the response body
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        const body = (data as any)?.error ?? (error as any)?.message ?? '';
+        const msg = typeof body === 'string' && body.length > 0
+          ? body
+          : 'Failed to create payment account. Please check your details and try again.';
+        throw new Error(msg);
       }
 
-      window.location.href = data.url;
+      if (!data?.subaccount_id) {
+        throw new Error('Failed to create payment account');
+      }
+
+      // Reload the payment account to reflect the new subaccount
+      await this.loadPaymentAccount(creator.id);
+      this.success.set(true);
+      setTimeout(() => this.success.set(false), 3000);
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : 'Failed to connect Stripe account');
-      this.stripeConnecting.set(false);
+      this.error.set(err instanceof Error ? err.message : 'Failed to connect payment account');
+    } finally {
+      this.paymentConnecting.set(false);
     }
   }
 
@@ -361,23 +376,23 @@ export class SettingsStateService {
         });
       }
 
-      // Load Stripe account
-      await this.loadStripeAccount(creatorData.id);
+      // Load payment account
+      await this.loadPaymentAccount(creatorData.id);
     }
 
     this.loading.set(false);
   }
 
-  private async loadStripeAccount(creatorId: string): Promise<void> {
+  private async loadPaymentAccount(creatorId: string): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await this.supabaseService.client
-      .from('stripe_accounts')
+      .from('flutterwave_subaccounts')
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
 
     if (data != null) {
-      this.stripeAccount.set(data as StripeAccount);
+      this.paymentAccount.set(data as FlutterwaveSubaccount);
     }
   }
 }

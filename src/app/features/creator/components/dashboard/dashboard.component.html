@@ -72,8 +72,8 @@
       </div>
     </header>
 
-    <!-- Stripe Setup Warning -->
-    @if (stripeSetupIncomplete()) {
+    <!-- Payment Setup Warning -->
+    @if (paymentSetupIncomplete()) {
       <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div class="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-xl sm:rounded-2xl p-4 sm:p-6 animate-fade-in">
           <div class="flex items-start gap-3 sm:gap-4">
@@ -83,9 +83,9 @@
               </svg>
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="text-base sm:text-lg font-bold text-white mb-1 sm:mb-2">⚡ Stripe Setup Incomplete</h3>
+              <h3 class="text-base sm:text-lg font-bold text-white mb-1 sm:mb-2">⚡ Payment Setup Incomplete</h3>
               <p class="text-sm sm:text-base text-slate-300 mb-3 sm:mb-4 leading-relaxed">
-                You need to complete your Stripe Connect setup to receive payments. Please contact support or try the onboarding process again.
+                You need to add your bank details to receive payments. Please go to Settings to complete the setup.
               </p>
               <button class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold active:scale-95 sm:hover:scale-105 transition-all duration-300 shadow-lg shadow-yellow-500/50 text-sm sm:text-base">
                 Complete Setup →

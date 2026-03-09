@@ -6,7 +6,6 @@
 
 import { Injectable, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { environment } from '../../../../../environments/environment';
 import { ERROR_MESSAGES } from '../../../../core/constants';
 import {
@@ -63,8 +62,6 @@ export class MessagePageStateService {
     () => this.settings()?.response_expectation ?? '24-48 hours',
   );
 
-  private stripe: Stripe | null = null;
-
   constructor(
     private readonly router: Router,
     private readonly supabaseService: SupabaseService,
@@ -76,7 +73,6 @@ export class MessagePageStateService {
   // ── Initialization ──
 
   async initialize(slug: string): Promise<void> {
-    await this.initializeStripe();
     await this.loadCreator(slug);
   }
 
@@ -140,10 +136,6 @@ export class MessagePageStateService {
   }
 
   // ── Private helpers ──
-
-  private async initializeStripe(): Promise<void> {
-    this.stripe = await loadStripe(environment.stripe.publishableKey);
-  }
 
   private async loadCreator(slug: string): Promise<void> {
     try {
@@ -246,11 +238,6 @@ export class MessagePageStateService {
     messageContent: string,
     messageType: MessageType,
   ): Promise<void> {
-    if (!this.stripe) {
-      this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
-      return;
-    }
-
     const creatorData = this.creator();
     if (!creatorData) {
       return;
@@ -276,14 +263,10 @@ export class MessagePageStateService {
 
       const { data, error } = await this.supabaseService.createCheckoutSession(payload);
 
-      if (error || !data?.sessionId) {
+      if (error || !data?.url) {
         throw new Error(error?.message || 'Failed to create checkout session');
       }
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
+      window.location.href = data.url;
     } catch (err) {
       this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
     } finally {
@@ -292,11 +275,6 @@ export class MessagePageStateService {
   }
 
   private async processCallCheckout(formData: CallBookingFormData): Promise<void> {
-    if (!this.stripe) {
-      this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
-      return;
-    }
-
     const creatorData = this.creator();
     if (!creatorData) {
       return;
@@ -325,11 +303,6 @@ export class MessagePageStateService {
   }
 
   private async processSupportCheckout(formData: SupportFormData): Promise<void> {
-    if (!this.stripe) {
-      this.toast.error(ERROR_MESSAGES.PAYMENT.NOT_INITIALIZED);
-      return;
-    }
-
     const creatorData = this.creator();
     if (!creatorData) {
       return;
@@ -352,14 +325,10 @@ export class MessagePageStateService {
 
       const { data, error } = await this.supabaseService.createCheckoutSession(payload);
 
-      if (error || !data?.sessionId) {
+      if (error || !data?.url) {
         throw new Error(error?.message || 'Failed to create checkout session');
       }
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
+      window.location.href = data.url;
     } catch (err) {
       this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
     } finally {

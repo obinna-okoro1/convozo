@@ -14,8 +14,8 @@ import {
   AvailabilitySlot,
   SupabaseResponse,
   EdgeFunctionResponse,
-  StripeConnectResponse,
-  StripeAccountStatus,
+  FlutterwaveSubaccountResponse,
+  FlutterwaveSubaccountStatus,
 } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
@@ -426,23 +426,26 @@ export class CreatorService {
   }
 
   /**
-   * Create Stripe Connect account
+   * Create Flutterwave subaccount
    */
-  public async createStripeConnectAccount(
+  public async createFlutterwaveSubaccount(
     creatorId: string,
     email: string,
     displayName: string,
-  ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
-    return this.supabaseService.createConnectAccount(creatorId, email, displayName);
+    bankCode?: string,
+    accountNumber?: string,
+    country?: string,
+  ): Promise<EdgeFunctionResponse<FlutterwaveSubaccountResponse>> {
+    return this.supabaseService.createConnectAccount(creatorId, email, displayName, bankCode, accountNumber, country);
   }
 
   /**
-   * Verify Stripe Connect account status
+   * Verify Flutterwave subaccount status
    */
-  public async verifyStripeAccount(
-    accountId: string,
-  ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
-    return this.supabaseService.verifyConnectAccount(accountId);
+  public async verifyFlutterwaveSubaccount(
+    subaccountId: string,
+  ): Promise<EdgeFunctionResponse<FlutterwaveSubaccountStatus>> {
+    return this.supabaseService.verifyConnectAccount(subaccountId);
   }
 
   // ==================== AVAILABILITY METHODS ====================

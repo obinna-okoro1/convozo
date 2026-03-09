@@ -1,15 +1,11 @@
-import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const FLW_SECRET_KEY = Deno.env.get('FLW_SECRET_KEY') || '';
 
 // Rate limiting store (in-memory, per-instance)
 const rateLimitStore = new Map<string, number[]>();
@@ -84,10 +80,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get creator with settings and stripe account (same pattern as create-checkout-session)
+    // Get creator with settings and Flutterwave subaccount
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, creator_settings(*), stripe_accounts(stripe_account_id)')
+      .select('id, display_name, creator_settings(*), flutterwave_subaccounts(subaccount_id)')
       .eq('slug', payload.creator_slug)
       .eq('is_active', true)
       .single();
@@ -99,7 +95,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // PostgREST returns one-to-one relationships as objects, not arrays
     const settings = creator.creator_settings as { calls_enabled: boolean; call_duration: number; call_price: number } | null;
     if (!settings || !settings.calls_enabled) {
       return new Response(
@@ -108,7 +103,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
+    // Get the server-authoritative price (NEVER trust client-sent price)
     const serverPrice = settings.call_price;
     if (!serverPrice || serverPrice < 100) {
       return new Response(
@@ -117,40 +112,46 @@ Deno.serve(async (req) => {
       );
     }
 
-    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
-    if (!stripeAccount?.stripe_account_id) {
+    const flwSubaccount = creator.flutterwave_subaccounts as { subaccount_id: string } | null;
+    if (!flwSubaccount?.subaccount_id) {
       return new Response(
         JSON.stringify({ error: 'Creator payment setup incomplete' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Calculate platform fee (22%) — using server-authoritative price
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
-    const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // Check if using test Stripe account (for local development)
-    const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_');
+    // Convert cents to dollars for Flutterwave
+    const amountInDollars = serverPrice / 100;
 
-    // Create Stripe Checkout Session config
-    const sessionConfig: Record<string, unknown> = {
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [
+    // Generate a unique transaction reference
+    const txRef = `convozo_call_${crypto.randomUUID()}`;
+
+    // Build Flutterwave Standard payment request
+    const flwPayload = {
+      tx_ref: txRef,
+      amount: amountInDollars,
+      currency: 'USD',
+      redirect_url: `${appUrl}/success?tx_ref=${txRef}&type=call`,
+      customer: {
+        email: payload.booker_email,
+        name: payload.booker_name,
+      },
+      customizations: {
+        title: 'Convozo',
+        description: `Video Call with ${creator.display_name} (${settings.call_duration} min)`,
+        logo: `${appUrl}/assets/icons/icon-192x192.png`,
+      },
+      subaccounts: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Video Call with ${creator.display_name}`,
-              description: `${settings.call_duration} minute video call`,
-            },
-            unit_amount: serverPrice,
-          },
-          quantity: 1,
+          id: flwSubaccount.subaccount_id,
+          transaction_charge_type: 'percentage',
+          transaction_charge: platformFeePercentage,
         },
       ],
-      metadata: {
+      meta: {
         type: 'call_booking',
         creator_id: creator.id,
         creator_slug: payload.creator_slug,
@@ -159,27 +160,28 @@ Deno.serve(async (req) => {
         booker_instagram: payload.booker_instagram,
         message_content: payload.message_content || '',
         duration: settings.call_duration.toString(),
-        amount: serverPrice.toString(),
+        amount_cents: serverPrice.toString(),
       },
-      customer_email: payload.booker_email,
-      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=call`,
-      cancel_url: `${appUrl}/${payload.creator_slug}`,
     };
 
-    // Only add Connect transfer if using real Stripe account
-    if (!isTestAccount) {
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: platformFee,
-        transfer_data: {
-          destination: stripeAccount.stripe_account_id,
-        },
-      };
+    const flwResponse = await fetch('https://api.flutterwave.com/v3/payments', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${FLW_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(flwPayload),
+    });
+
+    const flwData = await flwResponse.json();
+
+    if (flwData.status !== 'success') {
+      console.error('Flutterwave payment init failed:', flwData);
+      throw new Error(flwData.message || 'Failed to initialize payment');
     }
 
-    const session = await stripe.checkout.sessions.create(sessionConfig as Stripe.Checkout.SessionCreateParams);
-
     return new Response(
-      JSON.stringify({ url: session.url }),
+      JSON.stringify({ url: flwData.data.link, tx_ref: txRef }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {

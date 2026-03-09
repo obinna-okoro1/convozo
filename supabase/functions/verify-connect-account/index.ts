@@ -1,15 +1,11 @@
-import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const FLW_SECRET_KEY = Deno.env.get('FLW_SECRET_KEY') || '';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -36,25 +32,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { account_id } = await req.json();
+    const { subaccount_id } = await req.json();
 
-    if (!account_id) {
+    if (!subaccount_id) {
       return new Response(
-        JSON.stringify({ error: 'Missing account ID' }),
+        JSON.stringify({ error: 'Missing subaccount ID' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify the caller owns this Stripe account
-    const { data: stripeAccount, error: ownerError } = await supabase
-      .from('stripe_accounts')
+    // Verify the caller owns this subaccount
+    const { data: flwAccount, error: ownerError } = await supabase
+      .from('flutterwave_subaccounts')
       .select('creator_id')
-      .eq('stripe_account_id', account_id)
+      .eq('subaccount_id', subaccount_id)
       .single();
 
-    if (ownerError || !stripeAccount) {
+    if (ownerError || !flwAccount) {
       return new Response(
-        JSON.stringify({ error: 'Stripe account not found' }),
+        JSON.stringify({ error: 'Subaccount not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -62,7 +58,7 @@ Deno.serve(async (req) => {
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
       .select('id')
-      .eq('id', stripeAccount.creator_id)
+      .eq('id', flwAccount.creator_id)
       .eq('user_id', user.id)
       .single();
 
@@ -73,35 +69,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Retrieve account details from Stripe
-    const account = await stripe.accounts.retrieve(account_id);
+    // Fetch subaccount details from Flutterwave to verify it's still active
+    const flwResponse = await fetch(`https://api.flutterwave.com/v3/subaccounts/${subaccount_id}`, {
+      headers: {
+        Authorization: `Bearer ${FLW_SECRET_KEY}`,
+      },
+    });
 
-    // Update database with latest account status
-    const { error } = await supabase
-      .from('stripe_accounts')
+    const flwData = await flwResponse.json();
+    const isActive = flwData.status === 'success' && flwData.data;
+
+    // Update database with latest status
+    await supabase
+      .from('flutterwave_subaccounts')
       .update({
-        charges_enabled: account.charges_enabled,
-        payouts_enabled: account.payouts_enabled,
-        details_submitted: account.details_submitted,
-        onboarding_completed: account.details_submitted && account.charges_enabled,
+        is_active: isActive,
       })
-      .eq('stripe_account_id', account_id);
-
-    if (error) {
-      throw error;
-    }
+      .eq('subaccount_id', subaccount_id);
 
     return new Response(
       JSON.stringify({
-        charges_enabled: account.charges_enabled,
-        payouts_enabled: account.payouts_enabled,
-        details_submitted: account.details_submitted,
-        onboarding_completed: account.details_submitted && account.charges_enabled,
+        is_active: isActive,
+        subaccount_id: subaccount_id,
+        bank_name: flwData.data?.bank_name || null,
+        account_number: flwData.data?.account_number || null,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
-    console.error('Error verifying Connect account:', err);
+    console.error('Error verifying Flutterwave subaccount:', err);
     return new Response(
       JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

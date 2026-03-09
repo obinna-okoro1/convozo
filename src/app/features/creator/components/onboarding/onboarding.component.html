@@ -515,7 +515,7 @@
                 }
               </div>
 
-              <!-- Stripe Notice -->
+              <!-- Payment Notice -->
               <div class="p-6 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-yellow-500/20">
                 <div class="flex items-start gap-4">
                   <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/50">
@@ -524,9 +524,9 @@
                     </svg>
                   </div>
                   <div class="flex-1">
-                    <p class="font-bold text-white mb-1">Stripe Connect Required</p>
+                    <p class="font-bold text-white mb-1">Bank Account Required</p>
                     <p class="text-yellow-200 text-sm leading-relaxed">
-                      You'll need to connect your Stripe account to receive payments. This will be set up in the next step.
+                      You'll need to add your bank details to receive payments. This will be set up in the next step.
                     </p>
                   </div>
                 </div>
@@ -568,7 +568,7 @@
           </div>
         }
 
-        <!-- Step 4: Stripe Connect -->
+        <!-- Step 4: Payment Setup (Flutterwave) -->
         @if (currentStep() === 4) {
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
@@ -578,8 +578,8 @@
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Connect your Stripe account</h2>
-                <p class="text-white/60 text-sm mt-1">Start receiving payments securely</p>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Add your bank details</h2>
+                <p class="text-white/60 text-sm mt-1">Set up your payment account to start receiving money</p>
               </div>
             </div>
             
@@ -592,10 +592,65 @@
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <p class="font-bold text-white mb-1">Why do I need Stripe?</p>
+                  <p class="font-bold text-white mb-1">How payments work</p>
                   <p class="text-blue-200 text-sm leading-relaxed">
-                    Stripe processes all payments securely. You'll receive 78% of each payment directly to your bank account. Convozo takes a 22% platform fee which covers all Stripe processing fees — so what you see is what you get.
+                    Payments are processed securely via Flutterwave. You'll receive 78% of each payment directly to your bank account. Convozo takes a 22% platform fee which covers all processing fees — so what you see is what you get.
                   </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bank Details Form -->
+            <div class="space-y-6 mb-8">
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-white">Country *</label>
+                <div class="relative group">
+                  <select
+                    [value]="paymentCountry()"
+                    (change)="paymentCountry.set(inputValue($event))"
+                    class="appearance-none w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 cursor-pointer"
+                  >
+                    <option value="NG" class="bg-slate-900 text-white">🇳🇬 Nigeria</option>
+                    <option value="GH" class="bg-slate-900 text-white">🇬🇭 Ghana</option>
+                    <option value="KE" class="bg-slate-900 text-white">🇰🇪 Kenya</option>
+                    <option value="ZA" class="bg-slate-900 text-white">🇿🇦 South Africa</option>
+                    <option value="TZ" class="bg-slate-900 text-white">🇹🇿 Tanzania</option>
+                    <option value="UG" class="bg-slate-900 text-white">🇺🇬 Uganda</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-white">Bank Code *</label>
+                <div class="relative group">
+                  <input
+                    type="text"
+                    [value]="bankCode()"
+                    (input)="bankCode.set(inputValue($event))"
+                    placeholder="e.g. 044 (Access Bank)"
+                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                    required
+                  />
+                </div>
+                <p class="text-xs text-white/50">Your bank's Flutterwave code — check with your bank or search online</p>
+              </div>
+
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-white">Account Number *</label>
+                <div class="relative group">
+                  <input
+                    type="text"
+                    [value]="accountNumber()"
+                    (input)="accountNumber.set(inputValue($event))"
+                    placeholder="Enter your account number"
+                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                    required
+                  />
                 </div>
               </div>
             </div>
@@ -610,7 +665,7 @@
                 </div>
                 <div>
                   <p class="font-bold text-white">Secure & trusted</p>
-                  <p class="text-sm text-white/60">Stripe is used by millions of businesses worldwide</p>
+                  <p class="text-sm text-white/60">Powered by Flutterwave — Africa's leading payment platform</p>
                 </div>
               </div>
               
@@ -622,7 +677,7 @@
                 </div>
                 <div>
                   <p class="font-bold text-white">Fast payouts</p>
-                  <p class="text-sm text-white/60">Get paid directly to your bank account within 2-3 business days</p>
+                  <p class="text-sm text-white/60">Get paid directly to your bank account</p>
                 </div>
               </div>
               
@@ -634,7 +689,7 @@
                 </div>
                 <div>
                   <p class="font-bold text-white">Easy setup</p>
-                  <p class="text-sm text-white/60">Connect in just a few clicks - no technical knowledge required</p>
+                  <p class="text-sm text-white/60">Just enter your bank details — no external accounts needed</p>
                 </div>
               </div>
             </div>
@@ -646,25 +701,25 @@
             }
 
             <div class="mt-8 flex justify-between">
-              <button (click)="skipStripeSetup()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300" [disabled]="stripeConnecting()">
+              <button (click)="skipPaymentSetup()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300" [disabled]="paymentConnecting()">
                 Skip for now
               </button>
               <button
-                (click)="connectStripe()"
-                [disabled]="stripeConnecting()"
+                (click)="connectPayment()"
+                [disabled]="paymentConnecting() || !bankCode() || !accountNumber()"
                 class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
               >
-                @if (stripeConnecting()) {
+                @if (paymentConnecting()) {
                   <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Connecting...</span>
+                  <span>Setting up...</span>
                 } @else {
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
-                  <span>Connect Stripe Account</span>
+                  <span>Connect Bank Account</span>
                 }
               </button>
             </div>
