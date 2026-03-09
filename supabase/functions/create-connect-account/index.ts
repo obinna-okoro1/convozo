@@ -101,13 +101,58 @@ Deno.serve(async (req) => {
 
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // Create account link for onboarding
-    const accountLink = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: `${appUrl}/creator/onboarding`,
-      return_url: `${appUrl}/creator/dashboard`,
-      type: 'account_onboarding',
-    });
+    // Create account link for onboarding. If the stored account ID no longer
+    // exists in Stripe (e.g. stale seed data or deleted account), clear it
+    // from the DB and create a fresh one.
+    let accountLink;
+    try {
+      accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: `${appUrl}/creator/onboarding`,
+        return_url: `${appUrl}/creator/dashboard`,
+        type: 'account_onboarding',
+      });
+    } catch (linkErr: unknown) {
+      const stripeErr = linkErr as { code?: string; raw?: { param?: string } };
+      const isStaleAccount =
+        stripeErr?.code === 'resource_missing' &&
+        stripeErr?.raw?.param === 'account';
+
+      if (!isStaleAccount) throw linkErr;
+
+      // Stale account — wipe the DB row and create a fresh Stripe account
+      await supabase.from('stripe_accounts').delete().eq('creator_id', creator_id);
+
+      const freshAccount = await stripe.accounts.create({
+        type: 'express',
+        country: 'US',
+        email: email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
+        metadata: { creator_id, display_name: display_name || '' },
+      });
+
+      accountId = freshAccount.id;
+
+      await supabase.from('stripe_accounts').insert({
+        creator_id,
+        stripe_account_id: accountId,
+        charges_enabled: false,
+        payouts_enabled: false,
+        details_submitted: false,
+        onboarding_completed: false,
+      });
+
+      accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: `${appUrl}/creator/onboarding`,
+        return_url: `${appUrl}/creator/dashboard`,
+        type: 'account_onboarding',
+      });
+    }
 
     return new Response(
       JSON.stringify({ 

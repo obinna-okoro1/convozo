@@ -171,26 +171,11 @@ VALUES (
   'Fan messages: 2-3 days. Business inquiries: 24 hours.'
 ) ON CONFLICT (creator_id) DO NOTHING;
 
--- Sample Stripe Account (Mock - not real Stripe account)
-INSERT INTO public.stripe_accounts (creator_id, stripe_account_id, charges_enabled, payouts_enabled, details_submitted, onboarding_completed)
-VALUES (
-  '33333333-3333-3333-3333-333333333333',
-  'acct_test_sarahjohnson123',
-  true,
-  true,
-  true,
-  true
-) ON CONFLICT (creator_id) DO NOTHING;
-
-INSERT INTO public.stripe_accounts (creator_id, stripe_account_id, charges_enabled, payouts_enabled, details_submitted, onboarding_completed)
-VALUES (
-  '44444444-4444-4444-4444-444444444444',
-  'acct_test_mikechen456',
-  true,
-  true,
-  true,
-  true
-) ON CONFLICT (creator_id) DO NOTHING;
+-- Note: Stripe accounts are intentionally NOT seeded with fake IDs.
+-- Fake account IDs cause "resource_missing" errors when the function
+-- tries to create account links via the real Stripe API.
+-- To test Stripe Connect locally, use the real Stripe onboarding flow
+-- with your test-mode Stripe keys.
 
 -- Sample Messages for Sarah Johnson
 INSERT INTO public.messages (id, creator_id, sender_name, sender_email, message_content, amount_paid, message_type, is_handled, created_at)

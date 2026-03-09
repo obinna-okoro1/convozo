@@ -17,6 +17,7 @@ import {
 } from '../../../../shared/components/ui/image-upload/image-upload.component';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
+import { SupabaseService } from '../../../../core/services/supabase.service';
 
 /**
  * Country code entry for the phone number dropdown
@@ -245,6 +246,7 @@ export class OnboardingComponent implements OnInit {
     private readonly creatorService: CreatorService,
     private readonly authService: AuthService,
     private readonly router: Router,
+    private readonly supabaseService: SupabaseService,
   ) {}
 
   public ngOnInit(): void {
@@ -439,14 +441,14 @@ export class OnboardingComponent implements OnInit {
     this.stripeConnecting.set(true);
     this.error.set(null);
 
-    const user = this.authService.getCurrentUser();
-    if (!user) {
-      this.error.set(ERROR_MESSAGES.AUTH.NOT_AUTHENTICATED);
-      this.stripeConnecting.set(false);
-      return;
-    }
-
     try {
+      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      if (!user) {
+        this.error.set('Your session has expired. Please sign in again.');
+        this.stripeConnecting.set(false);
+        void this.router.navigate(['/auth/login']);
+        return;
+      }
       const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
       if (!creator) {
         throw new Error('Creator profile not found');

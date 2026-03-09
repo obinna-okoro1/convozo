@@ -276,16 +276,7 @@ export class CreatorService {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Send reply via Edge Function which updates DB and sends email
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const { error: functionError } = await this.supabaseService.client.functions.invoke(
-        'send-reply-email',
-        {
-          body: {
-            message_id: messageId,
-            reply_content: replyContent,
-          },
-        },
-      );
+      const { error: functionError } = await this.supabaseService.sendReplyEmail(messageId, replyContent);
 
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (functionError) {

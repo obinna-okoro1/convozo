@@ -281,10 +281,15 @@ export class SettingsStateService {
     }
 
     try {
-      const user = this.supabaseService.getCurrentUser();
+      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      if (!user) {
+        this.error.set('Your session has expired. Please sign in again.');
+        this.stripeConnecting.set(false);
+        return;
+      }
       const { data, error } = await this.creatorService.createStripeConnectAccount(
         creator.id,
-        user?.email || '',
+        user.email || '',
         creator.display_name,
       );
 
