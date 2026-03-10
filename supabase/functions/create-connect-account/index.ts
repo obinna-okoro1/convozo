@@ -109,7 +109,10 @@ Deno.serve(async (req) => {
     accountName = resolveData.data?.account_name || '';
 
     // Step 2: Create Flutterwave subaccount
-    const splitValue = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22') / 100;
+    // split_value is the SUBACCOUNT's (creator's) percentage in 0-1 range.
+    // e.g. PLATFORM_FEE_PERCENTAGE=22 → creator keeps 78% → split_value: 0.78
+    const platformFee = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
+    const splitValue = (100 - platformFee) / 100;
     const flwPayload = {
       account_bank: bank_code,
       account_number: account_number,

@@ -149,8 +149,10 @@ Deno.serve(async (req) => {
       subaccounts: [
         {
           id: flwSubaccount.subaccount_id,
+          // transaction_charge is the SUBACCOUNT's (creator's) percentage in 0-1 range.
+          // e.g. platformFeePercentage=22 → creator keeps 78% → 0.78
           transaction_charge_type: 'percentage',
-          transaction_charge: platformFeePercentage,
+          transaction_charge: (100 - platformFeePercentage) / 100,
         },
       ],
       meta: {
