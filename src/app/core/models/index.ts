@@ -147,6 +147,21 @@ export interface FlutterwaveSubaccountStatus {
   account_number: string | null;
 }
 
+export interface AccountChangeRequest {
+  id: string;
+  creator_id: string;
+  requested_bank_code: string;
+  requested_bank_name: string;
+  requested_account_number: string;
+  requested_country: string;
+  verified_account_name: string;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ── Link-in-Bio ──────────────────────────────────────────────────────
 
 export interface CreatorLink {

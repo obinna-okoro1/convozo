@@ -89,8 +89,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use Flutterwave-authoritative amount (in dollars, convert to cents)
-    const amountInCents = Math.round(verifyData.data.amount * 100);
+    // amount_paid is always stored in USD cents, regardless of what currency
+    // Flutterwave charged in. We read the original USD cents from meta (set at
+    // checkout time) so the frontend's "/ 100 → $" formatting is always correct.
+    const amountInCents = parseInt(meta.amount_cents || '0', 10) || Math.round(verifyData.data.amount);
 
     // Check if this is a call booking
     if (meta.type === 'call_booking') {

@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { usdCentsToLocal } from '../_shared/currency.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
     // Get creator with settings and Flutterwave subaccount
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, creator_settings(*), flutterwave_subaccounts(subaccount_id)')
+      .select('id, display_name, creator_settings(*), flutterwave_subaccounts(subaccount_id, country)')
       .eq('slug', payload.creator_slug)
       .eq('is_active', true)
       .single();
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const flwSubaccount = creator.flutterwave_subaccounts as { subaccount_id: string } | null;
+    const flwSubaccount = creator.flutterwave_subaccounts as { subaccount_id: string; country: string } | null;
     if (!flwSubaccount?.subaccount_id) {
       return new Response(
         JSON.stringify({ error: 'Creator payment setup incomplete' }),
@@ -123,8 +124,9 @@ Deno.serve(async (req) => {
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // Convert cents to dollars for Flutterwave
-    const amountInDollars = serverPrice / 100;
+    // serverPrice is in USD cents — convert to creator's local currency so Flutterwave
+    // subaccount split (which must match the transaction currency) works correctly.
+    const { amount, currency } = await usdCentsToLocal(serverPrice, flwSubaccount.country || 'NG');
 
     // Generate a unique transaction reference
     const txRef = `convozo_call_${crypto.randomUUID()}`;
@@ -132,8 +134,8 @@ Deno.serve(async (req) => {
     // Build Flutterwave Standard payment request
     const flwPayload = {
       tx_ref: txRef,
-      amount: amountInDollars,
-      currency: 'USD',
+      amount,
+      currency,
       redirect_url: `${appUrl}/success?tx_ref=${txRef}&type=call`,
       customer: {
         email: payload.booker_email,
@@ -160,6 +162,7 @@ Deno.serve(async (req) => {
         booker_instagram: payload.booker_instagram,
         message_content: payload.message_content || '',
         duration: settings.call_duration.toString(),
+        // USD cents — used by the webhook for amount_paid storage (not the local currency amount)
         amount_cents: serverPrice.toString(),
       },
     };

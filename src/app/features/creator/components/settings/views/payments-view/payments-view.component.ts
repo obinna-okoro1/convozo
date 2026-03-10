@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../../../../../core/services/supabase.service';
 import { SettingsStateService } from '../../settings-state.service';
@@ -15,7 +16,7 @@ interface FlutterwaveBank {
 
 @Component({
   selector: 'app-payments-view',
-  imports: [FormsModule, SearchableSelectComponent],
+  imports: [DatePipe, FormsModule, SearchableSelectComponent],
   templateUrl: './payments-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -24,12 +25,15 @@ export class PaymentsViewComponent {
 
   protected readonly showUpdateForm = signal(false);
   protected readonly bankCode = signal('');
+  protected readonly bankName = signal('');
   protected readonly accountNumber = signal('');
   protected readonly country = signal('NG');
 
   protected readonly banks = signal<FlutterwaveBank[]>([]);
   protected readonly banksLoading = signal(false);
   protected readonly banksError = signal<string | null>(null);
+
+  protected readonly pendingRequest = computed(() => this.state.pendingChangeRequest());
 
   protected readonly countryOptions: SelectOption[] = [
     { value: 'NG', label: '🇳🇬 Nigeria' },
@@ -118,6 +122,7 @@ export class PaymentsViewComponent {
     this.showUpdateForm.update(v => !v);
     if (!this.showUpdateForm()) {
       this.bankCode.set('');
+      this.bankName.set('');
       this.accountNumber.set('');
       this.country.set('NG');
       this.verifiedName.set(null);
@@ -125,12 +130,39 @@ export class PaymentsViewComponent {
     }
   }
 
-  protected async submitUpdate(): Promise<void> {
+  /** Called by the bank searchable-select in the update form */
+  protected onBankChange(code: string): void {
+    this.bankCode.set(code);
+    const bank = this.banks().find(b => b.code === code);
+    this.bankName.set(bank?.name ?? '');
+  }
+
+  protected async submitConnect(): Promise<void> {
     if (!this.isVerified()) return;
     await this.state.connectPayment(this.bankCode(), this.accountNumber(), this.country());
     if (!this.state.error()) {
+      this.bankCode.set('');
+      this.bankName.set('');
+      this.accountNumber.set('');
+      this.country.set('NG');
+      this.verifiedName.set(null);
+      this.verifyError.set(null);
+    }
+  }
+
+  protected async submitChangeRequest(): Promise<void> {
+    if (!this.isVerified() || !this.verifiedName()) return;
+    await this.state.requestAccountChange(
+      this.bankCode(),
+      this.bankName(),
+      this.accountNumber(),
+      this.country(),
+      this.verifiedName()!,
+    );
+    if (!this.state.error()) {
       this.showUpdateForm.set(false);
       this.bankCode.set('');
+      this.bankName.set('');
       this.accountNumber.set('');
       this.country.set('NG');
       this.verifiedName.set(null);

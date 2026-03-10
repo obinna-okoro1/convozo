@@ -11,6 +11,7 @@ import {
   CreatorSettings,
   Message,
   FlutterwaveSubaccount,
+  AccountChangeRequest,
   CheckoutSessionPayload,
   CallBookingPayload,
   EdgeFunctionResponse,
@@ -389,6 +390,54 @@ export class SupabaseService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };
   }
+
+  // ==================== ACCOUNT CHANGE REQUEST METHODS ====================
+
+  /**
+   * Submit a new bank account change request (pending admin approval)
+   */
+  public async submitAccountChangeRequest(
+    creatorId: string,
+    bankCode: string,
+    bankName: string,
+    accountNumber: string,
+    country: string,
+    verifiedAccountName: string,
+  ): Promise<SupabaseResponse<AccountChangeRequest>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client
+      .from('account_change_requests')
+      .insert({
+        creator_id: creatorId,
+        requested_bank_code: bankCode,
+        requested_bank_name: bankName,
+        requested_account_number: accountNumber,
+        requested_country: country,
+        verified_account_name: verifiedAccountName,
+      })
+      .select()
+      .single();
+    return { data: data as AccountChangeRequest | null, error };
+  }
+
+  /**
+   * Get the most recent pending account change request for a creator
+   */
+  public async getPendingAccountChangeRequest(
+    creatorId: string,
+  ): Promise<SupabaseResponse<AccountChangeRequest>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client
+      .from('account_change_requests')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .maybeSingle();
+    return { data: data as AccountChangeRequest | null, error };
+  }
+
+  // ==================== EDGE FUNCTION METHODS (BANKS) ====================
 
   /**
    * Get supported banks for a country via Edge Function

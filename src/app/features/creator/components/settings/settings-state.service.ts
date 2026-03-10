@@ -10,6 +10,7 @@ import {
   Creator,
   CreatorSettings,
   FlutterwaveSubaccount,
+  AccountChangeRequest,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -28,6 +29,8 @@ export class SettingsStateService {
   readonly success = signal(false);
   readonly error = signal<string | null>(null);
   readonly paymentConnecting = signal(false);
+  readonly pendingChangeRequest = signal<AccountChangeRequest | null>(null);
+  readonly requestSubmitting = signal(false);
 
   // ── Profile fields ─────────────────────────────────────────────────
   readonly displayName = signal('');
@@ -327,6 +330,48 @@ export class SettingsStateService {
     void this.router.navigate(['/creator/dashboard']);
   }
 
+  // ── Account change requests ────────────────────────────────────────
+
+  async requestAccountChange(
+    bankCode: string,
+    bankName: string,
+    accountNumber: string,
+    country: string,
+    verifiedAccountName: string,
+  ): Promise<void> {
+    const creator = this.creator();
+    if (!creator) {
+      this.error.set('Creator profile not found');
+      return;
+    }
+
+    this.requestSubmitting.set(true);
+    this.error.set(null);
+
+    try {
+      const { data, error } = await this.supabaseService.submitAccountChangeRequest(
+        creator.id,
+        bankCode,
+        bankName,
+        accountNumber,
+        country,
+        verifiedAccountName,
+      );
+
+      if (error != null || data == null) {
+        throw new Error('Failed to submit change request. Please try again.');
+      }
+
+      this.pendingChangeRequest.set(data);
+      this.success.set(true);
+      setTimeout(() => this.success.set(false), 4000);
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : 'Failed to submit change request');
+    } finally {
+      this.requestSubmitting.set(false);
+    }
+  }
+
   // ── Initialization ─────────────────────────────────────────────────
 
   async loadCreatorData(): Promise<void> {
@@ -394,5 +439,9 @@ export class SettingsStateService {
     if (data != null) {
       this.paymentAccount.set(data as FlutterwaveSubaccount);
     }
+
+    // Check for any pending account change request
+    const { data: pendingRequest } = await this.supabaseService.getPendingAccountChangeRequest(creatorId);
+    this.pendingChangeRequest.set(pendingRequest);
   }
 }
