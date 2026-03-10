@@ -10,13 +10,12 @@ import {
   Creator,
   CreatorSettings,
   Message,
-  FlutterwaveSubaccount,
-  AccountChangeRequest,
+  StripeAccount,
   CheckoutSessionPayload,
   CallBookingPayload,
   EdgeFunctionResponse,
-  FlutterwaveSubaccountResponse,
-  FlutterwaveSubaccountStatus,
+  StripeConnectResponse,
+  StripeAccountStatus,
 } from '../models';
 
 interface SupabaseResponse<T> {
@@ -235,51 +234,19 @@ export class SupabaseService {
     return { data: data as CreatorSettings | null, error };
   }
 
-  // ==================== FLUTTERWAVE SUBACCOUNT METHODS ====================
+  // ==================== STRIPE ACCOUNT METHODS ====================
 
   /**
-   * Get Flutterwave subaccount by creator ID
+   * Get Stripe account by creator ID
    */
-  public async getFlutterwaveSubaccount(creatorId: string): Promise<SupabaseResponse<FlutterwaveSubaccount>> {
+  public async getStripeAccount(creatorId: string): Promise<SupabaseResponse<StripeAccount>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
-      .from('flutterwave_subaccounts')
+      .from('stripe_accounts')
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    return { data: data as FlutterwaveSubaccount | null, error };
-  }
-
-  /**
-   * Create Flutterwave subaccount record
-   */
-  public async createFlutterwaveSubaccount(
-    account: Partial<FlutterwaveSubaccount>,
-  ): Promise<SupabaseResponse<FlutterwaveSubaccount>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client
-      .from('flutterwave_subaccounts')
-      .insert(account)
-      .select()
-      .single();
-    return { data: data as FlutterwaveSubaccount | null, error };
-  }
-
-  /**
-   * Update Flutterwave subaccount record
-   */
-  public async updateFlutterwaveSubaccount(
-    id: string,
-    updates: Partial<FlutterwaveSubaccount>,
-  ): Promise<SupabaseResponse<FlutterwaveSubaccount>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client
-      .from('flutterwave_subaccounts')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    return { data: data as FlutterwaveSubaccount | null, error };
+    return { data: data as StripeAccount | null, error };
   }
 
   // ==================== MESSAGE METHODS ====================
@@ -316,11 +283,11 @@ export class SupabaseService {
   // ==================== EDGE FUNCTION METHODS ====================
 
   /**
-   * Create checkout session via Edge Function (Flutterwave)
+   * Create checkout session via Edge Function (Stripe)
    */
   public async createCheckoutSession(
     payload: CheckoutSessionPayload,
-  ): Promise<EdgeFunctionResponse<{ url: string; tx_ref: string }>> {
+  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-checkout-session', {
       body: payload,
@@ -330,11 +297,11 @@ export class SupabaseService {
   }
 
   /**
-   * Create call booking checkout session via Edge Function (Flutterwave)
+   * Create call booking checkout session via Edge Function (Stripe)
    */
   public async createCallBookingSession(
     payload: CallBookingPayload,
-  ): Promise<EdgeFunctionResponse<{ url: string; tx_ref: string }>> {
+  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-call-booking-session', {
       body: payload,
@@ -359,110 +326,30 @@ export class SupabaseService {
   }
 
   /**
-   * Create Flutterwave subaccount via Edge Function
+   * Create Stripe Connect account via Edge Function
    */
   public async createConnectAccount(
     creatorId: string,
     email: string,
     displayName: string,
-    bankCode?: string,
-    accountNumber?: string,
-    country?: string,
-  ): Promise<EdgeFunctionResponse<FlutterwaveSubaccountResponse>> {
+  ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-connect-account', {
-      body: { creator_id: creatorId, email, display_name: displayName, bank_code: bankCode, account_number: accountNumber, country },
+      body: { creator_id: creatorId, email, display_name: displayName },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };
   }
 
   /**
-   * Verify Flutterwave subaccount status via Edge Function
+   * Verify Stripe Connect account status via Edge Function
    */
   public async verifyConnectAccount(
-    subaccountId: string,
-  ): Promise<EdgeFunctionResponse<FlutterwaveSubaccountStatus>> {
+    accountId: string,
+  ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('verify-connect-account', {
-      body: { subaccount_id: subaccountId },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
-  }
-
-  // ==================== ACCOUNT CHANGE REQUEST METHODS ====================
-
-  /**
-   * Submit a new bank account change request (pending admin approval)
-   */
-  public async submitAccountChangeRequest(
-    creatorId: string,
-    bankCode: string,
-    bankName: string,
-    accountNumber: string,
-    country: string,
-    verifiedAccountName: string,
-  ): Promise<SupabaseResponse<AccountChangeRequest>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client
-      .from('account_change_requests')
-      .insert({
-        creator_id: creatorId,
-        requested_bank_code: bankCode,
-        requested_bank_name: bankName,
-        requested_account_number: accountNumber,
-        requested_country: country,
-        verified_account_name: verifiedAccountName,
-      })
-      .select()
-      .single();
-    return { data: data as AccountChangeRequest | null, error };
-  }
-
-  /**
-   * Get the most recent pending account change request for a creator
-   */
-  public async getPendingAccountChangeRequest(
-    creatorId: string,
-  ): Promise<SupabaseResponse<AccountChangeRequest>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client
-      .from('account_change_requests')
-      .select('*')
-      .eq('creator_id', creatorId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .maybeSingle();
-    return { data: data as AccountChangeRequest | null, error };
-  }
-
-  // ==================== EDGE FUNCTION METHODS (BANKS) ====================
-
-  /**
-   * Get supported banks for a country via Edge Function
-   */
-  public async getBanks(
-    country: string,
-  ): Promise<EdgeFunctionResponse<{ id: string; code: string; name: string }[]>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('get-banks', {
-      body: { country },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
-  }
-
-  /**
-   * Verify a bank account number via Edge Function (Flutterwave /v3/accounts/resolve)
-   */
-  public async resolveAccount(
-    accountNumber: string,
-    accountBank: string,
-  ): Promise<EdgeFunctionResponse<{ account_name: string; account_number: string }>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('resolve-account', {
-      body: { account_number: accountNumber, account_bank: accountBank },
+      body: { account_id: accountId },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };

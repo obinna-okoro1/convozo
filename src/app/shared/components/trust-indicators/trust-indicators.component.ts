@@ -1,6 +1,6 @@
 /**
  * Trust Indicators Component
- * Displays encryption, Flutterwave, and privacy indicators at the bottom of forms.
+ * Displays encryption, Stripe, and privacy indicators at the bottom of forms.
  * Reused across message and call booking forms.
  */
 

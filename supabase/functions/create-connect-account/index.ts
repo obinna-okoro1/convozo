@@ -1,11 +1,15 @@
+import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-const FLW_SECRET_KEY = Deno.env.get('FLW_SECRET_KEY') || '';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -32,7 +36,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { creator_id, email, display_name, bank_code, account_number, country } = await req.json();
+    const { creator_id, email, display_name } = await req.json();
 
     if (!creator_id || !email) {
       return new Response(
@@ -56,136 +60,111 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if creator already has a Flutterwave subaccount
+    // Check if creator already has a Stripe account
     const { data: existingAccount } = await supabase
-      .from('flutterwave_subaccounts')
-      .select('subaccount_id, is_active')
+      .from('stripe_accounts')
+      .select('stripe_account_id, onboarding_completed')
       .eq('creator_id', creator_id)
       .single();
 
-    if (existingAccount?.subaccount_id && existingAccount?.is_active) {
-      // Already set up — return success
-      return new Response(
-        JSON.stringify({
-          subaccount_id: existingAccount.subaccount_id,
-          already_exists: true,
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    let accountId = existingAccount?.stripe_account_id;
 
-    // Validate bank details are provided for new subaccount creation
-    if (!bank_code || !account_number || !country) {
-      return new Response(
-        JSON.stringify({ error: 'Bank details required: bank_code, account_number, country' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Create new Stripe Connect Express account if doesn't exist
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        country: 'US',
+        email: email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
+        metadata: {
+          creator_id,
+          display_name: display_name || '',
+        },
+      });
 
-    // Verify the account number with Flutterwave before creating a subaccount
-    const resolveResponse = await fetch('https://api.flutterwave.com/v3/accounts/resolve', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${FLW_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ account_number, account_bank: bank_code }),
-    });
+      accountId = account.id;
 
-    const resolveData = await resolveResponse.json();
-    let accountName = '';
-
-    if (resolveData.status !== 'success') {
-      console.error('Account verification failed:', resolveData);
-      return new Response(
-        JSON.stringify({
-          error: resolveData.message || 'Could not verify your account number. Please double-check your bank and account number.',
-          detail: resolveData.message || 'Account verification failed',
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    accountName = resolveData.data?.account_name || '';
-
-    // Step 2: Create Flutterwave subaccount
-    // split_value is the SUBACCOUNT's (creator's) percentage in 0-1 range.
-    // e.g. PLATFORM_FEE_PERCENTAGE=22 → creator keeps 78% → split_value: 0.78
-    const platformFee = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
-    const splitValue = (100 - platformFee) / 100;
-    const flwPayload = {
-      account_bank: bank_code,
-      account_number: account_number,
-      business_name: display_name || 'Creator',
-      business_email: email,
-      business_contact: display_name || 'Creator',
-      business_contact_mobile: '0000000000', // placeholder — Flutterwave requires it
-      business_mobile: '0000000000',
-      country: country || 'NG',
-      split_type: 'percentage',
-      split_value: splitValue,
-    };
-
-    const flwResponse = await fetch('https://api.flutterwave.com/v3/subaccounts', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${FLW_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(flwPayload),
-    });
-
-    const flwData = await flwResponse.json();
-
-    if (flwData.status !== 'success') {
-      console.error('Flutterwave subaccount creation failed:', flwData);
-      return new Response(
-        JSON.stringify({
-          error: flwData.message || 'Failed to create payment subaccount. Please try again.',
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const subaccountId = flwData.data.subaccount_id || flwData.data.id;
-
-    // Save or update in database
-    const bankName = flwData.data.bank_name || bank_code;
-    if (existingAccount) {
-      await supabase
-        .from('flutterwave_subaccounts')
-        .update({
-          subaccount_id: subaccountId,
-          bank_name: bankName,
-          account_number: account_number,
-          country: country || 'NG',
-          is_active: true,
-        })
-        .eq('creator_id', creator_id);
-    } else {
-      await supabase.from('flutterwave_subaccounts').insert({
+      // Save to database
+      await supabase.from('stripe_accounts').insert({
         creator_id,
-        subaccount_id: subaccountId,
-        bank_name: bankName,
-        account_number: account_number,
-        country: country || 'NG',
-        is_active: true,
+        stripe_account_id: accountId,
+        charges_enabled: false,
+        payouts_enabled: false,
+        details_submitted: false,
+        onboarding_completed: false,
+      });
+    }
+
+    const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+
+    // Create account link for onboarding. If the stored account ID no longer
+    // exists in Stripe (e.g. stale seed data or deleted account), clear it
+    // from the DB and create a fresh one.
+    let accountLink;
+    try {
+      accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: `${appUrl}/creator/onboarding`,
+        return_url: `${appUrl}/creator/dashboard`,
+        type: 'account_onboarding',
+      });
+    } catch (linkErr: unknown) {
+      const stripeErr = linkErr as { code?: string; raw?: { param?: string } };
+      const isStaleAccount =
+        stripeErr?.code === 'resource_missing' &&
+        stripeErr?.raw?.param === 'account';
+
+      if (!isStaleAccount) throw linkErr;
+
+      // Stale account — wipe the DB row and create a fresh Stripe account
+      await supabase.from('stripe_accounts').delete().eq('creator_id', creator_id);
+
+      const freshAccount = await stripe.accounts.create({
+        type: 'express',
+        country: 'US',
+        email: email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
+        metadata: { creator_id, display_name: display_name || '' },
+      });
+
+      accountId = freshAccount.id;
+
+      await supabase.from('stripe_accounts').insert({
+        creator_id,
+        stripe_account_id: accountId,
+        charges_enabled: false,
+        payouts_enabled: false,
+        details_submitted: false,
+        onboarding_completed: false,
+      });
+
+      accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: `${appUrl}/creator/onboarding`,
+        return_url: `${appUrl}/creator/dashboard`,
+        type: 'account_onboarding',
       });
     }
 
     return new Response(
       JSON.stringify({
-        subaccount_id: subaccountId,
-        account_name: accountName,
-        bank_name: bankName,
+        url: accountLink.url,
+        account_id: accountId,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
-    console.error('Error creating Flutterwave subaccount:', err);
-    const message = err instanceof Error ? err.message : String(err);
+    console.error('Error creating Connect account:', err);
     return new Response(
-      JSON.stringify({ error: 'An internal error occurred. Please try again later.', debug: message }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

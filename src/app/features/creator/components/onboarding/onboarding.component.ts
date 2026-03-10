@@ -229,21 +229,9 @@ export class OnboardingComponent implements OnInit {
     APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
   );
 
-  // Payment setup (Flutterwave subaccount)
+  // Payment setup (Stripe Connect)
   protected readonly paymentConnecting = signal<boolean>(false);
   protected readonly paymentConnected = signal<boolean>(false);
-  protected readonly bankCode = signal<string>('');
-  protected readonly accountNumber = signal<string>('');
-  protected readonly paymentCountry = signal<string>('NG');
-
-  protected readonly paymentCountryOptions: SelectOption[] = [
-    { value: 'NG', label: '🇳🇬 Nigeria' },
-    { value: 'GH', label: '🇬🇭 Ghana' },
-    { value: 'KE', label: '🇰🇪 Kenya' },
-    { value: 'ZA', label: '🇿🇦 South Africa' },
-    { value: 'TZ', label: '🇹🇿 Tanzania' },
-    { value: 'UG', label: '🇺🇬 Uganda' },
-  ];
 
   // OAuth import indicator
   protected readonly hasOAuthData = signal<boolean>(false);
@@ -459,14 +447,9 @@ export class OnboardingComponent implements OnInit {
   }
 
   /**
-   * Connect Flutterwave payment account (create subaccount)
+   * Connect Stripe payment account (redirect to Stripe Express onboarding)
    */
   protected async connectPayment(): Promise<void> {
-    if (!this.bankCode() || !this.accountNumber()) {
-      this.error.set('Please enter your bank code and account number');
-      return;
-    }
-
     this.paymentConnecting.set(true);
     this.error.set(null);
 
@@ -483,22 +466,18 @@ export class OnboardingComponent implements OnInit {
         throw new Error('Creator profile not found');
       }
 
-      const { data, error } = await this.creatorService.createFlutterwaveSubaccount(
+      const { data, error } = await this.creatorService.createStripeConnectAccount(
         creator.id,
         user.email || '',
         this.displayName(),
-        this.bankCode(),
-        this.accountNumber(),
-        this.paymentCountry(),
       );
 
-      if (error || !data?.subaccount_id) {
+      if (error || !data?.url) {
         throw error instanceof Error ? error : new Error('Failed to create payment account');
       }
 
-      this.paymentConnected.set(true);
-      // Navigate to dashboard after successful setup
-      void this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+      // Redirect to Stripe onboarding
+      window.location.href = data.url;
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
       this.paymentConnecting.set(false);

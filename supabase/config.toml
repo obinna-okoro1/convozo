@@ -370,14 +370,8 @@ deno_version = 2
 # or are public endpoints. Disabling gateway JWT verification prevents stale-token 401s
 # while keeping security intact — each function still validates the caller.
 
-[functions.flutterwave-webhook]
-verify_jwt = false  # Flutterwave authenticates via verif-hash header
-
-[functions.get-banks]
-verify_jwt = false  # Public — proxies Flutterwave /v3/banks
-
-[functions.resolve-account]
-verify_jwt = false  # Public — proxies Flutterwave /v3/accounts/resolve
+[functions.stripe-webhook]
+verify_jwt = false  # Stripe authenticates via webhook signature verification
 
 [functions.create-connect-account]
 verify_jwt = false  # Auth handled internally via getUser(token)
@@ -395,10 +389,8 @@ verify_jwt = false  # Public — fans pay without being logged in
 verify_jwt = false  # Public — fans book calls without being logged in
 
 [edge_runtime.secrets]
-FLW_SECRET_KEY = "env(FLW_SECRET_KEY)"
-FLW_PUBLIC_KEY = "env(FLW_PUBLIC_KEY)"
-FLW_ENCRYPTION_KEY = "env(FLW_ENCRYPTION_KEY)"
-FLW_WEBHOOK_HASH = "env(FLW_WEBHOOK_HASH)"
+STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
+STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
 APP_URL = "env(APP_URL)"
 PLATFORM_FEE_PERCENTAGE = "env(PLATFORM_FEE_PERCENTAGE)"
 
