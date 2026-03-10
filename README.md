@@ -111,56 +111,65 @@ SUPABASE_SERVICE_ROLE_KEY=your_local_service_role_key
 ## Architecture
 
 ```
-src/app/
-├── core/                        # Singletons — imported once at root
-│   ├── constants/index.ts       # APP_CONSTANTS, ERROR_MESSAGES, ROUTES
-│   ├── guards/auth.guard.ts     # Route protection
-│   ├── models/index.ts          # All TypeScript interfaces and types
-│   ├── services/                # Application-wide services
-│   │   ├── supabase.service.ts  # DB, auth, storage, edge function calls
-│   │   ├── analytics.service.ts
-│   │   ├── instagram-public.service.ts
-│   │   ├── push-notification.service.ts
-│   │   └── response-template.service.ts
-│   └── validators/form-validators.ts
+src/
+├── environments/
+│   ├── environment.ts           # Local dev (localhost Supabase)
+│   ├── environment.staging.ts   # Staging (Convozo Staging Supabase)
+│   └── environment.prod.ts      # Production (convozo.com)
 │
-├── features/                    # Lazy-loaded feature modules
-│   ├── auth/                    # Login, signup, OAuth callback
-│   │   ├── components/login, signup, callback
-│   │   └── services/auth.service.ts
-│   ├── creator/                 # Dashboard, onboarding, settings
-│   │   ├── components/dashboard, onboarding, settings,
-│   │   │   analytics-dashboard, availability-manager, template-picker
-│   │   └── services/creator.service.ts
-│   └── public/                  # Landing, message page, success
-│       └── components/landing, message-page, success,
-│           creator-profile-header, message-form, call-booking-form
-│
-├── shared/                      # Reusable across features
-│   ├── components/              # toast-container, trust-banner,
-│   │   │                        # trust-indicators, social-proof,
-│   │   │                        # loading-spinner, error-message
-│   │   └── ui/                  # Primitives: avatar, badge, button,
-│   │                            # card, empty-state, input, spinner
-│   ├── services/toast.service.ts
-│   └── utils/                   # date.utils.ts, string.utils.ts
-│
-└── app.ts                       # Root component with <router-outlet>
+└── app/
+    ├── core/                        # Singletons — imported once at root
+    │   ├── constants/index.ts       # APP_CONSTANTS, ERROR_MESSAGES, ROUTES
+    │   ├── guards/auth.guard.ts     # Route protection
+    │   ├── models/index.ts          # All TypeScript interfaces and types
+    │   ├── services/                # Application-wide services
+    │   │   ├── supabase.service.ts  # DB, auth, storage, edge function calls
+    │   │   ├── analytics.service.ts
+    │   │   ├── instagram-public.service.ts
+    │   │   ├── push-notification.service.ts
+    │   │   └── response-template.service.ts
+    │   └── validators/form-validators.ts
+    │
+    ├── features/                    # Lazy-loaded feature modules
+    │   ├── auth/                    # Login, signup, OAuth callback
+    │   │   ├── components/login, signup, callback
+    │   │   └── services/auth.service.ts
+    │   ├── creator/                 # Dashboard, onboarding, settings
+    │   │   ├── components/dashboard, onboarding, settings,
+    │   │   │   analytics-dashboard, availability-manager, template-picker
+    │   │   └── services/creator.service.ts
+    │   └── public/                  # Landing, message page, success
+    │       └── components/landing, message-page, success,
+    │           creator-profile-header, message-form, call-booking-form,
+    │           privacy-policy, terms-of-service
+    │
+    ├── shared/                      # Reusable across features
+    │   ├── components/              # toast-container, trust-banner,
+    │   │   │                        # trust-indicators, social-proof,
+    │   │   │                        # loading-spinner, error-message
+    │   │   └── ui/                  # image-upload, searchable-select
+    │   ├── services/toast.service.ts
+    │   └── utils/                   # date.utils.ts, string.utils.ts
+    │
+    └── app.ts                       # Root component with <router-outlet>
 
 supabase/
-├── migrations/                  # Sequential SQL migrations
+├── migrations/                  # Sequential SQL migrations (001–018)
 │   ├── 001_initial_schema.sql
 │   ├── ...
-│   ├── 011_add_phone_number.sql
-│   └── 012_stripe_to_flutterwave.sql
+│   ├── 017_stripe_to_flutterwave.sql
+│   └── 018_account_change_requests.sql
 ├── functions/                   # Deno Edge Functions
 │   ├── _shared/                 # Shared utilities
 │   │   ├── cors.ts              # CORS headers helper
+│   │   ├── currency.ts          # USD cents → local currency conversion
 │   │   └── email.ts             # Resend email utility & branded templates
 │   ├── create-checkout-session/ # Flutterwave payment for messages
 │   ├── create-call-booking-session/ # Flutterwave payment for calls
 │   ├── create-connect-account/  # Flutterwave subaccount onboarding
 │   ├── verify-connect-account/  # Verify Flutterwave subaccount status
+│   ├── resolve-account/         # Resolve bank account name via Flutterwave
+│   ├── get-banks/               # List supported banks by country
 │   ├── flutterwave-webhook/     # Handle Flutterwave payment events & send emails
 │   └── send-reply-email/        # Creator reply → email to sender
 ├── .env                         # Local dev secrets (gitignored)
@@ -174,12 +183,13 @@ supabase/
 | Table | Purpose |
 |-------|---------|
 | `creators` | Creator profiles (name, slug, bio, avatar, instagram) |
-| `creator_settings` | Pricing config (message_price, call_price, calls_enabled) |
+| `creator_settings` | Pricing config (message_price, call_price, calls_enabled, messages_enabled) |
 | `flutterwave_subaccounts` | Flutterwave subaccount status & bank details |
 | `messages` | Paid messages from fans |
 | `payments` | Payment transaction records |
 | `availability_slots` | Weekly call availability schedule |
 | `call_bookings` | Booked video calls |
+| `account_change_requests` | Creator bank-account change requests (pending → approved/rejected) |
 
 All tables use Row Level Security. Creators access only their own data. Public users get read-only access to creator profiles and settings.
 
@@ -211,17 +221,30 @@ All emails are fire-and-forget — failures are logged but never block the main 
 
 ### Frontend (Cloudflare Pages)
 
-```bash
-# Build
-npm run build
+The frontend is deployed automatically via **Cloudflare Pages GitHub integration** — no CLI deploys needed.
 
-# Deploy
-npx wrangler pages deploy dist/convozo-app/browser --project-name=convozo
+| Branch | Build | Deployed to |
+|--------|-------|-------------|
+| `main` | `npm run build` (production) | **convozo.com** |
+| `develop` | `npm run build -- --configuration=staging` | **convozo-staging.pages.dev** (preview) |
+
+Every push to `main` or `develop` triggers an automatic build and deploy on Cloudflare Pages.
+
+The build command is:
+```bash
+if [ "$CF_PAGES_BRANCH" = "main" ]; then npm run build; else npm run build -- --configuration=staging; fi
 ```
 
-The production site is served at `https://convozo.com`.
+Build output directory: `dist/convozo-app/browser`
 
 ### Supabase
+
+Two Supabase projects exist:
+
+| Project | Ref | Region | Purpose |
+|---------|-----|--------|--------|
+| **Convozo** | `pfmscnpmpwxpdlrbeokb` | EU Frankfurt | Production |
+| **Convozo Staging** | `fzltvpbyhnvviuzanyha` | EU Frankfurt | Staging |
 
 ```bash
 # Link to production project (one-time)
@@ -231,7 +254,7 @@ supabase link --project-ref pfmscnpmpwxpdlrbeokb
 supabase db push
 
 # Deploy all Edge Functions
-supabase functions deploy
+supabase functions deploy --no-verify-jwt
 
 # Set production secrets (one at a time — NEVER use --env-file)
 supabase secrets set APP_URL=https://convozo.com
@@ -247,6 +270,14 @@ supabase secrets set RESEND_FROM_ADDRESS="Convozo <noreply@convozo.com>"
 supabase secrets list
 ```
 
+To deploy to staging instead:
+```bash
+supabase link --project-ref fzltvpbyhnvviuzanyha
+supabase db push
+supabase functions deploy --no-verify-jwt
+supabase link --project-ref pfmscnpmpwxpdlrbeokb  # re-link back to production
+```
+
 > **⚠️ Critical:** Always set secrets individually. Running `supabase secrets set --env-file supabase/.env` would push localhost values to production. See `supabase/.env.production` for a reference of required production secrets.
 
 ### Flutterwave
@@ -257,24 +288,17 @@ supabase secrets list
 4. Set a webhook hash in Settings → Webhooks and save it as `FLW_WEBHOOK_HASH`
 5. Set production secrets via `supabase secrets set FLW_SECRET_KEY=... FLW_PUBLIC_KEY=... FLW_WEBHOOK_HASH=...`
 
-### Production Environment
+### Environments
 
-Update `src/environments/environment.prod.ts`:
+Three Angular environment files control which backend each build targets:
 
-```typescript
-export const environment = {
-  production: true,
-  supabase: {
-    url: 'https://pfmscnpmpwxpdlrbeokb.supabase.co',
-    anonKey: 'YOUR_ANON_KEY',
-  },
-  flutterwave: {
-    publicKey: 'FLWPUBK-...',
-  },
-  platformFeePercentage: 22,
-  vapidPublicKey: 'YOUR_VAPID_PUBLIC_KEY',
-};
-```
+| File | Used by | Supabase project |
+|------|---------|------------------|
+| `environment.ts` | `ng serve` (local dev) | localhost |
+| `environment.staging.ts` | `ng build --configuration=staging` | Convozo Staging (`fzltvpbyhnvviuzanyha`) |
+| `environment.prod.ts` | `ng build` (production) | Convozo (`pfmscnpmpwxpdlrbeokb`) |
+
+`angular.json` has a `staging` build configuration that swaps `environment.ts` for `environment.staging.ts` via `fileReplacements`.
 
 ## Scripts
 
@@ -282,7 +306,17 @@ export const environment = {
 |---------|-------------|
 | `npm start` | Dev server on port 4200 |
 | `npm run build` | Production build |
+| `npm run build -- --configuration=staging` | Staging build (points to Convozo Staging Supabase) |
 | `npm test` | Run tests |
 | `supabase start` | Start local Supabase |
 | `supabase db reset` | Reset DB and re-seed |
 | `supabase functions serve` | Serve Edge Functions locally |
+
+## Branching Strategy
+
+| Branch | Purpose | Deploys to |
+|--------|---------|------------|
+| `main` | Production-ready code | convozo.com (Cloudflare Pages) |
+| `develop` | Staging / integration | convozo-staging.pages.dev (Cloudflare Pages preview) |
+
+Workflow: branch off `develop` → PR into `develop` → merge `develop` into `main` for production release.
