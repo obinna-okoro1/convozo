@@ -1,0 +1,65 @@
+# deploy-develop.yml
+# Runs on every push to `develop`.
+# Builds with the STAGING environment (staging Supabase project + Flutterwave TEST keys)
+# and deploys to the convozo-staging Cloudflare Pages project.
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN      — CF token with "Cloudflare Pages: Edit" permission
+#   CLOUDFLARE_ACCOUNT_ID     — Your Cloudflare account ID
+#   STAGING_SUPABASE_URL      — https://YOUR_STAGING_REF.supabase.co
+#   STAGING_SUPABASE_ANON_KEY — Anon key from staging Supabase project
+
+name: Deploy → Staging (develop)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    name: Build & Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Patch environment.staging.ts with real secrets ─────────────────────
+      # We don't commit real values — CI injects them at build time.
+      - name: Inject staging environment values
+        run: |
+          cat > src/environments/environment.staging.ts << 'EOF'
+          export const environment = {
+            production: false,
+            supabase: {
+              url: '${{ secrets.STAGING_SUPABASE_URL }}',
+              anonKey: '${{ secrets.STAGING_SUPABASE_ANON_KEY }}',
+            },
+            flutterwave: {
+              publicKey: 'FLWPUBK_TEST-59b8e970316ea0e268a6b2208343cd52-X',
+            },
+            platformFeePercentage: 22,
+            vapidPublicKey: 'BMUmrPyd-C_NfHyTfq2PzEiTFTYdRtx1tSFQM7eknpvNHmYdU3-i9AiEQzVVie3T8bh4iVO8L9zEivHsibsv3pc',
+          };
+          EOF
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (staging)
+        run: npm run build -- --configuration=staging
+
+      - name: Deploy to Cloudflare Pages (staging)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist/convozo-app/browser --project-name=convozo-staging --branch=develop

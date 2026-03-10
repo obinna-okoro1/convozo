@@ -71,6 +71,27 @@
                 }
               ]
             },
+            "staging": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -84,6 +105,9 @@
           "configurations": {
             "production": {
               "buildTarget": "convozo-app:build:production"
+            },
+            "staging": {
+              "buildTarget": "convozo-app:build:staging"
             },
             "development": {
               "buildTarget": "convozo-app:build:development"
