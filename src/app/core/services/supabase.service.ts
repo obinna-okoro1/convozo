@@ -287,7 +287,7 @@ export class SupabaseService {
    */
   public async createCheckoutSession(
     payload: CheckoutSessionPayload,
-  ): Promise<EdgeFunctionResponse<{ url: string; session_id: string }>> {
+  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-checkout-session', {
       body: payload,
@@ -301,7 +301,7 @@ export class SupabaseService {
    */
   public async createCallBookingSession(
     payload: CallBookingPayload,
-  ): Promise<EdgeFunctionResponse<{ url: string; session_id: string }>> {
+  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('create-call-booking-session', {
       body: payload,
@@ -345,11 +345,11 @@ export class SupabaseService {
    * Verify Stripe Connect account status via Edge Function
    */
   public async verifyConnectAccount(
-    creatorId: string,
+    accountId: string,
   ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('verify-connect-account', {
-      body: { creator_id: creatorId },
+      body: { account_id: accountId },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };

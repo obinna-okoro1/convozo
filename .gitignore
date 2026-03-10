@@ -50,3 +50,4 @@ Thumbs.db
 .env.*.local
 # Allow the production reference file (contains only placeholder values)
 !supabase/.env.production
+scripts/setup-test-account.sh

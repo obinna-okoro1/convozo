@@ -440,9 +440,9 @@ export class CreatorService {
    * Verify Stripe Connect account status
    */
   public async verifyStripeAccount(
-    creatorId: string,
+    accountId: string,
   ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
-    return this.supabaseService.verifyConnectAccount(creatorId);
+    return this.supabaseService.verifyConnectAccount(accountId);
   }
 
   // ==================== AVAILABILITY METHODS ====================

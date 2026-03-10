@@ -316,10 +316,11 @@ export class SettingsStateService {
    */
   async refreshStripeStatus(): Promise<void> {
     const creator = this.creator();
-    if (!creator) return;
+    const account = this.paymentAccount();
+    if (!creator || !account) return;
 
     try {
-      const { data } = await this.creatorService.verifyStripeAccount(creator.id);
+      const { data } = await this.creatorService.verifyStripeAccount(account.stripe_account_id);
       if (data) {
         // Reload the payment account from DB
         await this.loadPaymentAccount(creator.id);

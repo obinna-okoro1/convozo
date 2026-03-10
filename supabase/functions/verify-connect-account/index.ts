@@ -1,15 +1,16 @@
+import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Stripe from 'https://esm.sh/stripe@14?target=deno';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey =
   Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2024-06-20',
-});
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -39,20 +40,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { creator_id } = await req.json();
+    const { account_id } = await req.json();
 
-    if (!creator_id) {
-      return new Response(JSON.stringify({ error: 'Missing creator_id' }), {
+    if (!account_id) {
+      return new Response(JSON.stringify({ error: 'Missing account_id' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Verify the caller owns this creator profile
+    // Look up the Stripe account row by its Stripe ID
+    const { data: stripeRecord, error: recordError } = await supabase
+      .from('stripe_accounts')
+      .select('creator_id, stripe_account_id')
+      .eq('stripe_account_id', account_id)
+      .maybeSingle();
+
+    if (recordError || !stripeRecord) {
+      return new Response(
+        JSON.stringify({ error: 'No Stripe account found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify the caller owns the creator profile linked to this Stripe account
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
       .select('id')
-      .eq('id', creator_id)
+      .eq('id', stripeRecord.creator_id)
       .eq('user_id', user.id)
       .single();
 
@@ -63,34 +78,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the stored Stripe account
-    const { data: stripeRecord, error: recordError } = await supabase
-      .from('stripe_accounts')
-      .select('stripe_account_id')
-      .eq('creator_id', creator_id)
-      .maybeSingle();
-
-    if (recordError || !stripeRecord) {
-      return new Response(
-        JSON.stringify({ error: 'No Stripe account found for this creator' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Retrieve account details from Stripe
     const account = await stripe.accounts.retrieve(stripeRecord.stripe_account_id);
+
+    const charges_enabled = account.charges_enabled ?? false;
+    const payouts_enabled = account.payouts_enabled ?? false;
+    const details_submitted = account.details_submitted ?? false;
+    const onboarding_completed = charges_enabled && payouts_enabled && details_submitted;
 
     // Update database with latest status
     const { error: updateError } = await supabase
       .from('stripe_accounts')
       .update({
-        charges_enabled: account.charges_enabled,
-        payouts_enabled: account.payouts_enabled,
-        details_submitted: account.details_submitted,
-        onboarding_completed:
-          account.charges_enabled && account.payouts_enabled && account.details_submitted,
+        charges_enabled,
+        payouts_enabled,
+        details_submitted,
+        onboarding_completed,
       })
-      .eq('creator_id', creator_id);
+      .eq('creator_id', stripeRecord.creator_id);
 
     if (updateError) {
       console.error('Error updating stripe_accounts:', updateError);
@@ -98,12 +103,10 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        stripe_account_id: stripeRecord.stripe_account_id,
-        charges_enabled: account.charges_enabled,
-        payouts_enabled: account.payouts_enabled,
-        details_submitted: account.details_submitted,
-        onboarding_completed:
-          account.charges_enabled && account.payouts_enabled && account.details_submitted,
+        charges_enabled,
+        payouts_enabled,
+        details_submitted,
+        onboarding_completed,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

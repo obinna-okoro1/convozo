@@ -137,7 +137,7 @@ export interface EdgeFunctionResponse<T = unknown> {
 
 export interface StripeConnectResponse {
   url: string;
-  already_exists?: boolean;
+  account_id: string;
 }
 
 export interface StripeAccountStatus {

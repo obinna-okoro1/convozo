@@ -1,26 +1,40 @@
+import Stripe from 'stripe';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Stripe from 'https://esm.sh/stripe@14?target=deno';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', { apiVersion: '2024-06-20' });
-
 // Rate limiting store (in-memory, per-instance)
+// In production, use Redis or similar distributed cache
 const rateLimitStore = new Map<string, number[]>();
+
+// Rate limit: 10 requests per hour per email
 const RATE_LIMIT_MAX = 10;
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
 
 function checkRateLimit(email: string): boolean {
   const now = Date.now();
   const requests = rateLimitStore.get(email) || [];
+
+  // Remove old requests outside the time window
   const recentRequests = requests.filter(time => now - time < RATE_LIMIT_WINDOW);
-  if (recentRequests.length >= RATE_LIMIT_MAX) return false;
+
+  if (recentRequests.length >= RATE_LIMIT_MAX) {
+    return false; // Rate limit exceeded
+  }
+
+  // Add current request
   recentRequests.push(now);
   rateLimitStore.set(email, recentRequests);
-  return true;
+
+  return true; // Within rate limit
 }
 
 Deno.serve(async (req) => {
@@ -46,7 +60,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           error: 'Rate limit exceeded. Please try again later.',
-          retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000 / 60),
+          retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000 / 60), // minutes
         }),
         {
           status: 429,
@@ -54,7 +68,7 @@ Deno.serve(async (req) => {
             ...corsHeaders,
             'Content-Type': 'application/json',
             'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW / 1000)),
-          },
+          }
         }
       );
     }
@@ -76,10 +90,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get creator info + Stripe account for split payments
+    // Get creator info
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, stripe_accounts(stripe_account_id, charges_enabled), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
+      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -100,13 +114,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Normalise message_type to match DB constraint
+    // Normalise message_type to match DB constraint ('message' | 'call' | 'follow_back' | 'support')
     const validTypes = ['message', 'call', 'follow_back', 'support'];
     const validMessageType = validTypes.includes(message_type) ? message_type : 'message';
 
     // Determine the correct price based on type
     let serverPrice = settings.message_price;
     let productName = `Paid DM to ${creator.display_name}`;
+    let productDescription = 'Priority direct message';
 
     if (validMessageType === 'follow_back') {
       if (!settings.follow_back_enabled || !settings.follow_back_price || settings.follow_back_price < 100) {
@@ -117,6 +132,7 @@ Deno.serve(async (req) => {
       }
       serverPrice = settings.follow_back_price;
       productName = `Follow-Back Request to ${creator.display_name}`;
+      productDescription = 'Request a follow-back on Instagram';
     }
 
     if (validMessageType === 'support') {
@@ -126,6 +142,7 @@ Deno.serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      // For tips, use the client-sent price (fan chooses the amount) with a $1 minimum
       const tipAmount = typeof price === 'number' ? price : 0;
       if (tipAmount < 100) {
         return new Response(
@@ -135,11 +152,12 @@ Deno.serve(async (req) => {
       }
       serverPrice = tipAmount;
       productName = `Support for ${creator.display_name}`;
+      productDescription = 'Fan support / tip';
     }
 
-    // Check Stripe account
-    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string; charges_enabled: boolean } | null;
-    if (!stripeAccount?.stripe_account_id || !stripeAccount.charges_enabled) {
+    // PostgREST returns one-to-one relationships as objects, not arrays
+    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
+    if (!stripeAccount?.stripe_account_id) {
       return new Response(
         JSON.stringify({ error: 'Creator payment setup incomplete' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -147,28 +165,33 @@ Deno.serve(async (req) => {
     }
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
-    const applicationFeeAmount = Math.floor(serverPrice * platformFeePercentage / 100);
+    const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
+    // Hardcoded so Stripe redirects work even if APP_URL secret resets
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // Create Stripe Checkout Session with Connect split
-    const session = await stripe.checkout.sessions.create({
+    // Check if using test Stripe account (for local development)
+    const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_');
+
+    // Create Stripe Checkout session
+    const sessionConfig: any = {
       payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: productName },
-          unit_amount: serverPrice,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: productName,
+              description: productDescription,
+            },
+            unit_amount: serverPrice,
+          },
+          quantity: 1,
         },
-        quantity: 1,
-      }],
+      ],
       mode: 'payment',
-      customer_email: sender_email,
-      payment_intent_data: {
-        application_fee_amount: applicationFeeAmount,
-        transfer_data: { destination: stripeAccount.stripe_account_id },
-      },
-      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=message`,
+      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/${creator_slug}`,
+      customer_email: sender_email,
       metadata: {
         creator_id: creator.id,
         message_content: message_content.slice(0, 490),
@@ -176,12 +199,24 @@ Deno.serve(async (req) => {
         sender_email,
         sender_instagram: (sender_instagram || '').slice(0, 490),
         message_type: validMessageType,
-        amount_cents: serverPrice.toString(),
+        amount: serverPrice.toString(),
       },
-    });
+    };
+
+    // Only add Connect transfer if using real Stripe account
+    if (!isTestAccount) {
+      sessionConfig.payment_intent_data = {
+        application_fee_amount: platformFee,
+        transfer_data: {
+          destination: stripeAccount.stripe_account_id,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(
-      JSON.stringify({ url: session.url, session_id: session.id }),
+      JSON.stringify({ sessionId: session.id, url: session.url }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
@@ -190,7 +225,5 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  }
-});
   }
 });
