@@ -8,7 +8,7 @@
     ></div>
 
     <!-- Scrollable tabs -->
-    <div #scrollContainer (scroll)="onScroll()" class="flex gap-2 overflow-x-auto scrollbar-hide">
+    <div #scrollContainer (scroll)="onScroll()" class="flex gap-2 overflow-x-auto scrollbar-hide justify-center">
       @for (tab of visibleTabs(); track tab.path) {
         <a
           [routerLink]="tab.path"

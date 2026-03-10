@@ -1,7 +1,7 @@
 /**
  * Settings State Service
  * Shared state for the settings shell and child route components.
- * Holds creator data, settings, Flutterwave subaccount, and form-level state.
+ * Holds creator data, settings, Stripe account, and form-level state.
  */
 
 import { computed, Injectable, signal } from '@angular/core';
@@ -9,8 +9,7 @@ import { Router } from '@angular/router';
 import {
   Creator,
   CreatorSettings,
-  FlutterwaveSubaccount,
-  AccountChangeRequest,
+  StripeAccount,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -21,7 +20,7 @@ export class SettingsStateService {
   // ── Core data ──────────────────────────────────────────────────────
   readonly creator = signal<Creator | null>(null);
   readonly settings = signal<CreatorSettings | null>(null);
-  readonly paymentAccount = signal<FlutterwaveSubaccount | null>(null);
+  readonly paymentAccount = signal<StripeAccount | null>(null);
 
   // ── Shared UI state ────────────────────────────────────────────────
   readonly loading = signal(false);
@@ -29,8 +28,6 @@ export class SettingsStateService {
   readonly success = signal(false);
   readonly error = signal<string | null>(null);
   readonly paymentConnecting = signal(false);
-  readonly pendingChangeRequest = signal<AccountChangeRequest | null>(null);
-  readonly requestSubmitting = signal(false);
 
   // ── Profile fields ─────────────────────────────────────────────────
   readonly displayName = signal('');
@@ -272,7 +269,7 @@ export class SettingsStateService {
 
   // ── Payment actions ────────────────────────────────────────────────
 
-  async connectPayment(bankCode: string, accountNumber: string, country: string): Promise<void> {
+  async connectPayment(): Promise<void> {
     this.paymentConnecting.set(true);
     this.error.set(null);
 
@@ -290,37 +287,45 @@ export class SettingsStateService {
         this.paymentConnecting.set(false);
         return;
       }
-      const { data, error } = await this.creatorService.createFlutterwaveSubaccount(
+
+      const { data, error } = await this.creatorService.createStripeConnectAccount(
         creator.id,
         user.email || '',
         creator.display_name,
-        bankCode,
-        accountNumber,
-        country,
       );
 
-      if (error != null) {
-        // Edge function errors: extract the message from the response body
+      if (error != null || !data?.url) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
         const body = (data as any)?.error ?? (error as any)?.message ?? '';
         const msg = typeof body === 'string' && body.length > 0
           ? body
-          : 'Failed to create payment account. Please check your details and try again.';
+          : 'Failed to create payment account. Please try again.';
         throw new Error(msg);
       }
 
-      if (!data?.subaccount_id) {
-        throw new Error('Failed to create payment account');
-      }
-
-      // Reload the payment account to reflect the new subaccount
-      await this.loadPaymentAccount(creator.id);
-      this.success.set(true);
-      setTimeout(() => this.success.set(false), 3000);
+      // Redirect to Stripe onboarding
+      window.location.href = data.url;
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'Failed to connect payment account');
-    } finally {
       this.paymentConnecting.set(false);
+    }
+  }
+
+  /**
+   * Refresh Stripe account status (called after returning from Stripe onboarding)
+   */
+  async refreshStripeStatus(): Promise<void> {
+    const creator = this.creator();
+    if (!creator) return;
+
+    try {
+      const { data } = await this.creatorService.verifyStripeAccount(creator.id);
+      if (data) {
+        // Reload the payment account from DB
+        await this.loadPaymentAccount(creator.id);
+      }
+    } catch {
+      // Silently fail - the account status will be refreshed on next load
     }
   }
 
@@ -328,48 +333,6 @@ export class SettingsStateService {
 
   goToDashboard(): void {
     void this.router.navigate(['/creator/dashboard']);
-  }
-
-  // ── Account change requests ────────────────────────────────────────
-
-  async requestAccountChange(
-    bankCode: string,
-    bankName: string,
-    accountNumber: string,
-    country: string,
-    verifiedAccountName: string,
-  ): Promise<void> {
-    const creator = this.creator();
-    if (!creator) {
-      this.error.set('Creator profile not found');
-      return;
-    }
-
-    this.requestSubmitting.set(true);
-    this.error.set(null);
-
-    try {
-      const { data, error } = await this.supabaseService.submitAccountChangeRequest(
-        creator.id,
-        bankCode,
-        bankName,
-        accountNumber,
-        country,
-        verifiedAccountName,
-      );
-
-      if (error != null || data == null) {
-        throw new Error('Failed to submit change request. Please try again.');
-      }
-
-      this.pendingChangeRequest.set(data);
-      this.success.set(true);
-      setTimeout(() => this.success.set(false), 4000);
-    } catch (err) {
-      this.error.set(err instanceof Error ? err.message : 'Failed to submit change request');
-    } finally {
-      this.requestSubmitting.set(false);
-    }
   }
 
   // ── Initialization ─────────────────────────────────────────────────
@@ -429,19 +392,10 @@ export class SettingsStateService {
   }
 
   private async loadPaymentAccount(creatorId: string): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data } = await this.supabaseService.client
-      .from('flutterwave_subaccounts')
-      .select('*')
-      .eq('creator_id', creatorId)
-      .maybeSingle();
+    const { data } = await this.supabaseService.getStripeAccount(creatorId);
 
     if (data != null) {
-      this.paymentAccount.set(data as FlutterwaveSubaccount);
+      this.paymentAccount.set(data);
     }
-
-    // Check for any pending account change request
-    const { data: pendingRequest } = await this.supabaseService.getPendingAccountChangeRequest(creatorId);
-    this.pendingChangeRequest.set(pendingRequest);
   }
 }

@@ -171,11 +171,11 @@ VALUES (
   'Fan messages: 2-3 days. Business inquiries: 24 hours.'
 ) ON CONFLICT (creator_id) DO NOTHING;
 
--- Note: Flutterwave subaccounts are intentionally NOT seeded with fake IDs.
--- Fake subaccount IDs would cause errors when edge functions
--- try to look up subaccount details via the real Flutterwave API.
--- To test Flutterwave locally, use the real onboarding flow
--- with your test-mode Flutterwave keys.
+-- Note: Stripe accounts are intentionally NOT seeded with fake IDs.
+-- Fake account IDs would cause errors when edge functions
+-- try to look up account details via the real Stripe API.
+-- To test Stripe locally, use the real onboarding flow
+-- with your test-mode Stripe keys.
 
 -- Sample Messages for Sarah Johnson
 INSERT INTO public.messages (id, creator_id, sender_name, sender_email, message_content, amount_paid, message_type, is_handled, created_at)
@@ -249,12 +249,12 @@ VALUES (
 );
 
 -- Sample Payments
-INSERT INTO public.payments (message_id, creator_id, flw_tx_ref, flw_transaction_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
+INSERT INTO public.payments (message_id, creator_id, stripe_session_id, stripe_payment_intent_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
 VALUES (
   '55555555-5555-5555-5555-555555555555',
   '33333333-3333-3333-3333-333333333333',
-  'convozo_msg_a1b2c3d4e5f6g7h8i9j0',
-  '1234567',
+  'cs_test_a1b2c3d4e5f6g7h8i9j0',
+  'pi_1234567',
   1000,
   220, -- 22% platform fee
   780,
@@ -263,12 +263,12 @@ VALUES (
   NOW() - INTERVAL '1 day'
 );
 
-INSERT INTO public.payments (message_id, creator_id, flw_tx_ref, flw_transaction_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
+INSERT INTO public.payments (message_id, creator_id, stripe_session_id, stripe_payment_intent_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
 VALUES (
   '66666666-6666-6666-6666-666666666666',
   '33333333-3333-3333-3333-333333333333',
-  'convozo_msg_z9y8x7w6v5u4t3s2r1',
-  '1234568',
+  'cs_test_z9y8x7w6v5u4t3s2r1',
+  'pi_1234568',
   1000,
   220,
   780,
@@ -277,12 +277,12 @@ VALUES (
   NOW() - INTERVAL '2 days'
 );
 
-INSERT INTO public.payments (message_id, creator_id, flw_tx_ref, flw_transaction_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
+INSERT INTO public.payments (message_id, creator_id, stripe_session_id, stripe_payment_intent_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
 VALUES (
   '77777777-7777-7777-7777-777777777777',
   '33333333-3333-3333-3333-333333333333',
-  'convozo_msg_m1n2o3p4q5r6s7t8u9',
-  '1234569',
+  'cs_test_m1n2o3p4q5r6s7t8u9',
+  'pi_1234569',
   1000,
   220,
   780,
@@ -291,12 +291,12 @@ VALUES (
   NOW() - INTERVAL '3 hours'
 );
 
-INSERT INTO public.payments (message_id, creator_id, flw_tx_ref, flw_transaction_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
+INSERT INTO public.payments (message_id, creator_id, stripe_session_id, stripe_payment_intent_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
 VALUES (
   '88888888-8888-8888-8888-888888888888',
   '44444444-4444-4444-4444-444444444444',
-  'convozo_msg_f1a2n3b4o5y6z7x8c9',
-  '1234570',
+  'cs_test_f1a2n3b4o5y6z7x8c9',
+  'pi_1234570',
   500,
   110,
   390,
@@ -305,12 +305,12 @@ VALUES (
   NOW() - INTERVAL '5 hours'
 );
 
-INSERT INTO public.payments (message_id, creator_id, flw_tx_ref, flw_transaction_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
+INSERT INTO public.payments (message_id, creator_id, stripe_session_id, stripe_payment_intent_id, amount, platform_fee, creator_amount, status, sender_email, created_at)
 VALUES (
   '99999999-9999-9999-9999-999999999999',
   '44444444-4444-4444-4444-444444444444',
-  'convozo_msg_b1u2s3i4n5e6s7s8t9',
-  '1234571',
+  'cs_test_b1u2s3i4n5e6s7s8t9',
+  'pi_1234571',
   500,
   110,
   390,
@@ -334,7 +334,7 @@ VALUES
   ('33333333-3333-3333-3333-333333333333', 5, '14:00', '17:00', true); -- Friday afternoon
 
 -- Sample Call Booking
-INSERT INTO public.call_bookings (creator_id, booker_name, booker_email, booker_instagram, scheduled_at, duration, amount_paid, status, flw_tx_ref, flw_transaction_id, created_at)
+INSERT INTO public.call_bookings (creator_id, booker_name, booker_email, booker_instagram, scheduled_at, duration, amount_paid, status, stripe_session_id, stripe_payment_intent_id, created_at)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   'Alex Rodriguez',
@@ -344,8 +344,8 @@ VALUES (
   30,
   5000,
   'confirmed',
-  'convozo_call_1a2b3c4d',
-  '1234572',
+  'cs_test_call_1a2b3c4d',
+  'pi_1234572',
   NOW() - INTERVAL '2 hours'
 );
 
@@ -437,5 +437,5 @@ SELECT 'Test Users:' as users_header;
 SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min (enabled)' as user_1;
 SELECT '- creator2@example.com (Mike Chen) - Messages: $5, Calls: disabled' as user_2;
 SELECT '2. Sign up through the app to create auth users first' as step_2;
-SELECT '3. Update the environment variables with your Flutterwave keys' as step_3;
-SELECT '4. Add bank details for the test creators via onboarding' as step_4;
+SELECT '3. Update the environment variables with your Stripe keys' as step_3;
+SELECT '4. Connect Stripe accounts for the test creators via onboarding' as step_4;

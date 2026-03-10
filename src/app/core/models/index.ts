@@ -50,14 +50,14 @@ export interface Message {
   updated_at: string;
 }
 
-export interface FlutterwaveSubaccount {
+export interface StripeAccount {
   id: string;
   creator_id: string;
-  subaccount_id: string;
-  bank_name: string | null;
-  account_number: string | null;
-  country: string;
-  is_active: boolean;
+  stripe_account_id: string;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  details_submitted: boolean;
+  onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -93,8 +93,8 @@ export interface CallBooking {
   amount_paid: number;
   status: CallBookingStatus;
   call_notes: string | null;
-  flw_tx_ref: string | null;
-  flw_transaction_id: string | null;
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -135,31 +135,17 @@ export interface EdgeFunctionResponse<T = unknown> {
   error?: { message: string };
 }
 
-export interface FlutterwaveSubaccountResponse {
-  subaccount_id?: string;
+export interface StripeConnectResponse {
+  url: string;
   already_exists?: boolean;
 }
 
-export interface FlutterwaveSubaccountStatus {
-  is_active: boolean;
-  subaccount_id: string;
-  bank_name: string | null;
-  account_number: string | null;
-}
-
-export interface AccountChangeRequest {
-  id: string;
-  creator_id: string;
-  requested_bank_code: string;
-  requested_bank_name: string;
-  requested_account_number: string;
-  requested_country: string;
-  verified_account_name: string;
-  status: 'pending' | 'approved' | 'rejected';
-  admin_notes: string | null;
-  reviewed_at: string | null;
-  created_at: string;
-  updated_at: string;
+export interface StripeAccountStatus {
+  stripe_account_id: string;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  details_submitted: boolean;
+  onboarding_completed: boolean;
 }
 
 // ── Link-in-Bio ──────────────────────────────────────────────────────

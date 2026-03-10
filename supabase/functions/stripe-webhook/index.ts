@@ -1,104 +1,74 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Stripe from 'https://esm.sh/stripe@14?target=deno';
 import { sendEmail, messageConfirmationEmail, callBookingConfirmationEmail, newMessageNotificationEmail, newCallBookingNotificationEmail } from '../_shared/email.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const FLW_SECRET_KEY = Deno.env.get('FLW_SECRET_KEY') || '';
-const FLW_WEBHOOK_HASH = Deno.env.get('FLW_WEBHOOK_HASH') || '';
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', { apiVersion: '2024-06-20' });
+const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 
 Deno.serve(async (req) => {
-  // Handle OPTIONS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'content-type, verif-hash',
-      },
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  const signature = req.headers.get('stripe-signature');
+  if (!signature) {
+    return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // Flutterwave sends GET to validate the webhook URL is reachable
-  if (req.method === 'GET') {
-    return new Response(JSON.stringify({ status: 'ok' }), {
+  const body = await req.text();
+
+  let event: Stripe.Event;
+  try {
+    event = await stripe.webhooks.constructEventAsync(body, signature, STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err);
+    return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Only process successful checkout completions
+  if (event.type !== 'checkout.session.completed') {
+    return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // Only POST allowed beyond this point
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
+  const session = event.data.object as Stripe.Checkout.Session;
+  const sessionId = session.id;
+  const meta = session.metadata || {};
 
   try {
-    // Verify webhook authenticity using the secret hash header
-    const verifHash = req.headers.get('verif-hash');
-    if (!verifHash || verifHash !== FLW_WEBHOOK_HASH) {
-      console.error('Invalid webhook hash');
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const payload = await req.json();
-
-    // Flutterwave sends event = "charge.completed" for successful payments
-    if (payload.event !== 'charge.completed' || payload.data?.status !== 'successful') {
-      // Acknowledge but do nothing
-      return new Response(JSON.stringify({ received: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const txData = payload.data;
-    const txRef = txData.tx_ref as string;
-    const meta = txData.meta || {};
-
-    // Idempotency: skip if this transaction has already been processed
+    // Idempotency: skip if already processed
     const [{ data: existingPayment }, { data: existingBooking }, { data: existingMessage }] = await Promise.all([
-      supabase.from('payments').select('id').eq('flw_tx_ref', txRef).maybeSingle(),
-      supabase.from('call_bookings').select('id').eq('flw_tx_ref', txRef).maybeSingle(),
-      supabase.from('messages').select('id').eq('flw_tx_ref', txRef).maybeSingle(),
+      supabase.from('payments').select('id').eq('stripe_session_id', sessionId).maybeSingle(),
+      supabase.from('call_bookings').select('id').eq('stripe_session_id', sessionId).maybeSingle(),
+      supabase.from('messages').select('id').eq('stripe_session_id', sessionId).maybeSingle(),
     ]);
 
     if (existingPayment || existingBooking || existingMessage) {
-      console.log('Transaction already processed, skipping:', txRef);
+      console.log('Session already processed, skipping:', sessionId);
       return new Response(JSON.stringify({ received: true, skipped: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Verify the transaction with Flutterwave to prevent fraud
-    const verifyResponse = await fetch(`https://api.flutterwave.com/v3/transactions/${txData.id}/verify`, {
-      headers: { Authorization: `Bearer ${FLW_SECRET_KEY}` },
-    });
-    const verifyData = await verifyResponse.json();
+    const amountInCents = session.amount_total || 0;
+    const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : '';
 
-    if (verifyData.status !== 'success' || verifyData.data?.status !== 'successful') {
-      console.error('Transaction verification failed:', verifyData);
-      return new Response(JSON.stringify({ error: 'Verification failed' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // amount_paid is always stored in USD cents, regardless of what currency
-    // Flutterwave charged in. We read the original USD cents from meta (set at
-    // checkout time) so the frontend's "/ 100 → $" formatting is always correct.
-    const amountInCents = parseInt(meta.amount_cents || '0', 10) || Math.round(verifyData.data.amount);
-
-    // Check if this is a call booking
     if (meta.type === 'call_booking') {
       const { creator_id, booker_name, booker_email, booker_instagram, message_content, duration } = meta;
 
-      // Create call booking record
       const { data: booking, error: bookingError } = await supabase
         .from('call_bookings')
         .insert({
@@ -110,15 +80,15 @@ Deno.serve(async (req) => {
           amount_paid: amountInCents,
           status: 'confirmed',
           call_notes: message_content || null,
-          flw_tx_ref: txRef,
-          flw_transaction_id: String(txData.id),
+          stripe_session_id: sessionId,
+          stripe_payment_intent_id: paymentIntentId,
         })
         .select()
         .single();
 
       if (bookingError) {
         if (bookingError.code === '23505') {
-          console.log('Duplicate webhook detected (booking already exists):', txRef);
+          console.log('Duplicate webhook (call booking):', sessionId);
           return new Response(JSON.stringify({ received: true, duplicate: true }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
@@ -128,7 +98,7 @@ Deno.serve(async (req) => {
         throw bookingError;
       }
 
-      console.log('Call booking created successfully:', booking.id);
+      console.log('Call booking created:', booking.id);
 
       // Send emails (fire-and-forget)
       const { data: callCreator } = await supabase
@@ -138,15 +108,15 @@ Deno.serve(async (req) => {
         .single();
 
       if (callCreator) {
-        const bookerEmail = callBookingConfirmationEmail({
+        const bookerEmailPayload = callBookingConfirmationEmail({
           bookerName: booker_name,
           creatorName: callCreator.display_name,
           durationMinutes: parseInt(duration),
           amountCents: amountInCents,
         });
-        await sendEmail({ to: booker_email, ...bookerEmail, idempotencyKey: `${txRef}_call_booker` });
+        await sendEmail({ to: booker_email, ...bookerEmailPayload, idempotencyKey: `${sessionId}_call_booker` });
 
-        const creatorEmail = newCallBookingNotificationEmail({
+        const creatorEmailPayload = newCallBookingNotificationEmail({
           creatorName: callCreator.display_name,
           bookerName: booker_name,
           bookerEmail: booker_email,
@@ -155,15 +125,13 @@ Deno.serve(async (req) => {
           amountCents: amountInCents,
           callNotes: message_content || null,
         });
-        await sendEmail({ to: callCreator.email, ...creatorEmail, idempotencyKey: `${txRef}_call_creator` });
+        await sendEmail({ to: callCreator.email, ...creatorEmailPayload, idempotencyKey: `${sessionId}_call_creator` });
       }
     } else {
-      // Handle regular message payment
+      // Regular message payment
       const { creator_id, message_content, sender_name, sender_email, sender_instagram, message_type } = meta;
-
       const validMessageType = ['message', 'call', 'follow_back', 'support'].includes(message_type) ? message_type : 'message';
 
-      // Create the message only after payment is verified
       const { data: message, error: messageError } = await supabase
         .from('messages')
         .insert({
@@ -174,14 +142,14 @@ Deno.serve(async (req) => {
           message_content,
           amount_paid: amountInCents,
           message_type: validMessageType,
-          flw_tx_ref: txRef,
+          stripe_session_id: sessionId,
         })
         .select('id')
         .single();
 
       if (messageError) {
         if (messageError.code === '23505') {
-          console.log('Duplicate webhook detected (message already exists):', txRef);
+          console.log('Duplicate webhook (message):', sessionId);
           return new Response(JSON.stringify({ received: true, duplicate: true }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
@@ -191,7 +159,6 @@ Deno.serve(async (req) => {
         throw messageError;
       }
 
-      // Create payment record linked to the message
       const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
       const platformFee = Math.floor(amountInCents * (platformFeePercentage / 100));
       const creatorAmount = amountInCents - platformFee;
@@ -201,8 +168,8 @@ Deno.serve(async (req) => {
         .insert({
           message_id: message.id,
           creator_id,
-          flw_tx_ref: txRef,
-          flw_transaction_id: String(txData.id),
+          stripe_session_id: sessionId,
+          stripe_payment_intent_id: paymentIntentId,
           amount: amountInCents,
           platform_fee: platformFee,
           creator_amount: creatorAmount,
@@ -215,7 +182,7 @@ Deno.serve(async (req) => {
         throw paymentError;
       }
 
-      console.log('Message and payment created for:', message.id);
+      console.log('Message and payment created:', message.id);
 
       // Send emails (fire-and-forget)
       const { data: msgCreator } = await supabase
@@ -231,7 +198,7 @@ Deno.serve(async (req) => {
           messageContent: message_content,
           amountCents: amountInCents,
         });
-        await sendEmail({ to: sender_email, ...senderEmailPayload, idempotencyKey: `${txRef}_msg_sender` });
+        await sendEmail({ to: sender_email, ...senderEmailPayload, idempotencyKey: `${sessionId}_msg_sender` });
 
         const creatorEmailPayload = newMessageNotificationEmail({
           creatorName: msgCreator.display_name,
@@ -241,7 +208,7 @@ Deno.serve(async (req) => {
           messageContent: message_content,
           amountCents: amountInCents,
         });
-        await sendEmail({ to: msgCreator.email, ...creatorEmailPayload, idempotencyKey: `${txRef}_msg_creator` });
+        await sendEmail({ to: msgCreator.email, ...creatorEmailPayload, idempotencyKey: `${sessionId}_msg_creator` });
       }
     }
 
@@ -253,10 +220,7 @@ Deno.serve(async (req) => {
     console.error('Webhook error:', err);
     return new Response(
       JSON.stringify({ error: 'Webhook processing failed' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
 });

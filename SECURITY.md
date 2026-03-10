@@ -19,11 +19,11 @@
 
 ### Payments
 
-- **PCI compliance** — Flutterwave handles all card data; no sensitive payment info touches our servers
-- **Webhook hash verification** — all Flutterwave webhook payloads are verified using `verif-hash` header comparison
+- **PCI compliance** — Stripe handles all card data; no sensitive payment info touches our servers
+- **Webhook signature verification** — all Stripe webhook payloads are verified using `stripe.webhooks.constructEvent` with the signing secret
 - **Webhook idempotency** — duplicate transaction IDs are rejected to prevent double-processing
 - **Server-side price validation** — Edge Functions verify amounts against creator settings before creating payment sessions
-- **Subaccounts** — creators add bank details via Flutterwave subaccounts; Convozo never holds creator funds
+- **Connect Express** — creators onboard via Stripe Connect Express; Convozo never holds creator funds
 
 ### Input Validation
 
@@ -65,7 +65,7 @@
 - [ ] **Persistent rate limiting** — current implementation is in-memory per Edge Function instance; replace with Redis or Supabase table for rate limiting across instances
 - [ ] **CSP headers** — add Content-Security-Policy headers to restrict script/style sources
 - [ ] **Abuse monitoring** — set up alerts for unusual checkout session volume or failed webhook deliveries
-- [ ] **Flutterwave live mode** — switch from test keys to live keys; verify webhook hash is set for production
+- [ ] **Stripe live mode** — switch from test keys to live keys; verify webhook signing secret is set for production
 - [ ] **VAPID keys** — generate production VAPID keys (`npx web-push generate-vapid-keys`)
 - [ ] **Auth session config** — review Supabase Auth settings for session duration, refresh token rotation, and MFA options
 - [ ] **Dependency audit** — run `npm audit` and address any high/critical vulnerabilities

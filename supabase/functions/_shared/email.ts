@@ -32,7 +32,7 @@ interface EmailPayload {
   to: string;
   subject: string;
   html: string;
-  /** Optional idempotency key (e.g. Flutterwave tx_ref + suffix) to prevent duplicate sends. Max 256 chars. */
+  /** Optional idempotency key (e.g. Stripe session_id + suffix) to prevent duplicate sends. Max 256 chars. */
   idempotencyKey?: string;
 }
 

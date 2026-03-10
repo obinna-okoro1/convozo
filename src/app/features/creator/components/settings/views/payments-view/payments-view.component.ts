@@ -1,172 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../../../../core/services/supabase.service';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { SettingsStateService } from '../../settings-state.service';
-import {
-  SearchableSelectComponent,
-  SelectOption,
-} from '../../../../../../shared/components/ui/searchable-select/searchable-select.component';
-
-interface FlutterwaveBank {
-  id: string;
-  code: string;
-  name: string;
-}
 
 @Component({
   selector: 'app-payments-view',
-  imports: [DatePipe, FormsModule, SearchableSelectComponent],
   templateUrl: './payments-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PaymentsViewComponent {
-  private readonly supabase = inject(SupabaseService);
+export class PaymentsViewComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly showUpdateForm = signal(false);
-  protected readonly bankCode = signal('');
-  protected readonly bankName = signal('');
-  protected readonly accountNumber = signal('');
-  protected readonly country = signal('NG');
+  constructor(protected readonly state: SettingsStateService) {}
 
-  protected readonly banks = signal<FlutterwaveBank[]>([]);
-  protected readonly banksLoading = signal(false);
-  protected readonly banksError = signal<string | null>(null);
-
-  protected readonly pendingRequest = computed(() => this.state.pendingChangeRequest());
-
-  protected readonly countryOptions: SelectOption[] = [
-    { value: 'NG', label: '🇳🇬 Nigeria' },
-    { value: 'GH', label: '🇬🇭 Ghana' },
-    { value: 'KE', label: '🇰🇪 Kenya' },
-    { value: 'ZA', label: '🇿🇦 South Africa' },
-    { value: 'TZ', label: '🇹🇿 Tanzania' },
-    { value: 'UG', label: '🇺🇬 Uganda' },
-  ];
-
-  protected readonly bankSelectOptions = computed<SelectOption[]>(() => [
-    { value: '', label: 'Select your bank' },
-    ...this.banks().map((b) => ({ value: b.code, label: b.name })),
-  ]);
-
-  // Account verification state
-  protected readonly verifying = signal(false);
-  protected readonly verifiedName = signal<string | null>(null);
-  protected readonly verifyError = signal<string | null>(null);
-
-  // Auto-clear verification when bank or account changes
-  protected readonly canVerify = computed(() =>
-    this.bankCode().length > 0 && this.accountNumber().length >= 10 && !this.banksLoading(),
-  );
-  protected readonly isVerified = computed(() => this.verifiedName() !== null);
-
-  constructor(protected readonly state: SettingsStateService) {
-    // Load banks when country changes
-    effect(() => {
-      void this.loadBanks(this.country());
-    });
-
-    // Clear verification when bank or account number changes
-    effect(() => {
-      // Read both signals to track them
-      this.bankCode();
-      this.accountNumber();
-      this.verifiedName.set(null);
-      this.verifyError.set(null);
-    });
-  }
-
-  protected async loadBanks(country: string): Promise<void> {
-    this.banksLoading.set(true);
-    this.banksError.set(null);
-    this.bankCode.set('');
-    try {
-      const { data, error } = await this.supabase.getBanks(country);
-      if (error) throw error;
-      const response = data as unknown as { status: string; data: FlutterwaveBank[] } | null;
-      this.banks.set(response?.data ?? []);
-    } catch {
-      this.banksError.set('Could not load bank list. Please try again.');
-      this.banks.set([]);
-    } finally {
-      this.banksLoading.set(false);
+  ngOnInit(): void {
+    // Check if returning from Stripe onboarding
+    const params = this.route.snapshot.queryParamMap;
+    if (params.get('connected') === 'true' || params.get('refresh') === 'true') {
+      void this.state.refreshStripeStatus();
     }
   }
 
-  protected async verifyAccount(): Promise<void> {
-    if (!this.canVerify()) return;
-    this.verifying.set(true);
-    this.verifyError.set(null);
-    this.verifiedName.set(null);
-
-    try {
-      const { data, error } = await this.supabase.resolveAccount(
-        this.accountNumber(),
-        this.bankCode(),
-      );
-      if (error) throw error;
-      const response = data as unknown as { account_name?: string; error?: string } | null;
-      if (response?.account_name) {
-        this.verifiedName.set(response.account_name);
-      } else {
-        this.verifyError.set(response?.error || 'Could not verify this account. Please check your details.');
-      }
-    } catch {
-      this.verifyError.set('Verification failed. Please check your bank and account number.');
-    } finally {
-      this.verifying.set(false);
-    }
-  }
-
-  protected toggleUpdateForm(): void {
-    this.showUpdateForm.update(v => !v);
-    if (!this.showUpdateForm()) {
-      this.bankCode.set('');
-      this.bankName.set('');
-      this.accountNumber.set('');
-      this.country.set('NG');
-      this.verifiedName.set(null);
-      this.verifyError.set(null);
-    }
-  }
-
-  /** Called by the bank searchable-select in the update form */
-  protected onBankChange(code: string): void {
-    this.bankCode.set(code);
-    const bank = this.banks().find(b => b.code === code);
-    this.bankName.set(bank?.name ?? '');
-  }
-
-  protected async submitConnect(): Promise<void> {
-    if (!this.isVerified()) return;
-    await this.state.connectPayment(this.bankCode(), this.accountNumber(), this.country());
-    if (!this.state.error()) {
-      this.bankCode.set('');
-      this.bankName.set('');
-      this.accountNumber.set('');
-      this.country.set('NG');
-      this.verifiedName.set(null);
-      this.verifyError.set(null);
-    }
-  }
-
-  protected async submitChangeRequest(): Promise<void> {
-    if (!this.isVerified() || !this.verifiedName()) return;
-    await this.state.requestAccountChange(
-      this.bankCode(),
-      this.bankName(),
-      this.accountNumber(),
-      this.country(),
-      this.verifiedName()!,
-    );
-    if (!this.state.error()) {
-      this.showUpdateForm.set(false);
-      this.bankCode.set('');
-      this.bankName.set('');
-      this.accountNumber.set('');
-      this.country.set('NG');
-      this.verifiedName.set(null);
-      this.verifyError.set(null);
-    }
+  protected async connectStripe(): Promise<void> {
+    await this.state.connectPayment();
   }
 }

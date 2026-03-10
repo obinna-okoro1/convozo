@@ -1,12 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Stripe from 'https://esm.sh/stripe@14?target=deno';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-import { usdCentsToLocal } from '../_shared/currency.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const FLW_SECRET_KEY = Deno.env.get('FLW_SECRET_KEY') || '';
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', { apiVersion: '2024-06-20' });
 
 // Rate limiting store (in-memory, per-instance)
 const rateLimitStore = new Map<string, number[]>();
@@ -76,10 +76,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get creator info + Flutterwave subaccount for split payments
+    // Get creator info + Stripe account for split payments
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, flutterwave_subaccounts(subaccount_id, country), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
+      .select('id, display_name, stripe_accounts(stripe_account_id, charges_enabled), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -137,9 +137,9 @@ Deno.serve(async (req) => {
       productName = `Support for ${creator.display_name}`;
     }
 
-    // Check Flutterwave subaccount
-    const flwSubaccount = creator.flutterwave_subaccounts as { subaccount_id: string; country: string } | null;
-    if (!flwSubaccount?.subaccount_id) {
+    // Check Stripe account
+    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string; charges_enabled: boolean } | null;
+    if (!stripeAccount?.stripe_account_id || !stripeAccount.charges_enabled) {
       return new Response(
         JSON.stringify({ error: 'Creator payment setup incomplete' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -147,69 +147,41 @@ Deno.serve(async (req) => {
     }
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
+    const applicationFeeAmount = Math.floor(serverPrice * platformFeePercentage / 100);
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // serverPrice is in USD cents — convert to creator's local currency so Flutterwave
-    // subaccount split (which must match the transaction currency) works correctly.
-    const { amount, currency } = await usdCentsToLocal(serverPrice, flwSubaccount.country || 'NG');
-
-    // Generate a unique transaction reference
-    const txRef = `convozo_msg_${crypto.randomUUID()}`;
-
-    // Build Flutterwave Standard payment request
-    const flwPayload = {
-      tx_ref: txRef,
-      amount,
-      currency,
-      redirect_url: `${appUrl}/success?tx_ref=${txRef}&type=message`,
-      customer: {
-        email: sender_email,
-        name: sender_name,
-      },
-      customizations: {
-        title: 'Convozo',
-        description: productName,
-        logo: `${appUrl}/assets/icons/icon-192x192.png`,
-      },
-      subaccounts: [
-        {
-          id: flwSubaccount.subaccount_id,
-          // transaction_charge is the SUBACCOUNT's (creator's) percentage in 0-1 range.
-          // e.g. platformFeePercentage=22 → creator keeps 78% → 0.78
-          transaction_charge_type: 'percentage',
-          transaction_charge: (100 - platformFeePercentage) / 100,
+    // Create Stripe Checkout Session with Connect split
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: productName },
+          unit_amount: serverPrice,
         },
-      ],
-      meta: {
+        quantity: 1,
+      }],
+      mode: 'payment',
+      customer_email: sender_email,
+      payment_intent_data: {
+        application_fee_amount: applicationFeeAmount,
+        transfer_data: { destination: stripeAccount.stripe_account_id },
+      },
+      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=message`,
+      cancel_url: `${appUrl}/${creator_slug}`,
+      metadata: {
         creator_id: creator.id,
         message_content: message_content.slice(0, 490),
         sender_name: sender_name.slice(0, 490),
         sender_email,
         sender_instagram: (sender_instagram || '').slice(0, 490),
         message_type: validMessageType,
-        // USD cents — used by the webhook for amount_paid storage (not the local currency amount)
         amount_cents: serverPrice.toString(),
       },
-    };
-
-    const flwResponse = await fetch('https://api.flutterwave.com/v3/payments', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${FLW_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(flwPayload),
     });
 
-    const flwData = await flwResponse.json();
-
-    if (flwData.status !== 'success') {
-      console.error('Flutterwave payment init failed:', flwData);
-      throw new Error(flwData.message || 'Failed to initialize payment');
-    }
-
     return new Response(
-      JSON.stringify({ url: flwData.data.link, tx_ref: txRef }),
+      JSON.stringify({ url: session.url, session_id: session.id }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
@@ -218,5 +190,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  }
+});
   }
 });
