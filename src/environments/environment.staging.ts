@@ -9,10 +9,9 @@
 export const environment = {
   production: false,
   supabase: {
-    // TODO: Replace with your STAGING Supabase project URL
-    url: 'https://YOUR_STAGING_PROJECT_REF.supabase.co',
-    // TODO: Replace with your STAGING Supabase anon key
-    anonKey: 'YOUR_STAGING_ANON_KEY',
+    url: 'https://fzltvpbyhnvviuzanyha.supabase.co',
+    anonKey:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6bHR2cGJ5aG52dml1emFueWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTU3NDgsImV4cCI6MjA4ODczMTc0OH0.PXa7DPsSkb8XN7D4CHK1G7fko0XoIMgmaI2B0DB4W2A',
   },
   flutterwave: {
     // Use TEST keys for staging so no real money moves
