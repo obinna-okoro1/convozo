@@ -13,6 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Rate limiting store (in-memory, per-instance)
 // In production, use Redis or similar distributed cache
+// Debug deployment v2 - force redeploy
 const rateLimitStore = new Map<string, number[]>();
 
 // Rate limit: 10 requests per hour per email
@@ -221,8 +222,15 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error('Error creating checkout session:', err);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorStack = err instanceof Error ? err.stack : undefined;
+    console.error('Error details:', { message: errorMessage, stack: errorStack });
     return new Response(
-      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
+      JSON.stringify({
+        error: 'An internal error occurred. Please try again later.',
+        // Temporary debug info - remove after testing
+        _debug: { message: errorMessage, type: err?.constructor?.name },
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
