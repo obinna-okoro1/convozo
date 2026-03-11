@@ -12,8 +12,6 @@ const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUP
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Rate limiting store (in-memory, per-instance)
-// In production, use Redis or similar distributed cache
-// Debug deployment v2 - force redeploy
 const rateLimitStore = new Map<string, number[]>();
 
 // Rate limit: 10 requests per hour per email
@@ -167,14 +165,10 @@ Deno.serve(async (req) => {
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
-    // Hardcoded so Stripe redirects work even if APP_URL secret resets
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // Check if using test Stripe account (for local development)
-    const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_');
-
     // Create Stripe Checkout session
-    const sessionConfig: any = {
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -193,6 +187,12 @@ Deno.serve(async (req) => {
       success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/${creator_slug}`,
       customer_email: sender_email,
+      payment_intent_data: {
+        application_fee_amount: platformFee,
+        transfer_data: {
+          destination: stripeAccount.stripe_account_id,
+        },
+      },
       metadata: {
         creator_id: creator.id,
         message_content: message_content.slice(0, 490),
@@ -204,16 +204,6 @@ Deno.serve(async (req) => {
       },
     };
 
-    // Only add Connect transfer if using real Stripe account
-    if (!isTestAccount) {
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: platformFee,
-        transfer_data: {
-          destination: stripeAccount.stripe_account_id,
-        },
-      };
-    }
-
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(
@@ -222,15 +212,8 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error('Error creating checkout session:', err);
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const errorStack = err instanceof Error ? err.stack : undefined;
-    console.error('Error details:', { message: errorMessage, stack: errorStack });
     return new Response(
-      JSON.stringify({
-        error: 'An internal error occurred. Please try again later.',
-        // Temporary debug info - remove after testing
-        _debug: { message: errorMessage, type: err?.constructor?.name },
-      }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

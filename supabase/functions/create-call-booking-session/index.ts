@@ -130,11 +130,8 @@ Deno.serve(async (req) => {
     const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
-    // Check if using test Stripe account (for local development)
-    const isTestAccount = stripeAccount.stripe_account_id.startsWith('acct_test_');
-
     // Create Stripe Checkout Session config
-    const sessionConfig: Record<string, unknown> = {
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -161,22 +158,18 @@ Deno.serve(async (req) => {
         duration: settings.call_duration.toString(),
         amount: serverPrice.toString(),
       },
+      payment_intent_data: {
+        application_fee_amount: platformFee,
+        transfer_data: {
+          destination: stripeAccount.stripe_account_id,
+        },
+      },
       customer_email: payload.booker_email,
       success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=call`,
       cancel_url: `${appUrl}/${payload.creator_slug}`,
     };
 
-    // Only add Connect transfer if using real Stripe account
-    if (!isTestAccount) {
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: platformFee,
-        transfer_data: {
-          destination: stripeAccount.stripe_account_id,
-        },
-      };
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionConfig as Stripe.Checkout.SessionCreateParams);
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(
       JSON.stringify({ sessionId: session.id, url: session.url }),
