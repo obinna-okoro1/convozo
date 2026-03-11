@@ -38,12 +38,6 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy Supabase migrations (staging)
-        run: supabase db push --project-ref fzltvpbyhnvviuzanyha
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_STAGING }}
-
       - name: Deploy Supabase Edge Functions (staging)
         run: supabase functions deploy --project-ref fzltvpbyhnvviuzanyha
         env:
