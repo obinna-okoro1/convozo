@@ -114,6 +114,12 @@ export class SettingsStateService {
 
   readonly canSaveMonetization = computed(() => this.monetizationDirty());
 
+  /** True only when Stripe account is fully connected and onboarding is complete */
+  readonly isStripeConnected = computed(() => {
+    const account = this.paymentAccount();
+    return !!(account?.onboarding_completed && account?.charges_enabled);
+  });
+
   constructor(
     private readonly creatorService: CreatorService,
     private readonly supabaseService: SupabaseService,
@@ -320,13 +326,26 @@ export class SettingsStateService {
     if (!creator || !account) return;
 
     try {
-      const { data } = await this.creatorService.verifyStripeAccount(account.stripe_account_id);
-      if (data) {
-        // Reload the payment account from DB
-        await this.loadPaymentAccount(creator.id);
+      const { data, error } = await this.creatorService.verifyStripeAccount(
+        account.stripe_account_id,
+      );
+      if (error != null) {
+        console.error('[refreshStripeStatus] verify failed:', error);
+        return;
+      }
+      if (data != null) {
+        // Update the signal with the fresh values returned by the edge function
+        // so the UI reflects the real Stripe account status immediately.
+        this.paymentAccount.set({
+          ...account,
+          charges_enabled: data.charges_enabled ?? account.charges_enabled,
+          payouts_enabled: data.payouts_enabled ?? account.payouts_enabled,
+          details_submitted: data.details_submitted ?? account.details_submitted,
+          onboarding_completed: data.onboarding_completed ?? account.onboarding_completed,
+        });
       }
     } catch {
-      // Silently fail - the account status will be refreshed on next load
+      // Silently fail — stale UI is better than a crash
     }
   }
 
@@ -397,6 +416,12 @@ export class SettingsStateService {
 
     if (data != null) {
       this.paymentAccount.set(data);
+      // If the account isn't fully onboarded yet, pull the latest status from
+      // Stripe immediately so the user always sees current data without needing
+      // to manually click refresh.
+      if (!data.onboarding_completed || !data.charges_enabled) {
+        await this.refreshStripeStatus();
+      }
     }
   }
 }

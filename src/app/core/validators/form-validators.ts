@@ -38,20 +38,23 @@ export class FormValidators {
   }
 
   /**
-   * Sanitizes a slug value as the user types (strips invalid chars, forces lowercase)
+   * Sanitizes a slug value as the user types (strips invalid chars, forces lowercase).
+   * Valid chars: lowercase letters, digits, hyphens, underscores.
    */
   public static sanitizeSlug(value: string): string {
     return value
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
+      .replace(/[^a-z0-9_-]/g, '')
       .replace(/-{2,}/g, '-')
-      .replace(/^-/, '');
+      .replace(/^[-_]/, '');
   }
 
   /**
-   * Validates that a slug is in the correct format (lowercase alphanumeric + hyphens, min 2 chars)
+   * Validates that a slug matches ^[a-z0-9_-]{3,30}$
+   * Minimum 3 characters, maximum 30, lowercase alphanumeric + hyphens + underscores.
+   * Must not start with a hyphen or underscore.
    */
   public static isValidSlug(slug: string): boolean {
-    return /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug) && slug.length >= 2;
+    return /^[a-z0-9][a-z0-9_-]{2,29}$/.test(slug);
   }
 }

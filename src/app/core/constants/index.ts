@@ -5,7 +5,7 @@
 export const APP_CONSTANTS = {
   MESSAGE_MAX_LENGTH: 1000,
   PRICE_MULTIPLIER: 100, // Convert dollars to cents
-  DEFAULT_RESPONSE_EXPECTATION: 'I typically respond within 24-48 hours.',
+  DEFAULT_RESPONSE_EXPECTATION: '24-48 hours',
   EMAIL_REGEX:
     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/,
 } as const;

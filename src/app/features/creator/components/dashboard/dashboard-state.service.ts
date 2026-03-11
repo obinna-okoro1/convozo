@@ -10,8 +10,10 @@ import {
   CreatorSettings,
   Message,
   CallBooking,
+  StripeAccount,
 } from '../../../../core/models';
-import { CreatorService } from '../../services/creator.service';
+import { MessageService } from '../../services/message.service';
+import { BookingService } from '../../services/booking.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 @Injectable()
@@ -21,6 +23,7 @@ export class DashboardStateService {
   readonly settings = signal<CreatorSettings | null>(null);
   readonly messages = signal<Message[]>([]);
   readonly callBookings = signal<CallBooking[]>([]);
+  readonly stripeAccount = signal<StripeAccount | null>(null);
 
   // ── Computed ───────────────────────────────────────────────────────
   readonly unhandledMessageCount = computed(
@@ -29,9 +32,16 @@ export class DashboardStateService {
   readonly confirmedBookingCount = computed(
     () => this.callBookings().filter((b) => b.status === 'confirmed').length,
   );
-  readonly publicUrl = computed<string>(() =>
-    this.creatorService.buildPublicUrl(this.creator()?.slug),
-  );
+  readonly publicUrl = computed<string>(() => {
+    const slug = this.creator()?.slug;
+    if (!slug) return '';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${baseUrl}/${slug}`;
+  });
+  readonly isStripeConnected = computed(() => {
+    const account = this.stripeAccount();
+    return !!(account?.onboarding_completed && account?.charges_enabled);
+  });
 
   // ── Delete confirmation state ─────────────────────────────────────
   readonly showDeleteConfirm = signal<boolean>(false);
@@ -50,21 +60,22 @@ export class DashboardStateService {
   });
 
   constructor(
-    private readonly creatorService: CreatorService,
+    private readonly messageService: MessageService,
+    private readonly bookingService: BookingService,
     private readonly toast: ToastService,
   ) {}
 
   // ── Actions ────────────────────────────────────────────────────────
 
   async markAsHandled(message: Message): Promise<void> {
-    const { error } = await this.creatorService.markAsHandled(message.id);
+    const { error } = await this.messageService.markAsHandled(message.id);
     if (error) {
       this.toast.error(error instanceof Error ? error.message : 'Failed to mark as handled');
     }
   }
 
   async markBookingCompleted(booking: CallBooking): Promise<void> {
-    const { error } = await this.creatorService.updateBookingStatus(booking.id, 'completed');
+    const { error } = await this.bookingService.updateBookingStatus(booking.id, 'completed');
     if (error) {
       this.toast.error(error instanceof Error ? error.message : 'Failed to update booking');
     } else {
@@ -73,7 +84,7 @@ export class DashboardStateService {
   }
 
   async cancelBooking(booking: CallBooking): Promise<void> {
-    const { error } = await this.creatorService.updateBookingStatus(booking.id, 'cancelled');
+    const { error } = await this.bookingService.updateBookingStatus(booking.id, 'cancelled');
     if (error) {
       this.toast.error(error instanceof Error ? error.message : 'Failed to cancel booking');
     } else {
@@ -95,10 +106,10 @@ export class DashboardStateService {
       const isMessage = 'message_content' in item;
 
       if (isMessage) {
-        await this.creatorService.deleteMessage(item.id);
+        await this.messageService.deleteMessage(item.id);
         this.messages.update((msgs) => msgs.filter((m) => m.id !== item.id));
       } else {
-        await this.creatorService.deleteCallBooking(item.id);
+        await this.bookingService.deleteCallBooking(item.id);
         this.callBookings.update((bookings) => bookings.filter((b) => b.id !== item.id));
       }
 

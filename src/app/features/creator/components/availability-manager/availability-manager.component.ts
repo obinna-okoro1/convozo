@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AvailabilitySlot, DayOfWeek } from '../../../../core/models';
-import { CreatorService } from '../../services/creator.service';
+import { AvailabilityService } from '../../services/availability.service';
 import {
   SearchableSelectComponent,
   SelectOption,
@@ -78,7 +78,7 @@ export class AvailabilityManagerComponent implements OnInit {
 
   protected readonly activeDays = computed(() => this.schedule().filter((d) => d.enabled).length);
 
-  constructor(private readonly creatorService: CreatorService) {}
+  constructor(private readonly availabilityService: AvailabilityService) {}
 
   public ngOnInit(): void {
     void this.loadAvailability();
@@ -223,7 +223,7 @@ export class AvailabilityManagerComponent implements OnInit {
           })),
         );
 
-      const result = await this.creatorService.saveAvailabilitySlots(this.creatorId(), slots);
+      const result = await this.availabilityService.saveAvailabilitySlots(this.creatorId(), slots);
 
       if (result.success) {
         this.hasChanges.set(false);
@@ -260,7 +260,7 @@ export class AvailabilityManagerComponent implements OnInit {
    */
   private async loadAvailability(): Promise<void> {
     try {
-      const { data, error } = await this.creatorService.getAvailabilitySlots(this.creatorId());
+      const { data, error } = await this.availabilityService.getAvailabilitySlots(this.creatorId());
 
       if (error) {
         this.error.set('Failed to load availability');

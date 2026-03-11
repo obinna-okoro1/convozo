@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Message, MessageStats, FilterStatus } from '../../../../../core/models';
-import { CreatorService } from '../../../services/creator.service';
+import { MessageService } from '../../../services/message.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { ReplyModalComponent } from '../reply-modal/reply-modal.component';
 import {
@@ -35,11 +35,11 @@ export class InboxPanelComponent {
   protected readonly filterStatus = signal<FilterStatus>('all');
 
   protected readonly stats = computed<MessageStats>(() =>
-    this.creatorService.calculateStats(this.messages()),
+    this.messageService.calculateStats(this.messages()),
   );
 
   constructor(
-    private readonly creatorService: CreatorService,
+    private readonly messageService: MessageService,
     private readonly toast: ToastService,
   ) {}
 
@@ -99,7 +99,7 @@ export class InboxPanelComponent {
 
     this.sendingReply.set(true);
 
-    const result = await this.creatorService.replyToMessage(
+    const result = await this.messageService.replyToMessage(
       message.id,
       content,
       message.sender_email,
