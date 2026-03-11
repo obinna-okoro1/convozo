@@ -425,8 +425,8 @@ export class OnboardingComponent implements OnInit {
         throw settingsError;
       }
 
-      // Move to payment setup step
-      this.nextStep();
+      // Navigate directly to dashboard (Stripe Connect was already offered at step 2)
+      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       // Don't leak raw database errors to the user
@@ -485,10 +485,10 @@ export class OnboardingComponent implements OnInit {
   }
 
   /**
-   * Skip payment setup for now
+   * Skip payment setup for now — advance to the monetization step
    */
   protected skipPaymentSetup(): void {
-    void this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+    this.nextStep();
   }
 
   private async initialize(): Promise<void> {

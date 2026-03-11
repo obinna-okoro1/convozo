@@ -114,6 +114,12 @@ export class SettingsStateService {
 
   readonly canSaveMonetization = computed(() => this.monetizationDirty());
 
+  /** True only when Stripe account is fully connected and onboarding is complete */
+  readonly isStripeConnected = computed(() => {
+    const account = this.paymentAccount();
+    return !!(account?.onboarding_completed && account?.charges_enabled);
+  });
+
   constructor(
     private readonly creatorService: CreatorService,
     private readonly supabaseService: SupabaseService,

@@ -10,6 +10,7 @@ import {
   CreatorSettings,
   Message,
   CallBooking,
+  StripeAccount,
 } from '../../../../core/models';
 import { CreatorService } from '../../services/creator.service';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -21,6 +22,7 @@ export class DashboardStateService {
   readonly settings = signal<CreatorSettings | null>(null);
   readonly messages = signal<Message[]>([]);
   readonly callBookings = signal<CallBooking[]>([]);
+  readonly stripeAccount = signal<StripeAccount | null>(null);
 
   // ── Computed ───────────────────────────────────────────────────────
   readonly unhandledMessageCount = computed(
@@ -32,6 +34,10 @@ export class DashboardStateService {
   readonly publicUrl = computed<string>(() =>
     this.creatorService.buildPublicUrl(this.creator()?.slug),
   );
+  readonly isStripeConnected = computed(() => {
+    const account = this.stripeAccount();
+    return !!(account?.onboarding_completed && account?.charges_enabled);
+  });
 
   // ── Delete confirmation state ─────────────────────────────────────
   readonly showDeleteConfirm = signal<boolean>(false);

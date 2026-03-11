@@ -10,23 +10,52 @@
       <p class="text-white/60 text-xs sm:text-sm mt-0.5 sm:mt-1 hidden sm:block">Enable channels and set your rates</p>
     </div>
   </div>
+
+  @if (!state.isStripeConnected()) {
+    <!-- Stripe not connected warning -->
+    <div class="mb-6 p-5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-yellow-500/20">
+      <div class="flex items-start gap-4">
+        <div class="w-11 h-11 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/50 mt-0.5">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-white mb-1">Stripe account required to enable payment channels</p>
+          <p class="text-yellow-200 text-sm leading-relaxed mb-3">Connect your Stripe account first so you can receive payments from fans. You can set prices here, but toggles are locked until your account is connected.</p>
+          <a routerLink="../payments" class="inline-flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-2 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-yellow-500/30">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
+            </svg>
+            Connect with Stripe →
+          </a>
+        </div>
+      </div>
+    </div>
+  }
   
   <form class="space-y-8">
     <!-- Message Settings -->
     <div class="border-b border-white/10 pb-8">
-      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-60]="!state.isStripeConnected()">
         <div>
           <h3 class="font-bold text-white text-lg">💬 Paid Messages</h3>
           <p class="text-sm text-white/60 mt-1">Allow fans to send you paid messages</p>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer group">
+        <label class="relative inline-flex items-center group" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
           <input
             type="checkbox"
             [checked]="state.messagesEnabled()"
-            (change)="state.messagesEnabled.set(state.inputChecked($event))"
+            (change)="state.isStripeConnected() && state.messagesEnabled.set(state.inputChecked($event))"
+            [disabled]="!state.isStripeConnected()"
             class="sr-only peer"
           />
-          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
+          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg peer-disabled:opacity-50"></div>
+          @if (!state.isStripeConnected()) {
+            <svg class="w-4 h-4 text-yellow-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          }
         </label>
       </div>
 
@@ -51,23 +80,51 @@
           <p class="text-xs text-white/50 mt-2">Price per message in USD</p>
         </div>
       }
+
+      @if (!state.messagesEnabled() && state.isStripeConnected()) {
+        <!-- Price preview even when disabled -->
+        <div class="space-y-3">
+          <label for="messagePricePreview" class="block text-sm font-bold text-white">Message Price *</label>
+          <div class="flex items-center gap-4">
+            <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
+            <div class="relative flex-1 group">
+              <input
+                type="number"
+                id="messagePricePreview"
+                [value]="state.messagePrice() / 100"
+                (input)="state.messagePrice.set(state.inputNumber($event) * 100)"
+                min="1"
+                step="1"
+                class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 opacity-50"
+              />
+            </div>
+          </div>
+          <p class="text-xs text-white/50 mt-2">Enable above to activate this channel</p>
+        </div>
+      }
     </div>
 
     <!-- Call Settings -->
     <div class="border-t border-white/10 pt-8">
-      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-60]="!state.isStripeConnected()">
         <div>
           <h3 class="font-bold text-white text-lg">📞 Video Call Bookings</h3>
           <p class="text-sm text-white/60 mt-1">Allow fans to book video calls with you</p>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer group">
+        <label class="relative inline-flex items-center group" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
           <input
             type="checkbox"
             [checked]="state.callsEnabled()"
-            (change)="state.callsEnabled.set(state.inputChecked($event))"
+            (change)="state.isStripeConnected() && state.callsEnabled.set(state.inputChecked($event))"
+            [disabled]="!state.isStripeConnected()"
             class="sr-only peer"
           />
-          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
+          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg peer-disabled:opacity-50"></div>
+          @if (!state.isStripeConnected()) {
+            <svg class="w-4 h-4 text-yellow-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          }
         </label>
       </div>
 
@@ -144,19 +201,25 @@
 
     <!-- Follow-Back Request Settings -->
     <div class="border-t border-white/10 pt-8">
-      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-60]="!state.isStripeConnected()">
         <div>
           <h3 class="font-bold text-white text-lg">🔄 Follow-Back Requests</h3>
           <p class="text-sm text-white/60 mt-1">Let fans pay for a follow-back on Instagram</p>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer group">
+        <label class="relative inline-flex items-center group" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
           <input
             type="checkbox"
             [checked]="state.followBackEnabled()"
-            (change)="state.followBackEnabled.set(state.inputChecked($event))"
+            (change)="state.isStripeConnected() && state.followBackEnabled.set(state.inputChecked($event))"
+            [disabled]="!state.isStripeConnected()"
             class="sr-only peer"
           />
-          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
+          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg peer-disabled:opacity-50"></div>
+          @if (!state.isStripeConnected()) {
+            <svg class="w-4 h-4 text-yellow-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          }
         </label>
       </div>
 
@@ -187,19 +250,25 @@
 
     <!-- Support / Tips Settings -->
     <div class="border-t border-white/10 pt-8">
-      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+      <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-60]="!state.isStripeConnected()">
         <div>
           <h3 class="font-bold text-white text-lg">❤️ Fan Support</h3>
           <p class="text-sm text-white/60 mt-1">Let fans show their love with a custom tip</p>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer group">
+        <label class="relative inline-flex items-center group" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
           <input
             type="checkbox"
             [checked]="state.tipsEnabled()"
-            (change)="state.tipsEnabled.set(state.inputChecked($event))"
+            (change)="state.isStripeConnected() && state.tipsEnabled.set(state.inputChecked($event))"
+            [disabled]="!state.isStripeConnected()"
             class="sr-only peer"
           />
-          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
+          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg peer-disabled:opacity-50"></div>
+          @if (!state.isStripeConnected()) {
+            <svg class="w-4 h-4 text-yellow-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          }
         </label>
       </div>
 

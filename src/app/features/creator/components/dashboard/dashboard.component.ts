@@ -192,6 +192,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.dashboardState.callBookings.set(bookingsData);
       }
 
+      const { data: stripeData } = await this.creatorService.getStripeAccount(creatorData.id);
+      this.dashboardState.stripeAccount.set(stripeData ?? null);
+
       // Subscribe to real-time updates so the inbox refreshes instantly
       this.realtimeChannel = this.creatorService.subscribeToMessages(
         creatorData.id,

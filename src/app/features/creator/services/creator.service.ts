@@ -426,6 +426,13 @@ export class CreatorService {
   }
 
   /**
+   * Get Stripe account for a creator
+   */
+  public async getStripeAccount(creatorId: string) {
+    return this.supabaseService.getStripeAccount(creatorId);
+  }
+
+  /**
    * Create Stripe Connect account
    */
   public async createStripeConnectAccount(
