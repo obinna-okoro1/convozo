@@ -98,7 +98,11 @@ Deno.serve(async (req) => {
       .eq('creator_id', stripeRecord.creator_id);
 
     if (updateError) {
+      // This is a real failure — the DB is now out of sync with Stripe.
+      // Throw so the catch block returns a 500 rather than silently returning
+      // stale data to the client, which could leave a creator stuck in onboarding.
       console.error('Error updating stripe_accounts:', updateError);
+      throw updateError;
     }
 
     return new Response(

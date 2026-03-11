@@ -39,6 +39,17 @@ Deno.serve(async (req) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
 
+      // Rule: never process a session that has not been fully paid.
+      // checkout.session.completed fires even for sessions with payment_status='unpaid'
+      // (e.g. free checkout, subscriptions awaiting invoice). Reject them immediately.
+      if (session.payment_status !== 'paid') {
+        console.log('Skipping session with payment_status:', session.payment_status, session.id);
+        return new Response(JSON.stringify({ received: true, skipped: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
       // Idempotency: skip if this checkout session has already been processed
       // Check all three tables that store session IDs to cover every code path
       const [{ data: existingPayment }, { data: existingBooking }, { data: existingMessage }] = await Promise.all([
@@ -179,8 +190,9 @@ Deno.serve(async (req) => {
         }
 
         // Create payment record linked to the message
+        // Calculate fee using Math.round for symmetric rounding (never Math.floor)
         const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
-        const platformFee = Math.floor(amountInCents * (platformFeePercentage / 100));
+        const platformFee = Math.round(amountInCents * platformFeePercentage / 100);
         const creatorAmount = amountInCents - platformFee;
 
         const { error: paymentError } = await supabase

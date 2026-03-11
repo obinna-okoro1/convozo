@@ -8,6 +8,9 @@
 const ALLOWED_ORIGINS: string[] = [
   'https://convozo.com',
   'https://www.convozo.com',
+  // Staging: Cloudflare Pages preview URL for the `develop` branch.
+  // Update this value if the staging deployment URL changes.
+  'https://develop.convozo.pages.dev',
   'http://localhost:4200',   // local Angular dev server
 ];
 

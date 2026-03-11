@@ -26,6 +26,8 @@ import { AnimatedBackgroundComponent } from '../../../../shared/components/anima
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
+import { MessageService } from '../../services/message.service';
+import { BookingService } from '../../services/booking.service';
 import { DashboardStateService } from './dashboard-state.service';
 import { DashboardTabsComponent } from './dashboard-tabs/dashboard-tabs.component';
 import { DeleteConfirmModalComponent } from './delete-confirm-modal/delete-confirm-modal.component';
@@ -64,6 +66,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly creatorService: CreatorService,
+    private readonly messageService: MessageService,
+    private readonly bookingService: BookingService,
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -81,10 +85,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
     if (this.realtimeChannel) {
-      this.creatorService.unsubscribeFromMessages(this.realtimeChannel);
+      this.messageService.unsubscribeFromMessages(this.realtimeChannel);
     }
     if (this.bookingsRealtimeChannel) {
-      this.creatorService.unsubscribeFromCallBookings(this.bookingsRealtimeChannel);
+      this.bookingService.unsubscribeFromCallBookings(this.bookingsRealtimeChannel);
     }
   }
 
@@ -182,12 +186,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.dashboardState.settings.set(settingsData);
       }
 
-      const { data: messagesData } = await this.creatorService.getMessages(creatorData.id);
+      const { data: messagesData } = await this.messageService.getMessages(creatorData.id);
       if (messagesData) {
         this.dashboardState.messages.set(messagesData);
       }
 
-      const { data: bookingsData } = await this.creatorService.getCallBookings(creatorData.id);
+      const { data: bookingsData } = await this.bookingService.getCallBookings(creatorData.id);
       if (bookingsData) {
         this.dashboardState.callBookings.set(bookingsData);
       }
@@ -196,7 +200,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.dashboardState.stripeAccount.set(stripeData ?? null);
 
       // Subscribe to real-time updates so the inbox refreshes instantly
-      this.realtimeChannel = this.creatorService.subscribeToMessages(
+      this.realtimeChannel = this.messageService.subscribeToMessages(
         creatorData.id,
         (updatedMessages) => {
           this.dashboardState.messages.set(updatedMessages);
@@ -204,7 +208,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       );
 
       // Subscribe to real-time call booking updates
-      this.bookingsRealtimeChannel = this.creatorService.subscribeToCallBookings(
+      this.bookingsRealtimeChannel = this.bookingService.subscribeToCallBookings(
         creatorData.id,
         (updatedBookings) => {
           this.dashboardState.callBookings.set(updatedBookings);

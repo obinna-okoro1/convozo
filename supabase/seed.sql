@@ -142,7 +142,7 @@ VALUES (
   5000, -- $50 for 30min calls
   30, -- 30 minutes
   true, -- calls enabled
-  'I typically respond within 24-48 hours during business days.',
+  '24-48 hours',
   'Thanks for reaching out! To send me a priority message, visit: https://convozo.com/sarahjohnson'
 ) ON CONFLICT (creator_id) DO NOTHING;
 

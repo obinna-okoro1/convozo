@@ -164,7 +164,8 @@ Deno.serve(async (req) => {
     }
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
-    const platformFee = Math.floor(serverPrice * (platformFeePercentage / 100));
+    // Math.round for symmetric rounding — never Math.floor (undercounts) or Math.ceil (overcounts creator)
+    const platformFee = Math.round(serverPrice * platformFeePercentage / 100);
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
     // Create Stripe Checkout session
@@ -204,7 +205,15 @@ Deno.serve(async (req) => {
       },
     };
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    // Idempotency key prevents duplicate sessions if the client retries.
+    // Scoped to: sender email + creator + message type + truncated content, to allow
+    // the same fan to send a new message later without being blocked.
+    const idempotencyRaw = `${sender_email}:${creator_slug}:${validMessageType}:${message_content.slice(0, 100)}`;
+    const idempotencyKey = btoa(idempotencyRaw).slice(0, 64);
+
+    const session = await stripe.checkout.sessions.create(sessionConfig, {
+      idempotencyKey,
+    });
 
     return new Response(
       JSON.stringify({ sessionId: session.id, url: session.url }),
