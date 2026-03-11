@@ -171,15 +171,8 @@ VALUES (
   'Fan messages: 2-3 days. Business inquiries: 24 hours.'
 ) ON CONFLICT (creator_id) DO NOTHING;
 
--- Stripe test accounts with acct_test_ prefix.
--- Edge functions detect the acct_test_ prefix and skip the Connect split
--- (transfer_data / application_fee_amount) so payments work locally
--- without a fully onboarded Express account.
-INSERT INTO public.stripe_accounts (creator_id, stripe_account_id, charges_enabled, payouts_enabled, details_submitted, onboarding_completed)
-VALUES
-  ('33333333-3333-3333-3333-333333333333', 'acct_test_sarah', true, true, true, true),
-  ('44444444-4444-4444-4444-444444444444', 'acct_test_mike', true, true, true, true)
-ON CONFLICT (creator_id) DO NOTHING;
+-- NOTE: Stripe accounts are NOT seeded — creators must connect their Stripe
+-- account through the normal onboarding flow (Settings → Payments → Connect Stripe).
 
 -- Sample Messages for Sarah Johnson
 INSERT INTO public.messages (id, creator_id, sender_name, sender_email, message_content, amount_paid, message_type, is_handled, created_at)
@@ -436,11 +429,9 @@ SELECT '✅ Created availability slots for Sarah' as info_5;
 SELECT '✅ Created 1 sample call booking' as info_6;
 SELECT '✅ Created 12 sample links (7 for Sarah, 5 for Mike)' as info_7;
 SELECT '✅ Created 40 sample link clicks' as info_8;
-SELECT '✅ Created 2 Stripe test accounts (acct_test_sarah, acct_test_mike)' as info_9;
 SELECT '' as separator;
 SELECT 'Test Users:' as users_header;
 SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min (enabled)' as user_1;
 SELECT '- creator2@example.com (Mike Chen) - Messages: $5, Calls: disabled' as user_2;
-SELECT '2. Stripe test accounts are pre-seeded — checkout works without real onboarding' as step_2;
+SELECT '2. Connect Stripe via Settings → Payments to enable checkout' as step_2;
 SELECT '3. Update the environment variables with your Stripe keys' as step_3;
-SELECT '4. For production, connect real Stripe accounts via the onboarding flow' as step_4;

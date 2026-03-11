@@ -113,6 +113,16 @@
               }
               Reconnect Stripe
             </button>
+            <button
+              (click)="refreshStatus()"
+              [disabled]="refreshing()"
+              class="px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white/80 font-semibold hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+            >
+              <svg class="w-4 h-4" [class.animate-spin]="refreshing()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Refresh Status
+            </button>
           </div>
           @if (!state.paymentAccount()?.onboarding_completed) {
             <p class="text-yellow-200/70 text-xs mt-2">Your onboarding is incomplete. Click above to finish setting up your Stripe account.</p>
