@@ -11,6 +11,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 })
 export class SuccessComponent implements OnInit {
   protected readonly isCallBooking = signal(false);
+  protected readonly creatorSlug = signal<string | null>(null);
 
   constructor(
     private readonly router: Router,
@@ -20,9 +21,16 @@ export class SuccessComponent implements OnInit {
   public ngOnInit(): void {
     const type = this.route.snapshot.queryParamMap.get('type');
     this.isCallBooking.set(type === 'call');
+    const creator = this.route.snapshot.queryParamMap.get('creator');
+    this.creatorSlug.set(creator);
   }
 
-  protected goHome() {
-    void this.router.navigate(['/home']);
+  protected goBack(): void {
+    const slug = this.creatorSlug();
+    if (slug) {
+      void this.router.navigate(['/', slug]);
+    } else {
+      void this.router.navigate(['/']);
+    }
   }
 }

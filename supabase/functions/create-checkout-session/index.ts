@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
         },
       ],
       mode: 'payment',
-      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&creator=${creator_slug}`,
       cancel_url: `${appUrl}/${creator_slug}`,
       customer_email: sender_email,
       payment_intent_data: {
