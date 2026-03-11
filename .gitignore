@@ -48,6 +48,8 @@ Thumbs.db
 .env.local
 .env.keys
 .env.*.local
+# Stripe key pairs (live + test) — local only, never commit
+supabase/.env.stripe-keys
 # Allow the production reference file (contains only placeholder values)
 !supabase/.env.production
 scripts/setup-test-account.sh
