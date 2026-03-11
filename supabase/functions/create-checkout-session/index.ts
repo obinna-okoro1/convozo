@@ -205,10 +205,12 @@ Deno.serve(async (req) => {
       },
     };
 
-    // Idempotency key prevents duplicate sessions if the client retries.
-    // Scoped to: sender email + creator + message type + truncated content, to allow
-    // the same fan to send a new message later without being blocked.
-    const idempotencyRaw = `${sender_email}:${creator_slug}:${validMessageType}:${message_content.slice(0, 100)}`;
+    // Idempotency key prevents duplicate sessions on network retries within a 10-minute window.
+    // Must include serverPrice so that a different amount (e.g. a different tip value) always
+    // generates a new session — Stripe rejects a key reused with different parameters.
+    // The time window means the key expires naturally, allowing new sessions after 10 minutes.
+    const windowSlot = Math.floor(Date.now() / (10 * 60 * 1000)); // 10-minute slots
+    const idempotencyRaw = `${sender_email}:${creator_slug}:${validMessageType}:${serverPrice}:${message_content.slice(0, 50)}:${windowSlot}`;
     const idempotencyKey = btoa(idempotencyRaw).slice(0, 64);
 
     const session = await stripe.checkout.sessions.create(sessionConfig, {
