@@ -3,7 +3,14 @@
   <header class="border-b border-white/10">
     <div class="container mx-auto px-4 py-6 flex items-center justify-between">
       <a routerLink="/home" class="flex items-center space-x-3">
-        <img src="assets/logo.png" alt="Convozo" class="w-[2.5rem] h-[2.5rem] rounded-xl shadow-lg" />
+        <svg class="w-[2.5rem] h-[2.5rem] shadow-lg shadow-purple-500/30 flex-shrink-0" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Convozo">
+          <defs><linearGradient id="cvz-g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+          <rect width="40" height="40" rx="10" fill="url(#cvz-g)"/>
+          <circle cx="20" cy="20" r="2.5" fill="white"/>
+          <path d="M25 13 A8 8 0 1 0 25 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M27 10 A12 12 0 1 0 27 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-opacity="0.6"/>
+          <path d="M29 7 A16 16 0 1 0 29 33" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.3"/>
+        </svg>
         <span class="text-xl font-bold text-white">Convozo</span>
       </a>
       <a routerLink="/home"
