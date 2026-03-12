@@ -1,3 +1,4 @@
+@if (tabs().length > 1) {
 <div class="flex gap-2 sm:gap-3 mt-4 sm:mt-6 border-t border-white/10 pt-4 sm:pt-6 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
   @for (tab of tabs(); track tab.path) {
     <a
@@ -21,3 +22,4 @@
     </a>
   }
 </div>
+}
