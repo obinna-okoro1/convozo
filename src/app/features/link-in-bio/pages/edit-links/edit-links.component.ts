@@ -2,19 +2,20 @@
  * Edit Links Component
  * Dashboard component for managing creator links (add, edit, delete, reorder, toggle).
  * Supports brand auto-detection from URL and drag-style reorder via up/down buttons.
+ * Uses a modal form for adding/editing links.
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, input, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CreatorLink } from '../../../../core/models';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { LinkService } from '../../services/link.service';
-import { detectBrandKey, getBrandByKey, BrandInfo } from '../../utils/brand-detection';
+import { LinkFormModalComponent } from '../../components/link-form-modal/link-form-modal.component';
+import { getBrandByKey, BrandInfo } from '../../utils/brand-detection';
 
 @Component({
   selector: 'app-edit-links',
   standalone: true,
-  imports: [FormsModule],
+  imports: [LinkFormModalComponent],
   templateUrl: './edit-links.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -24,15 +25,10 @@ export class EditLinksComponent implements OnInit {
 
   protected readonly links = signal<CreatorLink[]>([]);
   protected readonly loading = signal(true);
-  protected readonly saving = signal(false);
   protected readonly reordering = signal(false);
+  protected readonly showFormModal = signal(false);
   protected readonly editingLink = signal<CreatorLink | null>(null);
-  protected readonly detectedBrand = signal<BrandInfo | null>(null);
   protected readonly deletePendingId = signal<string | null>(null);
-
-  // Form fields (simple two-way binding via ngModel)
-  protected formTitle = '';
-  protected formUrl = '';
 
   private brandCache = new Map<string, BrandInfo | null>();
 
@@ -45,88 +41,26 @@ export class EditLinksComponent implements OnInit {
     void this.loadLinks();
   }
 
-  // ── URL change detection ──────────────────────────────────────────
+  // ── Modal management ──────────────────────────────────────────────
 
-  protected onUrlChange(url: string): void {
-    if (!url.trim()) {
-      this.detectedBrand.set(null);
-      return;
-    }
-
-    // Ensure the URL has a protocol for detection
-    let normalizedUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      normalizedUrl = 'https://' + url;
-    }
-
-    const brandKey = detectBrandKey(normalizedUrl);
-    if (brandKey) {
-      const brand = getBrandByKey(brandKey);
-      this.detectedBrand.set(brand);
-      // Auto-fill title if empty and brand is detected
-      if (!this.formTitle.trim() && brand) {
-        this.formTitle = `My ${brand.label}`;
-      }
-    } else {
-      this.detectedBrand.set(null);
-    }
+  protected openAddLinkModal(): void {
+    this.editingLink.set(null);
+    this.showFormModal.set(true);
   }
 
-  // ── CRUD ──────────────────────────────────────────────────────────
+  protected openEditLinkModal(link: CreatorLink): void {
+    this.editingLink.set(link);
+    this.showFormModal.set(true);
+  }
 
-  protected async saveLink(): Promise<void> {
-    if (!this.formTitle.trim() || !this.formUrl.trim()) {
-      return;
-    }
+  protected closeFormModal(): void {
+    this.showFormModal.set(false);
+    this.editingLink.set(null);
+  }
 
-    this.saving.set(true);
-
-    // Normalise URL
-    let url = this.formUrl.trim();
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url;
-    }
-
-    const brandKey = detectBrandKey(url);
-    const editing = this.editingLink();
-
-    try {
-      if (editing) {
-        // Update existing link
-        const { error } = await this.linkService.updateLink(editing.id, {
-          title: this.formTitle.trim(),
-          url,
-          icon: brandKey,
-        });
-        if (error) {
-          this.toast.error('Failed to update link');
-        } else {
-          this.toast.success('Link updated');
-          this.cancelEdit();
-          await this.loadLinks();
-        }
-      } else {
-        // Create new link
-        const position = this.links().length;
-        const { error } = await this.linkService.createLink(this.creatorId(), {
-          title: this.formTitle.trim(),
-          url,
-          icon: brandKey,
-          position,
-        });
-        if (error) {
-          this.toast.error('Failed to add link');
-        } else {
-          this.toast.success('Link added');
-          this.resetForm();
-          await this.loadLinks();
-        }
-      }
-    } catch {
-      this.toast.error('Something went wrong');
-    } finally {
-      this.saving.set(false);
-    }
+  protected async onLinkSaved(): Promise<void> {
+    this.closeFormModal();
+    await this.loadLinks();
   }
 
   protected requestDelete(link: CreatorLink): void {
@@ -160,22 +94,6 @@ export class EditLinksComponent implements OnInit {
         list.map((l) => (l.id === link.id ? { ...l, is_active: !l.is_active } : l)),
       );
     }
-  }
-
-  // ── Edit mode ─────────────────────────────────────────────────────
-
-  protected startEdit(link: CreatorLink): void {
-    this.editingLink.set(link);
-    this.formTitle = link.title;
-    this.formUrl = link.url;
-    this.onUrlChange(link.url);
-    // Scroll to top of form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  protected cancelEdit(): void {
-    this.editingLink.set(null);
-    this.resetForm();
   }
 
   // ── Reorder ───────────────────────────────────────────────────────
@@ -225,11 +143,5 @@ export class EditLinksComponent implements OnInit {
     const { data } = await this.linkService.getCreatorLinks(this.creatorId());
     this.links.set(data ?? []);
     this.loading.set(false);
-  }
-
-  private resetForm(): void {
-    this.formTitle = '';
-    this.formUrl = '';
-    this.detectedBrand.set(null);
   }
 }
