@@ -15,6 +15,7 @@ import {
 import { MessageService } from '../../services/message.service';
 import { BookingService } from '../../services/booking.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { errorMessage } from '../../../../shared/utils/error.utils';
 
 @Injectable()
 export class DashboardStateService {
@@ -115,7 +116,7 @@ export class DashboardStateService {
 
       this.toast.success(`${isMessage ? 'Message' : 'Call booking'} deleted successfully`);
     } catch (err) {
-      this.toast.error(err instanceof Error ? err.message : 'Failed to delete item');
+      this.toast.error(errorMessage(err, 'Failed to delete item'));
     } finally {
       this.deleting.set(false);
       this.showDeleteConfirm.set(false);

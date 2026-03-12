@@ -17,6 +17,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { compressImage } from '../../../utils/image.utils';
+import { errorMessage } from '../../../utils/error.utils';
 
 /** Emitted when the image URL changes (new upload or removal). */
 export interface ImageChangeEvent {
@@ -118,7 +119,7 @@ export class ImageUploadComponent {
       }
     } catch (err) {
       this.preview.set(null);
-      this.uploadError.emit(err instanceof Error ? err.message : 'Failed to upload image');
+      this.uploadError.emit(errorMessage(err, 'Failed to upload image'));
     } finally {
       this.uploading.set(false);
       // Reset the input so re-selecting the same file triggers change

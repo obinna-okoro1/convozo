@@ -1,19 +1,8 @@
-import Stripe from 'stripe';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { sendEmail, messageConfirmationEmail, callBookingConfirmationEmail, newMessageNotificationEmail, newCallBookingNotificationEmail } from '../_shared/email.ts';
+import { stripe, Stripe, stripeCryptoProvider } from '../_shared/stripe.ts';
+import { supabase, supabaseUrl, supabaseServiceKey } from '../_shared/supabase.ts';
 
 // v3 - new webhook endpoint + secret rotation
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// Use SubtleCrypto for Deno/Edge-compatible signature verification
-const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 /**
  * Fire-and-forget push notification for a creator.
@@ -62,7 +51,7 @@ Deno.serve(async (req) => {
       signature,
       webhookSecret,
       undefined,
-      cryptoProvider,
+      stripeCryptoProvider,
     );
 
     if (event.type === 'checkout.session.completed') {

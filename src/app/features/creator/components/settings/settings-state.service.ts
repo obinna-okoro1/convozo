@@ -14,6 +14,7 @@ import {
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { CreatorService } from '../../services/creator.service';
+import { errorMessage } from '../../../../shared/utils/error.utils';
 
 @Injectable()
 export class SettingsStateService {
@@ -312,7 +313,7 @@ export class SettingsStateService {
       // Redirect to Stripe onboarding
       window.location.href = data.url;
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : 'Failed to connect payment account');
+      this.error.set(errorMessage(err, 'Failed to connect payment account'));
       this.paymentConnecting.set(false);
     }
   }
