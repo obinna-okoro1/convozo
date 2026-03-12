@@ -15,6 +15,35 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Use SubtleCrypto for Deno/Edge-compatible signature verification
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
+/**
+ * Fire-and-forget push notification for a creator.
+ * Calls the send-push-notification Edge Function internally.
+ * Errors are logged but never allowed to fail the webhook response.
+ */
+async function sendPushNotification(creatorId: string, title: string, body: string): Promise<void> {
+  try {
+    const fnUrl = `${supabaseUrl}/functions/v1/send-push-notification`;
+    const internalSecret = Deno.env.get('INTERNAL_SECRET') || '';
+    const res = await fetch(fnUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Use service role key so the function can read from push_subscriptions
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        ...(internalSecret ? { 'x-internal-secret': internalSecret } : {}),
+      },
+      body: JSON.stringify({ creator_id: creatorId, title, body, url: '/creator/dashboard' }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('[stripe-webhook] Push notification failed:', res.status, text);
+    }
+  } catch (err) {
+    // Never let push failures break the webhook — payments are processed regardless
+    console.error('[stripe-webhook] Push notification error (non-fatal):', (err as Error).message);
+  }
+}
+
 Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature');
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
@@ -143,6 +172,13 @@ Deno.serve(async (req) => {
           await sendEmail({ to: callCreator.email, ...creatorEmail, idempotencyKey: `${session.id}_call_creator` });
         }
 
+        // 3. Push notification to the creator (fire-and-forget)
+        void sendPushNotification(
+          creator_id,
+          '📅 New call booking!',
+          `${booker_name} booked a ${duration}-minute call with you`,
+        );
+
       } else {
         // Handle regular message payment
         const { creator_id, message_content, sender_name, sender_email, sender_instagram, message_type } =
@@ -244,6 +280,13 @@ Deno.serve(async (req) => {
           });
           await sendEmail({ to: msgCreator.email, ...creatorEmailPayload, idempotencyKey: `${session.id}_msg_creator` });
         }
+
+        // 3. Push notification to the creator (fire-and-forget)
+        void sendPushNotification(
+          creator_id,
+          '💬 New paid message!',
+          `${sender_name} sent you a paid message`,
+        );
       }
     }
 

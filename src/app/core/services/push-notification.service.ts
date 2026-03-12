@@ -3,7 +3,8 @@
  * Handles push notification subscription and management
  */
 
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { SupabaseService } from './supabase.service';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -17,6 +18,7 @@ export class PushNotificationService {
   public readonly isSubscribed = computed(() => this.pushSubscription() !== null);
   public readonly permissionState = signal<NotificationPermission>('default');
 
+  private readonly supabaseService = inject(SupabaseService);
   private readonly swRegistration = signal<ServiceWorkerRegistration | null>(null);
   private readonly pushSubscription = signal<PushSubscription | null>(null);
 
@@ -141,17 +143,81 @@ export class PushNotificationService {
   }
 
   /**
-   * Send subscription to server
+   * Save subscription to Supabase so the server can send push notifications later.
+   * Uses upsert to handle re-subscribing on the same device gracefully.
+   * Fire-and-forget: errors are logged but never propagate to the caller.
    */
-  private sendSubscriptionToServer(_subscription: PushSubscription): void {
-    // TODO: Implement to save subscription to Supabase
+  private sendSubscriptionToServer(subscription: PushSubscription): void {
+    void (async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await this.supabaseService.client.auth.getUser();
+
+        if (userError || !user) {
+          console.error('[PushNotification] Cannot save subscription — user not authenticated');
+          return;
+        }
+
+        // PushSubscription.toJSON() gives base64url-encoded keys ready for web-push
+        const json = subscription.toJSON() as {
+          endpoint: string;
+          keys?: { p256dh?: string; auth?: string };
+        };
+        const p256dh = json.keys?.p256dh;
+        const auth = json.keys?.auth;
+
+        if (!json.endpoint || !p256dh || !auth) {
+          console.error('[PushNotification] Subscription is missing required encryption keys');
+          return;
+        }
+
+        const { error } = await this.supabaseService.client
+          .from('push_subscriptions')
+          .upsert(
+            { creator_id: user.id, endpoint: json.endpoint, p256dh, auth },
+            { onConflict: 'creator_id,endpoint' },
+          );
+
+        if (error) {
+          console.error('[PushNotification] Failed to save subscription:', error.message);
+        }
+      } catch (err) {
+        console.error('[PushNotification] Unexpected error saving subscription:', err);
+      }
+    })();
   }
 
   /**
-   * Remove subscription from server
+   * Delete subscription from Supabase when user unsubscribes.
+   * Fire-and-forget: errors are logged but never propagate to the caller.
    */
-  private removeSubscriptionFromServer(_subscription: PushSubscription): void {
-    // TODO: Implement to remove subscription from Supabase
+  private removeSubscriptionFromServer(subscription: PushSubscription): void {
+    void (async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await this.supabaseService.client.auth.getUser();
+
+        if (userError || !user) {
+          return;
+        }
+
+        const { error } = await this.supabaseService.client
+          .from('push_subscriptions')
+          .delete()
+          .eq('creator_id', user.id)
+          .eq('endpoint', subscription.endpoint);
+
+        if (error) {
+          console.error('[PushNotification] Failed to remove subscription:', error.message);
+        }
+      } catch (err) {
+        console.error('[PushNotification] Unexpected error removing subscription:', err);
+      }
+    })();
   }
 
   /**

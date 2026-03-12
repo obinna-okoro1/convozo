@@ -14,5 +14,5 @@ export const environment = {
   },
   platformFeePercentage: 22,
   vapidPublicKey:
-    'BMUmrPyd-C_NfHyTfq2PzEiTFTYdRtx1tSFQM7eknpvNHmYdU3-i9AiEQzVVie3T8bh4iVO8L9zEivHsibsv3pc',
+    'BNHIas9VtDE6pey_L3jtM_VHXKyxq4IHIMgi3JJx-BTHTVSbMGptvEt0kRe_NLTtXzUIbelYlOa3yd5xgj0yew',
 };
