@@ -24,6 +24,7 @@ import { PushNotificationService } from '../../../../core/services/push-notifica
 import { ResponseTemplateService } from '../../../../core/services/response-template.service';
 import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { errorMessage } from '../../../../shared/utils/error.utils';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
 import { MessageService } from '../../services/message.service';
@@ -225,7 +226,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Handle errors
    */
   private handleError(err: unknown, defaultMessage: string): void {
-    const errorMessage = err instanceof Error ? err.message : defaultMessage;
-    this.toast.error(errorMessage);
+    this.toast.error(errorMessage(err, defaultMessage));
   }
 }

@@ -19,6 +19,7 @@ import { InstagramPublicService } from '../../../../core/services/instagram-publ
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { errorMessage } from '../../../../shared/utils/error.utils';
 import { LinkService } from '../../../link-in-bio/services/link.service';
 import { MessageFormData } from '../message-form/message-form.component';
 import { CallBookingFormData } from '../call-booking-form/call-booking-form.component';
@@ -337,7 +338,6 @@ export class MessagePageStateService {
   }
 
   private handleError(err: unknown, defaultMessage: string): void {
-    const errorMessage = err instanceof Error ? err.message : defaultMessage;
-    this.toast.error(`${defaultMessage}: ${errorMessage}`);
+    this.toast.error(`${defaultMessage}: ${errorMessage(err, defaultMessage)}`);
   }
 }

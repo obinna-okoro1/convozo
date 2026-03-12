@@ -1,15 +1,7 @@
-import Stripe from 'stripe';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { stripe } from '../_shared/stripe.ts';
+import { supabase } from '../_shared/supabase.ts';
+import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -18,31 +10,13 @@ Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    // Authenticate the caller via JWT
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const user = await requireAuth(req, supabase, corsHeaders);
+    if (user instanceof Response) return user;
 
     const { creator_id, email, display_name } = await req.json();
 
     if (!creator_id || !email) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Missing required fields', 400, corsHeaders);
     }
 
     // Verify the caller owns this creator profile
@@ -54,10 +28,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (creatorError || !creator) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: you do not own this creator profile' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Unauthorized: you do not own this creator profile', 403, corsHeaders);
     }
 
     // Check if creator already has a Stripe account
@@ -154,18 +125,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        url: accountLink.url,
-        account_id: accountId,
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ url: accountLink.url, account_id: accountId }, corsHeaders);
   } catch (err) {
     console.error('Error creating Connect account:', err);
-    return new Response(
-      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError('An internal error occurred. Please try again later.', 500, corsHeaders);
   }
 });

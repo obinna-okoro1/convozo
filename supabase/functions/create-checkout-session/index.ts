@@ -1,40 +1,10 @@
-import Stripe from 'stripe';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { stripe } from '../_shared/stripe.ts';
+import { supabase } from '../_shared/supabase.ts';
+import { jsonOk, jsonError, makeRateLimiter } from '../_shared/http.ts';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// Rate limiting store (in-memory, per-instance)
-const rateLimitStore = new Map<string, number[]>();
-
-// Rate limit: 10 requests per hour per email
-const RATE_LIMIT_MAX = 10;
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
-
-function checkRateLimit(email: string): boolean {
-  const now = Date.now();
-  const requests = rateLimitStore.get(email) || [];
-
-  // Remove old requests outside the time window
-  const recentRequests = requests.filter(time => now - time < RATE_LIMIT_WINDOW);
-
-  if (recentRequests.length >= RATE_LIMIT_MAX) {
-    return false; // Rate limit exceeded
-  }
-
-  // Add current request
-  recentRequests.push(now);
-  rateLimitStore.set(email, recentRequests);
-
-  return true; // Within rate limit
-}
+// Rate limit: 10 checkout requests per hour per sender email
+const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -48,45 +18,26 @@ Deno.serve(async (req) => {
 
     // Validate input
     if (!creator_slug || !message_content || !sender_name || !sender_email || !price) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Missing required fields', 400, corsHeaders);
     }
 
     // Check rate limit
     if (!checkRateLimit(sender_email)) {
-      return new Response(
-        JSON.stringify({
-          error: 'Rate limit exceeded. Please try again later.',
-          retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000 / 60), // minutes
-        }),
-        {
-          status: 429,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-            'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW / 1000)),
-          }
-        }
-      );
+      return jsonError('Rate limit exceeded. Please try again later.', 429, {
+        ...corsHeaders,
+        'Retry-After': '3600',
+      });
     }
 
     // Validate message content length
     if (message_content.length > 1000) {
-      return new Response(
-        JSON.stringify({ error: 'Message too long (max 1000 characters)' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Message too long (max 1000 characters)', 400, corsHeaders);
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(sender_email)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid email address' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Invalid email address', 400, corsHeaders);
     }
 
     // Get creator info
@@ -98,19 +49,13 @@ Deno.serve(async (req) => {
       .single();
 
     if (creatorError || !creator) {
-      return new Response(
-        JSON.stringify({ error: 'Creator not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Creator not found', 404, corsHeaders);
     }
 
     // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
     const settings = creator.creator_settings as { message_price: number; follow_back_price: number | null; follow_back_enabled: boolean; tips_enabled: boolean } | null;
     if (!settings?.message_price || settings.message_price < 100) {
-      return new Response(
-        JSON.stringify({ error: 'Creator pricing not configured' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Creator pricing not configured', 400, corsHeaders);
     }
 
     // Normalise message_type to match DB constraint ('message' | 'call' | 'follow_back' | 'support')
@@ -124,10 +69,7 @@ Deno.serve(async (req) => {
 
     if (validMessageType === 'follow_back') {
       if (!settings.follow_back_enabled || !settings.follow_back_price || settings.follow_back_price < 100) {
-        return new Response(
-          JSON.stringify({ error: 'Follow-back requests are not enabled for this creator' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Follow-back requests are not enabled for this creator', 400, corsHeaders);
       }
       serverPrice = settings.follow_back_price;
       productName = `Follow-Back Request to ${creator.display_name}`;
@@ -136,18 +78,12 @@ Deno.serve(async (req) => {
 
     if (validMessageType === 'support') {
       if (!settings.tips_enabled) {
-        return new Response(
-          JSON.stringify({ error: 'Fan support is not enabled for this creator' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Fan support is not enabled for this creator', 400, corsHeaders);
       }
       // For tips, use the client-sent price (fan chooses the amount) with a $1 minimum
       const tipAmount = typeof price === 'number' ? price : 0;
       if (tipAmount < 100) {
-        return new Response(
-          JSON.stringify({ error: 'Minimum support amount is $1.00' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Minimum support amount is $1.00', 400, corsHeaders);
       }
       serverPrice = tipAmount;
       productName = `Support for ${creator.display_name}`;
@@ -157,10 +93,7 @@ Deno.serve(async (req) => {
     // PostgREST returns one-to-one relationships as objects, not arrays
     const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
     if (!stripeAccount?.stripe_account_id) {
-      return new Response(
-        JSON.stringify({ error: 'Creator payment setup incomplete' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Creator payment setup incomplete', 400, corsHeaders);
     }
 
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
@@ -169,7 +102,7 @@ Deno.serve(async (req) => {
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
     // Create Stripe Checkout session
-    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
+    const sessionConfig = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -217,15 +150,9 @@ Deno.serve(async (req) => {
       idempotencyKey,
     });
 
-    return new Response(
-      JSON.stringify({ sessionId: session.id, url: session.url }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ sessionId: session.id, url: session.url }, corsHeaders);
   } catch (err) {
     console.error('Error creating checkout session:', err);
-    return new Response(
-      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError('An internal error occurred. Please try again later.', 500, corsHeaders);
   }
 });

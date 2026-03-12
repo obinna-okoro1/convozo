@@ -1,30 +1,15 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { sendEmail, creatorReplyEmail } from '../_shared/email.ts';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { supabase } from '../_shared/supabase.ts';
+import { jsonOk, jsonError, requireAuth, makeRateLimiter } from '../_shared/http.ts';
 
 /** Maximum allowed reply length (characters). */
 const MAX_REPLY_LENGTH = 5000;
 /** UUID v4 pattern for message_id validation. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Rate limiting store (in-memory, per-instance)
-const rateLimitStore = new Map<string, number[]>();
-const RATE_LIMIT_MAX = 20; // max replies per window
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const requests = rateLimitStore.get(userId) || [];
-  const recent = requests.filter(t => now - t < RATE_LIMIT_WINDOW);
-  if (recent.length >= RATE_LIMIT_MAX) return false;
-  recent.push(now);
-  rateLimitStore.set(userId, recent);
-  return true;
-}
+// Rate limit: 20 replies per hour per creator
+const checkRateLimit = makeRateLimiter(20, 60 * 60 * 1000);
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -42,29 +27,12 @@ Deno.serve(async (req) => {
 
   try {
     // ── 1. Authenticate the caller via JWT ────────────────────────────────
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const user = await requireAuth(req, supabase, corsHeaders);
+    if (user instanceof Response) return user;
 
     // Rate limit: max 20 replies per hour per creator
     if (!checkRateLimit(user.id)) {
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '3600' } }
-      );
+      return jsonError('Rate limit exceeded. Please try again later.', 429, { ...corsHeaders, 'Retry-After': '3600' });
     }
 
     // ── 2. Parse & validate body ──────────────────────────────────────────
@@ -75,24 +43,15 @@ Deno.serve(async (req) => {
       : undefined;
 
     if (!messageId || !replyContent) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: message_id, reply_content' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Missing required fields: message_id, reply_content', 400, corsHeaders);
     }
 
     if (!UUID_RE.test(messageId)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid message ID format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Invalid message ID format', 400, corsHeaders);
     }
 
     if (replyContent.length > MAX_REPLY_LENGTH) {
-      return new Response(
-        JSON.stringify({ error: `Reply too long (max ${MAX_REPLY_LENGTH} characters)` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError(`Reply too long (max ${MAX_REPLY_LENGTH} characters)`, 400, corsHeaders);
     }
 
     // ── 3. Fetch message & verify ownership ───────────────────────────────
@@ -103,26 +62,17 @@ Deno.serve(async (req) => {
       .single();
 
     if (messageError || !message) {
-      return new Response(
-        JSON.stringify({ error: 'Message not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Message not found', 404, corsHeaders);
     }
 
     // Only the creator who received the message may reply
     if (message.creators.user_id !== user.id) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Forbidden', 403, corsHeaders);
     }
 
     // Prevent double-replying
     if (message.replied_at) {
-      return new Response(
-        JSON.stringify({ error: 'This message has already been replied to' }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('This message has already been replied to', 409, corsHeaders);
     }
 
     // ── 4. Persist the reply ──────────────────────────────────────────────
@@ -151,15 +101,9 @@ Deno.serve(async (req) => {
       console.error('[send-reply-email] Email delivery failed for message:', messageId);
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: true }, corsHeaders);
   } catch (err) {
     console.error('[send-reply-email] Unhandled error:', err);
-    return new Response(
-      JSON.stringify({ error: 'An internal error occurred. Please try again later.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError('An internal error occurred. Please try again later.', 500, corsHeaders);
   }
 });

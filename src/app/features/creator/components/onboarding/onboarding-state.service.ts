@@ -8,6 +8,12 @@
  *   2 – Stripe Connect setup (optional, can skip)
  *   3 – Monetization (pricing toggles)
  *   4 – Review & complete
+ *
+ * Two-phase persistence:
+ *   The creator DB row may be written at Step 2 (when the user clicks "Connect Stripe")
+ *   or deferred until Step 4 (if they skip). `_savedCreatorId` caches the id once the
+ *   row exists so later steps avoid redundant DB round-trips and know whether to
+ *   UPDATE vs INSERT.
  */
 
 import { computed, Injectable, signal } from '@angular/core';
@@ -22,6 +28,7 @@ import {
   detectCountryIndex,
 } from './phone-country-codes.data';
 import type { SelectOption } from '../../../../shared/components/ui/searchable-select/searchable-select.component';
+import { errorMessage } from '../../../../shared/utils/error.utils';
 
 @Injectable()
 export class OnboardingStateService {
@@ -89,6 +96,10 @@ export class OnboardingStateService {
       this.slugStatus() !== 'taken' &&
       this.slugStatus() !== 'invalid',
   );
+
+  // Tracks a creator row already written to the DB during this session.
+  // Set by ensureCreator(); lets completeOnboarding() skip a redundant lookup.
+  private readonly _savedCreatorId = signal<string | null>(null);
 
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -201,45 +212,142 @@ export class OnboardingStateService {
     this.slugStatus.set(available ? 'available' : 'taken');
   }
 
-  // ── Completion ─────────────────────────────────────────────────────
+  // ── Private helpers ─────────────────────────────────────────────────
 
+  /**
+   * Returns the authenticated user via a fresh network check.
+   * Redirects to login and throws if the session is gone.
+   */
+  private async requireUser() {
+    const { data: { user } } = await this.supabaseService.client.auth.getUser();
+    if (!user) {
+      void this.router.navigate([ROUTES.AUTH.LOGIN]);
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+    return user;
+  }
+
+  /**
+   * Builds the editable profile fields from current form signals.
+   * Single source of truth — spread into both create and update calls.
+   */
+  private profileFormFields() {
+    return {
+      displayName: this.displayName(),
+      bio: this.bio(),
+      slug: this.slug(),
+      phoneNumber: this.fullPhoneNumber(),
+      profileImageUrl: this.profileImageUrl() || undefined,
+      instagramUsername: this.instagramUsername() || undefined,
+    };
+  }
+
+  /**
+   * Ensures a creator row exists in the DB and returns its id.
+   *
+   * Precedence:
+   *   1. In-memory cache (_savedCreatorId) — zero DB calls.
+   *   2. Existing DB row — handles page refreshes mid-flow.
+   *   3. INSERT a new row from the current form state.
+   */
+  private async ensureCreator(userId: string, email: string): Promise<string> {
+    const cached = this._savedCreatorId();
+    if (cached) return cached;
+
+    const { data: existing } = await this.creatorService.getCreatorByUserId(userId);
+    if (existing) {
+      this._savedCreatorId.set(existing.id);
+      return existing.id;
+    }
+
+    const { data: created, error } = await this.creatorService.createCreator({
+      userId,
+      email,
+      ...this.profileFormFields(),
+    });
+    if (error || !created) {
+      throw new Error('Failed to save your profile. Please check your details and try again.');
+    }
+    this._savedCreatorId.set(created.id);
+    return created.id;
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────
+
+  /**
+   * Step 2: Persist the creator row (if not yet done), then redirect to Stripe.
+   * On return from Stripe, _savedCreatorId is set so Step 4 will UPDATE, not INSERT.
+   */
+  async connectPayment(): Promise<void> {
+    this.paymentConnecting.set(true);
+    this.error.set(null);
+
+    try {
+      const user = await this.requireUser();
+      const creatorId = await this.ensureCreator(user.id, user.email ?? '');
+
+      const { data, error } = await this.creatorService.createStripeConnectAccount(
+        creatorId,
+        user.email ?? '',
+        this.displayName(),
+      );
+      if (error || !data?.url) {
+        throw error instanceof Error ? error : new Error('Failed to create payment account');
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      this.error.set(errorMessage(err, ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR));
+      this.paymentConnecting.set(false);
+    }
+  }
+
+  /**
+   * Step 4: Finalise onboarding.
+   *
+   * If _savedCreatorId is set (creator was persisted at Step 2), sync any profile
+   * edits made after that point. Otherwise Stripe was skipped, so INSERT now.
+   * Settings are always created fresh at this final step.
+   */
   async completeOnboarding(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 
-    const user = this.authService.getCurrentUser();
-    if (!user) {
-      this.error.set(ERROR_MESSAGES.AUTH.NOT_AUTHENTICATED);
-      this.loading.set(false);
-      return;
-    }
-
     try {
-      const { data: creator, error: creatorError } = await this.creatorService.createCreator({
-        userId: user.id,
-        email: user.email || '',
-        displayName: this.displayName(),
-        bio: this.bio(),
-        slug: this.slug(),
-        phoneNumber: this.fullPhoneNumber(),
-        profileImageUrl: this.profileImageUrl() || undefined,
-        instagramUsername: this.instagramUsername() || undefined,
-      });
+      const user = await this.requireUser();
+      const savedId = this._savedCreatorId();
 
-      if (creatorError || !creator) {
-        const errMsg = creatorError?.message ?? '';
-        if (errMsg.includes('unique') || errMsg.includes('duplicate') || errMsg.includes('slug')) {
-          this.slugStatus.set('taken');
-          this.currentStep.set(1);
-          throw new Error(
-            'This URL slug is already taken — please go back and choose a different one',
-          );
+      if (savedId) {
+        // Sync any Step 1 edits made after Stripe connect.
+        const { error } = await this.creatorService.updateCreatorProfile({
+          creatorId: savedId,
+          ...this.profileFormFields(),
+        });
+        if (error) throw error;
+      } else {
+        // Stripe was skipped — create the row now.
+        const { data: creator, error } = await this.creatorService.createCreator({
+          userId: user.id,
+          email: user.email ?? '',
+          ...this.profileFormFields(),
+        });
+        if (error || !creator) {
+          const msg = (error as { message?: string } | null)?.message ?? '';
+          if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('slug')) {
+            this.slugStatus.set('taken');
+            this.currentStep.set(1);
+            throw new Error(
+              'This URL slug is already taken — please go back and choose a different one',
+            );
+          }
+          throw error ?? new Error('Failed to create creator profile');
         }
-        throw creatorError || new Error('Failed to create creator');
+        this._savedCreatorId.set(creator.id);
       }
 
+      const creatorId = this._savedCreatorId()!;
       const { error: settingsError } = await this.creatorService.createCreatorSettings({
-        creatorId: creator.id,
+        creatorId,
         messagePrice: this.messagePrice(),
         messagesEnabled: this.messagesEnabled(),
         callPrice: this.callsEnabled() ? this.callPrice() : undefined,
@@ -250,62 +358,22 @@ export class OnboardingStateService {
         tipsEnabled: this.tipsEnabled(),
         responseExpectation: this.responseExpectation(),
       });
-
-      if (settingsError) {
-        throw settingsError;
-      }
+      if (settingsError) throw settingsError;
 
       await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
+      const msg = errorMessage(err, '');
       if (
         msg.includes('row-level security') ||
         msg.includes('violates') ||
         msg.includes('constraint')
       ) {
         this.error.set('Something went wrong saving your profile. Please log out and try again.');
-      } else if (msg) {
-        this.error.set(msg);
       } else {
-        this.error.set(ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
+        this.error.set(msg || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
       }
     } finally {
       this.loading.set(false);
-    }
-  }
-
-  async connectPayment(): Promise<void> {
-    this.paymentConnecting.set(true);
-    this.error.set(null);
-
-    try {
-      const { data: { user } } = await this.supabaseService.client.auth.getUser();
-      if (!user) {
-        this.error.set('Your session has expired. Please sign in again.');
-        this.paymentConnecting.set(false);
-        void this.router.navigate(['/auth/login']);
-        return;
-      }
-
-      const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
-      if (!creator) {
-        throw new Error('Creator profile not found');
-      }
-
-      const { data, error } = await this.creatorService.createStripeConnectAccount(
-        creator.id,
-        user.email || '',
-        this.displayName(),
-      );
-
-      if (error || !data?.url) {
-        throw error instanceof Error ? error : new Error('Failed to create payment account');
-      }
-
-      window.location.href = data.url;
-    } catch (err) {
-      this.error.set(err instanceof Error ? err.message : ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR);
-      this.paymentConnecting.set(false);
     }
   }
 }
