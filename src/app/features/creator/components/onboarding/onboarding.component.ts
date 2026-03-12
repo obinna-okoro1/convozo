@@ -5,6 +5,7 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import {
   ImageUploadComponent,
@@ -23,9 +24,12 @@ import { OnboardingStateService } from './onboarding-state.service';
 })
 export class OnboardingComponent implements OnInit {
   protected readonly state = inject(OnboardingStateService);
+  private readonly route = inject(ActivatedRoute);
 
   public ngOnInit(): void {
-    void this.state.initialize();
+    const returnedFromStripe =
+      this.route.snapshot.queryParamMap.get('stripe_connected') === 'true';
+    void this.state.initialize(returnedFromStripe);
   }
 
   /** Extract string value from an input/textarea/select event */

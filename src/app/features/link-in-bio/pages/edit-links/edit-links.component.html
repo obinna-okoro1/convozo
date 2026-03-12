@@ -89,12 +89,12 @@
               "
             >
               @if (getLinkBrand(link); as brand) {
-                <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" [style.fill]="brand.color">
-                  <path [attr.d]="brand.svgPath" />
+                <svg class="w-5 h-5" viewBox="0 0 24 24" [style.color]="brand.color">
+                  <path [attr.d]="brand.svgPath" fill="currentColor" />
                 </svg>
               } @else {
                 <svg
-                  class="w-4.5 h-4.5 text-slate-400"
+                  class="w-5 h-5 text-slate-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

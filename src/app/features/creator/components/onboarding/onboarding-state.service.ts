@@ -112,8 +112,14 @@ export class OnboardingStateService {
 
   // ── Initialization ─────────────────────────────────────────────────
 
-  async initialize(): Promise<void> {
+  async initialize(returnedFromStripe = false): Promise<void> {
     this.selectedCountryIndex.set(detectCountryIndex());
+
+    if (returnedFromStripe) {
+      await this.handleStripeReturn();
+      return;
+    }
+
     await this.checkExistingProfile();
     this.loadOAuthData();
   }
@@ -137,8 +143,61 @@ export class OnboardingStateService {
     }
   }
 
-  private async checkExistingProfile(): Promise<void> {
-    const user = this.authService.getCurrentUser();
+  /**
+   * Handles the return trip from Stripe Connect onboarding.
+   *
+   * Called when the URL contains ?stripe_connected=true (set as the return_url
+   * in create-connect-account). Skips the normal dashboard-redirect guard,
+   * restores form signals from the creator row that was saved before the
+   * Stripe redirect, marks the payment step complete, and advances to step 3.
+   */
+  private async handleStripeReturn(): Promise<void> {
+    try {
+      const user = await this.requireUser();
+      const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
+
+      if (creator) {
+        // Cache the id so completeOnboarding() UPDATE path is used (not INSERT).
+        this._savedCreatorId.set(creator.id);
+
+        // Restore form signals so profileFormFields() has correct values when
+        // completeOnboarding() calls updateCreatorProfile() at step 4.
+        this.displayName.set(creator.display_name ?? '');
+        this.bio.set(creator.bio ?? '');
+        this.slug.set(creator.slug ?? '');
+        this.slugStatus.set('available'); // slug was valid when first saved
+        this.profileImageUrl.set(creator.profile_image_url ?? '');
+        this.instagramUsername.set(creator.instagram_username ?? '');
+
+        // Best-effort phone parse: match the longest country code prefix so
+        // the country selector and local number field are populated correctly.
+        const storedPhone = creator.phone_number ?? '';
+        const match = [...COUNTRY_CODES]
+          .map((cc, i) => ({ cc, i }))
+          .sort((a, b) => b.cc.code.length - a.cc.code.length)
+          .find(({ cc }) => storedPhone.startsWith(cc.code + ' '));
+
+        if (match) {
+          this.selectedCountryIndex.set(match.i);
+          this.phoneNumber.set(storedPhone.slice(match.cc.code.length + 1));
+        } else {
+          this.phoneNumber.set(storedPhone);
+        }
+      }
+
+      // Mark payment connected and advance past the Stripe step.
+      this.paymentConnected.set(true);
+      this.currentStep.set(3);
+    } catch {
+      // If restoration fails, still advance — the Stripe connection succeeded
+      // and the user shouldn't be stuck. completeOnboarding() will handle any
+      // missing data gracefully via the ensureCreator() fallback.
+      this.paymentConnected.set(true);
+      this.currentStep.set(3);
+    }
+  }
+
+  private async checkExistingProfile(): Promise<void> {    const user = this.authService.getCurrentUser();
     if (!user) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
       return;

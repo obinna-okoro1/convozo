@@ -271,6 +271,22 @@
         <!-- Step 3: Monetization Setup -->
         @if (state.currentStep() === 3) {
           <div class="animate-fade-in">
+
+            <!-- Stripe connected confirmation (shown when returning from Stripe OAuth) -->
+            @if (state.paymentConnected()) {
+              <div class="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/40 rounded-2xl flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/40">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-emerald-300 text-sm">Stripe account connected!</p>
+                  <p class="text-emerald-400/70 text-xs mt-0.5">You're all set to receive payments. Now choose what you want to offer below.</p>
+                </div>
+              </div>
+            }
+
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
                 <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
