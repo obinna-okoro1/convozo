@@ -36,6 +36,26 @@
   50% { transform: translateY(-0.625rem); }
 }
 
+/* ─── Signal Logo Animation ─── */
+@keyframes cvz-signal {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+.cvz-arc-1 {
+  opacity: 1;
+}
+
+.cvz-arc-2 {
+  animation: cvz-signal 8s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.cvz-arc-3 {
+  animation: cvz-signal 8s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
 /* ─── Base Layer ─── */
 @layer base {
   * {
