@@ -71,6 +71,17 @@ export class VideoCallService {
     this.errorMessage.set(null);
 
     try {
+      // Creator role requires a valid JWT. Force a session refresh so an
+      // expired access token is swapped for a fresh one before the request.
+      if (role === 'creator') {
+        const { error: refreshErr } = await this.supabaseService.client.auth.getSession();
+        if (refreshErr) {
+          this.callState.set('error');
+          this.errorMessage.set('Session expired — please log in again');
+          return null;
+        }
+      }
+
       const { data, error } = await this.supabaseService.client.functions.invoke('join-call', {
         body: { booking_id: bookingId, role },
       });
