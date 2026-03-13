@@ -119,10 +119,12 @@ Deno.serve(async (req) => {
 
       token = role === 'creator' ? creatorToken : fanToken;
     } else {
-      // Room exists — return the appropriate token
-      token = role === 'creator'
-        ? (booking.creator_meeting_token as string)
-        : (booking.fan_meeting_token as string);
+      // Room exists — generate a fresh token (stored tokens may have expired
+      // if the participant is joining long after the booking was created).
+      const creatorDisplayName = (booking.creators as { display_name: string }).display_name;
+      const participantName = role === 'creator' ? creatorDisplayName : (booking.booker_name as string);
+      const durationMins = (booking.duration as number) || 30;
+      token = await createMeetingToken(roomName, participantName, role === 'creator', durationMins);
     }
 
     // ── Record attendance ──────────────────────────────────────────────

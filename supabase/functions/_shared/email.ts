@@ -321,13 +321,13 @@ export function callStartNotificationEmail(opts: {
         Click the button below to join.
       </p>
       <div style="text-align:center;margin:28px 0;">
-        <a href="${opts.joinUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
+        <a href="${escapeHtml(opts.joinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
           Join Call Now
         </a>
       </div>
       <p style="color:#9ca3af;font-size:14px;text-align:center;">
         If the button doesn't work, copy and paste this link into your browser:<br/>
-        <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;word-break:break-all;">${opts.joinUrl}</code>
+        <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;word-break:break-all;">${escapeHtml(opts.joinUrl)}</code>
       </p>
     `),
   };
@@ -352,13 +352,13 @@ export function fanJoinedEmail(opts: {
         You have a <strong>${opts.durationMinutes}-minute</strong> session booked — click below to join now.
       </p>
       <div style="text-align:center;margin:28px 0;">
-        <a href="${opts.joinUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
+        <a href="${escapeHtml(opts.joinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
           Join Call Now
         </a>
       </div>
       <p style="color:#9ca3af;font-size:14px;text-align:center;">
         If the button doesn't work, copy and paste this link into your browser:<br/>
-        <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;word-break:break-all;">${opts.joinUrl}</code>
+        <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;word-break:break-all;">${escapeHtml(opts.joinUrl)}</code>
       </p>
     `),
   };
