@@ -43,9 +43,11 @@ interface EmailPayload {
 export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   const apiKey = Deno.env.get('RESEND_API_KEY');
   if (!apiKey) {
-    console.error('[email] RESEND_API_KEY is not set – skipping email send');
+    console.error('[email] ❌ RESEND_API_KEY is not set – skipping email send');
     return false;
   }
+
+  console.log(`[email] 📤 Attempting to send email to ${payload.to}...`);
 
   try {
     const headers: Record<string, string> = {
@@ -71,13 +73,14 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
 
     if (!res.ok) {
       const body = await res.text();
-      console.error(`[email] Resend ${res.status}:`, body);
+      console.error(`[email] ❌ Resend ${res.status}: ${body}`);
       return false;
     }
 
+    console.log(`[email] ✅ Email sent successfully to ${payload.to}`);
     return true;
   } catch (err) {
-    console.error('[email] Network/fetch error:', err);
+    console.error('[email] ❌ Network/fetch error:', err);
     return false;
   }
 }
@@ -297,6 +300,66 @@ export function creatorReplyEmail(opts: {
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Reply from ${creator}:</p>
         <p style="margin:0;color:#4b5563;white-space:pre-wrap;">${reply}</p>
       </div>
+    `),
+  };
+}
+
+/** Email sent to the fan when the creator joins a scheduled video call. */
+export function callStartNotificationEmail(opts: {
+  creatorName: string;
+  durationMinutes: number;
+  joinUrl: string;
+}): { subject: string; html: string } {
+  const creator = escapeHtml(opts.creatorName);
+
+  return {
+    subject: `📞 ${creator} is ready for your call!`,
+    html: brandedWrapper(`
+      <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">Time to connect!</h2>
+      <p style="color:#4b5563;line-height:1.6;">
+        <strong>${creator}</strong> is now ready for your <strong>${opts.durationMinutes}-minute</strong> video call.
+        Click the button below to join.
+      </p>
+      <div style="text-align:center;margin:28px 0;">
+        <a href="${opts.joinUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
+          Join Call Now
+        </a>
+      </div>
+      <p style="color:#9ca3af;font-size:14px;text-align:center;">
+        If the button doesn't work, copy and paste this link into your browser:<br/>
+        <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;word-break:break-all;">${opts.joinUrl}</code>
+      </p>
+    `),
+  };
+}
+
+/** Email sent to the creator when a fan joins the call room. */
+export function fanJoinedEmail(opts: {
+  creatorName: string;
+  bookerName: string;
+  durationMinutes: number;
+  joinUrl: string;
+}): { subject: string; html: string } {
+  const creator = escapeHtml(opts.creatorName);
+  const booker = escapeHtml(opts.bookerName);
+
+  return {
+    subject: `📞 ${booker} has joined the call — join now!`,
+    html: brandedWrapper(`
+      <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">Your fan is waiting, ${creator}!</h2>
+      <p style="color:#4b5563;line-height:1.6;">
+        <strong>${booker}</strong> has joined the call room and is waiting for you.
+        You have a <strong>${opts.durationMinutes}-minute</strong> session booked — click below to join now.
+      </p>
+      <div style="text-align:center;margin:28px 0;">
+        <a href="${opts.joinUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
+          Join Call Now
+        </a>
+      </div>
+      <p style="color:#9ca3af;font-size:14px;text-align:center;">
+        If the button doesn't work, copy and paste this link into your browser:<br/>
+        <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;word-break:break-all;">${opts.joinUrl}</code>
+      </p>
     `),
   };
 }
