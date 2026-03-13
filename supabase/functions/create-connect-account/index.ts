@@ -70,6 +70,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    // SECURITY: redirect URL is always server-controlled — never accept from client payload.
+    // Set APP_URL via `supabase secrets set` per environment (local: .env, staging/prod: secrets).
     const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
 
     // Create account link for onboarding. If the stored account ID no longer
