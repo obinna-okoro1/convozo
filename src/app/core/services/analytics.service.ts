@@ -12,12 +12,6 @@ export interface DailyStats {
   messageCount: number;
 }
 
-export interface WeeklyStats {
-  week: string;
-  revenue: number;
-  messageCount: number;
-}
-
 export interface AnalyticsData {
   totalRevenue: number;
   totalMessages: number;
@@ -28,8 +22,6 @@ export interface AnalyticsData {
   messageGrowth: number; // percentage
   topSenders: { name: string; email: string; totalSpent: number; messageCount: number }[];
   dailyStats: DailyStats[];
-  weeklyStats: WeeklyStats[];
-  peakHours: { hour: number; count: number }[];
   messageTypeBreakdown: { type: string; count: number; revenue: number }[];
 }
 
@@ -134,12 +126,6 @@ export class AnalyticsService {
     // Daily stats (last 30 days) — include booking revenue
     const dailyStats = this.calculateDailyStats(last30Days, bookingsLast30);
 
-    // Weekly stats (last 12 weeks)
-    const weeklyStats = this.calculateWeeklyStats(messages, bookings);
-
-    // Peak hours
-    const peakHours = this.calculatePeakHours(messages);
-
     // Type breakdown — includes call bookings as a separate category
     const messageTypeBreakdown = this.calculateMessageTypeBreakdown(messages, bookings);
 
@@ -153,8 +139,6 @@ export class AnalyticsService {
       messageGrowth,
       topSenders,
       dailyStats,
-      weeklyStats,
-      peakHours,
       messageTypeBreakdown,
     };
   }
@@ -240,74 +224,6 @@ export class AnalyticsService {
   }
 
   /**
-   * Calculate weekly stats for the last 12 weeks
-   */
-  private calculateWeeklyStats(messages: Message[], bookings: CallBooking[] = []): WeeklyStats[] {
-    const weeklyMap = new Map<string, WeeklyStats>();
-    const now = new Date();
-
-    // Initialize last 12 weeks
-    for (let i = 11; i >= 0; i--) {
-      const weekStart = new Date(now);
-      weekStart.setDate(weekStart.getDate() - i * 7 - weekStart.getDay());
-      const weekStr = weekStart.toISOString().split('T')[0];
-      weeklyMap.set(weekStr, { week: weekStr, revenue: 0, messageCount: 0 });
-    }
-
-    // Populate with message data
-    messages.forEach((m) => {
-      const msgDate = new Date(m.created_at);
-      const weekStart = new Date(msgDate);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-      const weekStr = weekStart.toISOString().split('T')[0];
-
-      const existing = weeklyMap.get(weekStr);
-      if (existing) {
-        existing.revenue += m.amount_paid / 100;
-        existing.messageCount += 1;
-      }
-    });
-
-    // Add booking revenue
-    bookings.forEach((b) => {
-      const bDate = new Date(b.created_at);
-      const weekStart = new Date(bDate);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-      const weekStr = weekStart.toISOString().split('T')[0];
-
-      const existing = weeklyMap.get(weekStr);
-      if (existing) {
-        existing.revenue += b.amount_paid / 100;
-        existing.messageCount += 1;
-      }
-    });
-
-    return Array.from(weeklyMap.values());
-  }
-
-  /**
-   * Calculate peak hours for messages
-   */
-  private calculatePeakHours(messages: Message[]): { hour: number; count: number }[] {
-    const hourMap = new Map<number, number>();
-
-    // Initialize all hours
-    for (let i = 0; i < 24; i++) {
-      hourMap.set(i, 0);
-    }
-
-    // Count messages per hour
-    messages.forEach((m) => {
-      const hour = new Date(m.created_at).getHours();
-      hourMap.set(hour, (hourMap.get(hour) ?? 0) + 1);
-    });
-
-    return Array.from(hourMap.entries())
-      .map(([hour, count]) => ({ hour, count }))
-      .sort((a, b) => a.hour - b.hour);
-  }
-
-  /**
    * Calculate message type breakdown
    */
   private calculateMessageTypeBreakdown(
@@ -350,8 +266,6 @@ export class AnalyticsService {
       messageGrowth: 0,
       topSenders: [],
       dailyStats: [],
-      weeklyStats: [],
-      peakHours: [],
       messageTypeBreakdown: [],
     };
   }

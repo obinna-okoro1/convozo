@@ -173,7 +173,7 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+email_sent = 100
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -210,26 +210,26 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# NOTE: For production, configure SMTP via the Supabase Dashboard (Authentication > SMTP Settings).
+# Use Resend: host=smtp.resend.com, port=465, user=resend, pass=<RESEND_API_KEY>
+# Locally, auth emails are caught by Mailpit at http://127.0.0.1:54324
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Custom email templates (apply both locally via Mailpit and in production)
+[auth.email.template.magic_link]
+subject = "Your Convozo sign-in link"
+content_path = "./supabase/templates/magic-link.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+[auth.email.template.confirmation]
+subject = "Confirm your Convozo account"
+content_path = "./supabase/templates/confirm-signup.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Convozo password"
+content_path = "./supabase/templates/reset-password.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new Convozo email"
+content_path = "./supabase/templates/change-email.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.

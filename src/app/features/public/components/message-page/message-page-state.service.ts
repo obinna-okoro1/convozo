@@ -5,8 +5,6 @@
  */
 
 import { Injectable, signal, computed } from '@angular/core';
-import { Router } from '@angular/router';
-import { environment } from '../../../../../environments/environment';
 import { ERROR_MESSAGES } from '../../../../core/constants';
 import {
   CreatorProfile,
@@ -15,7 +13,6 @@ import {
   MessageType,
   CheckoutSessionPayload,
 } from '../../../../core/models';
-import { InstagramPublicService } from '../../../../core/services/instagram-public.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -38,13 +35,6 @@ export class MessagePageStateService {
   // ── Links data ──
   readonly creatorLinks = signal<CreatorLink[]>([]);
 
-  // ── Instagram data ──
-  readonly instagramUsername = signal<string | null>(null);
-  readonly instagramProfileUrl = computed(() => {
-    const username = this.instagramUsername();
-    return username ? this.instagramService.getProfileUrl(username) : null;
-  });
-
   // ── UI state ──
   readonly submitting = signal<boolean>(false);
 
@@ -64,9 +54,7 @@ export class MessagePageStateService {
   );
 
   constructor(
-    private readonly router: Router,
     private readonly supabaseService: SupabaseService,
-    private readonly instagramService: InstagramPublicService,
     private readonly toast: ToastService,
     private readonly linkService: LinkService,
   ) {}
@@ -148,10 +136,6 @@ export class MessagePageStateService {
       }
 
       this.creator.set(data as CreatorProfile);
-
-      if ((data as CreatorProfile).instagram_username) {
-        this.instagramUsername.set((data as CreatorProfile).instagram_username);
-      }
 
       const settings = (data as CreatorProfile).creator_settings;
       if (settings != null) {

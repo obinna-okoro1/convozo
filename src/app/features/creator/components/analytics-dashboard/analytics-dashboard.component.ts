@@ -37,17 +37,11 @@ export class AnalyticsDashboardComponent implements OnInit {
     messageGrowth: 0,
     topSenders: [],
     dailyStats: [],
-    weeklyStats: [],
-    peakHours: [],
     messageTypeBreakdown: [],
   });
 
   protected readonly projectedRevenue = computed(() =>
     this.analyticsService.getProjectedRevenue(this.messages(), this.callBookings()),
-  );
-
-  protected readonly topPeakHours = computed(() =>
-    [...this.analytics().peakHours].sort((a, b) => b.count - a.count).slice(0, 12),
   );
 
   protected Math = Math;
@@ -80,34 +74,6 @@ export class AnalyticsDashboardComponent implements OnInit {
     const sum = this.analytics().totalMessages + this.callBookings().length;
     const total = sum !== 0 ? sum : 1;
     return (count / total) * 100;
-  }
-
-  protected formatHour(hour: number): string {
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-    return `${String(displayHour)}:00 ${period}`;
-  }
-
-  protected formatHourShort(hour: number): string {
-    const period = hour >= 12 ? 'p' : 'a';
-    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-    return `${String(displayHour)}${period}`;
-  }
-
-  protected getHourHeatClass(count: number): string {
-    const maxCount = Math.max(...this.analytics().peakHours.map((h) => h.count), 1);
-    const ratio = count / maxCount;
-
-    if (ratio > 0.7) {
-      return 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30';
-    }
-    if (ratio > 0.4) {
-      return 'bg-purple-500/40 text-purple-200';
-    }
-    if (ratio > 0.1) {
-      return 'bg-purple-500/20 text-purple-300';
-    }
-    return 'bg-white/5 text-slate-500 border border-white/10';
   }
 
   private updateAnalytics(): void {
