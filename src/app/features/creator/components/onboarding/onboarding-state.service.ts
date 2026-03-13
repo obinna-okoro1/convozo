@@ -371,6 +371,13 @@ export class OnboardingStateService implements OnDestroy {
     this.paymentConnecting.set(true);
     this.error.set(null);
 
+    // IMPORTANT: Open a blank window SYNCHRONOUSLY before any await.
+    // Browsers only allow window.open() within the synchronous call stack of a user
+    // gesture. After any await the gesture context is lost and popup blockers fire —
+    // even with strict settings disabled. We reserve the window handle here, then
+    // point it to the real Stripe URL once the async call resolves.
+    const stripeWindow = window.open('', '_blank');
+
     try {
       const user = await this.requireUser();
       const creatorId = await this.ensureCreator(user.id, user.email ?? '');
@@ -384,14 +391,21 @@ export class OnboardingStateService implements OnDestroy {
         throw error instanceof Error ? error : new Error('Failed to create payment account');
       }
 
-      // Open Stripe onboarding in a new tab — keeps onboarding flow intact
-      window.open(data.url, '_blank');
-      this.stripeTabOpen.set(true);
-      this.paymentConnecting.set(false);
-
-      // Poll every 3 s until the Stripe account has charges_enabled
-      this.startStripePolling(data.account_id);
+      if (stripeWindow !== null) {
+        // Navigate the pre-opened window to the Stripe URL — never blocked
+        stripeWindow.location.href = data.url;
+        this.stripeTabOpen.set(true);
+        this.paymentConnecting.set(false);
+        // Poll every 3 s until the Stripe account has charges_enabled
+        this.startStripePolling(data.account_id);
+      } else {
+        // Popup was blocked at the OS/extension level — redirect in the current tab.
+        // handleStripeReturn() will restore state when the user comes back via ?stripe_connected=true
+        window.location.href = data.url;
+      }
     } catch (err) {
+      // Close the blank tab if the API call failed — avoids a dangling empty tab
+      stripeWindow?.close();
       this.error.set(errorMessage(err, ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR));
       this.paymentConnecting.set(false);
     }
