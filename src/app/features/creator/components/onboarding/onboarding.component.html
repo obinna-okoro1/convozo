@@ -285,6 +285,18 @@
                   <p class="text-emerald-400/70 text-xs mt-0.5">You're all set to receive payments. Now choose what you want to offer below.</p>
                 </div>
               </div>
+            } @else {
+              <div class="mb-6 p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/40">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-amber-300 text-sm">Payment setup required</p>
+                  <p class="text-amber-400/70 text-xs mt-0.5">Connect your Stripe account in the previous step to enable monetization channels. You can skip for now and set this up later.</p>
+                </div>
+              </div>
             }
 
             <div class="flex items-center gap-4 mb-8">
@@ -302,16 +314,17 @@
             <div class="space-y-8">
               <!-- Paid Messages -->
               <div>
-                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
                   <div>
                     <h3 class="font-bold text-white text-lg">💬 Paid Messages</h3>
                     <p class="text-sm text-white/60 mt-1">Allow fans to send you paid messages</p>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer group">
+                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
                     <input
                       type="checkbox"
                       [checked]="state.messagesEnabled()"
                       (change)="state.messagesEnabled.set(inputChecked($event))"
+                      [disabled]="!state.canEnableMonetization()"
                       class="sr-only peer"
                     />
                     <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
@@ -341,16 +354,17 @@
 
               <!-- Call Settings -->
               <div class="border-t border-white/10 pt-8">
-                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
                   <div>
                     <h3 class="font-bold text-white text-lg">📞 Video Call Bookings</h3>
                     <p class="text-sm text-white/60 mt-1">Allow fans to book video calls with you</p>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer group">
+                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
                     <input
                       type="checkbox"
                       [checked]="state.callsEnabled()"
                       (change)="state.callsEnabled.set(inputChecked($event))"
+                      [disabled]="!state.canEnableMonetization()"
                       class="sr-only peer"
                     />
                     <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
@@ -399,16 +413,17 @@
 
               <!-- Follow-Back Requests -->
               <div class="border-t border-white/10 pt-8">
-                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
                   <div>
                     <h3 class="font-bold text-white text-lg">🔄 Follow-Back Requests</h3>
                     <p class="text-sm text-white/60 mt-1">Allow fans to pay for a follow-back</p>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer group">
+                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
                     <input
                       type="checkbox"
                       [checked]="state.followBackEnabled()"
                       (change)="state.followBackEnabled.set(inputChecked($event))"
+                      [disabled]="!state.canEnableMonetization()"
                       class="sr-only peer"
                     />
                     <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
@@ -437,16 +452,17 @@
 
               <!-- Fan Support / Tips -->
               <div class="border-t border-white/10 pt-8">
-                <div class="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10">
+                <div class="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
                   <div>
                     <h3 class="font-bold text-white text-lg">❤️ Fan Support</h3>
                     <p class="text-sm text-white/60 mt-1">Let fans tip you with any amount they choose</p>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer group">
+                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
                     <input
                       type="checkbox"
                       [checked]="state.tipsEnabled()"
                       (change)="state.tipsEnabled.set(inputChecked($event))"
+                      [disabled]="!state.canEnableMonetization()"
                       class="sr-only peer"
                     />
                     <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
@@ -682,7 +698,7 @@
               </button>
               <button
                 (click)="state.connectPayment()"
-                [disabled]="state.paymentConnecting()"
+                [disabled]="state.paymentConnecting() || state.stripeTabOpen()"
                 class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
               >
                 @if (state.paymentConnecting()) {
@@ -690,7 +706,13 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Redirecting to Stripe...</span>
+                  <span>Opening Stripe...</span>
+                } @else if (state.stripeTabOpen()) {
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Waiting for Stripe setup...</span>
                 } @else {
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -699,6 +721,10 @@
                 }
               </button>
             </div>
+
+            @if (state.stripeTabOpen()) {
+              <p class="mt-4 text-center text-sm text-white/50">Complete the Stripe setup in the new tab. This page will update automatically.</p>
+            }
           </div>
         }
       </div>

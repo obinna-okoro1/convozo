@@ -16,7 +16,7 @@
  *   UPDATE vs INSERT.
  */
 
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, Injectable, OnDestroy, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -31,7 +31,7 @@ import type { SelectOption } from '../../../../shared/components/ui/searchable-s
 import { errorMessage } from '../../../../shared/utils/error.utils';
 
 @Injectable()
-export class OnboardingStateService {
+export class OnboardingStateService implements OnDestroy {
   // ── Step management ────────────────────────────────────────────────
   readonly currentStep = signal<number>(1);
   readonly loading = signal<boolean>(false);
@@ -82,6 +82,12 @@ export class OnboardingStateService {
   readonly paymentConnecting = signal<boolean>(false);
   readonly paymentConnected = signal<boolean>(false);
 
+  /**
+   * Monetization toggles are only interactive when Stripe is connected.
+   * Without payment setup, creators can view the step but cannot turn anything on.
+   */
+  readonly canEnableMonetization = computed(() => this.paymentConnected());
+
   // ── OAuth import indicator ─────────────────────────────────────────
   readonly hasOAuthData = signal<boolean>(false);
   readonly oauthProvider = signal<string>('');
@@ -102,6 +108,10 @@ export class OnboardingStateService {
   private readonly _savedCreatorId = signal<string | null>(null);
 
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
+  private stripePollingTimer: ReturnType<typeof setInterval> | null = null;
+
+  /** True while we have a Stripe tab open and are polling for completion */
+  readonly stripeTabOpen = signal<boolean>(false);
 
   constructor(
     private readonly creatorService: CreatorService,
@@ -109,6 +119,14 @@ export class OnboardingStateService {
     private readonly router: Router,
     private readonly supabaseService: SupabaseService,
   ) {}
+
+  ngOnDestroy(): void {
+    this.stopStripePolling();
+    if (this.slugCheckTimer != null) {
+      clearTimeout(this.slugCheckTimer);
+      this.slugCheckTimer = null;
+    }
+  }
 
   // ── Initialization ─────────────────────────────────────────────────
 
@@ -212,6 +230,14 @@ export class OnboardingStateService {
 
   nextStep(): void {
     if (this.currentStep() < this.TOTAL_STEPS) {
+      // If leaving step 3 without payment connected, force all monetization off.
+      // The user can view the step but cannot activate paid channels.
+      if (this.currentStep() === 3 && !this.paymentConnected()) {
+        this.messagesEnabled.set(false);
+        this.callsEnabled.set(false);
+        this.followBackEnabled.set(false);
+        this.tipsEnabled.set(false);
+      }
       this.currentStep.update((s) => s + 1);
     }
   }
@@ -334,8 +360,12 @@ export class OnboardingStateService {
   // ── Actions ────────────────────────────────────────────────────────
 
   /**
-   * Step 2: Persist the creator row (if not yet done), then redirect to Stripe.
-   * On return from Stripe, _savedCreatorId is set so Step 4 will UPDATE, not INSERT.
+   * Step 2: Persist the creator row (if not yet done), then open Stripe
+   * onboarding in a new tab. Polls the Stripe account status every 3 seconds
+   * until the user completes setup, then auto-advances to step 3.
+   *
+   * Opening in a new tab preserves all in-memory form signals — no need to
+   * restore from the DB when the user comes back.
    */
   async connectPayment(): Promise<void> {
     this.paymentConnecting.set(true);
@@ -350,15 +380,60 @@ export class OnboardingStateService {
         user.email ?? '',
         this.displayName(),
       );
-      if (error || !data?.url) {
+      if (error || !data?.url || !data?.account_id) {
         throw error instanceof Error ? error : new Error('Failed to create payment account');
       }
 
-      window.location.href = data.url;
+      // Open Stripe onboarding in a new tab — keeps onboarding flow intact
+      window.open(data.url, '_blank');
+      this.stripeTabOpen.set(true);
+      this.paymentConnecting.set(false);
+
+      // Poll every 3 s until the Stripe account has charges_enabled
+      this.startStripePolling(data.account_id);
     } catch (err) {
       this.error.set(errorMessage(err, ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR));
       this.paymentConnecting.set(false);
     }
+  }
+
+  /**
+   * Polls `verify-connect-account` every 3 seconds.
+   * Stops when the account is fully connected (charges_enabled) or after 10 min timeout.
+   */
+  private startStripePolling(accountId: string): void {
+    this.stopStripePolling();
+
+    const POLL_INTERVAL_MS = 3_000;
+    const MAX_POLL_DURATION_MS = 5 * 60 * 1_000; // 5 minutes
+    const startTime = Date.now();
+
+    this.stripePollingTimer = setInterval(async () => {
+      // Timeout guard — stop polling after 10 min
+      if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+        this.stopStripePolling();
+        return;
+      }
+
+      try {
+        const { data } = await this.creatorService.verifyStripeAccount(accountId);
+        if (data?.charges_enabled) {
+          this.stopStripePolling();
+          this.paymentConnected.set(true);
+          this.currentStep.set(3);
+        }
+      } catch {
+        // Swallow individual poll failures — network blip shouldn't kill the flow
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  private stopStripePolling(): void {
+    if (this.stripePollingTimer != null) {
+      clearInterval(this.stripePollingTimer);
+      this.stripePollingTimer = null;
+    }
+    this.stripeTabOpen.set(false);
   }
 
   /**
@@ -418,6 +493,12 @@ export class OnboardingStateService {
         responseExpectation: this.responseExpectation(),
       });
       if (settingsError) throw settingsError;
+
+      // Verify settings were actually created (guard against future database issues)
+      const { data: settingsCheck } = await this.creatorService.getCreatorSettings(creatorId);
+      if (!settingsCheck) {
+        throw new Error('Failed to verify creator settings were saved. Please try again.');
+      }
 
       await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
     } catch (err) {

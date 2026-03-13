@@ -35,6 +35,11 @@ export class CreatorService {
     return data;
   }
 
+  /**
+   * Create a new creator profile.
+   * NOTE: A database trigger automatically creates default creator_settings.
+   * If overriding settings after this call, ensure they complete successfully.
+   */
   public async createCreator(data: {
     userId: string;
     email: string;
