@@ -4,16 +4,13 @@
  * The OnboardingComponent is a thin shell that delegates everything here.
  *
  * Steps:
- *   1 – Creator profile (display name, slug, phone, bio, avatar)
- *   2 – Stripe Connect setup (optional, can skip)
- *   3 – Monetization (pricing toggles)
- *   4 – Review & complete
+ *   1 - Creator profile (display name, slug, phone, bio, avatar)
+ *   2 - Payment info (read-only explainer — connect Stripe later in Settings)
+ *   3 - Monetization preview (locked toggles — enable after Stripe in Settings)
+ *   4 - Review & complete
  *
- * Two-phase persistence:
- *   The creator DB row may be written at Step 2 (when the user clicks "Connect Stripe")
- *   or deferred until Step 4 (if they skip). `_savedCreatorId` caches the id once the
- *   row exists so later steps avoid redundant DB round-trips and know whether to
- *   UPDATE vs INSERT.
+ * The creator row and default settings are written at step 4. All monetization
+ * (Stripe connection, pricing, toggle activation) happens post-onboarding in Settings.
  */
 
 import { computed, Injectable, OnDestroy, signal } from '@angular/core';
@@ -67,27 +64,6 @@ export class OnboardingStateService implements OnDestroy {
     return `${country.code} ${local}`;
   });
 
-  // ── Monetization fields ────────────────────────────────────────────
-  readonly messagePrice = signal<number>(1000);        // cents ($10)
-  readonly messagesEnabled = signal<boolean>(false);
-  readonly callPrice = signal<number>(5000);           // cents ($50)
-  readonly callDuration = signal<number>(30);          // minutes
-  readonly callsEnabled = signal<boolean>(false);
-  readonly followBackEnabled = signal<boolean>(false);
-  readonly followBackPrice = signal<number>(2000);     // cents ($20)
-  readonly tipsEnabled = signal<boolean>(false);
-  readonly responseExpectation = signal<string>(APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION);
-
-  // ── Payment setup ──────────────────────────────────────────────────
-  readonly paymentConnecting = signal<boolean>(false);
-  readonly paymentConnected = signal<boolean>(false);
-
-  /**
-   * Monetization toggles are only interactive when Stripe is connected.
-   * Without payment setup, creators can view the step but cannot turn anything on.
-   */
-  readonly canEnableMonetization = computed(() => this.paymentConnected());
-
   // ── OAuth import indicator ─────────────────────────────────────────
   readonly hasOAuthData = signal<boolean>(false);
   readonly oauthProvider = signal<string>('');
@@ -104,14 +80,10 @@ export class OnboardingStateService implements OnDestroy {
   );
 
   // Tracks a creator row already written to the DB during this session.
-  // Set by ensureCreator(); lets completeOnboarding() skip a redundant lookup.
+  // Set by completeOnboarding() so an update path is used on re-submit.
   private readonly _savedCreatorId = signal<string | null>(null);
 
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
-  private stripePollingTimer: ReturnType<typeof setInterval> | null = null;
-
-  /** True while we have a Stripe tab open and are polling for completion */
-  readonly stripeTabOpen = signal<boolean>(false);
 
   constructor(
     private readonly creatorService: CreatorService,
@@ -121,7 +93,6 @@ export class OnboardingStateService implements OnDestroy {
   ) {}
 
   ngOnDestroy(): void {
-    this.stopStripePolling();
     if (this.slugCheckTimer != null) {
       clearTimeout(this.slugCheckTimer);
       this.slugCheckTimer = null;
@@ -130,14 +101,8 @@ export class OnboardingStateService implements OnDestroy {
 
   // ── Initialization ─────────────────────────────────────────────────
 
-  async initialize(returnedFromStripe = false): Promise<void> {
+  async initialize(): Promise<void> {
     this.selectedCountryIndex.set(detectCountryIndex());
-
-    if (returnedFromStripe) {
-      await this.handleStripeReturn();
-      return;
-    }
-
     await this.checkExistingProfile();
     this.loadOAuthData();
   }
@@ -161,61 +126,8 @@ export class OnboardingStateService implements OnDestroy {
     }
   }
 
-  /**
-   * Handles the return trip from Stripe Connect onboarding.
-   *
-   * Called when the URL contains ?stripe_connected=true (set as the return_url
-   * in create-connect-account). Skips the normal dashboard-redirect guard,
-   * restores form signals from the creator row that was saved before the
-   * Stripe redirect, marks the payment step complete, and advances to step 3.
-   */
-  private async handleStripeReturn(): Promise<void> {
-    try {
-      const user = await this.requireUser();
-      const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
-
-      if (creator) {
-        // Cache the id so completeOnboarding() UPDATE path is used (not INSERT).
-        this._savedCreatorId.set(creator.id);
-
-        // Restore form signals so profileFormFields() has correct values when
-        // completeOnboarding() calls updateCreatorProfile() at step 4.
-        this.displayName.set(creator.display_name ?? '');
-        this.bio.set(creator.bio ?? '');
-        this.slug.set(creator.slug ?? '');
-        this.slugStatus.set('available'); // slug was valid when first saved
-        this.profileImageUrl.set(creator.profile_image_url ?? '');
-        this.instagramUsername.set(creator.instagram_username ?? '');
-
-        // Best-effort phone parse: match the longest country code prefix so
-        // the country selector and local number field are populated correctly.
-        const storedPhone = creator.phone_number ?? '';
-        const match = [...COUNTRY_CODES]
-          .map((cc, i) => ({ cc, i }))
-          .sort((a, b) => b.cc.code.length - a.cc.code.length)
-          .find(({ cc }) => storedPhone.startsWith(cc.code + ' '));
-
-        if (match) {
-          this.selectedCountryIndex.set(match.i);
-          this.phoneNumber.set(storedPhone.slice(match.cc.code.length + 1));
-        } else {
-          this.phoneNumber.set(storedPhone);
-        }
-      }
-
-      // Mark payment connected and advance past the Stripe step.
-      this.paymentConnected.set(true);
-      this.currentStep.set(3);
-    } catch {
-      // If restoration fails, still advance — the Stripe connection succeeded
-      // and the user shouldn't be stuck. completeOnboarding() will handle any
-      // missing data gracefully via the ensureCreator() fallback.
-      this.paymentConnected.set(true);
-      this.currentStep.set(3);
-    }
-  }
-
-  private async checkExistingProfile(): Promise<void> {    const user = this.authService.getCurrentUser();
+  private async checkExistingProfile(): Promise<void> {
+    const user = this.authService.getCurrentUser();
     if (!user) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
       return;
@@ -230,34 +142,14 @@ export class OnboardingStateService implements OnDestroy {
 
   nextStep(): void {
     if (this.currentStep() < this.TOTAL_STEPS) {
-      // If leaving step 3 without payment connected, force all monetization off.
-      // The user can view the step but cannot activate paid channels.
-      if (this.currentStep() === 3 && !this.paymentConnected()) {
-        this.messagesEnabled.set(false);
-        this.callsEnabled.set(false);
-        this.followBackEnabled.set(false);
-        this.tipsEnabled.set(false);
-      }
       this.currentStep.update((s) => s + 1);
     }
   }
 
   prevStep(): void {
     if (this.currentStep() > 1) {
-      // Cancel Stripe polling when navigating back from step 2 so the user
-      // gets a clean state if they return to step 2 and try again.
-      if (this.currentStep() === 2) {
-        this.stopStripePolling();
-      }
       this.currentStep.update((s) => s - 1);
     }
-  }
-
-  skipPaymentSetup(): void {
-    // Cancel any running Stripe polling — user deliberately chose to skip.
-    // Avoids ghost polls that could set paymentConnected(true) after skipping.
-    this.stopStripePolling();
-    this.nextStep();
   }
 
   // ── Profile field updates ──────────────────────────────────────────
@@ -335,149 +227,12 @@ export class OnboardingStateService implements OnDestroy {
     };
   }
 
-  /**
-   * Ensures a creator row exists in the DB and returns its id.
-   *
-   * Precedence:
-   *   1. In-memory cache (_savedCreatorId) — zero DB calls.
-   *   2. Existing DB row — handles page refreshes mid-flow.
-   *   3. INSERT a new row from the current form state.
-   */
-  private async ensureCreator(userId: string, email: string): Promise<string> {
-    const cached = this._savedCreatorId();
-    if (cached) return cached;
-
-    const { data: existing } = await this.creatorService.getCreatorByUserId(userId);
-    if (existing) {
-      this._savedCreatorId.set(existing.id);
-      return existing.id;
-    }
-
-    const { data: created, error } = await this.creatorService.createCreator({
-      userId,
-      email,
-      ...this.profileFormFields(),
-    });
-    if (error || !created) {
-      throw new Error('Failed to save your profile. Please check your details and try again.');
-    }
-    this._savedCreatorId.set(created.id);
-    return created.id;
-  }
-
   // ── Actions ────────────────────────────────────────────────────────
 
   /**
-   * Step 2: Persist the creator row (if not yet done), then open Stripe
-   * onboarding in a new tab. Polls the Stripe account status every 3 seconds
-   * until the user completes setup, then auto-advances to step 3.
-   *
-   * Opening in a new tab preserves all in-memory form signals — no need to
-   * restore from the DB when the user comes back.
-   */
-  async connectPayment(): Promise<void> {
-    this.paymentConnecting.set(true);
-    this.error.set(null);
-
-    // IMPORTANT: Open a blank window SYNCHRONOUSLY before any await.
-    // Browsers only allow window.open() within the synchronous call stack of a user
-    // gesture. After any await the gesture context is lost and popup blockers fire —
-    // even with strict settings disabled. We reserve the window handle here, then
-    // point it to the real Stripe URL once the async call resolves.
-    const stripeWindow = window.open('', '_blank');
-
-    try {
-      const user = await this.requireUser();
-      const creatorId = await this.ensureCreator(user.id, user.email ?? '');
-
-      const { data, error } = await this.creatorService.createStripeConnectAccount(
-        creatorId,
-        user.email ?? '',
-        this.displayName(),
-      );
-      if (error || !data?.url || !data?.account_id) {
-        throw error instanceof Error ? error : new Error('Failed to create payment account');
-      }
-
-      if (stripeWindow !== null) {
-        // Navigate the pre-opened window to the Stripe URL — never blocked
-        stripeWindow.location.href = data.url;
-        this.stripeTabOpen.set(true);
-        this.paymentConnecting.set(false);
-        // Poll every 3 s until the Stripe account has charges_enabled
-        this.startStripePolling(data.account_id);
-      } else {
-        // Popup was blocked at the OS/extension level — redirect in the current tab.
-        // handleStripeReturn() will restore state when the user comes back via ?stripe_connected=true
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      // Close the blank tab if the API call failed — avoids a dangling empty tab
-      stripeWindow?.close();
-      this.error.set(errorMessage(err, ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR));
-      this.paymentConnecting.set(false);
-    }
-  }
-
-  /**
-   * Polls `verify-connect-account` every 3 seconds.
-   * Stops when the account is fully connected (charges_enabled) or after 10 min timeout.
-   */
-  private startStripePolling(accountId: string): void {
-    this.stopStripePolling();
-
-    const POLL_INTERVAL_MS = 3_000;
-    const MAX_POLL_DURATION_MS = 5 * 60 * 1_000; // 5 minutes
-    const startTime = Date.now();
-
-    this.stripePollingTimer = setInterval(async () => {
-      // Timeout guard — stop polling after 10 min
-      if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
-        this.stopStripePolling();
-        return;
-      }
-
-      try {
-        const { data } = await this.creatorService.verifyStripeAccount(accountId);
-        if (data?.charges_enabled) {
-          this.stopStripePolling();
-          this.paymentConnected.set(true);
-          // Only auto-advance if the user is still on step 2.
-          // If they went Back or skipped while polling was running, don't
-          // forcibly re-advance them to step 3.
-          if (this.currentStep() === 2) {
-            this.currentStep.set(3);
-          }
-        }
-      } catch {
-        // Swallow individual poll failures — network blip shouldn't kill the flow
-      }
-    }, POLL_INTERVAL_MS);
-  }
-
-  /**
-   * Cancels any running Stripe polling and resets the tab-open flag.
-   * Called from the template when the user accidentally closes the Stripe tab
-   * and wants to restart — restores the "Connect with Stripe" button.
-   */
-  resetStripeState(): void {
-    this.stopStripePolling();
-  }
-
-  private stopStripePolling(): void {
-    if (this.stripePollingTimer != null) {
-      clearInterval(this.stripePollingTimer);
-      this.stripePollingTimer = null;
-    }
-    this.stripeTabOpen.set(false);
-  }
-
-  /**
-   * Step 4: Finalise onboarding.
-   *
-   * If _savedCreatorId is set (creator was persisted at Step 2), sync any profile
-   * edits made after that point. Otherwise Stripe was skipped, so INSERT now.
-   * Settings are always created fresh at this final step.
+   * Finalise onboarding: create the creator row + default settings (all channels off),
+   * then navigate to the dashboard. Stripe connection and monetization activation
+   * happen post-onboarding in Settings -> Payments.
    */
   async completeOnboarding(): Promise<void> {
     this.loading.set(true);
@@ -488,14 +243,12 @@ export class OnboardingStateService implements OnDestroy {
       const savedId = this._savedCreatorId();
 
       if (savedId) {
-        // Sync any Step 1 edits made after Stripe connect.
         const { error } = await this.creatorService.updateCreatorProfile({
           creatorId: savedId,
           ...this.profileFormFields(),
         });
         if (error) throw error;
       } else {
-        // Stripe was skipped — create the row now.
         const { data: creator, error } = await this.creatorService.createCreator({
           userId: user.id,
           email: user.email ?? '',
@@ -516,17 +269,20 @@ export class OnboardingStateService implements OnDestroy {
       }
 
       const creatorId = this._savedCreatorId()!;
+
+      // All channels off by default — creator enables them after connecting Stripe
+      // in Settings -> Payments.
       const { error: settingsError } = await this.creatorService.createCreatorSettings({
         creatorId,
-        messagePrice: this.messagePrice(),
-        messagesEnabled: this.messagesEnabled(),
-        callPrice: this.callsEnabled() ? this.callPrice() : undefined,
-        callDuration: this.callsEnabled() ? this.callDuration() : undefined,
-        callsEnabled: this.callsEnabled(),
-        followBackPrice: this.followBackEnabled() ? this.followBackPrice() : undefined,
-        followBackEnabled: this.followBackEnabled(),
-        tipsEnabled: this.tipsEnabled(),
-        responseExpectation: this.responseExpectation(),
+        messagePrice: 1000,
+        messagesEnabled: false,
+        callPrice: 5000,
+        callDuration: 30,
+        callsEnabled: false,
+        followBackPrice: 2000,
+        followBackEnabled: false,
+        tipsEnabled: false,
+        responseExpectation: APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
       });
       if (settingsError) throw settingsError;
 

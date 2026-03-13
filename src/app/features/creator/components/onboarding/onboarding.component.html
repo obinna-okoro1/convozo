@@ -268,36 +268,9 @@
           </div>
         }
 
-        <!-- Step 3: Monetization Setup -->
+        <!-- Step 3: Monetization Preview (locked — activate in Settings after Stripe) -->
         @if (state.currentStep() === 3) {
           <div class="animate-fade-in">
-
-            <!-- Stripe connected confirmation (shown when returning from Stripe OAuth) -->
-            @if (state.paymentConnected()) {
-              <div class="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/40 rounded-2xl flex items-center gap-3">
-                <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/40">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-semibold text-emerald-300 text-sm">Stripe account connected!</p>
-                  <p class="text-emerald-400/70 text-xs mt-0.5">You're all set to receive payments. Now choose what you want to offer below.</p>
-                </div>
-              </div>
-            } @else {
-              <div class="mb-6 p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl flex items-center gap-3">
-                <div class="w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/40">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-semibold text-amber-300 text-sm">Payment setup required</p>
-                  <p class="text-amber-400/70 text-xs mt-0.5">Connect your Stripe account in the previous step to enable monetization channels. You can skip for now and set this up later.</p>
-                </div>
-              </div>
-            }
 
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
@@ -306,181 +279,65 @@
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Set up monetization</h2>
-                <p class="text-white/60 text-sm mt-1">Enable channels and set your rates</p>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Monetization channels</h2>
+                <p class="text-white/60 text-sm mt-1">Here's what you can enable once your account is live</p>
               </div>
             </div>
-            
-            <div class="space-y-8">
-              <!-- Paid Messages -->
+
+            <!-- Info banner -->
+            <div class="mb-8 p-5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl flex items-start gap-4">
+              <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30 mt-0.5">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
               <div>
-                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
-                  <div>
-                    <h3 class="font-bold text-white text-lg">💬 Paid Messages</h3>
-                    <p class="text-sm text-white/60 mt-1">Allow fans to send you paid messages</p>
-                  </div>
-                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
-                    <input
-                      type="checkbox"
-                      [checked]="state.messagesEnabled()"
-                      (change)="state.messagesEnabled.set(inputChecked($event))"
-                      [disabled]="!state.canEnableMonetization()"
-                      class="sr-only peer"
-                    />
-                    <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
-                  </label>
-                </div>
-
-                @if (state.messagesEnabled()) {
-                  <div class="space-y-3 animate-fade-in">
-                    <label class="block text-sm font-bold text-white">Message Price (USD) *</label>
-                    <div class="flex items-center gap-4">
-                      <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
-                      <div class="relative flex-1 group">
-                        <input
-                          type="number"
-                          [value]="state.messagePrice() / 100"
-                          (input)="state.messagePrice.set(inputNumber($event) * 100)"
-                          min="1"
-                          step="1"
-                          class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                        />
-                      </div>
-                    </div>
-                    <p class="text-xs text-white/50 mt-2">Price per message in USD</p>
-                  </div>
-                }
+                <p class="font-bold text-amber-300 text-sm mb-1">These channels are activated after setup</p>
+                <p class="text-amber-200/80 text-sm leading-relaxed">
+                  To turn on paid channels, first connect Stripe in <strong class="text-amber-200">Settings → Payments</strong>, then enable each channel in <strong class="text-amber-200">Settings → Monetization</strong>. You're just a few taps away after creating your profile.
+                </p>
               </div>
+            </div>
 
-              <!-- Call Settings -->
-              <div class="border-t border-white/10 pt-8">
-                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
-                  <div>
-                    <h3 class="font-bold text-white text-lg">📞 Video Call Bookings</h3>
-                    <p class="text-sm text-white/60 mt-1">Allow fans to book video calls with you</p>
-                  </div>
-                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
-                    <input
-                      type="checkbox"
-                      [checked]="state.callsEnabled()"
-                      (change)="state.callsEnabled.set(inputChecked($event))"
-                      [disabled]="!state.canEnableMonetization()"
-                      class="sr-only peer"
-                    />
-                    <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
-                  </label>
+            <!-- Locked channel previews -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-white">💬 Paid Messages</h3>
+                  <p class="text-sm text-white/50 mt-0.5">Allow fans to send you paid messages</p>
                 </div>
-
-                @if (state.callsEnabled()) {
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                    <div class="space-y-3">
-                      <label class="block text-sm font-bold text-white">Call Price (USD) *</label>
-                      <div class="flex items-center gap-4">
-                        <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
-                        <div class="relative flex-1 group">
-                          <input
-                            type="number"
-                            [value]="state.callPrice() / 100"
-                            (input)="state.callPrice.set(inputNumber($event) * 100)"
-                            min="1"
-                            step="1"
-                            class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="space-y-3">
-                      <label class="block text-sm font-bold text-white">Duration (minutes) *</label>
-                      <div class="flex items-center gap-3">
-                        <div class="relative flex-1 group">
-                          <input
-                            type="number"
-                            [value]="state.callDuration()"
-                            (input)="state.callDuration.set(inputNumber($event))"
-                            min="15"
-                            max="120"
-                            step="15"
-                            class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                          />
-                        </div>
-                        <span class="text-white/60 font-medium">min</span>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-
-              <!-- Follow-Back Requests -->
-              <div class="border-t border-white/10 pt-8">
-                <div class="flex items-center justify-between mb-6 p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
-                  <div>
-                    <h3 class="font-bold text-white text-lg">🔄 Follow-Back Requests</h3>
-                    <p class="text-sm text-white/60 mt-1">Allow fans to pay for a follow-back</p>
-                  </div>
-                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
-                    <input
-                      type="checkbox"
-                      [checked]="state.followBackEnabled()"
-                      (change)="state.followBackEnabled.set(inputChecked($event))"
-                      [disabled]="!state.canEnableMonetization()"
-                      class="sr-only peer"
-                    />
-                    <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
-                  </label>
-                </div>
-
-                @if (state.followBackEnabled()) {
-                  <div class="space-y-3 animate-fade-in">
-                    <label class="block text-sm font-bold text-white">Follow-Back Price (USD) *</label>
-                    <div class="flex items-center gap-4">
-                      <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
-                      <div class="relative flex-1 group">
-                        <input
-                          type="number"
-                          [value]="state.followBackPrice() / 100"
-                          (input)="state.followBackPrice.set(inputNumber($event) * 100)"
-                          min="1"
-                          step="1"
-                          class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-
-              <!-- Fan Support / Tips -->
-              <div class="border-t border-white/10 pt-8">
-                <div class="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10" [class.opacity-50]="!state.canEnableMonetization()">
-                  <div>
-                    <h3 class="font-bold text-white text-lg">❤️ Fan Support</h3>
-                    <p class="text-sm text-white/60 mt-1">Let fans tip you with any amount they choose</p>
-                  </div>
-                  <label class="relative inline-flex items-center group" [class.cursor-pointer]="state.canEnableMonetization()" [class.cursor-not-allowed]="!state.canEnableMonetization()">
-                    <input
-                      type="checkbox"
-                      [checked]="state.tipsEnabled()"
-                      (change)="state.tipsEnabled.set(inputChecked($event))"
-                      [disabled]="!state.canEnableMonetization()"
-                      class="sr-only peer"
-                    />
-                    <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 shadow-lg"></div>
-                  </label>
+                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
                 </div>
               </div>
 
-              <!-- Response Expectation -->
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Response Time Expectation</label>
-                <div class="relative group">
-                  <textarea
-                    [value]="state.responseExpectation()"
-                    (input)="state.responseExpectation.set(inputValue($event))"
-                    placeholder="Set expectations for response time..."
-                    rows="2"
-                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 resize-none"
-                  ></textarea>
+              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-white">📞 Video Call Bookings</h3>
+                  <p class="text-sm text-white/50 mt-0.5">Allow fans to book video calls with you</p>
+                </div>
+                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-white">🔄 Follow-Back Requests</h3>
+                  <p class="text-sm text-white/50 mt-0.5">Allow fans to pay for a follow-back</p>
+                </div>
+                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-white">❤️ Fan Support</h3>
+                  <p class="text-sm text-white/50 mt-0.5">Let fans tip you with any amount they choose</p>
+                </div>
+                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -543,38 +400,30 @@
                 </div>
               }
 
-              <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
-                <div class="text-sm text-white/60 mb-2">Monetization</div>
-                @if (state.messagesEnabled()) {
-                  <div class="font-bold text-white text-lg">Messages: ${{ state.messagePrice() / 100 }}</div>
-                }
-                @if (state.callsEnabled()) {
-                  <div class="font-bold text-white mt-1">Calls: ${{ state.callPrice() / 100 }} ({{ state.callDuration() }} min)</div>
-                }
-                @if (state.followBackEnabled()) {
-                  <div class="font-bold text-white mt-1">Follow-Back: ${{ state.followBackPrice() / 100 }}</div>
-                }
-                @if (state.tipsEnabled()) {
-                  <div class="font-bold text-white mt-1">Fan Support: Enabled</div>
-                }
-                @if (!state.messagesEnabled() && !state.callsEnabled() && !state.followBackEnabled() && !state.tipsEnabled()) {
-                  <div class="text-white/40 italic">No channels enabled — you can enable them later in Settings</div>
-                }
-              </div>
-
-              <!-- Payment Notice -->
-              <div class="p-6 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-yellow-500/20">
+              <!-- Next steps notice -->
+              <div class="p-6 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-blue-500/20">
                 <div class="flex items-start gap-4">
-                  <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/50">
-                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/50 mt-0.5">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div class="flex-1">
-                    <p class="font-bold text-white mb-1">Bank Account Required</p>
-                    <p class="text-yellow-200 text-sm leading-relaxed">
-                      To receive payments, connect your Stripe account via <strong>Settings → Payments</strong> after completing setup.
-                    </p>
+                  <div>
+                    <p class="font-bold text-white mb-2">What happens next</p>
+                    <ul class="space-y-1.5 text-sm text-blue-200">
+                      <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                        Your profile goes live immediately at <strong>convozo.com/{{ state.slug() }}</strong>
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                        Connect Stripe in <strong>Settings → Payments</strong> to start receiving money
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                        Enable paid channels in <strong>Settings → Monetization</strong>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -615,125 +464,94 @@
           </div>
         }
 
-        <!-- Step 2: Payment Setup (Stripe Connect) -->
+        <!-- Step 2: Payments Info -->
         @if (state.currentStep() === 2) {
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
-                <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Connect your payment account</h2>
-                <p class="text-white/60 text-sm mt-1">Set up Stripe to start receiving payments</p>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Getting paid</h2>
+                <p class="text-white/60 text-sm mt-1">Here's how payments work on Convozo</p>
               </div>
             </div>
             
-            <!-- Info Card -->
+            <!-- Main info card -->
             <div class="mb-8 p-6 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-blue-500/20">
               <div class="flex items-start gap-4">
                 <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50 flex-shrink-0">
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <p class="font-bold text-white mb-1">How payments work</p>
+                  <p class="font-bold text-white mb-2">Set up payments after your profile is live</p>
                   <p class="text-blue-200 text-sm leading-relaxed">
-                    Payments are processed securely via Stripe. You'll receive 78% of each payment directly to your bank account. Convozo takes a 22% platform fee which covers all processing fees — so what you see is what you get.
+                    Once your account is created, go to <strong>Settings → Payments</strong> to connect your Stripe account. This is what allows you to receive money from fans.
                   </p>
                 </div>
               </div>
             </div>
 
-            <!-- Benefits -->
+            <!-- How it works -->
             <div class="space-y-4 mb-8">
               <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg shadow-emerald-500/30">
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/30">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-bold text-white">78% goes to you</p>
+                  <p class="text-sm text-white/60">Every payment a fan makes, you keep 78% — sent directly to your bank account via Stripe.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/30">
                   <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                   </svg>
                 </div>
                 <div>
                   <p class="font-bold text-white">Secure & trusted</p>
-                  <p class="text-sm text-white/60">Powered by Stripe — the world's leading payment platform</p>
+                  <p class="text-sm text-white/60">Payments are powered by Stripe — the same platform used by millions of businesses worldwide.</p>
                 </div>
               </div>
-              
+
               <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg shadow-emerald-500/30">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p class="font-bold text-white">Fast payouts</p>
-                  <p class="text-sm text-white/60">Get paid directly to your bank account via Stripe</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg shadow-emerald-500/30">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-bold text-white">Easy setup</p>
-                  <p class="text-sm text-white/60">Stripe handles all bank details securely — just click and follow the steps</p>
+                  <p class="font-bold text-white">Takes just a few minutes</p>
+                  <p class="text-sm text-white/60">Connecting Stripe is quick. You'll need your bank details and a form of ID to complete setup.</p>
                 </div>
               </div>
             </div>
-
-            @if (state.error()) {
-              <div class="mb-6 p-5 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-red-500/20 text-red-200 text-sm">
-                {{ state.error() }}
-              </div>
-            }
 
             <div class="mt-8 flex justify-between">
-              <button (click)="state.skipPaymentSetup()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300" [disabled]="state.paymentConnecting()">
-                Skip for now
+              <button (click)="state.prevStep()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                </svg>
+                Back
               </button>
               <button
-                (click)="state.connectPayment()"
-                [disabled]="state.paymentConnecting() || state.stripeTabOpen()"
-                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
+                (click)="state.nextStep()"
+                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 flex items-center gap-3"
               >
-                @if (state.paymentConnecting()) {
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Opening Stripe...</span>
-                } @else if (state.stripeTabOpen()) {
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Waiting for Stripe setup...</span>
-                } @else {
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                  <span>Connect with Stripe</span>
-                }
+                <span>Continue</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </button>
             </div>
-
-            @if (state.stripeTabOpen()) {
-              <p class="mt-4 text-center text-sm text-white/50">Complete the Stripe setup in the new tab. This page will update automatically.</p>
-              <p class="mt-2 text-center text-sm text-white/40">
-                Accidentally closed the tab?
-                <button
-                  (click)="state.resetStripeState()"
-                  class="underline text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  Click here to try again
-                </button>
-              </p>
-            }
           </div>
         }
       </div>
