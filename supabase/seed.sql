@@ -330,8 +330,12 @@ VALUES
   ('33333333-3333-3333-3333-333333333333', 5, '09:00', '12:00', true), -- Friday morning
   ('33333333-3333-3333-3333-333333333333', 5, '14:00', '17:00', true); -- Friday afternoon
 
--- Sample Call Booking
-INSERT INTO public.call_bookings (creator_id, booker_name, booker_email, booker_instagram, scheduled_at, duration, amount_paid, status, stripe_session_id, stripe_payment_intent_id, created_at)
+-- Sample Call Booking with Daily.co room
+INSERT INTO public.call_bookings (
+  creator_id, booker_name, booker_email, booker_instagram, scheduled_at, duration, amount_paid, 
+  status, stripe_session_id, stripe_payment_intent_id, created_at,
+  daily_room_name, daily_room_url, creator_meeting_token, fan_meeting_token, payout_status
+)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   'Alex Rodriguez',
@@ -343,7 +347,12 @@ VALUES (
   'confirmed',
   'cs_test_call_1a2b3c4d',
   'pi_1234572',
-  NOW() - INTERVAL '2 hours'
+  NOW() - INTERVAL '2 hours',
+  'convozo-test-call-001',
+  'https://convozo.daily.co/convozo-test-call-001',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyIjoiY29udm96by10ZXN0LWNhbGwtMDAxIiwibyI6dHJ1ZSwidSI6IlNhcmFoIEpvaG5zb24iLCJleHAiOjk5OTk5OTk5OTksImQiOiJmYTFhODEwMS05MmZiLTQxOTMtOWEzMS01N2Q0MTY5M2Y3MzUiLCJpYXQiOjE3NzM0MzczMjV9.fEPoTwSVp-mrwITuqwOVW4OLMNoB-fJewI_TZxRe834',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyIjoiY29udm96by10ZXN0LWNhbGwtMDAxIiwibyI6ZmFsc2UsInUiOiJBbGV4IFJvZHJpZ3VleiIsImV4cCI6OTk5OTk5OTk5OSwiZCI6ImZhMWE4MTAxLTkyZmItNDE5My05YTMxLTU3ZDQxNjkzZjczNSIsImlhdCI6MTc3MzQzNzMyNX0.AKcRfjP5M8KrjncXhCO5Q8ba0KuIH3UOpAW_lWfTh38',
+  'held'
 );
 
 -- Set theme colors on creators

@@ -2,17 +2,17 @@
  * Video Call Service
  *
  * Handles all video call operations:
- * - Joining a call (creator or fan)
- * - Completing a call
- * - Loading the Daily.co iframe
- * - Tracking call state
+ * - Joining a call (creator or fan) via the join-call Edge Function
+ * - Completing a call via the complete-call Edge Function
+ * - Loading bookings from the database
+ * - Tracking reactive call state (idle → joining → waiting → in_progress → completed)
  *
- * Uses Daily.co's prebuilt UI via iframe embedding for MVP.
- * Future: switch to daily-js SDK for custom UI.
+ * The VideoRoomComponent uses @daily-co/daily-js for real-time participant events
+ * and calls this service for state management and backend communication.
  *
- * Expects: SupabaseService for Edge Function invocations
+ * Expects: SupabaseService for Edge Function invocations and DB queries
  * Returns: typed responses
- * Errors: all methods handle errors and never throw to callers
+ * Errors: all methods handle errors internally and never throw to callers
  */
 
 import { Injectable, signal, computed } from '@angular/core';
@@ -23,7 +23,6 @@ import {
   CompleteCallResponse,
   SupabaseResponse,
 } from '../../../core/models';
-
 export type VideoCallState =
   | 'idle'
   | 'joining'
@@ -132,7 +131,7 @@ export class VideoCallService {
   }
 
   /**
-   * Load a booking by ID (for the video room component)
+   * Load a booking by ID (used by VideoRoomComponent on init and after participant-joined)
    */
   async loadBooking(bookingId: string): Promise<SupabaseResponse<CallBooking>> {
     const { data, error } = await this.supabaseService.client
@@ -149,18 +148,7 @@ export class VideoCallService {
   }
 
   /**
-   * Build the full Daily iframe URL with meeting token.
-   * Format: https://yourdomain.daily.co/room-name?t=TOKEN
-   */
-  getDailyIframeUrl(): string | null {
-    const url = this.roomUrl();
-    const token = this.meetingToken();
-    if (!url || !token) return null;
-    return `${url}?t=${token}`;
-  }
-
-  /**
-   * Start the countdown timer for the booked duration.
+   * Stop the countdown timer.
    */
   startCountdown(durationMinutes: number): void {
     this.stopCountdown(); // Clear any existing timer
@@ -193,19 +181,7 @@ export class VideoCallService {
   }
 
   /**
-   * Notify that the other participant has joined (called from realtime subscription).
-   * Transitions from 'waiting' to 'in_progress' and starts the countdown.
-   */
-  onOtherParticipantJoined(booking: CallBooking): void {
-    if (this.callState() === 'waiting' && booking.call_started_at) {
-      this.callState.set('in_progress');
-      this.callStartedAt.set(new Date(booking.call_started_at));
-      this.startCountdown(booking.duration);
-    }
-  }
-
-  /**
-   * Reset all state — call when navigating away from the video room.
+   * Reset all state — called by VideoRoomComponent on ngOnDestroy.
    */
   reset(): void {
     this.stopCountdown();

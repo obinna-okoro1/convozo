@@ -81,7 +81,9 @@ export async function createRoom(
         enable_chat: true,
         enable_knocking: false,
         enable_screenshare: false,
-        enable_recording: 'cloud', // future premium: call recordings
+        // Cloud recording requires a paid Daily.co plan with billing on file.
+        // Disabled here — enable per-room once billing is configured.
+        // enable_recording: 'cloud',
         exp: expiresAt,
         eject_at_room_exp: true,
         // Auto-close room when empty for 60s (cleanup)
