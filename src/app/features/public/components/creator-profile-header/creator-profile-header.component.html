@@ -58,7 +58,7 @@
           <span class="text-slate-400">Active now</span>
         </div>
         
-        @if (creator().creator_settings.messages_enabled || creator().creator_settings.calls_enabled) {
+        @if (creator().creator_settings?.messages_enabled || creator().creator_settings?.calls_enabled) {
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
             <path
