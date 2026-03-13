@@ -1,0 +1,25 @@
+# Cloudflare Pages response headers
+#
+# index.html must NEVER be cached — every deploy changes chunk filenames.
+# If a stale index.html is served, it references old JS chunks that no longer
+# exist, causing "text/html" MIME errors when the browser tries to load them.
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+
+# Hashed JS/CSS chunks are immutable — safe to cache forever.
+# Angular appends a content hash to every chunk filename, so stale files
+# are never an issue here.
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker must not be cached so updates are picked up immediately.
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Manifest and other root files — short cache so PWA metadata stays fresh.
+/manifest.json
+  Cache-Control: public, max-age=3600
