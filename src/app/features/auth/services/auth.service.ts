@@ -135,6 +135,8 @@ export class AuthService {
 
   /**
    * Sign in with OAuth provider (Google)
+   * Note: The app name shown in the Google consent screen is configured in your Google Cloud Console project settings
+   * Make sure the Google OAuth app in GCP is named "Convozo" for consistent branding
    */
   public async signInWithOAuth(provider: 'google'): Promise<{ success: boolean; error?: string }> {
     try {
@@ -142,6 +144,12 @@ export class AuthService {
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          // Ensure the Google OAuth app in Google Cloud Console is named "Convozo"
+          // and has the correct OAuth consent screen configured
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 

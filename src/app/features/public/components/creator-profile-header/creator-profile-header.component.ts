@@ -4,7 +4,7 @@
  * Used on the public message page.
  */
 
-import { ChangeDetectionStrategy, Component, input, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, computed, signal } from '@angular/core';
 import { CreatorProfile } from '../../../../core/models';
 
 @Component({
@@ -16,6 +16,8 @@ import { CreatorProfile } from '../../../../core/models';
 export class CreatorProfileHeaderComponent {
   public readonly creator = input.required<CreatorProfile>();
   public readonly responseExpectation = input<string>('24-48 hours');
+
+  protected readonly imageLoadError = signal(false);
 
   protected readonly initial = computed(() => {
     const name = this.creator()?.display_name;

@@ -3,7 +3,7 @@
  * Displays avatar, display name, bio, and Instagram handle on the public link-in-bio page.
  */
 
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 
 @Component({
   selector: 'app-creator-header',
@@ -17,4 +17,6 @@ export class CreatorHeaderComponent {
   public readonly imageUrl = input<string | null>(null);
   public readonly instagramUsername = input<string | null>(null);
   public readonly themeColor = input<string>('#7c3aed');
+
+  public readonly imageLoadError = signal(false);
 }
