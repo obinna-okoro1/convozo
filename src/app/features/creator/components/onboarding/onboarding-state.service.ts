@@ -244,11 +244,19 @@ export class OnboardingStateService implements OnDestroy {
 
   prevStep(): void {
     if (this.currentStep() > 1) {
+      // Cancel Stripe polling when navigating back from step 2 so the user
+      // gets a clean state if they return to step 2 and try again.
+      if (this.currentStep() === 2) {
+        this.stopStripePolling();
+      }
       this.currentStep.update((s) => s - 1);
     }
   }
 
   skipPaymentSetup(): void {
+    // Cancel any running Stripe polling — user deliberately chose to skip.
+    // Avoids ghost polls that could set paymentConnected(true) after skipping.
+    this.stopStripePolling();
     this.nextStep();
   }
 
@@ -434,12 +442,26 @@ export class OnboardingStateService implements OnDestroy {
         if (data?.charges_enabled) {
           this.stopStripePolling();
           this.paymentConnected.set(true);
-          this.currentStep.set(3);
+          // Only auto-advance if the user is still on step 2.
+          // If they went Back or skipped while polling was running, don't
+          // forcibly re-advance them to step 3.
+          if (this.currentStep() === 2) {
+            this.currentStep.set(3);
+          }
         }
       } catch {
         // Swallow individual poll failures — network blip shouldn't kill the flow
       }
     }, POLL_INTERVAL_MS);
+  }
+
+  /**
+   * Cancels any running Stripe polling and resets the tab-open flag.
+   * Called from the template when the user accidentally closes the Stripe tab
+   * and wants to restart — restores the "Connect with Stripe" button.
+   */
+  resetStripeState(): void {
+    this.stopStripePolling();
   }
 
   private stopStripePolling(): void {
