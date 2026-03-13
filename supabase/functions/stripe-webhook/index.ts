@@ -1,6 +1,7 @@
 import { sendEmail, messageConfirmationEmail, callBookingConfirmationEmail, newMessageNotificationEmail, newCallBookingNotificationEmail } from '../_shared/email.ts';
 import { stripe, Stripe, stripeCryptoProvider } from '../_shared/stripe.ts';
 import { supabase, supabaseUrl, supabaseServiceKey } from '../_shared/supabase.ts';
+import { createRoom, createMeetingToken } from '../_shared/daily.ts';
 
 // v3 - new webhook endpoint + secret rotation
 
@@ -97,8 +98,44 @@ Deno.serve(async (req) => {
           };
 
         const amountInCents = session.amount_total || 0;
+        const durationMinutes = parseInt(duration);
 
-        // Create call booking record
+        // ── Create Daily.co room for the video call ──────────────────────
+        // Room is created immediately so the join link can be sent in the
+        // confirmation email. Tokens are scoped + time-limited for security.
+        let dailyRoomName: string | null = null;
+        let dailyRoomUrl: string | null = null;
+        let creatorMeetingToken: string | null = null;
+        let fanMeetingToken: string | null = null;
+
+        try {
+          // Look up creator name for the meeting token display name
+          const { data: creatorForRoom } = await supabase
+            .from('creators')
+            .select('display_name')
+            .eq('id', creator_id)
+            .single();
+
+          const creatorName = creatorForRoom?.display_name || 'Creator';
+
+          const room = await createRoom(session.id, durationMinutes);
+          dailyRoomName = room.name;
+          dailyRoomUrl = room.url;
+
+          // Create scoped meeting tokens — creator is owner, fan is participant
+          creatorMeetingToken = await createMeetingToken(
+            room.name, creatorName, true, durationMinutes,
+          );
+          fanMeetingToken = await createMeetingToken(
+            room.name, booker_name, false, durationMinutes,
+          );
+        } catch (dailyErr) {
+          // Daily room creation is non-fatal — booking still created,
+          // room can be created later via create-call-room function
+          console.error('[stripe-webhook] Daily room creation failed (non-fatal):', (dailyErr as Error).message);
+        }
+
+        // Create call booking record with room info + escrow payout status
         const { data: booking, error: bookingError } = await supabase
           .from('call_bookings')
           .insert({
@@ -106,12 +143,19 @@ Deno.serve(async (req) => {
             booker_name,
             booker_email,
             booker_instagram,
-            duration: parseInt(duration),
+            duration: durationMinutes,
             amount_paid: amountInCents,
             status: 'confirmed',
             call_notes: message_content || null,
             stripe_session_id: session.id,
             stripe_payment_intent_id: session.payment_intent as string,
+            // Daily.co room fields
+            daily_room_name: dailyRoomName,
+            daily_room_url: dailyRoomUrl,
+            creator_meeting_token: creatorMeetingToken,
+            fan_meeting_token: fanMeetingToken,
+            // Escrow: payout is held until call completion
+            payout_status: 'held',
           })
           .select()
           .single();
@@ -131,6 +175,16 @@ Deno.serve(async (req) => {
 
         console.log('Call booking created successfully:', booking.id);
 
+        // Log room creation event for audit trail
+        if (dailyRoomName) {
+          await supabase.from('call_events').insert({
+            booking_id: booking.id,
+            event_type: 'room_created',
+            actor: 'system',
+            metadata: { room_name: dailyRoomName, room_url: dailyRoomUrl },
+          });
+        }
+
         // Send emails (fire-and-forget; failures are logged)
         const { data: callCreator } = await supabase
           .from('creators')
@@ -139,12 +193,17 @@ Deno.serve(async (req) => {
           .single();
 
         if (callCreator) {
-          // 1. Confirmation to the booker
+          // Build the fan's call join URL (booking ID + role=fan)
+          const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+          const callJoinUrl = booking.id ? `${appUrl}/call/${booking.id}?role=fan` : undefined;
+
+          // 1. Confirmation to the booker (with call join link)
           const bookerEmail = callBookingConfirmationEmail({
             bookerName: booker_name,
             creatorName: callCreator.display_name,
-            durationMinutes: parseInt(duration),
+            durationMinutes: durationMinutes,
             amountCents: amountInCents,
+            callJoinUrl,
           });
           await sendEmail({ to: booker_email, ...bookerEmail, idempotencyKey: `${session.id}_call_booker` });
 
@@ -154,7 +213,7 @@ Deno.serve(async (req) => {
             bookerName: booker_name,
             bookerEmail: booker_email,
             bookerInstagram: booker_instagram || null,
-            durationMinutes: parseInt(duration),
+            durationMinutes: durationMinutes,
             amountCents: amountInCents,
             callNotes: message_content || null,
           });
@@ -165,7 +224,7 @@ Deno.serve(async (req) => {
         void sendPushNotification(
           creator_id,
           '📅 New call booking!',
-          `${booker_name} booked a ${duration}-minute call with you`,
+          `${booker_name} booked a ${durationMinutes}-minute call with you`,
         );
 
       } else {

@@ -5,6 +5,7 @@
  */
 
 import { computed, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   Creator,
   CreatorSettings,
@@ -64,6 +65,7 @@ export class DashboardStateService {
     private readonly messageService: MessageService,
     private readonly bookingService: BookingService,
     private readonly toast: ToastService,
+    private readonly router: Router,
   ) {}
 
   // ── Actions ────────────────────────────────────────────────────────
@@ -91,6 +93,18 @@ export class DashboardStateService {
     } else {
       this.toast.success('Booking cancelled');
     }
+  }
+
+  /**
+   * Navigate to the video call room for a booking.
+   * Opens /call/:bookingId?role=creator so the creator can join the Daily.co room.
+   */
+  joinVideoCall(booking: CallBooking): void {
+    if (!booking.daily_room_url) {
+      this.toast.error('Video room not yet created. Please try again shortly.');
+      return;
+    }
+    void this.router.navigate(['/call', booking.id], { queryParams: { role: 'creator' } });
   }
 
   confirmDelete(item: Message | CallBooking): void {

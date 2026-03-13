@@ -146,10 +146,24 @@ export function callBookingConfirmationEmail(opts: {
   creatorName: string;
   durationMinutes: number;
   amountCents: number;
+  callJoinUrl?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(opts.bookerName);
   const creator = escapeHtml(opts.creatorName);
   const amount = formatUsd(opts.amountCents);
+
+  const joinBlock = opts.callJoinUrl
+    ? `<div style="text-align:center;margin:24px 0;">
+        <a href="${escapeHtml(opts.callJoinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 40px;border-radius:12px;">
+          Join Video Call
+        </a>
+      </div>
+      <p style="color:#6b7280;font-size:13px;line-height:1.6;">
+        Use this link when it's time for your call. Both you and ${creator} need to join for the call to start.
+      </p>`
+    : `<p style="color:#4b5563;line-height:1.6;">
+        ${creator} will reach out to you to schedule the call. Keep an eye on your inbox!
+      </p>`;
 
   return {
     subject: `Booking confirmed – ${opts.durationMinutes} min call with ${creator}`,
@@ -159,9 +173,16 @@ export function callBookingConfirmationEmail(opts: {
         Your <strong>${amount}</strong> booking for a <strong>${opts.durationMinutes}-minute</strong>
         video call with <strong>${creator}</strong> is confirmed.
       </p>
-      <p style="color:#4b5563;line-height:1.6;">
-        ${creator} will reach out to you to schedule the call. Keep an eye on your inbox!
-      </p>
+      ${joinBlock}
+      <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
+        <p style="margin:0 0 4px;font-weight:600;color:#374151;">What happens next:</p>
+        <ul style="margin:8px 0 0;padding-left:20px;color:#4b5563;line-height:1.8;">
+          <li>When both you and ${creator} join, the call starts automatically</li>
+          <li>The call lasts <strong>${opts.durationMinutes} minutes</strong></li>
+          <li>Your payment is held securely until the call is completed</li>
+          <li>If ${creator} doesn't show up, you'll be refunded automatically</li>
+        </ul>
+      </div>
     `),
   };
 }

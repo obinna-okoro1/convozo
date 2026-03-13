@@ -46,6 +46,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'call/:bookingId',
+    loadComponent: () =>
+      import('./features/creator/components/video-room/video-room.component').then(
+        (m) => m.VideoRoomComponent,
+      ),
+  },
+  {
     path: ':slug',
     loadComponent: () =>
       import('./features/public/components/message-page/message-page.component').then(

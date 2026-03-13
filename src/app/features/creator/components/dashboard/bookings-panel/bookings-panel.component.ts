@@ -25,34 +25,31 @@ export class BookingsPanelComponent {
   public readonly markCompleted = output<CallBooking>();
   public readonly cancelBooking = output<CallBooking>();
   public readonly confirmDelete = output<CallBooking>();
+  public readonly joinCall = output<CallBooking>();
 
   protected readonly selectedBooking = signal<CallBooking | null>(null);
   protected readonly showBookingModal = signal<boolean>(false);
-  protected readonly bookingFilterStatus = signal<'all' | 'confirmed' | 'completed' | 'cancelled'>(
+  protected readonly bookingFilterStatus = signal<string>(
     'all',
   );
 
   protected readonly bookingStats = computed(() => {
     const bookings = this.bookings();
     const confirmed = bookings.filter((b) => b.status === 'confirmed').length;
+    const inProgress = bookings.filter((b) => b.status === 'in_progress').length;
     const completed = bookings.filter((b) => b.status === 'completed').length;
     const cancelled = bookings.filter((b) => b.status === 'cancelled').length;
+    const noShow = bookings.filter((b) => b.status === 'no_show').length;
     const totalRevenue =
       Math.round((bookings.reduce((sum, b) => sum + (b.amount_paid ?? 0), 0) / 100) * 100) / 100;
-    return { total: bookings.length, confirmed, completed, cancelled, totalRevenue };
+    return { total: bookings.length, confirmed, inProgress, completed, cancelled, noShow, totalRevenue };
   });
 
   protected readonly filteredBookings = computed(() => {
     const bookings = this.bookings();
     const status = this.bookingFilterStatus();
-    if (status === 'confirmed') {
-      return bookings.filter((b) => b.status === 'confirmed');
-    } else if (status === 'completed') {
-      return bookings.filter((b) => b.status === 'completed');
-    } else if (status === 'cancelled') {
-      return bookings.filter((b) => b.status === 'cancelled');
-    }
-    return bookings;
+    if (status === 'all') return bookings;
+    return bookings.filter((b) => b.status === status);
   });
 
   protected readonly bookingFilterOptions = computed<SelectOption[]>(() => {
@@ -60,15 +57,15 @@ export class BookingsPanelComponent {
     return [
       { value: 'all', label: `All (${s.total})` },
       { value: 'confirmed', label: `Confirmed (${s.confirmed})` },
+      { value: 'in_progress', label: `In Call (${s.inProgress})` },
       { value: 'completed', label: `Completed (${s.completed})` },
       { value: 'cancelled', label: `Cancelled (${s.cancelled})` },
+      { value: 'no_show', label: `No Show (${s.noShow})` },
     ];
   });
 
   protected onBookingFilterChange(value: string): void {
-    this.bookingFilterStatus.set(
-      value as 'all' | 'confirmed' | 'completed' | 'cancelled',
-    );
+    this.bookingFilterStatus.set(value);
   }
 
   protected handleBookingClick(booking: CallBooking): void {
@@ -107,5 +104,14 @@ export class BookingsPanelComponent {
   protected confirmDeleteBookingFromMobile(booking: CallBooking): void {
     this.closeBookingModal();
     this.confirmDelete.emit(booking);
+  }
+
+  protected onJoinCall(booking: CallBooking): void {
+    this.joinCall.emit(booking);
+  }
+
+  protected joinCallFromMobile(booking: CallBooking): void {
+    this.closeBookingModal();
+    this.joinCall.emit(booking);
   }
 }
