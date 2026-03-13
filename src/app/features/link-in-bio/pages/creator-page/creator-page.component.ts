@@ -5,7 +5,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CreatorLink } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { CreatorHeaderComponent } from '../../components/creator-header/creator-header.component';
@@ -51,7 +51,6 @@ export class CreatorPageComponent implements OnInit {
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly router: Router,
     private readonly supabaseService: SupabaseService,
     private readonly linkService: LinkService,
   ) {}

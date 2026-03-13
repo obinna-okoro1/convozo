@@ -4,7 +4,6 @@
  */
 
 import { Injectable, signal, computed } from '@angular/core';
-import { SupabaseService } from './supabase.service';
 
 export interface ResponseTemplate {
   id: string;
@@ -148,7 +147,7 @@ export class ResponseTemplateService {
 
   private readonly templates = signal<ResponseTemplate[]>([]);
 
-  constructor(private readonly supabaseService: SupabaseService) {
+  constructor() {
     this.loadTemplates();
   }
 

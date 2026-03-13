@@ -6,7 +6,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ERROR_MESSAGES } from '../../../../core/constants';
 import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import { AuthService } from '../../services/auth.service';
@@ -27,10 +27,7 @@ export class LoginComponent {
   protected readonly success = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly router: Router,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   /**
    * Extract string value from an input event

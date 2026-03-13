@@ -195,21 +195,6 @@ export class CreatorService {
     }
   }
 
-  public buildPublicUrl(slug: string | undefined): string {
-    if (!slug) return '';
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${baseUrl}/${slug}`;
-  }
-
-  public generateAutoReplyText(displayName: string, slug: string): string {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    return `Hey! Thanks for reaching out. To ensure I see your message, please send it through my priority inbox: ${baseUrl}/${slug} 💌`;
-  }
-
-  public calculateSinglePrice(fanPrice: number, businessPrice: number): number {
-    return Math.round((fanPrice + businessPrice) / 2);
-  }
-
   public async getStripeAccount(creatorId: string) {
     return this.supabaseService.getStripeAccount(creatorId);
   }

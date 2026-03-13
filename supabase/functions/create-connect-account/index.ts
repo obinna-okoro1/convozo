@@ -81,8 +81,8 @@ Deno.serve(async (req) => {
     try {
       accountLink = await stripe.accountLinks.create({
         account: accountId,
-        refresh_url: `${appUrl}/creator/onboarding`,
-        return_url: `${appUrl}/creator/onboarding?stripe_connected=true`,
+        refresh_url: `${appUrl}/creator/settings/payments?refresh=true`,
+        return_url: `${appUrl}/creator/settings/payments?connected=true`,
         type: 'account_onboarding',
       });
     } catch (linkErr: unknown) {
@@ -121,8 +121,8 @@ Deno.serve(async (req) => {
 
       accountLink = await stripe.accountLinks.create({
         account: accountId,
-        refresh_url: `${appUrl}/creator/onboarding`,
-        return_url: `${appUrl}/creator/onboarding?stripe_connected=true`,
+        refresh_url: `${appUrl}/creator/settings/payments?refresh=true`,
+        return_url: `${appUrl}/creator/settings/payments?connected=true`,
         type: 'account_onboarding',
       });
     }
