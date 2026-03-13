@@ -23,6 +23,7 @@ import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { supabase } from '../_shared/supabase.ts';
 import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
 import { createRoom, createMeetingToken } from '../_shared/daily.ts';
+import { sendEmail, callStartNotificationEmail, fanJoinedEmail } from '../_shared/email.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
     // Fetch the booking with all video call fields
     const { data: booking, error: bookingError } = await supabase
       .from('call_bookings')
-      .select('*, creators!inner(user_id, display_name)')
+      .select('*, creators!inner(user_id, display_name, email)')
       .eq('id', booking_id)
       .single();
 
@@ -173,6 +174,45 @@ Deno.serve(async (req) => {
           metadata: { started_at: now },
         });
       }
+
+    }
+
+    // ── Send join notifications ───────────────────────────────────────
+    // Runs OUTSIDE the updateFields block so it fires on EVERY creator join,
+    // not just the first. This is critical: the fan's email is their ONLY way
+    // to get the join link. The idempotency key (24h window) prevents actual
+    // duplicate sends if the creator joins multiple times in quick succession.
+    const creatorData = booking.creators as { user_id: string; display_name: string; email: string };
+    const creatorName = creatorData.display_name;
+    const creatorEmail = creatorData.email;
+    const bookerName = booking.booker_name as string;
+    const bookerEmail = booking.booker_email as string;
+    const durationMinutes = (booking.duration as number) || 30;
+    const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+    const callUrl = `${appUrl}/call/${booking_id}`;
+
+    // Creator joins → always email the fan with the join link
+    if (role === 'creator' && bookerEmail) {
+      const emailPayload = callStartNotificationEmail({ creatorName, durationMinutes, joinUrl: callUrl });
+      const sent = await sendEmail({
+        to: bookerEmail,
+        subject: emailPayload.subject,
+        html: emailPayload.html,
+        idempotencyKey: `call-creator-joined-${booking_id}`,
+      });
+      console.log(`[join-call] Creator joined → fan email (${bookerEmail}): ${sent ? '✅' : '⚠️ failed'}`);
+    }
+
+    // Fan joins → email the creator (idempotency key prevents spam on re-joins)
+    if (role === 'fan' && creatorEmail) {
+      const emailPayload = fanJoinedEmail({ creatorName, bookerName, durationMinutes, joinUrl: callUrl });
+      const sent = await sendEmail({
+        to: creatorEmail,
+        subject: emailPayload.subject,
+        html: emailPayload.html,
+        idempotencyKey: `call-fan-joined-${booking_id}`,
+      });
+      console.log(`[join-call] Fan joined → creator email (${creatorEmail}): ${sent ? '✅' : '⚠️ failed'}`);
     }
 
     return jsonOk({
