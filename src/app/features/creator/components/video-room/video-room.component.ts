@@ -33,6 +33,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import { VideoCallService } from '../../services/video-call.service';
 import { CompleteCallResponse } from '../../../../core/models';
+import { SupabaseService } from '../../../../core/services/supabase.service';
 
 @Component({
   selector: 'app-video-room',
@@ -218,6 +219,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly router: Router,
     private readonly ngZone: NgZone,
     readonly videoCallService: VideoCallService,
+    private readonly supabaseService: SupabaseService,
   ) {
     // Watch for timer expiry → auto-complete the call (creator only)
     effect(() => {
@@ -246,6 +248,21 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     void this.initializeCall();
   }
 
+  private async checkCreatorAuth(): Promise<boolean> {
+    // Creators must be authenticated — the join-call Edge Function requires a valid JWT
+    // for the creator role. If the session is missing or expired, redirect to login.
+    if (this.role !== 'creator') return true;
+
+    const user = await this.supabaseService.waitForSession();
+    if (!user) {
+      // Preserve the intended destination so login can redirect back
+      const returnUrl = `/call/${this.bookingId}?role=creator`;
+      void this.router.navigate(['/auth/login'], { queryParams: { returnUrl } });
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Wrap the iframe with daily-js and set up event listeners.
    * Must happen here (not ngOnInit) because the DOM element must exist first.
@@ -253,6 +270,16 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * ngAfterViewInit will always have already run, so dailyCall is guaranteed to be set.
    */
   ngAfterViewInit(): void {
+    // Destroy any lingering Daily.co singleton before wrapping.
+    // This prevents "Duplicate DailyIframe instances are not allowed" when
+    // the component is remounted (e.g. Angular hot reload or fast navigation)
+    // before the async ngOnDestroy cleanup has fully resolved.
+    try {
+      DailyIframe.getCallInstance()?.destroy();
+    } catch {
+      // No existing instance — safe to continue
+    }
+
     this.dailyCall = DailyIframe.wrap(this.dailyIframeRef.nativeElement, {
       // We provide our own End Call button and timer overlay
       showLeaveButton: false,
@@ -345,6 +372,10 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async initializeCall(): Promise<void> {
+    // Verify creator auth before making any Edge Function calls
+    const isAuthed = await this.checkCreatorAuth();
+    if (!isAuthed) return;
+
     const { error } = await this.videoCallService.loadBooking(this.bookingId);
     if (error) {
       this.videoCallService.callState.set('error');
