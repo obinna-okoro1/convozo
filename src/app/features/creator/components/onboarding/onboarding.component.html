@@ -724,6 +724,15 @@
 
             @if (state.stripeTabOpen()) {
               <p class="mt-4 text-center text-sm text-white/50">Complete the Stripe setup in the new tab. This page will update automatically.</p>
+              <p class="mt-2 text-center text-sm text-white/40">
+                Accidentally closed the tab?
+                <button
+                  (click)="state.resetStripeState()"
+                  class="underline text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  Click here to try again
+                </button>
+              </p>
             }
           </div>
         }
