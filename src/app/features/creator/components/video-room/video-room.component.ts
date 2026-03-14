@@ -104,7 +104,12 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
           <p class="text-slate-400 mb-[0.5rem]">
             {{ videoCallService.currentBooking()?.duration }} minute call
           </p>
-          <p class="text-slate-500 text-sm">The call will start when both parties are connected</p>
+          <p class="text-slate-500 text-sm mb-[1.5rem]">The call will start when both parties are connected</p>
+          <button
+            (click)="leaveWaiting()"
+            class="px-[1.5rem] py-[0.75rem] bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white rounded-xl font-semibold transition-all duration-200 border border-white/10 hover:border-white/20 min-h-[2.75rem]">
+            Leave
+          </button>
         </div>
       </div>
     }
@@ -481,6 +486,24 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       void this.router.navigate(['/']);
     }
+  }
+
+  /**
+   * Leave the waiting screen without triggering call completion.
+   * The call never started so there's nothing to finalize — just disconnect
+   * from Daily and navigate back. The booking stays 'confirmed' so they
+   * can rejoin later.
+   */
+  async leaveWaiting(): Promise<void> {
+    if (this.dailyCall) {
+      try {
+        await this.dailyCall.leave();
+      } catch (err) {
+        console.error('[Daily] Leave error during waiting exit:', err);
+      }
+    }
+    this.videoCallService.reset();
+    this.goBack();
   }
 
   formatDuration(seconds: number): string {
