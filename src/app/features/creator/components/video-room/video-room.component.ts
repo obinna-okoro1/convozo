@@ -281,10 +281,11 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.dailyCall = DailyIframe.wrap(this.dailyIframeRef.nativeElement, {
-      // We provide our own End Call button and timer overlay
+      // We provide our own End Call button and timer overlay.
+      // NOTE: iframeStyle cannot be passed to wrap() — it only works with createFrame().
+      // The iframe is already styled full-screen via CSS classes in the template.
       showLeaveButton: false,
       showFullscreenButton: false,
-      iframeStyle: { width: '100%', height: '100%', border: '0' },
     });
 
     this.setupDailyEvents();
