@@ -21,7 +21,7 @@
 
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
+import { jsonOk, jsonError, requireAuth, getAppUrl } from '../_shared/http.ts';
 import { createRoom, createMeetingToken } from '../_shared/daily.ts';
 import { sendEmail, callStartNotificationEmail, fanJoinedEmail } from '../_shared/email.ts';
 
@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
     const bookerName = booking.booker_name as string;
     const bookerEmail = booking.booker_email as string;
     const durationMinutes = (booking.duration as number) || 30;
-    const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+    const appUrl = getAppUrl();
     const callUrl = `${appUrl}/call/${booking_id}`;
 
     // Creator joins → always email the fan with the join link

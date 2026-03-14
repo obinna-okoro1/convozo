@@ -1,7 +1,7 @@
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, makeRateLimiter } from '../_shared/http.ts';
+import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
 
 // Rate limit: 10 checkout requests per hour per sender email
 const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
@@ -100,8 +100,7 @@ Deno.serve(async (req) => {
     // Math.round for symmetric rounding — never Math.floor (undercounts) or Math.ceil (overcounts creator)
     const platformFee = Math.round(serverPrice * platformFeePercentage / 100);
     // SECURITY: redirect URL is always server-controlled — never accept from client payload.
-    // Set APP_URL via `supabase secrets set` per environment (local: .env, staging/prod: secrets).
-    const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+    const appUrl = getAppUrl();
 
     // Create Stripe Checkout session
     const sessionConfig = {

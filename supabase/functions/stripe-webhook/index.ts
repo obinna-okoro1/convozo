@@ -2,6 +2,7 @@ import { sendEmail, messageConfirmationEmail, callBookingConfirmationEmail, newM
 import { stripe, Stripe, stripeCryptoProvider } from '../_shared/stripe.ts';
 import { supabase, supabaseUrl, supabaseServiceKey } from '../_shared/supabase.ts';
 import { createRoom, createMeetingToken } from '../_shared/daily.ts';
+import { getAppUrl } from '../_shared/http.ts';
 
 // v3 - new webhook endpoint + secret rotation
 
@@ -194,7 +195,7 @@ Deno.serve(async (req) => {
 
         if (callCreator) {
           // Build the fan's call join URL (booking ID + role=fan)
-          const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+          const appUrl = getAppUrl();
           const callJoinUrl = booking.id ? `${appUrl}/call/${booking.id}?role=fan` : undefined;
 
           // 1. Confirmation to the booker (with call join link)
