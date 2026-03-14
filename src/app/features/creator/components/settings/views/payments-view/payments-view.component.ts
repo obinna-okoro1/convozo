@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { SettingsStateService } from '../../settings-state.service';
+import { FEATURE_FLAGS } from '../../../../../../core/constants';
 
 @Component({
   selector: 'app-payments-view',
@@ -10,6 +11,9 @@ import { SettingsStateService } from '../../settings-state.service';
 export class PaymentsViewComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   protected readonly refreshing = signal(false);
+
+  // Feature flag — remove this line (and the template guards) when Stripe Connect goes live.
+  protected readonly stripeConnectEnabled = FEATURE_FLAGS.STRIPE_CONNECT_ENABLED;
 
   constructor(protected readonly state: SettingsStateService) {}
 
