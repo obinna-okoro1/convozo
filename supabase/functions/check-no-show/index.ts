@@ -53,11 +53,13 @@ Deno.serve(async (req) => {
     const bookingId = (body as { booking_id?: string })?.booking_id;
 
     // ── Fetch bookings to check ──────────────────────────────────────
+    // Check both 'confirmed' (no-show detection) and 'in_progress' (stuck calls
+    // where the complete-call function was never invoked — e.g. browser closed).
     let query = supabase
       .from('call_bookings')
       .select('*')
       .eq('payout_status', 'held')
-      .in('status', ['confirmed']);
+      .in('status', ['confirmed', 'in_progress']);
 
     if (bookingId) {
       query = query.eq('id', bookingId);
@@ -78,6 +80,79 @@ Deno.serve(async (req) => {
     const results: NoShowResult[] = [];
 
     for (const booking of bookings) {
+      // ── Handle stuck 'in_progress' calls ────────────────────────────
+      // These are calls where both parties joined but complete-call was never
+      // invoked (e.g. browser closed, network drop, fan left without creator ending).
+      // Auto-complete them if they've exceeded their booked duration + grace period.
+      if (booking.status === 'in_progress' && booking.call_started_at) {
+        const startedAt = new Date(booking.call_started_at);
+        const bookedDurationMs = (booking.duration || 30) * 60 * 1000;
+        const autoCompleteDeadline = new Date(startedAt.getTime() + bookedDurationMs + GRACE_PERIOD_MINUTES * 60 * 1000);
+
+        if (now < autoCompleteDeadline) {
+          results.push({
+            booking_id: booking.id,
+            action: 'skipped',
+            refunded: false,
+            payout_released: false,
+            reason: `In-progress call not past deadline yet (${autoCompleteDeadline.toISOString()})`,
+          });
+          continue;
+        }
+
+        // Auto-complete the stuck call
+        const actualDurationSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
+        const bookedDurationSeconds = (booking.duration || 30) * 60;
+        const COMPLETION_THRESHOLD = 0.80;
+        const meetsThreshold = actualDurationSeconds >= bookedDurationSeconds * COMPLETION_THRESHOLD;
+
+        const updatePayload: Record<string, unknown> = {
+          status: 'completed',
+          call_ended_at: now.toISOString(),
+          actual_duration_seconds: actualDurationSeconds,
+        };
+
+        let payoutReleased = false;
+        if (meetsThreshold) {
+          updatePayload.payout_status = 'released';
+          updatePayload.payout_released_at = now.toISOString();
+          payoutReleased = true;
+        }
+
+        await supabase
+          .from('call_bookings')
+          .update(updatePayload)
+          .eq('id', booking.id);
+
+        await supabase.from('call_events').insert({
+          booking_id: booking.id,
+          event_type: 'call_auto_completed',
+          actor: 'system',
+          metadata: {
+            reason: 'stuck_in_progress',
+            actual_seconds: actualDurationSeconds,
+            booked_seconds: bookedDurationSeconds,
+            meets_threshold: meetsThreshold,
+            payout_released: payoutReleased,
+          },
+        });
+
+        // Clean up Daily room (fire-and-forget)
+        if (booking.daily_room_name) {
+          void deleteRoom(booking.daily_room_name);
+        }
+
+        results.push({
+          booking_id: booking.id,
+          action: 'skipped', // Re-using type; logged as auto-completed in events
+          refunded: false,
+          payout_released: payoutReleased,
+          reason: `Auto-completed stuck in_progress call (${actualDurationSeconds}s actual)`,
+        });
+        continue;
+      }
+
+      // ── Handle 'confirmed' bookings (no-show detection) ─────────────
       // Determine the deadline for joining
       let deadline: Date;
 

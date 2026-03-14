@@ -333,9 +333,11 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           if (!this.dailyCall || this.videoCallService.callState() !== 'in_progress') return;
           const count = Object.keys(this.dailyCall.participants()).length;
           if (count < 2) {
-            // Remote participant left — log it; the creator's End Call button
-            // or the auto-complete timer handles cleanup.
-            console.log('[Daily] Remote participant left the call');
+            console.log('[Daily] Remote participant left — auto-ending call');
+            // Auto-end the call when the other participant disconnects.
+            // For creators: calls complete-call to finalize payout.
+            // For fans: just leaves and shows completion screen.
+            void this.endCall();
           }
         });
       })
@@ -437,9 +439,18 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * End the call: leave the Daily room first (releases camera/mic),
-   * then call the complete-call Edge Function to record duration and release payout.
+   * then finalize based on role.
+   *
+   * Creator: calls complete-call Edge Function to record duration and release payout.
+   * Fan: just leaves the room and shows a simple completion screen.
+   *       The complete-call Edge Function requires creator JWT auth, so fans cannot
+   *       call it — the creator side (or auto-complete timer) handles finalization.
    */
   async endCall(): Promise<void> {
+    // Prevent double-ending
+    const currentState = this.videoCallService.callState();
+    if (currentState === 'ending' || currentState === 'completed') return;
+
     if (this.dailyCall) {
       try {
         await this.dailyCall.leave();
@@ -448,12 +459,19 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    const result = await this.videoCallService.completeCall(
-      this.bookingId,
-      this.isCreator() ? 'creator' : 'fan',
-    );
-    if (result) {
-      this.completionResult.set(result);
+    if (this.isCreator()) {
+      // Creator: call the Edge Function to finalize the booking and release payout
+      const result = await this.videoCallService.completeCall(
+        this.bookingId,
+        'creator',
+      );
+      if (result) {
+        this.completionResult.set(result);
+      }
+    } else {
+      // Fan: cannot call complete-call (requires creator auth).
+      // Just show a friendly completion screen and let the creator/system finalize.
+      this.videoCallService.callState.set('completed');
     }
   }
 
@@ -473,11 +491,18 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.videoCallService.reset();
-
     if (this.autoCompleteTimeout) {
       clearTimeout(this.autoCompleteTimeout);
     }
+
+    // If the creator navigates away while the call is in_progress, fire-and-forget
+    // a complete-call request so the booking doesn't stay stuck in 'in_progress'.
+    const state = this.videoCallService.callState();
+    if (this.isCreator() && (state === 'in_progress' || state === 'waiting')) {
+      void this.videoCallService.completeCall(this.bookingId, 'creator');
+    }
+
+    this.videoCallService.reset();
 
     // Leave and destroy the Daily call object to release all camera/mic resources.
     if (this.dailyCall) {
