@@ -5,9 +5,9 @@
  * Records attendance timestamps and returns the meeting token + room URL.
  *
  * Expects:
- *   POST { booking_id: string, role: 'creator' | 'fan' }
+ *   POST { booking_id: string, role: 'creator' | 'fan', fan_access_token?: string }
  *   - Creator must be authenticated (Bearer JWT)
- *   - Fan identifies via booking_id + fan token (no auth required)
+ *   - Fan must provide the secret fan_access_token (UUID sent in their email link)
  *
  * Returns:
  *   { room_url: string, token: string, booking: { ... } }
@@ -42,10 +42,19 @@ Deno.serve(async (req) => {
       return jsonError('Missing required fields: booking_id, role', 400, corsHeaders);
     }
 
-    const { booking_id, role } = body as { booking_id: string; role: string };
+    const { booking_id, role, fan_access_token } = body as {
+      booking_id: string;
+      role: string;
+      fan_access_token?: string;
+    };
 
     if (role !== 'creator' && role !== 'fan') {
       return jsonError('Invalid role. Must be "creator" or "fan"', 400, corsHeaders);
+    }
+
+    // Fans must provide the secret access token from their email link
+    if (role === 'fan' && !fan_access_token) {
+      return jsonError('Missing access token', 400, corsHeaders);
     }
 
     // Fetch the booking with all video call fields
@@ -76,9 +85,14 @@ Deno.serve(async (req) => {
       if (user.id !== creatorUserId) {
         return jsonError('You are not authorized to join this call', 403, corsHeaders);
       }
+    } else {
+      // Fan must provide the secret access token generated at booking time.
+      // This prevents anyone who guesses/leaks a booking UUID from joining.
+      const storedToken = booking.fan_access_token as string | null;
+      if (!storedToken || fan_access_token !== storedToken) {
+        return jsonError('Invalid access token', 403, corsHeaders);
+      }
     }
-    // Fan access: no JWT required — the booking_id itself acts as the access control.
-    // Meeting tokens are scoped and time-limited for additional security.
 
     // ── Ensure a Daily room exists ─────────────────────────────────────
     let roomUrl = booking.daily_room_url as string | null;
@@ -191,7 +205,8 @@ Deno.serve(async (req) => {
     const bookerEmail = booking.booker_email as string;
     const durationMinutes = (booking.duration as number) || 30;
     const appUrl = getAppUrl();
-    const callUrl = `${appUrl}/call/${booking_id}`;
+    const fanAccessToken = booking.fan_access_token as string;
+    const callUrl = `${appUrl}/call/${booking_id}?role=fan&token=${fanAccessToken}`;
 
     // Creator joins → always email the fan with the join link
     if (role === 'creator' && bookerEmail) {

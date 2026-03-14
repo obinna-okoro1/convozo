@@ -6,8 +6,14 @@
  * marks the booking as completed, and releases the creator payout.
  *
  * Expects:
- *   POST { booking_id: string, ended_by: 'creator' | 'fan' | 'system' }
- *   Authorization: Bearer <creator JWT> (creator must own the booking)
+ *   POST { booking_id: string, ended_by: 'creator' | 'fan' | 'system', fan_access_token?: string }
+ *   Authorization: Bearer <creator JWT>  — OR —  fan_access_token in body
+ *
+ * Auth:
+ *   - Creator: must provide a valid JWT that matches the booking's creator
+ *   - Fan: must provide the fan_access_token issued at booking time
+ *   Either path triggers full call completion. If both parties race to call this
+ *   simultaneously, the second caller receives 409 (already completed) — harmless.
  *
  * Returns:
  *   { status: 'completed', actual_duration_seconds: number, payout_released: boolean }
@@ -15,7 +21,7 @@
  * Errors:
  *   400 — missing fields, call never started
  *   404 — booking not found
- *   403 — unauthorized
+ *   403 — unauthorized (bad JWT or wrong/missing fan_access_token)
  *   409 — already completed/cancelled/refunded
  */
 
@@ -44,15 +50,14 @@ Deno.serve(async (req) => {
       return jsonError('Missing required field: booking_id', 400, corsHeaders);
     }
 
-    const { booking_id, ended_by } = body as { booking_id: string; ended_by?: string };
+    const { booking_id, ended_by, fan_access_token } = body as {
+      booking_id: string;
+      ended_by?: string;
+      fan_access_token?: string;
+    };
     const actor = ended_by === 'fan' ? 'fan' : ended_by === 'system' ? 'system' : 'creator';
 
-    // ── Auth: creator must own this booking ──────────────────────────
-    const authResult = await requireAuth(req, supabase, corsHeaders);
-    if (authResult instanceof Response) return authResult;
-    const user = authResult;
-
-    // Fetch booking
+    // ── Fetch booking first (needed for both auth paths) ─────────────
     const { data: booking, error: bookingError } = await supabase
       .from('call_bookings')
       .select('*, creators!inner(user_id, display_name, stripe_accounts(stripe_account_id))')
@@ -63,10 +68,25 @@ Deno.serve(async (req) => {
       return jsonError('Booking not found', 404, corsHeaders);
     }
 
-    // Verify ownership
-    const creatorUserId = (booking.creators as { user_id: string }).user_id;
-    if (user.id !== creatorUserId) {
-      return jsonError('You are not authorized to complete this call', 403, corsHeaders);
+    // ── Auth: creator JWT OR fan access token ─────────────────────────
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Creator path: validate JWT and ownership
+      const authResult = await requireAuth(req, supabase, corsHeaders);
+      if (authResult instanceof Response) return authResult;
+      const user = authResult;
+      const creatorUserId = (booking.creators as { user_id: string }).user_id;
+      if (user.id !== creatorUserId) {
+        return jsonError('You are not authorized to complete this call', 403, corsHeaders);
+      }
+    } else if (fan_access_token) {
+      // Fan path: validate the secret token issued at booking time
+      const storedToken = booking.fan_access_token as string | null;
+      if (!storedToken || fan_access_token !== storedToken) {
+        return jsonError('Invalid access token', 403, corsHeaders);
+      }
+    } else {
+      return jsonError('Authentication required', 403, corsHeaders);
     }
 
     // Block if already terminal

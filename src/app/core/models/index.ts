@@ -101,6 +101,8 @@ export interface CallBooking {
   daily_room_url: string | null;
   creator_meeting_token: string | null;
   fan_meeting_token: string | null;
+  // Secret token for fan call access — sent in their email link
+  fan_access_token: string;
   // Attendance tracking
   creator_joined_at: string | null;
   fan_joined_at: string | null;
