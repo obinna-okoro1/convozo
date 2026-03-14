@@ -71,10 +71,10 @@ export class VideoCallService {
     this.errorMessage.set(null);
 
     try {
-      // Creator role requires a valid JWT. Force a session refresh so an
-      // expired access token is swapped for a fresh one before the request.
+      // Creator role requires a valid JWT. Call refreshSession() to ensure
+      // any expired access token is swapped for a fresh one before invoking the Edge Function.
       if (role === 'creator') {
-        const { error: refreshErr } = await this.supabaseService.client.auth.getSession();
+        const { error: refreshErr } = await this.supabaseService.client.auth.refreshSession();
         if (refreshErr) {
           this.callState.set('error');
           this.errorMessage.set('Session expired — please log in again');

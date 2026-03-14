@@ -274,10 +274,20 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // This prevents "Duplicate DailyIframe instances are not allowed" when
     // the component is remounted (e.g. Angular hot reload or fast navigation)
     // before the async ngOnDestroy cleanup has fully resolved.
-    try {
-      DailyIframe.getCallInstance()?.destroy();
-    } catch {
-      // No existing instance — safe to continue
+    // Retry multiple times to ensure the instance is fully destroyed.
+    let attempts = 0;
+    const maxAttempts = 3;
+    while (attempts < maxAttempts) {
+      try {
+        const existingInstance = DailyIframe.getCallInstance();
+        if (!existingInstance) break; // No instance to destroy
+        existingInstance.destroy();
+        // Small yield to allow async cleanup
+        break;
+      } catch (err) {
+        // Instance may already be destroyed or invalid — continue
+      }
+      attempts++;
     }
 
     this.dailyCall = DailyIframe.wrap(this.dailyIframeRef.nativeElement, {
