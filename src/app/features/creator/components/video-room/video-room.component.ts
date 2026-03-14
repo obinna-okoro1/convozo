@@ -104,7 +104,12 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
           <p class="text-slate-400 mb-[0.5rem]">
             {{ videoCallService.currentBooking()?.duration }} minute call
           </p>
-          <p class="text-slate-500 text-sm">The call will start when both parties are connected</p>
+          <p class="text-slate-500 text-sm mb-[1.5rem]">The call will start when both parties are connected</p>
+          <button
+            (click)="leaveWaiting()"
+            class="px-[1.5rem] py-[0.75rem] bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white rounded-xl font-semibold transition-all duration-200 border border-white/10 hover:border-white/20 min-h-[2.75rem]">
+            Leave
+          </button>
         </div>
       </div>
     }
@@ -201,6 +206,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private bookingId = '';
   private role: 'creator' | 'fan' = 'fan';
+  private fanAccessToken = '';
   private dailyCall: DailyCall | null = null;
   private autoCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -235,6 +241,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.bookingId = this.route.snapshot.paramMap.get('bookingId') || '';
     this.role = (this.route.snapshot.queryParamMap.get('role') as 'creator' | 'fan') || 'fan';
+    this.fanAccessToken = this.route.snapshot.queryParamMap.get('token') || '';
 
     if (!this.bookingId) {
       this.videoCallService.callState.set('error');
@@ -374,11 +381,18 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     this.videoCallService.callStartedAt.set(new Date());
     this.videoCallService.startCountdown(booking.duration);
 
-    // Authoritative: re-fetch booking to get server-recorded call_started_at
-    const { data: fresh } = await this.videoCallService.loadBooking(this.bookingId);
-    if (fresh?.call_started_at) {
-      this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at));
-      this.videoCallService.startCountdown(fresh.duration);
+    // Authoritative: re-fetch booking to get server-recorded call_started_at.
+    // This query may fail for fans (RLS blocks unauthenticated SELECT), so
+    // treat it as a best-effort refresh — the optimistic values above are
+    // close enough for a smooth UX.
+    try {
+      const { data: fresh } = await this.videoCallService.loadBooking(this.bookingId);
+      if (fresh?.call_started_at) {
+        this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at));
+        this.videoCallService.startCountdown(fresh.duration);
+      }
+    } catch {
+      // Fan RLS blocked — continue with optimistic timer
     }
   }
 
@@ -387,15 +401,21 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     const isAuthed = await this.checkCreatorAuth();
     if (!isAuthed) return;
 
-    const { error } = await this.videoCallService.loadBooking(this.bookingId);
-    if (error) {
-      this.videoCallService.callState.set('error');
-      this.videoCallService.errorMessage.set('Booking not found');
-      this.loading.set(false);
-      return;
+    // Creators are authenticated and can query call_bookings directly via RLS.
+    // Fans are unauthenticated — RLS blocks their SELECT, so skip the client-side
+    // query entirely. The join-call Edge Function (service role) will fetch the
+    // booking and return all needed data in its response.
+    if (this.role === 'creator') {
+      const { error } = await this.videoCallService.loadBooking(this.bookingId);
+      if (error) {
+        this.videoCallService.callState.set('error');
+        this.videoCallService.errorMessage.set('Booking not found');
+        this.loading.set(false);
+        return;
+      }
     }
 
-    const joinResult = await this.videoCallService.joinCall(this.bookingId, this.role);
+    const joinResult = await this.videoCallService.joinCall(this.bookingId, this.role, this.fanAccessToken);
     this.loading.set(false);
 
     if (!joinResult) return; // joinCall already set error state
@@ -439,12 +459,12 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * End the call: leave the Daily room first (releases camera/mic),
-   * then finalize based on role.
+   * then call complete-call for BOTH roles.
    *
-   * Creator: calls complete-call Edge Function to record duration and release payout.
-   * Fan: just leaves the room and shows a simple completion screen.
-   *       The complete-call Edge Function requires creator JWT auth, so fans cannot
-   *       call it — the creator side (or auto-complete timer) handles finalization.
+   * Creator: authenticated via JWT.
+   * Fan: authenticated via fan_access_token (stored in VideoCallService from joinCall).
+   * Both paths hit the same complete-call Edge Function — if both race simultaneously,
+   * the second caller gets a 409 which is handled gracefully (shows completed screen).
    */
   async endCall(): Promise<void> {
     // Prevent double-ending
@@ -459,19 +479,14 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    if (this.isCreator()) {
-      // Creator: call the Edge Function to finalize the booking and release payout
-      const result = await this.videoCallService.completeCall(
-        this.bookingId,
-        'creator',
-      );
-      if (result) {
-        this.completionResult.set(result);
-      }
-    } else {
-      // Fan: cannot call complete-call (requires creator auth).
-      // Just show a friendly completion screen and let the creator/system finalize.
-      this.videoCallService.callState.set('completed');
+    // Both creator and fan call complete-call. The Edge Function accepts:
+    //   - Creator: via Bearer JWT
+    //   - Fan: via fan_access_token in the request body
+    // The second caller (if both race) gets a 409 and shows the completed screen.
+    const endedBy = this.isCreator() ? 'creator' : 'fan';
+    const result = await this.videoCallService.completeCall(this.bookingId, endedBy);
+    if (result) {
+      this.completionResult.set(result);
     }
   }
 
@@ -481,6 +496,24 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       void this.router.navigate(['/']);
     }
+  }
+
+  /**
+   * Leave the waiting screen without triggering call completion.
+   * The call never started so there's nothing to finalize — just disconnect
+   * from Daily and navigate back. The booking stays 'confirmed' so they
+   * can rejoin later.
+   */
+  async leaveWaiting(): Promise<void> {
+    if (this.dailyCall) {
+      try {
+        await this.dailyCall.leave();
+      } catch (err) {
+        console.error('[Daily] Leave error during waiting exit:', err);
+      }
+    }
+    this.videoCallService.reset();
+    this.goBack();
   }
 
   formatDuration(seconds: number): string {

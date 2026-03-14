@@ -1,7 +1,7 @@
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
+import { jsonOk, jsonError, requireAuth, getAppUrl } from '../_shared/http.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -71,8 +71,7 @@ Deno.serve(async (req) => {
     }
 
     // SECURITY: redirect URL is always server-controlled — never accept from client payload.
-    // Set APP_URL via `supabase secrets set` per environment (local: .env, staging/prod: secrets).
-    const appUrl = Deno.env.get('APP_URL') || 'https://convozo.com';
+    const appUrl = getAppUrl();
 
     // Create account link for onboarding. If the stored account ID no longer
     // exists in Stripe (e.g. stale seed data or deleted account), clear it

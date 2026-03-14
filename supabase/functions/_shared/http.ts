@@ -103,3 +103,46 @@ export function makeRateLimiter(max: number, windowMs: number): (key: string) =>
     return true;
   };
 }
+
+// ── APP_URL helper ───────────────────────────────────────────────────────────
+
+/** Production domain — the single source of truth for the app URL. */
+const PRODUCTION_URL = 'https://convozo.com';
+
+/**
+ * Returns the application URL for links in emails, Stripe redirects, etc.
+ *
+ * Guards against the recurring regression where the local dev `.env`
+ * value (`http://localhost:4200`) leaks into production secrets.
+ *
+ * Rules:
+ *  1. If SUPABASE_URL points to localhost (local dev), allow APP_URL=localhost.
+ *  2. Otherwise (staging/production), **reject** any localhost APP_URL and
+ *     fall back to the production domain with a loud console warning.
+ *  3. If APP_URL is not set at all, fall back to the production domain.
+ */
+export function getAppUrl(): string {
+  const rawAppUrl = Deno.env.get('APP_URL') ?? '';
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+
+  // Detect if we're running against local Supabase (Docker / `supabase start`)
+  const isLocalDev = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1');
+
+  // If no APP_URL is set, use production default
+  if (!rawAppUrl) {
+    return PRODUCTION_URL;
+  }
+
+  // Guard: reject localhost APP_URL in non-local environments
+  const isLocalhostAppUrl = rawAppUrl.includes('localhost') || rawAppUrl.includes('127.0.0.1');
+  if (isLocalhostAppUrl && !isLocalDev) {
+    console.error(
+      `[CRITICAL] APP_URL is set to "${rawAppUrl}" but this is NOT a local environment ` +
+      `(SUPABASE_URL=${supabaseUrl}). This is a configuration error — ` +
+      `falling back to ${PRODUCTION_URL}. Fix with: supabase secrets set APP_URL=${PRODUCTION_URL}`,
+    );
+    return PRODUCTION_URL;
+  }
+
+  return rawAppUrl;
+}

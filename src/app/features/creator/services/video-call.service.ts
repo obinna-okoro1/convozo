@@ -45,6 +45,9 @@ export class VideoCallService {
   readonly remainingSeconds = signal<number>(0);
   readonly errorMessage = signal<string | null>(null);
 
+  // Secret token for fan auth against complete-call (set when fan joins via joinCall)
+  private fanAccessToken: string | null = null;
+
   // Computed: formatted time remaining (MM:SS)
   readonly formattedTimeRemaining = computed(() => {
     const total = this.remainingSeconds();
@@ -66,9 +69,11 @@ export class VideoCallService {
    * Join a video call as either 'creator' or 'fan'.
    * Calls the join-call Edge Function to get room URL + meeting token.
    */
-  async joinCall(bookingId: string, role: 'creator' | 'fan'): Promise<JoinCallResponse | null> {
+  async joinCall(bookingId: string, role: 'creator' | 'fan', fanAccessToken?: string): Promise<JoinCallResponse | null> {
     this.callState.set('joining');
     this.errorMessage.set(null);
+    // Store for use in completeCall when the fan ends the call
+    this.fanAccessToken = role === 'fan' ? (fanAccessToken ?? null) : null;
 
     try {
       // Creator role requires a valid JWT. Call refreshSession() to ensure
@@ -83,7 +88,11 @@ export class VideoCallService {
       }
 
       const { data, error } = await this.supabaseService.client.functions.invoke('join-call', {
-        body: { booking_id: bookingId, role },
+        body: {
+          booking_id: bookingId,
+          role,
+          ...(role === 'fan' && fanAccessToken ? { fan_access_token: fanAccessToken } : {}),
+        },
       });
 
       if (error) {
@@ -95,6 +104,19 @@ export class VideoCallService {
       const response = data as JoinCallResponse;
       this.roomUrl.set(response.room_url);
       this.meetingToken.set(response.token);
+
+      // Set currentBooking from Edge Function response so the UI has booking
+      // data even for fans who can't query call_bookings directly (RLS blocks it).
+      // This ensures the waiting overlay, timer, and participant name all render.
+      if (!this.currentBooking()) {
+        this.currentBooking.set({
+          id: response.booking.id,
+          status: response.booking.status,
+          duration: response.booking.duration,
+          booker_name: response.booking.booker_name,
+          call_started_at: response.booking.call_started_at,
+        } as CallBooking);
+      }
 
       // If call already started (both parties in), go to in_progress
       if (response.booking.call_started_at) {
@@ -114,19 +136,35 @@ export class VideoCallService {
   }
 
   /**
-   * Complete the call — called when the timer expires or creator ends manually.
-   * Only authenticated creators can call this.
+   * Complete the call — called when the timer expires or either participant ends.
+   * Creator: authenticated via JWT.
+   * Fan: authenticated via fan_access_token issued at booking time.
+   * If the call is already completed (409), treat it as success — the other
+   * party already triggered completion.
    */
-  async completeCall(bookingId: string, endedBy: 'creator' | 'fan' | 'system' = 'system'): Promise<CompleteCallResponse | null> {
+  async completeCall(bookingId: string, endedBy: 'creator' | 'fan' | 'system' = 'system', fanAccessToken?: string): Promise<CompleteCallResponse | null> {
     this.callState.set('ending');
     this.stopCountdown();
 
+    // Resolve which token to use: explicit param → stored token from joinCall
+    const tokenToUse = fanAccessToken ?? this.fanAccessToken ?? undefined;
+
     try {
       const { data, error } = await this.supabaseService.client.functions.invoke('complete-call', {
-        body: { booking_id: bookingId, ended_by: endedBy },
+        body: {
+          booking_id: bookingId,
+          ended_by: endedBy,
+          ...(tokenToUse ? { fan_access_token: tokenToUse } : {}),
+        },
       });
 
       if (error) {
+        // 409 means the call was already completed by the other party — that's fine.
+        // Show the completed screen without treating it as an error.
+        if (error.message?.includes('409') || error.message?.includes('already')) {
+          this.callState.set('completed');
+          return null;
+        }
         this.callState.set('error');
         this.errorMessage.set(error.message || 'Failed to complete call');
         return null;
@@ -203,5 +241,6 @@ export class VideoCallService {
     this.callStartedAt.set(null);
     this.remainingSeconds.set(0);
     this.errorMessage.set(null);
+    this.fanAccessToken = null;
   }
 }

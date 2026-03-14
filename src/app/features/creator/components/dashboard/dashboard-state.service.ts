@@ -100,10 +100,7 @@ export class DashboardStateService {
    * Opens /call/:bookingId?role=creator so the creator can join the Daily.co room.
    */
   joinVideoCall(booking: CallBooking): void {
-    if (!booking.daily_room_url) {
-      this.toast.error('Video room not yet created. Please try again shortly.');
-      return;
-    }
+    // Room is created on-demand by the join-call Edge Function — no need to check daily_room_url
     void this.router.navigate(['/call', booking.id], { queryParams: { role: 'creator' } });
   }
 
