@@ -209,6 +209,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   private fanAccessToken = '';
   private dailyCall: DailyCall | null = null;
   private autoCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Polls participants() every 2s as a fallback for the participant-joined event,
+  // which can be unreliable in iframe-wrapped Daily sessions.
+  private participantPollInterval: ReturnType<typeof setInterval> | null = null;
 
   readonly otherParticipantName = computed(() => {
     const booking = this.videoCallService.currentBooking();
@@ -373,8 +376,13 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * call_started_at so both parties see the same timer.
    */
   private async transitionToInProgress(): Promise<void> {
+    // Guard: if we already moved past waiting (event + poll both fired), do nothing
+    if (this.videoCallService.callState() !== 'waiting') return;
     const booking = this.videoCallService.currentBooking();
     if (!booking) return;
+
+    // Stop polling — we got the signal, no need to keep checking
+    this.stopParticipantPolling();
 
     // Optimistic: start countdown from now for immediate UX
     this.videoCallService.callState.set('in_progress');
@@ -433,6 +441,44 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     //  2. Passes the scoped meeting token for access control
     //  3. Handles camera/mic permission prompts
     await this.joinDailyRoom(joinResult.room_url, joinResult.token);
+
+    // Start polling as a safety net in case participant-joined doesn't fire.
+    // Cleared automatically once the call transitions to in_progress.
+    this.startParticipantPolling();
+  }
+
+  /**
+   * Poll Daily.co participants() every 2 seconds while in the 'waiting' state.
+   * This is a reliable fallback for the participant-joined SDK event, which can
+   * be missed in iframe-wrapped sessions (e.g. cross-origin iframe message delays).
+   * Stops automatically when the call moves to any non-waiting state.
+   */
+  private startParticipantPolling(): void {
+    if (this.participantPollInterval) return; // already polling
+
+    this.participantPollInterval = setInterval(() => {
+      this.ngZone.run(() => {
+        if (this.videoCallService.callState() !== 'waiting') {
+          this.stopParticipantPolling();
+          return;
+        }
+        if (!this.dailyCall) return;
+
+        const count = Object.keys(this.dailyCall.participants()).length;
+        if (count >= 2) {
+          console.log('[Daily] Poll detected 2 participants — transitioning to in_progress');
+          this.stopParticipantPolling();
+          void this.transitionToInProgress();
+        }
+      });
+    }, 2000);
+  }
+
+  private stopParticipantPolling(): void {
+    if (this.participantPollInterval) {
+      clearInterval(this.participantPollInterval);
+      this.participantPollInterval = null;
+    }
   }
 
   /**
@@ -527,6 +573,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.autoCompleteTimeout) {
       clearTimeout(this.autoCompleteTimeout);
     }
+    this.stopParticipantPolling();
 
     // If the creator navigates away while the call is in_progress, fire-and-forget
     // a complete-call request so the booking doesn't stay stuck in 'in_progress'.
