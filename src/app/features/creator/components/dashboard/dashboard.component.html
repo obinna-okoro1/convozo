@@ -1,44 +1,53 @@
-<div class="min-h-screen relative overflow-hidden">
-  <!-- Animated Background -->
-  <app-animated-background />
+<div class="min-h-screen relative overflow-hidden" style="background:#060412">
+  <!-- Ambient glows -->
+  <div class="fixed inset-0 pointer-events-none">
+    <div class="absolute top-0 right-0 w-[40rem] h-[30rem] rounded-full blur-3xl opacity-20" style="background:radial-gradient(ellipse,#7c3aed 0%,transparent 70%)"></div>
+    <div class="absolute bottom-1/3 left-1/4 w-[35rem] h-[35rem] rounded-full blur-3xl opacity-15" style="background:radial-gradient(ellipse,#ec4899 0%,transparent 70%)"></div>
+  </div>
 
   @if (loading()) {
     <div class="flex items-center justify-center min-h-screen relative z-10">
       <div class="text-center">
-        <div class="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-purple-500/50 animate-pulse">
-          <svg class="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+        <div class="relative mb-6">
+          <div class="absolute inset-0 rounded-full scale-150 border border-purple-400/20 animate-ripple-out"></div>
+          <div class="relative w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl" style="box-shadow:0 0 3rem rgba(124,58,237,0.4)">
+            <svg class="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
         </div>
-        <p class="text-slate-300 text-lg font-medium">Loading dashboard...</p>
+        <p class="text-slate-400 text-lg font-medium">Initializing dashboard...</p>
       </div>
     </div>
   } @else {
     <!-- Header -->
-    <header class="relative z-20 bg-white/5 backdrop-blur-2xl border-b border-white/10">
-      <div class="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div class="flex items-center justify-between gap-3 sm:gap-4">
-          <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
+    <header class="relative z-20 py-4 sm:py-6 px-3 sm:px-4 border-b" style="background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.05)">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between gap-4">
+          <!-- Profile Section -->
+          <div class="flex items-center gap-4 min-w-0 flex-1">
             @if (dashboardState.creator()?.profile_image_url) {
-              <img [src]="dashboardState.creator()!.profile_image_url" [alt]="dashboardState.creator()!.display_name" class="w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white/20 shadow-lg shadow-purple-500/50 shrink-0" />
+              <img [src]="dashboardState.creator()!.profile_image_url" [alt]="dashboardState.creator()!.display_name" class="w-14 h-14 rounded-2xl object-cover border border-white/20 shadow-lg shadow-purple-500/30 flex-shrink-0" />
             } @else {
-              <div class="w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/50 shrink-0">
-                <span class="text-white font-bold text-base sm:text-2xl">{{ (dashboardState.creator()?.display_name || 'C')[0].toUpperCase() }}</span>
+              <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+                <span class="text-white font-black text-xl">{{ (dashboardState.creator()?.display_name || 'C')[0].toUpperCase() }}</span>
               </div>
             }
-            <div class="min-w-0">
-              <h1 class="text-base sm:text-2xl font-bold text-white truncate">{{ dashboardState.creator()?.display_name }}</h1>
-              <p class="text-xs sm:text-sm text-slate-400">Creator Dashboard</p>
+            <div class="min-w-0 flex-1">
+              <h1 class="text-xl sm:text-2xl font-black text-white truncate">{{ dashboardState.creator()?.display_name }}</h1>
+              <p class="text-xs sm:text-sm text-slate-500">Creator Dashboard</p>
             </div>
           </div>
-          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <!-- Push Notification Toggle -->
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 shrink-0">
             @if (isPushSupported()) {
               <button 
                 (click)="togglePushNotifications()"
                 [disabled]="pushLoading()"
-                [class]="pushEnabled() ? 'text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl flex items-center gap-1.5 sm:gap-2 border backdrop-blur-xl transition-all duration-300 active:scale-95 sm:hover:scale-105 hover:bg-white/10 hover:border-white/20 min-w-[2.75rem] justify-center bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl flex items-center gap-1.5 sm:gap-2 border backdrop-blur-xl transition-all duration-300 active:scale-95 sm:hover:scale-105 hover:bg-white/10 hover:border-white/20 min-w-[2.75rem] justify-center bg-white/5 text-slate-400 border-white/10'"
+                class="group relative overflow-hidden px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border"
+                [style]="pushEnabled() ? 'background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.3);color:rgb(134,239,172)' : 'background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:rgb(148,163,184)'"
               >
                 @if (pushLoading()) {
                   <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -50,54 +59,55 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                 }
-                <span class="hidden sm:inline font-medium">{{ pushEnabled() ? 'Notifications On' : 'Enable Alerts' }}</span>
+                <span class="hidden sm:inline">{{ pushEnabled() ? 'On' : 'Off' }}</span>
               </button>
             }
-            <a routerLink="/creator/settings" class="bg-white/5 border border-white/10 text-white px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl backdrop-blur-xl transition-all duration-300 active:scale-95 sm:hover:scale-105 hover:bg-white/10 hover:border-white/20 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium min-w-[2.75rem] justify-center">
+            <a routerLink="/creator/settings" class="group relative overflow-hidden px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:rgb(226,232,240)">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span class="hidden sm:inline">Settings</span>
             </a>
-            <button (click)="signOut()" class="text-slate-400 hover:text-white px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium transition-colors duration-300 min-w-[2.75rem]">
+            <button (click)="signOut()" class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-300 transition-colors">
               <span class="hidden sm:inline">Sign Out</span>
               <span class="sm:hidden">Exit</span>
             </button>
           </div>
         </div>
-        
-        <!-- View Tabs -->
+
+        <!-- Tabs -->
         <app-dashboard-tabs />
       </div>
     </header>
 
     <!-- Payment Setup Warning -->
     @if (paymentSetupIncomplete()) {
-      <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <div class="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-xl sm:rounded-2xl p-4 sm:p-6 animate-fade-in">
-          <div class="flex items-start gap-3 sm:gap-4">
-            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/50">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base sm:text-lg font-bold text-white mb-1 sm:mb-2">⚡ Payment Setup Incomplete</h3>
-              <p class="text-sm sm:text-base text-slate-300 mb-3 sm:mb-4 leading-relaxed">
-                You need to add your bank details to receive payments. Please go to Settings to complete the setup.
-              </p>
-              <button class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold active:scale-95 sm:hover:scale-105 transition-all duration-300 shadow-lg shadow-yellow-500/50 text-sm sm:text-base">
-                Complete Setup →
-              </button>
+      <div class="relative z-10 px-3 sm:px-4 py-4 sm:py-6">
+        <div class="max-w-7xl mx-auto">
+          <div class="rounded-2xl p-6 border animate-scale-pop" style="background:linear-gradient(135deg,rgba(218,165,32,0.12) 0%,rgba(255,140,0,0.08) 100%);border-color:rgba(218,165,32,0.25)">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 0 2rem rgba(251,191,36,0.4)">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-base sm:text-lg font-bold text-white mb-1">⚡ Complete Your Setup</h3>
+                <p class="text-sm text-slate-400 mb-4">Add your bank details to start receiving payments from your fans.</p>
+                <a routerLink="/creator/settings/payments" class="inline-block px-5 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95" style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);box-shadow:0 0.5rem 1.5rem rgba(251,191,36,0.3)">
+                  Complete Setup →
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </div>
     }
 
-    <!-- Routed View Content -->
-    <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+    <!-- Content -->
+    <div class="relative z-10 px-3 sm:px-4 py-6 sm:py-10">
+
       <router-outlet />
     </div>
 
