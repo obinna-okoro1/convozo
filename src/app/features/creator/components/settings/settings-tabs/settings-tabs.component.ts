@@ -32,6 +32,13 @@ export class SettingsTabsComponent {
       iconFill: false,
     },
     {
+      path: 'shop',
+      label: 'Shop',
+      mobileLabel: 'Shop',
+      iconPath: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+      iconFill: false,
+    },
+    {
       path: 'payments',
       label: 'Payments',
       mobileLabel: 'Pay',

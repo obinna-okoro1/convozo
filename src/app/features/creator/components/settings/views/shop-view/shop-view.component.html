@@ -1,0 +1,407 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- ── Header card ─────────────────────────────────────────────────────── -->
+  <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 mb-6">
+      <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50 flex-shrink-0">
+        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Digital Shop</h2>
+        <p class="text-white/60 text-xs sm:text-sm mt-0.5 sm:mt-1">Sell videos, audio, PDFs, images & personalised shoutouts to your fans</p>
+      </div>
+    </div>
+
+    <!-- Stripe not connected warning -->
+    @if (!state.isStripeConnected()) {
+      <div class="mb-6 p-5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-yellow-500/20">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/50 mt-0.5">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-white mb-1">Connect Stripe to enable your shop</p>
+            <p class="text-yellow-200 text-sm leading-relaxed mb-3">You can add items now, but your shop won't go live until Stripe is connected.</p>
+            <a routerLink="../payments" class="inline-flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-2 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-yellow-500/30">
+              Connect with Stripe →
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Shop enabled toggle -->
+    <div class="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10" [class.opacity-60]="!state.isStripeConnected()">
+      <div>
+        <h3 class="font-bold text-white text-base">🛍️ Shop Active</h3>
+        <p class="text-sm text-white/60 mt-0.5">Show your shop tab on your public profile</p>
+      </div>
+      <div class="flex items-center gap-3">
+        @if (state.saving()) {
+          <svg class="animate-spin h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        }
+        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
+          <input
+            type="checkbox"
+            [checked]="state.shopEnabled()"
+            (change)="state.isStripeConnected() && toggleShop()"
+            [disabled]="!state.isStripeConnected() || state.saving()"
+            class="sr-only peer"
+          />
+          <div class="w-14 h-7 bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:border-white/20 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-violet-600 peer-checked:to-pink-600 shadow-lg peer-disabled:opacity-50"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Success flash -->
+    @if (shopSuccess()) {
+      <div class="mt-4 flex items-center gap-3 p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-xl animate-fade-in">
+        <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/30">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p class="text-emerald-300 font-semibold text-sm">{{ shopSuccess() }}</p>
+      </div>
+    }
+
+    @if (shopError()) {
+      <div class="mt-4 flex items-center gap-3 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-fade-in">
+        <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-rose-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/30">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <p class="text-red-300 font-semibold text-sm">{{ shopError() }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- ── Item list ────────────────────────────────────────────────────────── -->
+  <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="font-bold text-white text-lg">Your Items</h3>
+        <p class="text-white/50 text-xs mt-0.5">{{ activeCount() }} active · {{ items().length }} total</p>
+      </div>
+      @if (!showForm()) {
+        <button
+          type="button"
+          (click)="openAddForm()"
+          class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-pink-600 rounded-xl text-white font-bold text-sm shadow-lg shadow-purple-500/40 hover:scale-105 hover:shadow-purple-500/60 transition-all duration-300"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Item
+        </button>
+      }
+    </div>
+
+    <!-- Add / Edit form ──────────────────────────────────────────────────── -->
+    @if (showForm()) {
+      <div class="mb-6 p-5 sm:p-6 bg-gradient-to-br from-violet-500/10 to-pink-500/10 border border-violet-500/30 rounded-2xl shadow-lg shadow-purple-500/20 animate-fade-in">
+        <h4 class="font-bold text-white text-base mb-5">{{ editingId() ? '✏️ Edit Item' : '✨ New Item' }}</h4>
+
+        <div class="space-y-5">
+          <!-- Item type selector -->
+          <div>
+            <label class="block text-sm font-bold text-white/80 mb-3">Item Type *</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              @for (type of itemTypes; track type) {
+                <button
+                  type="button"
+                  (click)="onTypeChange(type)"
+                  [class]="form().itemType === type
+                    ? 'p-3 rounded-xl border-2 border-violet-500 bg-violet-500/20 text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-all duration-200 shadow-lg shadow-purple-500/30'
+                    : 'p-3 rounded-xl border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 font-semibold text-xs flex flex-col items-center gap-1.5 transition-all duration-200'"
+                >
+                  <span class="text-xl">{{ getTypeMeta(type).emoji }}</span>
+                  <span class="text-center leading-tight">{{ getTypeMeta(type).label }}</span>
+                </button>
+              }
+            </div>
+            <p class="text-xs text-white/40 mt-2">{{ getTypeMeta(form().itemType).hint }}</p>
+          </div>
+
+          <!-- Title -->
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-white/80">Title *</label>
+            <input
+              type="text"
+              [value]="form().title"
+              (input)="setTitle($any($event.target).value)"
+              placeholder="e.g. 'My Lightroom Preset Pack'"
+              maxlength="100"
+              class="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+            />
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-white/80">Description <span class="text-white/40 font-normal">(optional)</span></label>
+            <textarea
+              [value]="form().description"
+              (input)="setDescription($any($event.target).value)"
+              placeholder="What does the buyer get? Be specific — this sells."
+              rows="3"
+              maxlength="500"
+              class="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 resize-none text-sm"
+            ></textarea>
+          </div>
+
+          <!-- Price + File URL in two columns -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Price -->
+            <div class="space-y-2">
+              <label class="block text-sm font-bold text-white/80">Price (USD) *</label>
+              <div class="flex items-center gap-3">
+                <span class="text-2xl font-bold bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">$</span>
+                <input
+                  type="number"
+                  [value]="form().priceDollars"
+                  (input)="setPrice($any($event.target).value)"
+                  min="1"
+                  step="1"
+                  class="flex-1 px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+                />
+              </div>
+              <p class="text-xs text-white/40">Minimum $1.00</p>
+            </div>
+
+            <!-- File URL (hidden for request-based) -->
+            @if (!form().isRequestBased) {
+              <div class="space-y-2">
+                <label class="block text-sm font-bold text-white/80">File / Download URL *</label>
+                <input
+                  type="url"
+                  [value]="form().fileUrl"
+                  (input)="setFileUrl($any($event.target).value)"
+                  placeholder="https://drive.google.com/…"
+                  class="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+                />
+                <p class="text-xs text-white/40">Google Drive, Dropbox, or any direct link</p>
+              </div>
+            } @else {
+              <div class="space-y-2">
+                <label class="block text-sm font-bold text-white/80">Request Type</label>
+                <div class="flex items-center gap-3 px-4 py-3.5 bg-violet-500/10 border border-violet-500/30 rounded-xl">
+                  <span class="text-xl">🎥</span>
+                  <div>
+                    <p class="text-white font-semibold text-sm">Manual Fulfilment</p>
+                    <p class="text-white/50 text-xs">Fan submits a brief → you record & deliver</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Thumbnail URL -->
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-white/80">Cover / Thumbnail URL <span class="text-white/40 font-normal">(optional)</span></label>
+            <input
+              type="url"
+              [value]="form().thumbnailUrl"
+              (input)="setThumbnailUrl($any($event.target).value)"
+              placeholder="https://… (image shown on your shop card)"
+              class="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+            />
+          </div>
+
+          <!-- Preview text + Delivery note -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="block text-sm font-bold text-white/80">Preview Teaser <span class="text-white/40 font-normal">(optional)</span></label>
+              <input
+                type="text"
+                [value]="form().previewText"
+                (input)="setPreviewText($any($event.target).value)"
+                placeholder="e.g. '30 professional presets'"
+                maxlength="200"
+                class="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+              />
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-bold text-white/80">Delivery Note <span class="text-white/40 font-normal">(optional)</span></label>
+              <input
+                type="text"
+                [value]="form().deliveryNote"
+                (input)="setDeliveryNote($any($event.target).value)"
+                placeholder="e.g. 'Compatible with Lightroom 6+'"
+                maxlength="300"
+                class="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Form actions -->
+        <div class="flex gap-3 mt-6">
+          <button
+            type="button"
+            (click)="saveItem()"
+            [disabled]="!canSaveItem() || savingItem()"
+            class="relative flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-violet-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/40 hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm"
+          >
+            @if (savingItem()) {
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Saving…</span>
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{{ editingId() ? 'Update Item' : 'Add to Shop' }}</span>
+            }
+          </button>
+          <button
+            type="button"
+            (click)="cancelForm()"
+            class="px-6 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Items loading skeleton -->
+    @if (loadingItems()) {
+      <div class="space-y-3">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="h-20 bg-white/5 rounded-xl animate-pulse"></div>
+        }
+      </div>
+    } @else if (items().length === 0) {
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-violet-500/20 to-pink-500/20 border border-violet-500/20 rounded-2xl flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-violet-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+        </div>
+        <p class="text-white/70 font-bold text-lg mb-1">Your shop is empty</p>
+        <p class="text-white/40 text-sm mb-5 max-w-xs">Add your first digital item and start making money from your content.</p>
+        @if (!showForm()) {
+          <button
+            type="button"
+            (click)="openAddForm()"
+            class="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-600 to-pink-600 rounded-xl text-white font-bold text-sm shadow-lg shadow-purple-500/40 hover:scale-105 transition-all duration-300"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Your First Item
+          </button>
+        }
+      </div>
+    } @else {
+      <!-- Item rows -->
+      <div class="space-y-3">
+        @for (item of items(); track item.id) {
+          <div
+            [class]="'group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 ' + (item.is_active ? 'bg-white/5 border-white/10 hover:border-white/15' : 'bg-white/[0.02] border-white/5 opacity-60')"
+          >
+            <!-- Type icon -->
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
+              [style]="item.is_active
+                ? 'background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(236,72,153,0.3));border:1px solid rgba(124,58,237,0.2)'
+                : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)'">
+              {{ getTypeMeta(item.item_type).emoji }}
+            </div>
+
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="font-bold text-white text-sm truncate">{{ item.title }}</p>
+                <span [class]="'px-2 py-0.5 rounded-full text-xs font-semibold ' + (item.is_request_based ? 'bg-violet-500/20 text-violet-300 border border-violet-500/20' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20')">
+                  {{ item.is_request_based ? 'Request' : 'Download' }}
+                </span>
+              </div>
+              <p class="text-white/50 text-xs mt-0.5">{{ getTypeMeta(item.item_type).label }} · <strong class="text-white/70">{{ formatPrice(item.price) }}</strong></p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <!-- Active toggle -->
+              <button
+                type="button"
+                (click)="toggleItemActive(item)"
+                [title]="item.is_active ? 'Deactivate' : 'Activate'"
+                [class]="'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ' + (item.is_active ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white/60')"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    [attr.d]="item.is_active
+                      ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                      : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'" />
+                </svg>
+              </button>
+
+              <!-- Edit -->
+              <button
+                type="button"
+                (click)="openEditForm(item)"
+                title="Edit item"
+                class="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/80 transition-all duration-200"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+
+              <!-- Delete -->
+              <button
+                type="button"
+                (click)="deleteItem(item.id)"
+                title="Delete item"
+                [disabled]="deletingId() === item.id"
+                class="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 disabled:opacity-40"
+              >
+                @if (deletingId() === item.id) {
+                  <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- ── How it works info card ───────────────────────────────────────────── -->
+  <div class="p-5 sm:p-6 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-violet-500/20 backdrop-blur-2xl rounded-2xl shadow-lg">
+    <div class="flex gap-4">
+      <div class="w-10 h-10 bg-gradient-to-br from-violet-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/40 flex-shrink-0 mt-0.5">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-white mb-2">How the Digital Shop works</p>
+        <ul class="space-y-1.5 text-sm text-white/60">
+          <li class="flex items-start gap-2"><span class="text-violet-400 mt-0.5 flex-shrink-0">→</span> <span>Fans visit your public profile and browse your shop tab</span></li>
+          <li class="flex items-start gap-2"><span class="text-violet-400 mt-0.5 flex-shrink-0">→</span> <span>They pay securely via Stripe and receive their item by email</span></li>
+          <li class="flex items-start gap-2"><span class="text-violet-400 mt-0.5 flex-shrink-0">→</span> <span>For shoutout requests, you see the fan's brief and deliver manually</span></li>
+          <li class="flex items-start gap-2"><span class="text-violet-400 mt-0.5 flex-shrink-0">→</span> <span>You keep 78% of every sale — Convozo's 22% platform fee applies</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

@@ -28,6 +28,7 @@ export interface CreatorSettings {
   follow_back_price: number | null;
   follow_back_enabled: boolean;
   tips_enabled: boolean;
+  shop_enabled: boolean;
   response_expectation: string | null;
   auto_reply_text: string | null;
   created_at: string;
@@ -234,4 +235,54 @@ export interface LinkClick {
   referrer: string | null;
   user_agent: string | null;
   created_at: string;
+}
+
+// ── Digital Shop ─────────────────────────────────────────────────────────────
+
+export type ShopItemType = 'video' | 'audio' | 'pdf' | 'image' | 'shoutout_request';
+
+export interface ShopItem {
+  id: string;
+  creator_id: string;
+  title: string;
+  description: string | null;
+  /** Price in cents — minimum 100 ($1.00) */
+  price: number;
+  item_type: ShopItemType;
+  /** Download / delivery URL. Null for request-based items. */
+  file_url: string | null;
+  thumbnail_url: string | null;
+  preview_text: string | null;
+  delivery_note: string | null;
+  is_active: boolean;
+  /** True when creator must manually fulfil (e.g. shoutout_request). */
+  is_request_based: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopOrder {
+  id: string;
+  item_id: string;
+  creator_id: string;
+  buyer_name: string;
+  buyer_email: string;
+  /** Amount paid in cents */
+  amount_paid: number;
+  stripe_session_id: string;
+  idempotency_key: string;
+  status: 'pending' | 'completed' | 'refunded';
+  request_details: string | null;
+  fulfillment_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopCheckoutPayload {
+  creator_slug: string;
+  item_id: string;
+  buyer_name: string;
+  buyer_email: string;
+  request_details?: string;
 }

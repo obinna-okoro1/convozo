@@ -34,4 +34,9 @@ export const MESSAGE_PAGE_ROUTES: Routes = [
     loadComponent: () =>
       import('./views/support-view/support-view.component').then((m) => m.SupportViewComponent),
   },
+  {
+    path: 'shop',
+    loadComponent: () =>
+      import('./views/shop-view/shop-view.component').then((m) => m.ShopViewComponent),
+  },
 ];
