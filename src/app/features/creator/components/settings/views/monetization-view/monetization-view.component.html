@@ -81,26 +81,8 @@
         </div>
       }
 
-      @if (!state.messagesEnabled() && state.isStripeConnected()) {
-        <!-- Price preview even when disabled -->
-        <div class="space-y-3">
-          <label for="messagePricePreview" class="block text-sm font-bold text-white">Message Price *</label>
-          <div class="flex items-center gap-4">
-            <span class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">$</span>
-            <div class="relative flex-1 group">
-              <input
-                type="number"
-                id="messagePricePreview"
-                [value]="state.messagePrice() / 100"
-                (input)="state.messagePrice.set(state.inputNumber($event) * 100)"
-                min="1"
-                step="1"
-                class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 opacity-50"
-              />
-            </div>
-          </div>
-          <p class="text-xs text-white/50 mt-2">Enable above to activate this channel</p>
-        </div>
+      @if (!state.messagesEnabled() && !state.isStripeConnected()) {
+        <!-- Price hidden when messages disabled and stripe not connected -->
       }
     </div>
 
