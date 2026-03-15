@@ -428,6 +428,144 @@ SELECT
   NOW() - (random() * INTERVAL '30 days')
 FROM generate_series(1, 15);
 
+-- ============================================================================
+-- SAMPLE SHOP DATA (Digital Shop)
+-- ============================================================================
+
+-- Enable shop for Sarah Johnson
+UPDATE public.creator_settings
+SET shop_enabled = true
+WHERE creator_id = '33333333-3333-3333-3333-333333333333';
+
+-- Enable shop for Mike Chen
+UPDATE public.creator_settings
+SET shop_enabled = true
+WHERE creator_id = '44444444-4444-4444-4444-444444444444';
+
+-- Sarah's Shop Items (9 products)
+INSERT INTO public.shop_items (
+  id, creator_id, title, description, price, item_type, file_url, thumbnail_url,
+  preview_text, delivery_note, is_active, is_request_based, sort_order, created_at
+) VALUES
+  -- Video products
+  ('cccccccc-0001-0001-0001-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Complete Fitness Workout Guide', 'Full-body 30-minute workout video with modifications for all levels',
+   2999, 'video', 'https://example.com/downloads/workout-30min.mp4',
+   'https://example.com/thumbnails/workout-thumb.jpg', 'HD 1080p, 30 minutes',
+   'Digital download link sent immediately', true, false, 1, NOW() - INTERVAL '60 days'),
+  
+  ('cccccccc-0002-0002-0002-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Instagram Reel Templates (20)', 'Ready-to-use Adobe Premiere Pro templates for creating viral reels',
+   1999, 'video', 'https://example.com/downloads/reels-templates-20.zip',
+   'https://example.com/thumbnails/reels-thumb.jpg', 'Premiere Pro format, fully editable',
+   'ZIP download sent to email immediately', true, false, 2, NOW() - INTERVAL '50 days'),
+  
+  -- Audio products
+  ('cccccccc-0003-0003-0003-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Meditation Session (45 min)', 'Guided meditation for stress relief and deep relaxation',
+   1499, 'audio', 'https://example.com/downloads/meditation-45min.m4a',
+   'https://example.com/thumbnails/meditation-thumb.jpg', '45 minutes, high quality',
+   'Audio file download sent immediately', true, false, 3, NOW() - INTERVAL '45 days'),
+  
+  ('cccccccc-0004-0004-0004-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Podcast Production Masterclass', 'Audio guide on recording, editing, and distributing podcasts',
+   2499, 'audio', 'https://example.com/downloads/podcast-masterclass.zip',
+   'https://example.com/thumbnails/podcast-thumb.jpg', 'Multi-part guide, MP3 + PDF',
+   'Compressed ZIP sent to email', true, false, 4, NOW() - INTERVAL '40 days'),
+  
+  -- PDF products
+  ('cccccccc-0005-0005-0005-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Social Media Growth Strategy (2024)', '50-page guide to growing followers and engagement on Instagram, TikTok & YouTube',
+   999, 'pdf', 'https://example.com/downloads/sm-growth-2024.pdf',
+   'https://example.com/thumbnails/smgrowth-thumb.jpg', '50 pages, actionable tactics',
+   'PDF link sent immediately', true, false, 5, NOW() - INTERVAL '35 days'),
+  
+  ('cccccccc-0006-0006-0006-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Email Marketing Templates', 'Canva templates for professional email campaigns and newsletters',
+   799, 'pdf', 'https://example.com/downloads/email-templates.pdf',
+   'https://example.com/thumbnails/email-thumb.jpg', '15 customizable templates',
+   'PDF download sent to email', true, false, 6, NOW() - INTERVAL '30 days'),
+  
+  -- Image products
+  ('cccccccc-0007-0007-0007-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Stock Photo Collection (100)', 'High-resolution lifestyle and portrait photos for content creators',
+   1499, 'image', 'https://example.com/downloads/stock-photos-100.zip',
+   'https://example.com/thumbnails/stock-thumb.jpg', 'High-res JPG, commercial license',
+   'ZIP archive sent to email', true, false, 7, NOW() - INTERVAL '25 days'),
+  
+  -- Request-based product (shoutout)
+  ('cccccccc-0008-0008-0008-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Personalized Shoutout Video', 'Custom 30-second video shoutout recorded just for you',
+   5000, 'shoutout_request', null, 'https://example.com/thumbnails/shoutout-thumb.jpg',
+   'Custom video, 30 seconds max', 'Delivered within 3-5 business days',
+   true, true, 8, NOW() - INTERVAL '20 days'),
+  
+  -- Another video product (inactive draft)
+  ('cccccccc-0009-0009-0009-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Advanced Video Editing Course (Coming Soon)', 'Professional techniques for cinematic video production',
+   3999, 'video', null, 'https://example.com/thumbnails/editing-course-thumb.jpg',
+   'Full course with exercises', 'Coming soon - pre-order available',
+   false, false, 9, NOW() - INTERVAL '5 days');
+
+-- Mike's Shop Items (3 products)
+INSERT INTO public.shop_items (
+  id, creator_id, title, description, price, item_type, file_url, thumbnail_url,
+  preview_text, delivery_note, is_active, is_request_based, sort_order, created_at
+) VALUES
+  ('cccccccc-1001-1001-1001-cccccccccccc', '44444444-4444-4444-4444-444444444444',
+   'Music Production Samples Pack', 'Royalty-free drum kits, synths, and loops for EDM production',
+   1299, 'audio', 'https://example.com/downloads/edm-samples.zip',
+   'https://example.com/thumbnails/samples-thumb.jpg', '2GB of samples, WAV format',
+   'ZIP download sent immediately', true, false, 1, NOW() - INTERVAL '40 days'),
+  
+  ('cccccccc-1002-1002-1002-cccccccccccc', '44444444-4444-4444-4444-444444444444',
+   'YouTube SEO Checklist', '25-point checklist for optimizing videos and channel for discovery',
+   599, 'pdf', 'https://example.com/downloads/youtube-seo.pdf',
+   'https://example.com/thumbnails/youtube-seo-thumb.jpg', 'Printable PDF checklist',
+   'PDF sent immediately', true, false, 2, NOW() - INTERVAL '25 days'),
+  
+  ('cccccccc-1003-1003-1003-cccccccccccc', '44444444-4444-4444-4444-444444444444',
+   'Beat Tape (10 Exclusive Beats)', 'Original hip-hop and R&B instrumental beats exclusive on this store',
+   2499, 'audio', 'https://example.com/downloads/beat-tape-10.zip',
+   'https://example.com/thumbnails/beats-thumb.jpg', 'MP3 + WAV, commercial license included',
+   'Compressed ZIP sent to email', true, false, 3, NOW() - INTERVAL '15 days');
+
+-- Sample Shop Orders (purchases for testing)
+INSERT INTO public.shop_orders (
+  id, item_id, creator_id, buyer_name, buyer_email, amount_paid,
+  stripe_session_id, idempotency_key, status, request_details, created_at
+) VALUES
+  ('dddddddd-0001-0001-0001-dddddddddddd',
+   'cccccccc-0001-0001-0001-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Alex Thompson', 'alex.thompson@example.com', 2999,
+   'cs_test_a1b2c3d4e5f6g7h8', 'idempotency_order_001',
+   'completed', null, NOW() - INTERVAL '10 days'),
+  
+  ('dddddddd-0002-0002-0002-dddddddddddd',
+   'cccccccc-0005-0005-0005-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Jordan Smith', 'jordan.smith@example.com', 999,
+   'cs_test_a1b2c3d4e5f6g7h9', 'idempotency_order_002',
+   'completed', null, NOW() - INTERVAL '8 days'),
+  
+  ('dddddddd-0003-0003-0003-dddddddddddd',
+   'cccccccc-0008-0008-0008-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Casey Robinson', 'casey.robinson@example.com', 5000,
+   'cs_test_a1b2c3d4e5f6g7h10', 'idempotency_order_003',
+   'pending', 'Please do a funny birthday shoutout for my friend Tom with a silly accent!',
+   NOW() - INTERVAL '5 days'),
+  
+  ('dddddddd-0004-0004-0004-dddddddddddd',
+   'cccccccc-1001-1001-1001-cccccccccccc', '44444444-4444-4444-4444-444444444444',
+   'Taylor Davis', 'taylor.davis@example.com', 1299,
+   'cs_test_a1b2c3d4e5f6g7h11', 'idempotency_order_004',
+   'completed', null, NOW() - INTERVAL '3 days'),
+  
+  ('dddddddd-0005-0005-0005-dddddddddddd',
+   'cccccccc-0002-0002-0002-cccccccccccc', '33333333-3333-3333-3333-333333333333',
+   'Morgan Lee', 'morgan.lee@example.com', 1999,
+   'cs_test_a1b2c3d4e5f6g7h12', 'idempotency_order_005',
+   'completed', null, NOW() - INTERVAL '2 days');
+
 -- Output summary
 SELECT 'Seed data inserted successfully!' as message;
 SELECT '✅ Created 2 test users (password: sample123)' as info_1;
@@ -438,9 +576,25 @@ SELECT '✅ Created availability slots for Sarah' as info_5;
 SELECT '✅ Created 1 sample call booking' as info_6;
 SELECT '✅ Created 12 sample links (7 for Sarah, 5 for Mike)' as info_7;
 SELECT '✅ Created 40 sample link clicks' as info_8;
+SELECT '✅ Created 12 sample shop items (9 for Sarah, 3 for Mike)' as info_9;
+SELECT '✅ Created 5 sample shop orders (3 completed, 1 pending, 1 completed)' as info_10;
 SELECT '' as separator;
 SELECT 'Test Users:' as users_header;
-SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min (enabled)' as user_1;
-SELECT '- creator2@example.com (Mike Chen) - Messages: $5, Calls: disabled' as user_2;
+SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min, Shop: ENABLED' as user_1;
+SELECT '- creator2@example.com (Mike Chen) - Messages: $5, Calls: disabled, Shop: ENABLED' as user_2;
+SELECT '' as separator;
+SELECT 'Shop Products Available:' as shop_header;
+SELECT '  Sarah''s Shop (9 items):' as sarah_shop;
+SELECT '    - 2 Videos (workout, reel templates)' as sarah_1;
+SELECT '    - 2 Audio (meditation, podcast guide)' as sarah_2;
+SELECT '    - 2 PDFs (social media guide, email templates)' as sarah_3;
+SELECT '    - 1 Image pack (100 stock photos)' as sarah_4;
+SELECT '    - 1 Shoutout request (personalized video)' as sarah_5;
+SELECT '    - 1 Draft video (coming soon)' as sarah_6;
+SELECT '  Mike''s Shop (3 items):' as mike_shop;
+SELECT '    - 1 Audio (sample pack)' as mike_1;
+SELECT '    - 1 PDF (YouTube SEO checklist)' as mike_2;
+SELECT '    - 1 Audio (beat tape)' as mike_3;
+SELECT '' as separator;
 SELECT '2. Connect Stripe via Settings → Payments to enable checkout' as step_2;
 SELECT '3. Update the environment variables with your Stripe keys' as step_3;
