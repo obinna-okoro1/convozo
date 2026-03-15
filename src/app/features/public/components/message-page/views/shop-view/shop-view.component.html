@@ -1,0 +1,183 @@
+@if (!state.shopEnabled()) {
+  <!-- Shop disabled / not configured -->
+  <div class="flex flex-col items-center justify-center py-16 text-center px-4">
+    <div class="w-16 h-16 bg-gradient-to-br from-violet-500/20 to-pink-500/20 border border-violet-500/20 rounded-3xl flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-violet-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+      </svg>
+    </div>
+    <p class="text-white/50 font-semibold text-lg mb-1">Shop not available</p>
+    <p class="text-white/30 text-sm">This creator hasn't enabled their shop yet.</p>
+  </div>
+} @else {
+  <div class="space-y-4 animate-fade-in">
+
+    <!-- ── Shop header ─────────────────────────────────────────────────── -->
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl text-center">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 rounded-2xl shadow-lg shadow-purple-500/40 mb-4">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+        {{ state.creator()?.display_name }}'s Shop
+      </h2>
+      <p class="text-white/50 text-sm mt-1">Exclusive digital content &amp; personalised videos</p>
+    </div>
+
+    <!-- ── Loading skeleton ────────────────────────────────────────────── -->
+    @if (loadingItems()) {
+      <div class="space-y-3">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="h-24 bg-white/5 rounded-3xl animate-pulse"></div>
+        }
+      </div>
+    } @else if (items().length === 0) {
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-12 text-center px-4">
+        <span class="text-4xl mb-3">🛒</span>
+        <p class="text-white/50 font-semibold mb-1">No items yet</p>
+        <p class="text-white/30 text-sm">Check back later!</p>
+      </div>
+    } @else {
+      <!-- ── Item cards ─────────────────────────────────────────────────── -->
+      @for (item of items(); track item.id) {
+        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-xl transition-all duration-300">
+
+          <!-- Card header (always visible) -->
+          <button
+            type="button"
+            (click)="toggleItem(item.id)"
+            class="w-full text-left p-5 flex items-center gap-4 hover:bg-white/5 transition-all duration-200"
+          >
+            <!-- Thumbnail or emoji icon -->
+            @if (item.thumbnail_url) {
+              <img
+                [src]="item.thumbnail_url"
+                [alt]="item.title"
+                class="w-16 h-16 object-cover rounded-2xl flex-shrink-0 border border-white/10"
+              />
+            } @else {
+              <div class="w-16 h-16 flex items-center justify-center rounded-2xl flex-shrink-0 text-3xl bg-gradient-to-br from-violet-500/20 to-pink-500/20 border border-violet-500/20">
+                {{ typeEmoji[item.item_type] ?? '📦' }}
+              </div>
+            }
+
+            <!-- Item info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <p class="font-bold text-white text-base leading-snug truncate">{{ item.title }}</p>
+                <span class="text-lg font-black bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent flex-shrink-0">
+                  {{ formatPrice(item.price) }}
+                </span>
+              </div>
+              @if (item.description) {
+                <p class="text-white/50 text-xs mt-1 line-clamp-2">{{ item.description }}</p>
+              }
+              <div class="flex items-center gap-2 mt-2">
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/20">
+                  {{ typeLabel[item.item_type] ?? item.item_type }}
+                </span>
+                @if (item.is_request_based) {
+                  <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/20">
+                    Custom Request
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Chevron -->
+            <svg
+              [class]="'w-5 h-5 text-white/40 transition-transform duration-300 flex-shrink-0 ' + (activeItemId() === item.id ? 'rotate-180' : '')"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Inline buy form (expanded) -->
+          @if (activeItemId() === item.id) {
+            <div class="px-5 pb-6 pt-0 border-t border-white/10 animate-fade-in">
+
+              @if (item.preview_text) {
+                <p class="text-violet-300/80 text-xs italic mt-4 mb-5">{{ item.preview_text }}</p>
+              }
+
+              <form (ngSubmit)="onSubmit(item)" class="space-y-4 mt-4">
+                <!-- Name -->
+                <div>
+                  <label class="block text-xs font-bold text-white/70 mb-1.5">Your Name *</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="buyerName"
+                    name="buyerName"
+                    placeholder="Enter your name"
+                    required
+                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+                  />
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <label class="block text-xs font-bold text-white/70 mb-1.5">Your Email *</label>
+                  <input
+                    type="email"
+                    [(ngModel)]="buyerEmail"
+                    name="buyerEmail"
+                    placeholder="you@example.com"
+                    required
+                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 text-sm"
+                  />
+                  @if (!item.is_request_based) {
+                    <p class="text-white/35 text-xs mt-1">Download link will be sent here after purchase.</p>
+                  }
+                </div>
+
+                <!-- Request brief (request-based items only) -->
+                @if (item.is_request_based) {
+                  <div>
+                    <label class="block text-xs font-bold text-white/70 mb-1.5">Your Brief / Instructions *</label>
+                    <textarea
+                      [(ngModel)]="requestDetails"
+                      name="requestDetails"
+                      placeholder="Tell me what you'd like — be as specific as possible!"
+                      rows="4"
+                      maxlength="1000"
+                      required
+                      class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 hover:bg-white/10 resize-none text-sm"
+                    ></textarea>
+                    @if (item.delivery_note) {
+                      <p class="text-white/40 text-xs mt-1.5 italic">{{ item.delivery_note }}</p>
+                    }
+                  </div>
+                }
+
+                <!-- Submit -->
+                <button
+                  type="submit"
+                  [disabled]="state.submitting()"
+                  class="w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-violet-600 to-pink-600 rounded-2xl text-white font-bold text-base shadow-lg shadow-purple-500/40 hover:shadow-purple-500/60 hover:scale-[1.02] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  @if (state.submitting()) {
+                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Processing…</span>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <span>Buy for {{ formatPrice(item.price) }} →</span>
+                  }
+                </button>
+
+                <!-- Security note -->
+                <p class="text-center text-white/25 text-xs">Secure checkout by Stripe · You'll be redirected to complete payment</p>
+              </form>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+}

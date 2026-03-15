@@ -13,6 +13,9 @@ import {
   StripeAccount,
   CheckoutSessionPayload,
   CallBookingPayload,
+  ShopItem,
+  ShopOrder,
+  ShopCheckoutPayload,
   EdgeFunctionResponse,
   StripeConnectResponse,
   StripeAccountStatus,
@@ -350,6 +353,104 @@ export class SupabaseService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.functions.invoke('verify-connect-account', {
       body: { account_id: accountId },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
+
+  // ==================== SHOP METHODS ====================
+
+  /**
+   * Get all shop items for a creator (creator-side — includes inactive items)
+   */
+  public async getShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
+    const { data, error } = await this.client
+      .from('shop_items')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+    return { data: data as ShopItem[] | null, error };
+  }
+
+  /**
+   * Get active shop items for a creator (public-facing — active only)
+   */
+  public async getActiveShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
+    const { data, error } = await this.client
+      .from('shop_items')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+    return { data: data as ShopItem[] | null, error };
+  }
+
+  /**
+   * Create a new shop item
+   */
+  public async createShopItem(
+    item: Omit<ShopItem, 'id' | 'created_at' | 'updated_at'>,
+  ): Promise<{ data: ShopItem | null; error: unknown }> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client
+      .from('shop_items')
+      .insert(item)
+      .select()
+      .single();
+    return { data: data as ShopItem | null, error };
+  }
+
+  /**
+   * Update an existing shop item
+   */
+  public async updateShopItem(
+    id: string,
+    updates: Partial<Omit<ShopItem, 'id' | 'creator_id' | 'created_at' | 'updated_at'>>,
+  ): Promise<{ data: ShopItem | null; error: unknown }> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client
+      .from('shop_items')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    return { data: data as ShopItem | null, error };
+  }
+
+  /**
+   * Delete a shop item
+   */
+  public async deleteShopItem(id: string): Promise<{ error: unknown }> {
+    const { error } = await this.client
+      .from('shop_items')
+      .delete()
+      .eq('id', id);
+    return { error };
+  }
+
+  /**
+   * Get shop orders for a creator (creator-side)
+   */
+  public async getShopOrders(creatorId: string): Promise<{ data: ShopOrder[] | null; error: unknown }> {
+    const { data, error } = await this.client
+      .from('shop_orders')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .order('created_at', { ascending: false });
+    return { data: data as ShopOrder[] | null, error };
+  }
+
+  /**
+   * Create a Stripe Checkout session for purchasing a shop item via Edge Function
+   */
+  public async createShopCheckout(
+    payload: ShopCheckoutPayload,
+  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client.functions.invoke('create-shop-checkout', {
+      body: payload,
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };

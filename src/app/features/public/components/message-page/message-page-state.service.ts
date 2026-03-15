@@ -12,6 +12,7 @@ import {
   AvailabilitySlot,
   MessageType,
   CheckoutSessionPayload,
+  ShopCheckoutPayload,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -49,6 +50,7 @@ export class MessagePageStateService {
   readonly callDuration = computed(() => this.settings()?.call_duration ?? 30);
   readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
   readonly tipsEnabled = computed(() => this.settings()?.tips_enabled ?? false);
+  readonly shopEnabled = computed(() => this.settings()?.shop_enabled ?? false);
   readonly responseExpectation = computed(
     () => this.settings()?.response_expectation ?? '24-48 hours',
   );
@@ -114,6 +116,49 @@ export class MessagePageStateService {
       return;
     }
     await this.processSupportCheckout(formData);
+  }
+
+  async onShopCheckout(
+    itemId: string,
+    buyerName: string,
+    buyerEmail: string,
+    requestDetails?: string,
+  ): Promise<void> {
+    const creatorData = this.creator();
+    if (!creatorData) return;
+
+    if (!FormValidators.isNotEmpty(buyerName)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+      return;
+    }
+    if (!FormValidators.isValidEmail(buyerEmail)) {
+      this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+      return;
+    }
+
+    this.submitting.set(true);
+    try {
+      const payload: ShopCheckoutPayload = {
+        creator_slug: creatorData.slug,
+        item_id: itemId,
+        buyer_name: buyerName,
+        buyer_email: buyerEmail,
+      };
+      if (requestDetails?.trim()) {
+        payload.request_details = requestDetails.trim();
+      }
+
+      const { data, error } = await this.supabaseService.createShopCheckout(payload);
+
+      if (error || !data?.url) {
+        throw new Error(error?.message ?? 'Failed to create checkout session');
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      this.handleError(err, ERROR_MESSAGES.PAYMENT.FAILED_TO_PROCESS);
+    } finally {
+      this.submitting.set(false);
+    }
   }
 
   onLinkClicked(link: CreatorLink): void {

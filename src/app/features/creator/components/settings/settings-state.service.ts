@@ -51,6 +51,7 @@ export class SettingsStateService {
   readonly followBackPrice = signal(2000);
   readonly followBackEnabled = signal(false);
   readonly tipsEnabled = signal(false);
+  readonly shopEnabled = signal(false);
   readonly responseExpectation = signal('');
 
   // ── Dirty-state tracking ───────────────────────────────────────────
@@ -71,6 +72,7 @@ export class SettingsStateService {
     followBackPrice: 2000,
     followBackEnabled: false,
     tipsEnabled: false,
+    shopEnabled: false,
     responseExpectation: '',
   });
 
@@ -109,6 +111,7 @@ export class SettingsStateService {
       this.followBackPrice() !== o.followBackPrice ||
       this.followBackEnabled() !== o.followBackEnabled ||
       this.tipsEnabled() !== o.tipsEnabled ||
+      this.shopEnabled() !== o.shopEnabled ||
       this.responseExpectation() !== o.responseExpectation
     );
   });
@@ -250,6 +253,7 @@ export class SettingsStateService {
       followBackPrice: this.followBackEnabled() ? this.followBackPrice() : undefined,
       followBackEnabled: this.followBackEnabled(),
       tipsEnabled: this.tipsEnabled(),
+      shopEnabled: this.shopEnabled(),
       responseExpectation: this.responseExpectation() || '',
     });
 
@@ -265,6 +269,7 @@ export class SettingsStateService {
         followBackPrice: this.followBackPrice(),
         followBackEnabled: this.followBackEnabled(),
         tipsEnabled: this.tipsEnabled(),
+        shopEnabled: this.shopEnabled(),
         responseExpectation: this.responseExpectation(),
       });
       this.success.set(true);
@@ -391,6 +396,7 @@ export class SettingsStateService {
         this.followBackPrice.set(settingsData.data.follow_back_price ?? 2000);
         this.followBackEnabled.set(settingsData.data.follow_back_enabled);
         this.tipsEnabled.set(settingsData.data.tips_enabled ?? false);
+        this.shopEnabled.set(settingsData.data.shop_enabled ?? false);
         this.responseExpectation.set(settingsData.data.response_expectation || '');
         this.originalMonetization.set({
           messagePrice: settingsData.data.message_price,
@@ -401,6 +407,7 @@ export class SettingsStateService {
           followBackPrice: settingsData.data.follow_back_price ?? 2000,
           followBackEnabled: settingsData.data.follow_back_enabled,
           tipsEnabled: settingsData.data.tips_enabled ?? false,
+          shopEnabled: settingsData.data.shop_enabled ?? false,
           responseExpectation: settingsData.data.response_expectation || '',
         });
       }

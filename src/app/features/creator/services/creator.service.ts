@@ -150,6 +150,7 @@ export class CreatorService {
     followBackPrice?: number;
     followBackEnabled: boolean;
     tipsEnabled: boolean;
+    shopEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -164,6 +165,7 @@ export class CreatorService {
         follow_back_price: data.followBackPrice,
         follow_back_enabled: data.followBackEnabled,
         tips_enabled: data.tipsEnabled,
+        shop_enabled: data.shopEnabled,
         response_expectation: data.responseExpectation,
       })
       .eq('id', data.settingsId)
