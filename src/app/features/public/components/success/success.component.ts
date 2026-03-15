@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-success',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './success.component.html',
   styleUrls: ['./success.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,6 +12,24 @@ import { Router, ActivatedRoute } from '@angular/router';
 export class SuccessComponent implements OnInit {
   protected readonly isCallBooking = signal(false);
   protected readonly creatorSlug = signal<string | null>(null);
+
+  protected readonly confettiItems = Array.from({ length: 12 }, (_, i) => i);
+  protected readonly confettiPositions = this.confettiItems.map(() => ({
+    left: `${Math.floor(Math.random() * 100)}%`,
+    delay: `${(Math.random() * 2).toFixed(1)}s`,
+  }));
+
+  protected readonly callSteps = [
+    { n: 1, text: "You'll receive a confirmation email with your booking details." },
+    { n: 2, text: 'The creator will DM you on Instagram to confirm the exact date & time.' },
+    { n: 3, text: 'Join the private video call at the agreed time — enjoy!' },
+  ];
+
+  protected readonly messageSteps = [
+    { n: 1, text: 'The creator receives your message in their priority inbox.' },
+    { n: 2, text: "You'll receive a confirmation email with your message details." },
+    { n: 3, text: "When the creator replies, you'll get an email with their response." },
+  ];
 
   constructor(
     private readonly router: Router,
@@ -34,3 +52,4 @@ export class SuccessComponent implements OnInit {
     }
   }
 }
+

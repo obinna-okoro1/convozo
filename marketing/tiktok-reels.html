@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convozo – TikTok Reels</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(90deg, #ff0050, #ff6b35, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Grid of reel cards ── */
+    .reels-grid {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .reel-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .reel-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .reel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+    }
+
+    /* ── Phone frame / viewport ── */
+    .phone-frame {
+      width: 270px;
+      height: 480px;
+      border-radius: 2rem;
+      overflow: hidden;
+      position: relative;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 0 60px rgba(255,0,80,0.15), 0 20px 60px rgba(0,0,0,0.8);
+      background: #000;
+      cursor: pointer;
+    }
+    /* ── The actual reel scene (fills phone) ── */
+    .reel-scene {
+      width: 100%; height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background video */
+    .reel-scene video.bg-video {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    .reel-scene.playing video.bg-video { opacity: 1; }
+
+    /* Dark gradient overlay so text pops */
+    .reel-scene .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.55) 0%,
+        rgba(0,0,0,0.1)  35%,
+        rgba(0,0,0,0.1)  60%,
+        rgba(0,0,0,0.75) 100%
+      );
+      z-index: 1;
+    }
+
+    /* Thumbnail shown before play */
+    .reel-scene .thumb {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: rgba(0,0,0,0.6);
+      transition: opacity 0.3s;
+    }
+    .reel-scene.playing .thumb { opacity: 0; pointer-events: none; }
+    .thumb-icon { font-size: 3rem; }
+    .thumb-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+      text-align: center;
+      padding: 0 1.5rem;
+      line-height: 1.4;
+    }
+    .thumb-play {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(255,0,80,0.85);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 0 20px rgba(255,0,80,0.5);
+    }
+
+    /* ── Text slides shown at timed intervals ── */
+    .slide {
+      position: absolute;
+      z-index: 5;
+      left: 0; right: 0;
+      padding: 0 14px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(14px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .slide.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Hook slide — big top text */
+    .slide-hook {
+      top: 20px;
+      text-align: center;
+    }
+    .slide-hook .hook-text {
+      font-size: 1.5rem;
+      font-weight: 900;
+      line-height: 1.2;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.7);
+      letter-spacing: -0.01em;
+    }
+    .slide-hook .hook-sub {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.75);
+      margin-top: 6px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    /* Middle "stat" slide */
+    .slide-mid {
+      top: 50%;
+      transform: translateY(calc(-50% + 14px));
+      text-align: center;
+    }
+    .slide-mid.visible {
+      transform: translateY(-50%);
+    }
+    .slide-mid .stat-num {
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.9);
+    }
+    .slide-mid .stat-label {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.8);
+      font-weight: 600;
+      margin-top: 4px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    /* CTA slide — bold bottom */
+    .slide-cta {
+      bottom: 115px;
+      text-align: center;
+    }
+    .slide-cta .cta-pill {
+      display: inline-block;
+      background: #ff0050;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-size: 0.88rem;
+      font-weight: 900;
+      box-shadow: 0 4px 20px rgba(255,0,80,0.6);
+      text-shadow: none;
+    }
+    .slide-cta .cta-sub {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 6px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+
+    /* Accent colour variants per reel */
+    .r1 .hook-text em, .r1 .stat-num { color: #ff0050; font-style: normal; }
+    .r2 .hook-text em, .r2 .stat-num { color: #fbbf24; font-style: normal; }
+    .r3 .hook-text em, .r3 .stat-num { color: #4ade80; font-style: normal; }
+    .r4 .hook-text em, .r4 .stat-num { color: #a78bfa; font-style: normal; }
+
+    /* Progress bar */
+    .progress-bar {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 2px;
+      background: #ff0050;
+      width: 0%;
+      z-index: 20;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex; gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 0.55rem 1rem;
+      border: none; border-radius: 0.5rem;
+      font-weight: 700; font-size: 0.8rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-play {
+      background: linear-gradient(135deg, #ff0050, #ff6b35);
+      color: #fff;
+    }
+    .btn-play:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,0,80,0.4); }
+    .btn-restart {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .btn-restart:hover { background: rgba(255,255,255,0.14); }
+    .btn-download {
+      background: rgba(74,222,128,0.12);
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.3);
+    }
+    .btn-download:hover { background: rgba(74,222,128,0.22); }
+    .btn-download:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Caption copy box */
+    .caption-box {
+      max-width: 270px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+    .caption-box strong { color: rgba(255,255,255,0.85); display: block; margin-bottom: 4px; font-size: 0.7rem; }
+
+    /* Recording status */
+    .rec-status {
+      position: absolute;
+      top: -3rem; left: 0; right: 0;
+      text-align: center;
+      font-size: 0.82rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .rec-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #ef4444;
+      animation: recPulse 0.8s infinite;
+    }
+    @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* Fullscreen overlay */
+    .fs-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 999; justify-content: center; align-items: center;
+    }
+    .fs-overlay.active { display: flex; }
+    .fs-inner {
+      position: relative;
+      width: min(480px, 90vw);
+      aspect-ratio: 9/16;
+    }
+    .fs-inner .fs-host {
+      width: 100%; height: 100%;
+      border-radius: 2rem;
+      overflow: hidden;
+    }
+    .fs-close {
+      position: absolute; top: -2.5rem; right: 0;
+      background: none; border: none;
+      color: #fff; font-size: 1.5rem;
+      cursor: pointer; opacity: 0.7;
+    }
+    .fs-close:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<h1>🎬 Convozo – TikTok Reels</h1>
+<p class="subtitle">4 × 30-second converting reels · Real Pexels video backgrounds · Click ▶ to preview</p>
+
+<div class="reels-grid">
+
+  <!-- ════════════════════════════════
+       REEL 1 – "You're leaving money on the table"
+       Hook: shocking statement
+       BG: woman counting money (portrait) – Pexels 6266922
+  ════════════════════════════════ -->
+  <div class="reel-card">
+    <div class="reel-num">Reel 01 / 04</div>
+    <div class="reel-title">💸 "You're leaving money on the table"</div>
+
+    <div class="phone-frame" id="pf1">
+      <div class="reel-scene r1" id="rs1">
+        <video class="bg-video" id="bv1" loop muted playsinline preload="metadata"
+          src="https://videos.pexels.com/video-files/6266922/6266922-uhd_1440_2560_25fps.mp4">
+        </video>
+        <div class="overlay"></div>
+
+        <!-- Pre-play thumbnail -->
+        <div class="thumb">
+          <div class="thumb-icon">💸</div>
+          <div class="thumb-label">POV: Your followers want to pay you but you haven't let them yet</div>
+          <div class="thumb-play">▶</div>
+        </div>
+
+        <!-- Slide 0–4s: Hook -->
+        <div class="slide slide-hook" id="rs1-s0">
+          <div class="hook-text">POV: your 50K followers<br>are trying to <em>pay you</em><br>right now 💸</div>
+          <div class="hook-sub">...but you haven't set it up yet</div>
+        </div>
+
+        <!-- Slide 5–12s: Problem agitation -->
+        <div class="slide slide-hook" id="rs1-s1" style="top:18px;">
+          <div class="hook-text" style="font-size:1.25rem;">Brands ghost you.<br>Sponsorships don't come.<br>But your fans? <em>They're ready.</em></div>
+        </div>
+
+        <!-- Slide 13–19s: Stat -->
+        <div class="slide slide-mid" id="rs1-s2">
+          <div class="stat-num">78%</div>
+          <div class="stat-label">goes straight to YOUR bank<br>every time a fan messages you</div>
+        </div>
+
+        <!-- Slide 20–26s: How -->
+        <div class="slide slide-hook" id="rs1-s3" style="top:18px;">
+          <div class="hook-text" style="font-size:1.1rem;">With Convozo, fans pay to<br>📩 send you a DM<br>📞 book a 1-on-1 call<br>💝 send you a tip</div>
+        </div>
+
+        <!-- Slide 27–30s: CTA -->
+        <div class="slide slide-cta" id="rs1-s4">
+          <div class="cta-pill">→ convozo.com – Free</div>
+          <div class="cta-sub">Link in bio 👆 Set up in 2 minutes</div>
+        </div>
+
+        <div class="progress-bar" id="pb1"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-play" onclick="playReel(1)">▶ Preview</button>
+      <button class="btn-restart" onclick="resetReel(1)">↺ Reset</button>
+      <button class="btn-download" id="dl1" onclick="downloadReel(1, 30)">⬇ Download</button>
+    </div>
+    <div class="caption-box">
+      <strong>📋 TikTok caption to copy:</strong>
+      Your followers want to pay you. You just haven't let them yet 💸 Set up your Convozo page for free → link in bio<br>
+      #creatortips #sidehustle #monetizeyouraudience #tiktokcreator #passiveincome #convozo
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       REEL 2 – "How creators make $500/week"
+       Hook: curiosity + number
+       BG: man recording himself vlog – Pexels 4994156
+  ════════════════════════════════ -->
+  <div class="reel-card">
+    <div class="reel-num">Reel 02 / 04</div>
+    <div class="reel-title">💰 "How creators make $500/week extra"</div>
+
+    <div class="phone-frame" id="pf2">
+      <div class="reel-scene r2" id="rs2">
+        <video class="bg-video" id="bv2" loop muted playsinline preload="metadata"
+          src="https://videos.pexels.com/video-files/4994156/4994156-uhd_1440_2560_25fps.mp4">
+        </video>
+        <div class="overlay"></div>
+
+        <div class="thumb">
+          <div class="thumb-icon">💰</div>
+          <div class="thumb-label">How creators with 10K followers are making an extra $500/week</div>
+          <div class="thumb-play">▶</div>
+        </div>
+
+        <!-- Hook -->
+        <div class="slide slide-hook" id="rs2-s0">
+          <div class="hook-text">Creators with <em>10K followers</em><br>are making an extra<br>$500/week. Here's how 👇</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="slide slide-hook" id="rs2-s1" style="top:18px;">
+          <div class="hook-text" style="font-size:1.1rem;">Step 1 ✅<br>Create your free profile on<br><em>Convozo</em><br><span style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.75)">Takes 2 minutes</span></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="slide slide-hook" id="rs2-s2" style="top:18px;">
+          <div class="hook-text" style="font-size:1.1rem;">Step 2 ✅<br>Set your price for<br>paid DMs &amp; video calls<br><em>You choose the rate</em></div>
+        </div>
+
+        <!-- Stat -->
+        <div class="slide slide-mid" id="rs2-s3">
+          <div class="stat-num" style="font-size:2.2rem;">$0 upfront</div>
+          <div class="stat-label">No monthly fee · No setup fee<br>Convozo only earns when you do</div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="slide slide-hook" id="rs2-s4" style="top:18px;">
+          <div class="hook-text" style="font-size:1.1rem;">Step 3 ✅<br>Put your Convozo link<br>in your TikTok bio<br><em>Watch the requests roll in</em> 📬</div>
+        </div>
+
+        <!-- CTA -->
+        <div class="slide slide-cta" id="rs2-s5">
+          <div class="cta-pill">Start free → convozo.com</div>
+          <div class="cta-sub">Link in bio 👆 No card needed</div>
+        </div>
+
+        <div class="progress-bar" id="pb2"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-play" onclick="playReel(2)">▶ Preview</button>
+      <button class="btn-restart" onclick="resetReel(2)">↺ Reset</button>
+      <button class="btn-download" id="dl2" onclick="downloadReel(2, 30)">⬇ Download</button>
+    </div>
+    <div class="caption-box">
+      <strong>📋 TikTok caption to copy:</strong>
+      The 3-step formula creators with 10K followers use to make an extra $500/week 💰 All you need is a free Convozo page → link in bio<br>
+      #howtomakemoney #creatortips #contentcreator #tiktokforbusiness #sidehustle #convozo
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       REEL 3 – "Your link in bio is dead weight"
+       Hook: pain point for creators
+       BG: woman recording herself vlog – Pexels 13929655
+  ════════════════════════════════ -->
+  <div class="reel-card">
+    <div class="reel-num">Reel 03 / 04</div>
+    <div class="reel-title">🔗 "Your link in bio is dead weight"</div>
+
+    <div class="phone-frame" id="pf3">
+      <div class="reel-scene r3" id="rs3">
+        <video class="bg-video" id="bv3" loop muted playsinline preload="metadata"
+          src="https://videos.pexels.com/video-files/13929655/13929655-uhd_1440_2560_24fps.mp4">
+        </video>
+        <div class="overlay"></div>
+
+        <div class="thumb">
+          <div class="thumb-icon">🔗</div>
+          <div class="thumb-label">Stop sending fans to a link page that makes you zero dollars</div>
+          <div class="thumb-play">▶</div>
+        </div>
+
+        <!-- Hook -->
+        <div class="slide slide-hook" id="rs3-s0">
+          <div class="hook-text">Stop sending your fans to<br>a link page that makes<br>you <em>zero dollars</em> 🛑</div>
+        </div>
+
+        <!-- Problem -->
+        <div class="slide slide-hook" id="rs3-s1" style="top:18px;">
+          <div class="hook-text" style="font-size:1.1rem;">Linktree? Dead weight.<br>Your fans click once,<br>leave, and you never<br>see a cent from them.</div>
+        </div>
+
+        <!-- Solution intro -->
+        <div class="slide slide-mid" id="rs3-s2">
+          <div class="stat-num" style="font-size:1.6rem;color:#4ade80;">Convozo</div>
+          <div class="stat-label" style="font-size:0.8rem;">is the link in bio that<br>actually <em style="color:#4ade80;">makes you money</em></div>
+        </div>
+
+        <!-- Features -->
+        <div class="slide slide-hook" id="rs3-s3" style="top:18px;">
+          <div class="hook-text" style="font-size:1rem; line-height:1.6;">✅ All your links<br>✅ Fans pay to DM you<br>✅ Book paid video calls<br>✅ Accept tips<br>✅ <em>One link. Everything.</em></div>
+        </div>
+
+        <!-- Social proof stat -->
+        <div class="slide slide-mid" id="rs3-s4">
+          <div class="stat-num">Free</div>
+          <div class="stat-label">to set up · forever<br>You keep <em style="color:#4ade80;">78%</em> of every payment</div>
+        </div>
+
+        <!-- CTA -->
+        <div class="slide slide-cta" id="rs3-s5">
+          <div class="cta-pill" style="background:#4ade80;color:#000;">→ convozo.com – Free</div>
+          <div class="cta-sub">Replace your dead link in bio today 👆</div>
+        </div>
+
+        <div class="progress-bar" id="pb3"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-play" onclick="playReel(3)">▶ Preview</button>
+      <button class="btn-restart" onclick="resetReel(3)">↺ Reset</button>
+      <button class="btn-download" id="dl3" onclick="downloadReel(3, 30)">⬇ Download</button>
+    </div>
+    <div class="caption-box">
+      <strong>📋 TikTok caption to copy:</strong>
+      Your link in bio is sending fans away without paying you a cent 🛑 Switch to Convozo — the link in bio that actually earns → link in bio<br>
+      #linkinbio #creatortips #contentcreator #makemoneyonline #convozo
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       REEL 4 – "What if your DMs could pay you"
+       Hook: curiosity + aspirational
+       BG: woman doing livestream / vlogging – Pexels 7677015
+  ════════════════════════════════ -->
+  <div class="reel-card">
+    <div class="reel-num">Reel 04 / 04</div>
+    <div class="reel-title">📩 "What if your DMs paid you?"</div>
+
+    <div class="phone-frame" id="pf4">
+      <div class="reel-scene r4" id="rs4">
+        <video class="bg-video" id="bv4" loop muted playsinline preload="metadata"
+          src="https://videos.pexels.com/video-files/7677015/7677015-hd_1080_1920_25fps.mp4">
+        </video>
+        <div class="overlay"></div>
+
+        <div class="thumb">
+          <div class="thumb-icon">📩</div>
+          <div class="thumb-label">What if every DM from a fan came with a payment attached?</div>
+          <div class="thumb-play">▶</div>
+        </div>
+
+        <!-- Hook -->
+        <div class="slide slide-hook" id="rs4-s0">
+          <div class="hook-text">What if every DM<br>from a fan came with<br>a <em>payment attached?</em> 📩</div>
+        </div>
+
+        <!-- Reality check -->
+        <div class="slide slide-hook" id="rs4-s1" style="top:18px;">
+          <div class="hook-text" style="font-size:1.1rem;">"Hey can I pick your brain?"<br>"Can you review my page?"<br><br><em>Sure. But now you pay first.</em> 😎</div>
+        </div>
+
+        <!-- Product intro -->
+        <div class="slide slide-mid" id="rs4-s2">
+          <div class="stat-num" style="font-size:1.6rem;color:#a78bfa;">Convozo</div>
+          <div class="stat-label">lets fans pay to send you<br>a message or book a call<br><em style="color:#a78bfa;">on your terms, your price</em></div>
+        </div>
+
+        <!-- The math -->
+        <div class="slide slide-hook" id="rs4-s3" style="top:18px;">
+          <div class="hook-text" style="font-size:1rem; line-height:1.6;">Even at $10/message:<br>10 fans/week = <em>$78 in your pocket</em><br>50 fans/week = <em>$390</em><br>100 fans/week = <em>$780</em> 🤯</div>
+        </div>
+
+        <!-- Credibility -->
+        <div class="slide slide-mid" id="rs4-s4">
+          <div class="stat-num" style="font-size:1.9rem;">2 min</div>
+          <div class="stat-label">to set up your page<br>Free forever · No card needed</div>
+        </div>
+
+        <!-- CTA -->
+        <div class="slide slide-cta" id="rs4-s5">
+          <div class="cta-pill" style="background:linear-gradient(135deg,#a78bfa,#ec4899);">→ convozo.com</div>
+          <div class="cta-sub">Link in bio 👆 Start earning from your DMs</div>
+        </div>
+
+        <div class="progress-bar" id="pb4"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-play" onclick="playReel(4)">▶ Preview</button>
+      <button class="btn-restart" onclick="resetReel(4)">↺ Reset</button>
+      <button class="btn-download" id="dl4" onclick="downloadReel(4, 30)">⬇ Download</button>
+    </div>
+    <div class="caption-box">
+      <strong>📋 TikTok caption to copy:</strong>
+      POV: you start charging for your time and your DMs become a revenue stream 📩💰 Set up free on Convozo → link in bio<br>
+      #paidDMs #creatortips #contentcreator #makemoney #sidehustle #convozo
+    </div>
+  </div>
+
+</div><!-- /reels-grid -->
+
+<!-- Fullscreen overlay for recording -->
+<div class="fs-overlay" id="fsOverlay">
+  <div class="fs-inner" id="fsInner">
+    <button class="fs-close" onclick="closeFS()">✕</button>
+    <div class="fs-host" id="fsHost"></div>
+  </div>
+</div>
+
+<script>
+  // ── Reel slide timings (seconds) ──────────────────────────────────────
+  // Each reel's slides: [startSec, endSec]
+  const TIMINGS = {
+    1: [[0,4],[5,12],[13,19],[20,26],[27,30]],
+    2: [[0,4],[5,10],[11,16],[17,21],[22,26],[27,30]],
+    3: [[0,4],[5,10],[11,16],[17,22],[23,26],[27,30]],
+    4: [[0,4],[5,10],[11,16],[17,22],[23,26],[27,30]],
+  };
+
+  const timers  = {};   // reel id → array of setTimeouts
+  const rafIds  = {};   // reel id → requestAnimationFrame id
+  const starts  = {};   // reel id → performance.now() at play start
+
+  function getSlides(n) {
+    const rs = document.getElementById('rs' + n);
+    return rs ? rs.querySelectorAll('.slide') : [];
+  }
+
+  function hideAllSlides(n) {
+    getSlides(n).forEach(s => s.classList.remove('visible'));
+  }
+
+  function clearTimers(n) {
+    (timers[n] || []).forEach(t => clearTimeout(t));
+    timers[n] = [];
+    if (rafIds[n]) { cancelAnimationFrame(rafIds[n]); rafIds[n] = null; }
+  }
+
+  function animateProgress(n, durationMs) {
+    const bar = document.getElementById('pb' + n);
+    if (!bar) return;
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    void bar.offsetWidth;
+    bar.style.transition = `width ${durationMs}ms linear`;
+    bar.style.width = '100%';
+  }
+
+  function playReel(n) {
+    clearTimers(n);
+    hideAllSlides(n);
+
+    const scene = document.getElementById('rs' + n);
+    const video = document.getElementById('bv' + n);
+
+    // Reset video
+    video.currentTime = 0;
+    video.play().catch(() => {});
+    scene.classList.add('playing');
+
+    const timing = TIMINGS[n];
+    const slideEls = Array.from(getSlides(n));
+
+    // Schedule slide visibility
+    timing.forEach(([start, end], i) => {
+      const el = slideEls[i];
+      if (!el) return;
+
+      const showT = setTimeout(() => el.classList.add('visible'),    start * 1000);
+      const hideT = setTimeout(() => el.classList.remove('visible'), end   * 1000);
+      (timers[n] = timers[n] || []).push(showT, hideT);
+    });
+
+    animateProgress(n, 30000);
+  }
+
+  function resetReel(n) {
+    clearTimers(n);
+    hideAllSlides(n);
+
+    const scene = document.getElementById('rs' + n);
+    const video = document.getElementById('bv' + n);
+    const bar   = document.getElementById('pb' + n);
+
+    scene.classList.remove('playing');
+    video.pause();
+    video.currentTime = 0;
+    if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
+  }
+
+  // ── Fullscreen + tab-capture download ──────────────────────────────────
+  function playInFS(n) {
+    const original = document.getElementById('rs' + n);
+    const clone    = original.cloneNode(true);
+    // Detach timings from clone IDs to avoid conflict
+    clone.querySelectorAll('.slide').forEach(s => s.classList.remove('visible'));
+    clone.querySelectorAll('video').forEach(v => { v.currentTime = 0; v.muted = true; });
+    clone.style.width  = '100%';
+    clone.style.height = '100%';
+    clone.removeAttribute('id');
+
+    const host = document.getElementById('fsHost');
+    host.innerHTML = '';
+    host.appendChild(clone);
+
+    document.getElementById('fsOverlay').classList.add('active');
+
+    // Play the cloned reel
+    const vid = clone.querySelector('video');
+    vid.play().catch(() => {});
+    clone.classList.add('playing');
+
+    const timing  = TIMINGS[n];
+    const slideEls = Array.from(clone.querySelectorAll('.slide'));
+    timing.forEach(([start, end], i) => {
+      const el = slideEls[i];
+      if (!el) return;
+      setTimeout(() => el.classList.add('visible'),    start * 1000);
+      setTimeout(() => el.classList.remove('visible'), end   * 1000);
+    });
+
+    const bar = clone.querySelector('.progress-bar');
+    if (bar) {
+      bar.style.transition = 'none'; bar.style.width = '0%';
+      void bar.offsetWidth;
+      bar.style.transition = 'width 30000ms linear';
+      bar.style.width = '100%';
+    }
+  }
+
+  function closeFS() {
+    const host = document.getElementById('fsHost');
+    host.querySelectorAll('video').forEach(v => v.pause());
+    host.innerHTML = '';
+    document.getElementById('fsOverlay').classList.remove('active');
+    const st = document.getElementById('recStatus');
+    if (st) st.remove();
+  }
+
+  async function downloadReel(n, durationSec) {
+    const btn = document.getElementById('dl' + n);
+    if (btn.disabled) return;
+
+    // ── Step 1: Get display capture first (requires active user gesture) ──
+    // We capture the live tab so CSS animations + cross-origin video both work.
+    let displayStream;
+    try {
+      displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30, width: { ideal: 3840 }, height: { ideal: 2160 } },
+        audio: false,
+        preferCurrentTab: true,
+      });
+    } catch { return; } // user cancelled
+
+    btn.disabled = true;
+    btn.textContent = '⏺ Recording…';
+
+    // ── Step 2: Show the reel fullscreen so it fills the overlay ──
+    playInFS(n);
+    await new Promise(r => setTimeout(r, 400)); // let overlay paint
+
+    // ── Step 3: Find where the reel sits on screen ──
+    const hostEl = document.getElementById('fsHost');
+    const rect   = hostEl.getBoundingClientRect();
+    const dpr    = window.devicePixelRatio || 1;
+
+    // ── Step 4: Pipe display stream into a hidden <video> ──
+    const displayVideo = document.createElement('video');
+    displayVideo.srcObject = displayStream;
+    displayVideo.muted = true;
+    displayVideo.playsInline = true;
+    await displayVideo.play();
+
+    // ── Step 5: Create 1080×1920 output canvas ──
+    const W = 1080, H = 1920;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Crop-and-scale the reel area from the display capture every frame
+    let rafId;
+    function drawFrame() {
+      ctx.drawImage(
+        displayVideo,
+        Math.round(rect.left  * dpr), Math.round(rect.top    * dpr),
+        Math.round(rect.width * dpr), Math.round(rect.height * dpr),
+        0, 0, W, H
+      );
+      rafId = requestAnimationFrame(drawFrame);
+    }
+
+    // ── Step 6: Record the canvas stream ──
+    const mimeType = [
+      'video/mp4;codecs=avc1', 'video/mp4',
+      'video/webm;codecs=vp9', 'video/webm'
+    ].find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
+
+    const canvasStream = canvas.captureStream(30);
+    const recorder     = new MediaRecorder(canvasStream, { mimeType, videoBitsPerSecond: 8_000_000 });
+    const chunks       = [];
+
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+      cancelAnimationFrame(rafId);
+      displayVideo.srcObject = null;
+      displayStream.getTracks().forEach(t => t.stop());
+      closeFS();
+
+      const ext  = mimeType.includes('mp4') ? 'mp4' : 'webm';
+      const blob = new Blob(chunks, { type: mimeType });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `convozo-tiktok-reel${n}.${ext}`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      btn.disabled = false;
+      btn.textContent = '⬇ Download';
+    };
+
+    rafId = requestAnimationFrame(drawFrame);
+    recorder.start(100);
+
+    // Stop after durationSec
+    setTimeout(() => {
+      if (recorder.state === 'recording') recorder.stop();
+    }, durationSec * 1000);
+  }
+
+  // Close fullscreen on backdrop click or Escape
+  document.getElementById('fsOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('fsOverlay')) closeFS();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFS(); });
+</script>
+</body>
+</html>
