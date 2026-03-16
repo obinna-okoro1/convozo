@@ -46,7 +46,7 @@ export class CreatorPageComponent implements OnInit {
   protected readonly themeColor = computed(() => this.creator()?.theme_color || '#7c3aed');
   protected readonly bgGradient = computed(() => {
     const color = this.themeColor();
-    return `linear-gradient(to bottom right, #0f172a, ${color}15, #0f172a)`;
+    return `linear-gradient(to bottom right, #f5f5f7, ${color}08, #f5f5f7)`;
   });
 
   constructor(

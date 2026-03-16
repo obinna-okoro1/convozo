@@ -6,26 +6,42 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // ─── Semantic Surface Tokens (dark-first) ───
+        // ─── Light Mode System Tokens ───
         surface: {
-          DEFAULT: '#0f0d1a',              // Page background
-          raised:  'rgba(255,255,255,0.05)', // Card / raised surface
-          overlay: 'rgba(255,255,255,0.10)', // Elevated overlays
-          border:  'rgba(255,255,255,0.10)', // Standard border
-          hover:   'rgba(255,255,255,0.15)', // Hover state
+          DEFAULT:  '#f5f5f7',               // Page background — Apple's exact light gray
+          raised:   '#ffffff',               // Cards, panels, elevated surfaces
+          overlay:  '#e8e8ed',               // Tertiary fill (inputs on page bg)
+          elevated: '#d1d1d6',               // Quaternary fill (active states)
+          border:   'rgba(0,0,0,0.09)',       // Subtle separator
+          hover:    'rgba(0,0,0,0.04)',       // Hover fill
         },
-        // Semantic Text Tokens
+        // Label tokens — dark text on light background
         content: {
-          DEFAULT:   '#ffffff',
-          secondary: '#94a3b8',             // slate-400
-          muted:     '#64748b',             // slate-500
-          inverse:   '#0f172a',             // For light surfaces
+          DEFAULT:   '#1d1d1f',              // Apple dark label
+          secondary: 'rgba(60,60,67,0.6)',   // Apple secondary label
+          tertiary:  'rgba(60,60,67,0.4)',   // Apple tertiary label
+          muted:     'rgba(60,60,67,0.28)',  // Apple quaternary label
+          disabled:  'rgba(60,60,67,0.18)',  // Disabled label
+          inverse:   '#ffffff',
         },
-        // Accent (pink gradient endpoint)
+        // Brand gradient anchors
         accent: {
-          400: '#f472b6',
-          500: '#ec4899',
-          600: '#db2777',
+          DEFAULT: '#7c3aed',
+          hover:   '#6d28d9',
+          muted:   'rgba(124,58,237,0.10)',
+          pink:    '#ec4899',
+          400: '#a78bfa',
+          500: '#7c3aed',
+          600: '#6d28d9',
+        },
+        // Separator — used as border-separator
+        separator: 'rgba(0,0,0,0.09)',
+        // System semantic colors (light-mode contrast ratios)
+        system: {
+          green: '#1a9e3f',
+          red:   '#d70015',
+          orange:'#b85c00',
+          blue:  '#0071e3',
         },
         // Premium neutral palette (kept for compatibility)
         neutral: {
@@ -96,21 +112,32 @@ module.exports = {
         },
       },
       fontFamily: {
+        // Apple system font stack — SF Pro on Apple devices
         sans: [
-          'Inter var',
           '-apple-system',
           'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          '"Helvetica Neue"',
           'Arial',
           'sans-serif',
         ],
         display: [
-          'Cal Sans',
-          'Inter var',
-          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Display"',
+          '"Helvetica Neue"',
+          'Arial',
           'sans-serif',
+        ],
+        mono: [
+          '"SF Mono"',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          'monospace',
         ],
       },
       fontSize: {

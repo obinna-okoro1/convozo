@@ -1,14 +1,14 @@
 <!-- Public Link Card -->
-<div class="bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-5 sm:p-6 mb-6 animate-fade-in shadow-lg shadow-purple-500/20">
+<div class="card p-5 sm:p-6 mb-6 border-accent/20">
   <div class="flex items-center gap-3 mb-4">
-    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/50 flex-shrink-0">
-      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+      <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
       </svg>
     </div>
     <div class="flex-1 min-w-0">
-      <h3 class="text-base sm:text-lg font-bold text-white">Your Public Page</h3>
-      <p class="text-xs sm:text-sm text-slate-400">Share this link to receive messages, calls & showcase your links</p>
+      <h3 class="text-base font-semibold text-content">Your Public Page</h3>
+      <p class="text-xs text-content-tertiary">Share this link to receive messages, calls &amp; showcase your links</p>
     </div>
   </div>
   <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -16,11 +16,11 @@
       type="text"
       [value]="state.publicUrl()"
       readonly
-      class="flex-1 bg-white/5 backdrop-blur-xl border border-white/20 text-white px-4 sm:px-6 py-3 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      class="input flex-1 font-mono text-sm"
     />
     <button
       (click)="state.copyPublicUrl()"
-      class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition-all duration-300 shadow-lg shadow-purple-500/50 flex items-center justify-center gap-2 whitespace-nowrap text-sm"
+      class="btn-primary btn-md flex items-center justify-center gap-2 whitespace-nowrap"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />

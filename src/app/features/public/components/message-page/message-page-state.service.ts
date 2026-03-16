@@ -258,6 +258,10 @@ export class MessagePageStateService {
       this.toast.error('Instagram handle is required for call bookings');
       return false;
     }
+    if (!data.scheduledAt) {
+      this.toast.error('Please select a time slot for your call');
+      return false;
+    }
     return true;
   }
 
@@ -319,6 +323,8 @@ export class MessagePageStateService {
         booker_instagram: formData.instagramHandle,
         message_content: formData.messageContent || '',
         price: this.callPriceCents(),
+        scheduled_at: formData.scheduledAt,
+        fan_timezone: formData.timezone,
       });
 
       if (error || !data?.url) {

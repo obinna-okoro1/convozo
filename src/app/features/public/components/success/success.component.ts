@@ -20,9 +20,9 @@ export class SuccessComponent implements OnInit {
   }));
 
   protected readonly callSteps = [
-    { n: 1, text: "You'll receive a confirmation email with your booking details." },
-    { n: 2, text: 'The creator will DM you on Instagram to confirm the exact date & time.' },
-    { n: 3, text: 'Join the private video call at the agreed time — enjoy!' },
+    { n: 1, text: "Check your email — a booking confirmation and receipt has been sent to you." },
+    { n: 2, text: 'The creator will DM you on Instagram to agree on an exact date and time.' },
+    { n: 3, text: "You'll receive a private call link by email. Join at the scheduled time — enjoy!" },
   ];
 
   protected readonly messageSteps = [

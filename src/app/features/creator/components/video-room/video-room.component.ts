@@ -54,60 +54,113 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
     <!-- ─── In-call overlays (timer + end button) ─── -->
     @if (videoCallService.callState() === 'in_progress') {
       <!-- Top bar: live indicator + countdown timer -->
-      <div class="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-[1rem] py-[0.75rem] bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-        <div class="flex items-center gap-[0.75rem]">
-          <div class="w-[0.5rem] h-[0.5rem] rounded-full bg-green-500 animate-pulse"></div>
-          <span class="text-white text-sm font-medium">Live</span>
-          <span class="text-slate-400 text-sm">•</span>
-          <span class="text-white text-sm">{{ otherParticipantName() }}</span>
+      <div class="fixed top-0 left-0 right-0 z-20 flex items-center justify-between
+                  px-4 pt-safe-top pb-3 pt-3
+                  bg-gradient-to-b from-black/75 via-black/40 to-transparent pointer-events-none">
+        <div class="flex items-center gap-2.5">
+          <!-- Pulsing live dot -->
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  style="background: #4ade80;"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2" style="background: #4ade80;"></span>
+          </span>
+          <span class="text-white text-sm font-medium tracking-wide">Live</span>
+          <span class="w-px h-3 opacity-30" style="background: white;"></span>
+          <span class="text-sm" style="color: rgba(255,255,255,0.65);">{{ otherParticipantName() }}</span>
         </div>
-        <div class="flex items-center gap-[0.5rem]"
-             [class.text-red-400]="videoCallService.remainingSeconds() < 60"
-             [class.text-white]="videoCallService.remainingSeconds() >= 60">
-          <svg class="w-[1.125rem] h-[1.125rem]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <!-- Countdown timer -->
+        <div class="flex items-center gap-1.5 tabular-nums transition-colors duration-300"
+             [style.color]="videoCallService.remainingSeconds() < 60 ? '#f87171' : 'rgba(255,255,255,0.9)'">
+          <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <span class="font-mono font-bold text-lg">{{ videoCallService.formattedTimeRemaining() }}</span>
+          <span class="font-mono font-bold text-base">{{ videoCallService.formattedTimeRemaining() }}</span>
         </div>
       </div>
 
-      <!-- Bottom bar: end call button (both creator and fan) -->
-      <div class="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-center py-[1.25rem] bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+      <!-- Bottom bar: end call button -->
+      <div class="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-center
+                  py-6 bg-gradient-to-t from-black/75 via-black/40 to-transparent pointer-events-none">
         <button
           (click)="endCall()"
-          class="pointer-events-auto flex items-center gap-[0.5rem] px-[1.5rem] py-[0.75rem] bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold transition-colors min-h-[2.75rem]">
-          <svg class="w-[1.25rem] h-[1.25rem]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />
+          class="pointer-events-auto flex items-center gap-2 px-7 py-3.5 rounded-full
+                 font-semibold text-sm text-white transition-all duration-200
+                 shadow-xl min-h-[2.75rem]"
+          style="background: #ef4444; box-shadow: 0 0.5rem 1.5rem rgba(239,68,68,0.35);"
+          onmouseover="this.style.background='#dc2626';"
+          onmouseout="this.style.background='#ef4444';">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24
+                     1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17
+                     0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
           </svg>
           {{ isCreator() ? 'End Call' : 'Leave Call' }}
         </button>
       </div>
 
-      <!-- Low time warning banner -->
+      <!-- Low-time warning pill — replaces the old animate-pulse banner -->
       @if (videoCallService.remainingSeconds() <= 60 && videoCallService.remainingSeconds() > 0) {
-        <div class="fixed top-[4rem] left-1/2 -translate-x-1/2 z-20 bg-red-600/90 text-white px-[1rem] py-[0.5rem] rounded-full text-sm font-medium animate-pulse">
-          ⏱ Less than 1 minute remaining
+        <div class="fixed top-14 left-1/2 -translate-x-1/2 z-30 animate-fade-in
+                    flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white"
+             style="background: rgba(239,68,68,0.85); backdrop-filter: blur(0.5rem);">
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Less than 1 minute remaining
         </div>
       }
     }
 
-    <!-- ─── Waiting overlay: first participant waiting for the other ─── -->
+    <!-- ─── Waiting overlay ─── -->
     @if (videoCallService.callState() === 'waiting') {
-      <div class="fixed inset-0 bg-slate-900/95 flex items-center justify-center z-40">
-        <div class="text-center max-w-md mx-auto px-[1.5rem]">
-          <div class="w-[5rem] h-[5rem] rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-[1.5rem] animate-pulse">
-            <svg class="w-[2.5rem] h-[2.5rem] text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
+      <div class="fixed inset-0 z-40 flex items-center justify-center animate-fade-in"
+           style="background: #0a0a0a;">
+        <div class="text-center max-w-xs mx-auto px-6">
+          <!-- Animated avatar ring with brand gradient -->
+          <div class="relative w-[5.5rem] h-[5.5rem] mx-auto mb-8">
+            <div class="absolute inset-0 rounded-full animate-ping"
+                 style="background: rgba(124,58,237,0.12);"></div>
+            <div class="absolute inset-[-0.25rem] rounded-full animate-spin"
+                 style="background: conic-gradient(from 0deg, transparent 60%, #7c3aed 80%, #ec4899 100%);
+                        animation-duration: 3s;"></div>
+            <div class="absolute inset-0 rounded-full flex items-center justify-center"
+                 style="background: #161616; border: 1px solid rgba(124,58,237,0.2);">
+              <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                   style="color: rgba(167,139,250,0.8);">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
           </div>
-          <h2 class="text-white text-2xl font-bold mb-[0.5rem]">Waiting for {{ otherParticipantName() }}</h2>
-          <p class="text-slate-400 mb-[0.5rem]">
-            {{ videoCallService.currentBooking()?.duration }} minute call
+
+          <h2 class="text-2xl font-bold mb-2" style="color: #fff;">
+            Waiting for {{ otherParticipantName() }}
+          </h2>
+          <p class="text-sm mb-1" style="color: rgba(255,255,255,0.45);">
+            {{ videoCallService.currentBooking()?.duration }}-minute call
           </p>
-          <p class="text-slate-500 text-sm mb-[1.5rem]">The call will start when both parties are connected</p>
+          <p class="text-xs mb-10" style="color: rgba(255,255,255,0.28);">
+            The call begins when both participants are connected
+          </p>
+
+          <!-- Animated dots -->
+          <div class="flex items-center justify-center gap-1.5 mb-10">
+            @for (i of [0, 1, 2]; track i) {
+              <div class="w-1.5 h-1.5 rounded-full animate-bounce"
+                   style="background: rgba(124,58,237,0.65);"
+                   [style.animation-delay]="(i * 160) + 'ms'"></div>
+            }
+          </div>
+
           <button
             (click)="leaveWaiting()"
-            class="px-[1.5rem] py-[0.75rem] bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white rounded-xl font-semibold transition-all duration-200 border border-white/10 hover:border-white/20 min-h-[2.75rem]">
+            class="text-sm font-medium transition-all duration-200 px-5 py-2.5 rounded-xl min-h-[2.75rem]"
+            style="color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05);
+                   border: 1px solid rgba(255,255,255,0.09);"
+            onmouseover="this.style.color='rgba(255,255,255,0.7)'; this.style.background='rgba(255,255,255,0.09)';"
+            onmouseout="this.style.color='rgba(255,255,255,0.4)'; this.style.background='rgba(255,255,255,0.05)';">
             Leave
           </button>
         </div>
@@ -116,28 +169,56 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
 
     <!-- ─── Loading overlay ─── -->
     @if (loading()) {
-      <div class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+      <div class="fixed inset-0 z-50 flex items-center justify-center" style="background: #0a0a0a;">
         <div class="text-center">
-          <div class="w-[3rem] h-[3rem] border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-[1rem]"></div>
-          <p class="text-white text-lg">Connecting to your call...</p>
+          <!-- Brand gradient spinner ring -->
+          <div class="relative w-16 h-16 mx-auto mb-6">
+            <div class="absolute inset-0 rounded-full animate-spin"
+                 style="background: conic-gradient(from 0deg, transparent 0%, #7c3aed 35%, #ec4899 100%);
+                        mask: radial-gradient(farthest-side, transparent 62%, black 63%);
+                        -webkit-mask: radial-gradient(farthest-side, transparent 62%, black 63%);
+                        animation-duration: 1.1s;"></div>
+            <div class="absolute inset-[0.25rem] rounded-full flex items-center justify-center"
+                 style="background: #0a0a0a;">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                   style="color: rgba(167,139,250,0.7);">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-base font-medium" style="color: rgba(255,255,255,0.65);">
+            Connecting to your call…
+          </p>
+          <p class="text-xs mt-1.5" style="color: rgba(255,255,255,0.3);">
+            This may take a moment
+          </p>
         </div>
       </div>
     }
 
     <!-- ─── Error overlay ─── -->
     @if (videoCallService.callState() === 'error') {
-      <div class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
-        <div class="text-center max-w-md mx-auto px-[1.5rem]">
-          <div class="w-[4rem] h-[4rem] rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-[1.5rem]">
-            <svg class="w-[2rem] h-[2rem] text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      <div class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
+           style="background: #0a0a0a;">
+        <div class="text-center max-w-sm mx-auto px-6 w-full">
+          <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+               style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.18);">
+            <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                 style="color: #f87171;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4
+                       c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
           </div>
-          <h2 class="text-white text-xl font-bold mb-[0.5rem]">Unable to join call</h2>
-          <p class="text-slate-400 mb-[1.5rem]">{{ videoCallService.errorMessage() }}</p>
+          <h2 class="text-xl font-bold mb-2" style="color: #fff;">Connection Failed</h2>
+          <p class="text-sm mb-8 leading-relaxed" style="color: rgba(255,255,255,0.45);">
+            {{ videoCallService.errorMessage() }}
+          </p>
           <button
             (click)="goBack()"
-            class="px-[1.5rem] py-[0.75rem] bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors">
+            class="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200"
+            style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">
             Go Back
           </button>
         </div>
@@ -146,41 +227,72 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
 
     <!-- ─── Ending overlay ─── -->
     @if (videoCallService.callState() === 'ending') {
-      <div class="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50">
+      <div class="fixed inset-0 z-50 flex items-center justify-center"
+           style="background: rgba(10,10,10,0.92); backdrop-filter: blur(0.25rem);">
         <div class="text-center">
-          <div class="w-[3rem] h-[3rem] border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-[1rem]"></div>
-          <p class="text-white text-lg">Ending call...</p>
+          <div class="relative w-14 h-14 mx-auto mb-5">
+            <div class="absolute inset-0 rounded-full animate-spin"
+                 style="background: conic-gradient(from 0deg, transparent 0%, #7c3aed 35%, #ec4899 100%);
+                        mask: radial-gradient(farthest-side, transparent 62%, black 63%);
+                        -webkit-mask: radial-gradient(farthest-side, transparent 62%, black 63%);"></div>
+          </div>
+          <p class="font-medium" style="color: rgba(255,255,255,0.6);">Wrapping up…</p>
         </div>
       </div>
     }
 
-    <!-- ─── Completed summary overlay ─── -->
+    <!-- ─── Completed overlay ─── -->
     @if (videoCallService.callState() === 'completed') {
-      <div class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
-        <div class="text-center max-w-md mx-auto px-[1.5rem]">
-          <div class="w-[5rem] h-[5rem] rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-[1.5rem]">
-            <svg class="w-[2.5rem] h-[2.5rem] text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      <div class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
+           style="background: #0a0a0a;">
+        <div class="text-center max-w-sm mx-auto px-6 w-full">
+          <!-- Checkmark circle -->
+          <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-7"
+               style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+            <svg class="w-11 h-11" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                 style="color: #4ade80;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
           </div>
-          <h2 class="text-white text-2xl font-bold mb-[0.5rem]">Call Complete! 🎉</h2>
+
+          <h2 class="text-2xl font-bold mb-1.5" style="color: #fff;">Call Completed</h2>
+          <p class="text-sm mb-8" style="color: rgba(255,255,255,0.4);">
+            Thanks for the great conversation
+          </p>
 
           @if (completionResult()) {
-            <div class="bg-slate-800 rounded-xl p-[1.25rem] mb-[1.5rem] text-left">
-              <div class="flex justify-between text-sm mb-[0.5rem]">
-                <span class="text-slate-400">Duration</span>
-                <span class="text-white font-medium">{{ formatDuration(completionResult()!.actual_duration_seconds) }}</span>
+            <div class="rounded-2xl p-5 mb-7 text-left space-y-3.5"
+                 style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);">
+              <div class="flex justify-between items-center text-sm">
+                <span style="color: rgba(255,255,255,0.45);">Duration</span>
+                <span class="font-semibold" style="color: #fff;">
+                  {{ formatDuration(completionResult()!.actual_duration_seconds) }}
+                </span>
               </div>
-              <div class="flex justify-between text-sm mb-[0.5rem]">
-                <span class="text-slate-400">Booked</span>
-                <span class="text-white font-medium">{{ formatDuration(completionResult()!.booked_duration_seconds) }}</span>
+              <div class="h-px" style="background: rgba(255,255,255,0.06);"></div>
+              <div class="flex justify-between items-center text-sm">
+                <span style="color: rgba(255,255,255,0.45);">Booked</span>
+                <span class="font-semibold" style="color: #fff;">
+                  {{ formatDuration(completionResult()!.booked_duration_seconds) }}
+                </span>
               </div>
               @if (isCreator()) {
-                <hr class="border-slate-700 my-[0.75rem]" />
-                <div class="flex justify-between text-sm">
-                  <span class="text-slate-400">Payout</span>
-                  <span [class]="completionResult()!.payout_released ? 'text-green-400 font-medium' : 'text-yellow-400 font-medium'">
-                    {{ completionResult()!.payout_released ? '✅ Released' : '⏳ Pending review' }}
+                <div class="h-px" style="background: rgba(255,255,255,0.06);"></div>
+                <div class="flex justify-between items-center text-sm">
+                  <span style="color: rgba(255,255,255,0.45);">Payout</span>
+                  <span class="font-semibold flex items-center gap-1.5"
+                        [style.color]="completionResult()!.payout_released ? '#4ade80' : '#fbbf24'">
+                    @if (completionResult()!.payout_released) {
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                      Released
+                    } @else {
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                      </svg>
+                      Pending review
+                    }
                   </span>
                 </div>
               }
@@ -189,7 +301,8 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
 
           <button
             (click)="goBack()"
-            class="px-[1.5rem] py-[0.75rem] bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors">
+            class="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200"
+            style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">
             {{ isCreator() ? 'Back to Dashboard' : 'Done' }}
           </button>
         </div>

@@ -1,87 +1,73 @@
-<div class="min-h-screen relative overflow-hidden" style="background:#060412">
-  <!-- Ambient glows -->
-  <div class="fixed inset-0 pointer-events-none">
-    <div class="absolute top-0 right-0 w-[40rem] h-[30rem] rounded-full blur-3xl opacity-20" style="background:radial-gradient(ellipse,#7c3aed 0%,transparent 70%)"></div>
-    <div class="absolute bottom-1/3 left-1/4 w-[35rem] h-[35rem] rounded-full blur-3xl opacity-15" style="background:radial-gradient(ellipse,#ec4899 0%,transparent 70%)"></div>
+<div class="min-h-screen bg-surface relative overflow-hidden">
+
+  <!-- Ambient blobs for glass depth -->
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div style="position:absolute;top:-10rem;right:-8rem;width:40rem;height:40rem;background:radial-gradient(ellipse at 100% 0%,rgba(124,58,237,0.1) 0%,transparent 65%)"></div>
+    <div style="position:absolute;bottom:10%;left:-8rem;width:34rem;height:34rem;background:radial-gradient(ellipse at 0% 50%,rgba(236,72,153,0.08) 0%,transparent 65%)"></div>
   </div>
 
   @if (state.loading()) {
-    <div class="flex items-center justify-center min-h-screen relative z-10">
+    <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
-        <div class="relative mb-6">
-          <div class="absolute inset-0 rounded-full scale-150 border border-purple-400/20 animate-ripple-out"></div>
-          <div class="relative w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl" style="box-shadow:0 0 3rem rgba(124,58,237,0.4)">
-            <svg class="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        </div>
-        <p class="text-slate-400 text-lg font-medium">Loading settings...</p>
+        <div class="w-10 h-10 rounded-full border-2 border-surface-border border-t-accent animate-spin mx-auto mb-4"></div>
+        <p class="text-content-secondary text-sm">Loading settings...</p>
       </div>
     </div>
   } @else {
-    <!-- Header -->
-    <header class="sticky top-0 z-20 py-4 sm:py-6 px-3 sm:px-4 border-b" style="background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.05);backdrop-filter:blur(1rem)">
-      <div class="max-w-7xl mx-auto">
-        <div class="flex items-center gap-4">
-          <button (click)="state.goToDashboard()" class="flex items-center justify-center w-12 h-12 rounded-2xl border transition-all duration-300 hover:scale-105 active:scale-95 group" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1)">
-            <svg class="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-20 nav-bar">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="h-14 flex items-center gap-3">
+          <button
+            (click)="state.goToDashboard()"
+            class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-raised text-content-secondary hover:text-content hover:bg-surface-overlay transition-colors duration-150"
+            aria-label="Back to dashboard"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-black text-white">Settings</h1>
-            <p class="text-xs sm:text-sm text-slate-500">Manage your profile and preferences</p>
-          </div>
+          <h1 class="text-[0.9375rem] font-semibold text-content">Settings</h1>
         </div>
       </div>
     </header>
 
-    <!-- Success Message -->
+    <!-- Feedback -->
     @if (state.success()) {
-      <div class="relative z-10 px-3 sm:px-4 py-4">
+      <div class="px-4 sm:px-6 pt-4">
         <div class="max-w-7xl mx-auto">
-          <div class="rounded-2xl p-5 border animate-scale-pop flex items-start gap-4" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.25)">
-            <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,#10b981,#14b8a6);box-shadow:0 0 1.5rem rgba(16,185,129,0.4)">
-              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-slate-200 text-sm sm:text-base font-medium">✨ Settings saved successfully!</p>
-            </div>
+          <div class="alert-success animate-slide-down">
+            <svg class="w-4 h-4 text-[#1a9e3f] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <p class="text-sm text-content">Changes saved</p>
           </div>
         </div>
       </div>
     }
 
-    <!-- Error Message -->
     @if (state.error()) {
-      <div class="relative z-10 px-3 sm:px-4 py-4">
+      <div class="px-4 sm:px-6 pt-4">
         <div class="max-w-7xl mx-auto">
-          <div class="rounded-2xl p-5 border animate-scale-pop flex items-start gap-4" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.25)">
-            <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,#ef4444,#f43f5e);box-shadow:0 0 1.5rem rgba(239,68,68,0.4)">
-              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-slate-200 text-sm sm:text-base font-medium">⚠️ {{ state.error() }}</p>
-            </div>
+          <div class="alert-error animate-slide-down">
+            <svg class="w-4 h-4 text-[#d70015] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <p class="text-sm text-[#d70015]">{{ state.error() }}</p>
           </div>
         </div>
       </div>
     }
 
     <!-- Tabs -->
-    <app-settings-tabs />
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <app-settings-tabs />
+    </div>
 
     <!-- Routed Content -->
-    <div class="relative z-10 px-3 sm:px-4 py-6 sm:py-10">
-      <div class="max-w-7xl mx-auto">
-        <router-outlet />
-      </div>
-    </div>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-16">
+      <router-outlet />
+    </main>
   }
 </div>

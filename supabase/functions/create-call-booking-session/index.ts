@@ -15,6 +15,10 @@ interface CallBookingPayload {
   booker_instagram: string;
   message_content: string;
   price: number;
+  /** ISO 8601 UTC datetime of the fan's chosen time slot */
+  scheduled_at: string;
+  /** IANA timezone string from fan's browser (e.g. "America/New_York") */
+  fan_timezone: string;
 }
 
 Deno.serve(async (req) => {
@@ -27,13 +31,23 @@ Deno.serve(async (req) => {
     const payload: CallBookingPayload = await req.json();
 
     // Validate required fields
-    if (!payload.creator_slug || !payload.booker_name || !payload.booker_email || !payload.booker_instagram) {
+    if (!payload.creator_slug || !payload.booker_name || !payload.booker_email || !payload.booker_instagram || !payload.scheduled_at) {
       return jsonError('Missing required fields', 400, corsHeaders);
     }
 
     // Validate email format
     if (!EMAIL_RE.test(payload.booker_email)) {
       return jsonError('Invalid email address', 400, corsHeaders);
+    }
+
+    // Validate scheduled_at is a valid ISO datetime and not in the past
+    const scheduledDate = new Date(payload.scheduled_at);
+    if (isNaN(scheduledDate.getTime())) {
+      return jsonError('Invalid scheduled time', 400, corsHeaders);
+    }
+    // Allow 5-minute buffer for clock drift
+    if (scheduledDate.getTime() < Date.now() - 5 * 60 * 1000) {
+      return jsonError('Selected time slot is in the past', 400, corsHeaders);
     }
 
     // Validate message content length
@@ -111,6 +125,9 @@ Deno.serve(async (req) => {
         message_content: payload.message_content || '',
         duration: settings.call_duration.toString(),
         amount: serverPrice.toString(),
+        // Fan's chosen call time — stored as scheduled_at on booking creation
+        scheduled_at: payload.scheduled_at,
+        fan_timezone: payload.fan_timezone || 'UTC',
       },
       payment_intent_data: {
         application_fee_amount: platformFee,
