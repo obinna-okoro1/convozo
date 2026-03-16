@@ -36,6 +36,7 @@ export class SettingsStateService {
   readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   readonly bio = signal('');
   readonly profileImageUrl = signal('');
+  readonly bannerImageUrl = signal('');
   readonly phoneNumber = signal('');
   readonly instagramUsername = signal('');
 
@@ -60,6 +61,7 @@ export class SettingsStateService {
     slug: '',
     bio: '',
     profileImageUrl: '',
+    bannerImageUrl: '',
     phoneNumber: '',
     instagramUsername: '',
   });
@@ -84,6 +86,7 @@ export class SettingsStateService {
       this.slug() !== o.slug ||
       this.bio() !== o.bio ||
       this.profileImageUrl() !== o.profileImageUrl ||
+      this.bannerImageUrl() !== o.bannerImageUrl ||
       this.phoneNumber() !== o.phoneNumber ||
       this.instagramUsername() !== o.instagramUsername
     );
@@ -207,6 +210,7 @@ export class SettingsStateService {
       bio: this.bio(),
       phoneNumber: this.phoneNumber(),
       profileImageUrl: this.profileImageUrl() || undefined,
+      bannerImageUrl: this.bannerImageUrl() || undefined,
       instagramUsername: this.instagramUsername() || undefined,
     });
 
@@ -219,6 +223,7 @@ export class SettingsStateService {
         slug: this.slug(),
         bio: this.bio(),
         profileImageUrl: this.profileImageUrl(),
+        bannerImageUrl: this.bannerImageUrl(),
         phoneNumber: this.phoneNumber(),
         instagramUsername: this.instagramUsername(),
       });
@@ -374,6 +379,7 @@ export class SettingsStateService {
       this.originalSlug = creatorData.slug;
       this.bio.set(creatorData.bio || '');
       this.profileImageUrl.set(creatorData.profile_image_url || '');
+      this.bannerImageUrl.set(creatorData.banner_image_url || '');
       this.phoneNumber.set(creatorData.phone_number || '');
       this.instagramUsername.set(creatorData.instagram_username || '');
       this.originalProfile.set({
@@ -381,6 +387,7 @@ export class SettingsStateService {
         slug: creatorData.slug,
         bio: creatorData.bio || '',
         profileImageUrl: creatorData.profile_image_url || '',
+        bannerImageUrl: creatorData.banner_image_url || '',
         phoneNumber: creatorData.phone_number || '',
         instagramUsername: creatorData.instagram_username || '',
       });

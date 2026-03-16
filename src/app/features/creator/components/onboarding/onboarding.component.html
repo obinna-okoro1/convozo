@@ -1,31 +1,29 @@
-<div class="min-h-screen relative overflow-hidden">
-  <!-- Animated Background -->
-  <app-animated-background />
-
+<div class="min-h-screen bg-surface relative overflow-hidden">
   <div class="relative z-10 py-12 px-4">
     <div class="max-w-3xl mx-auto">
+
       <!-- Logo Header -->
       <div class="text-center mb-8 animate-fade-in">
         <div class="flex items-center justify-center gap-3 mb-4">
-          <svg class="w-14 h-14 shadow-lg shadow-purple-500/50 flex-shrink-0" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Convozo">
-            <defs><linearGradient id="cvz-g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
-            <rect width="40" height="40" rx="10" fill="url(#cvz-g)"/>
+          <svg class="w-14 h-14 flex-shrink-0" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Convozo">
+            <defs><linearGradient id="cvz-ob" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+            <rect width="40" height="40" rx="10" fill="url(#cvz-ob)"/>
             <circle cx="20" cy="20" r="2.5" fill="white"/>
-            <path class="cvz-arc-1" d="M25 13 A8 8 0 1 0 25 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-            <path class="cvz-arc-2" d="M27 10 A12 12 0 1 0 27 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-opacity="0.6"/>
-            <path class="cvz-arc-3" d="M29 7 A16 16 0 1 0 29 33" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.3"/>
+            <path d="M25 13 A8 8 0 1 0 25 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M27 10 A12 12 0 1 0 27 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-opacity="0.6"/>
+            <path d="M29 7 A16 16 0 1 0 29 33" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.3"/>
           </svg>
-          <span class="text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">Convozo</span>
+          <span class="text-4xl font-bold text-content">Convozo</span>
         </div>
-        <p class="text-slate-400 text-lg">Set up your creator profile</p>
+        <p class="text-content-secondary text-lg">Set up your creator profile</p>
       </div>
 
       <!-- Progress Indicator -->
       <div class="mb-8 animate-fade-in">
         <!-- Mobile: step counter + progress bar -->
         <div class="flex items-center justify-between mb-3 sm:hidden px-1">
-          <span class="text-xs font-semibold text-white/60 uppercase tracking-wider">Step {{ state.currentStep() }} of 4</span>
-          <span class="text-xs font-bold text-white">
+          <span class="text-xs font-semibold text-content-muted uppercase tracking-wider">Step {{ state.currentStep() }} of 4</span>
+          <span class="text-xs font-bold text-content">
             @switch (state.currentStep()) {
               @case (1) { Profile }
               @case (2) { Payments }
@@ -38,7 +36,7 @@
         <div class="flex gap-1.5 sm:hidden mb-6">
           @for (step of [1, 2, 3, 4]; track step) {
             <div class="flex-1 h-1.5 rounded-full transition-all duration-500"
-                 [class]="state.currentStep() > step ? 'bg-gradient-to-r from-purple-600 to-pink-600' : state.currentStep() === step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-white/10'">
+                 [class]="state.currentStep() > step ? 'bg-accent' : state.currentStep() === step ? 'bg-accent' : 'bg-surface-overlay'">
             </div>
           }
         </div>
@@ -46,156 +44,145 @@
         <!-- Desktop: full step indicator -->
         <div class="hidden sm:flex items-center justify-center gap-2">
           <div class="flex items-center">
-            <div [class]="state.currentStep() >= 1 ? 'w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500' : 'w-9 h-9 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
+            <div [class]="state.currentStep() >= 1
+              ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
+              : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
               @if (state.currentStep() > 1) {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                </svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
               } @else { 1 }
             </div>
-            <span [class]="state.currentStep() >= 1 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Profile</span>
+            <span [class]="state.currentStep() >= 1 ? 'ml-2 font-semibold text-sm text-content' : 'ml-2 font-semibold text-sm text-content-muted'">Profile</span>
           </div>
-          <div [class]="state.currentStep() >= 2 ? 'w-10 h-0.5 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-10 h-0.5 rounded-full transition-all duration-500 bg-white/10'"></div>
+          <div [class]="state.currentStep() >= 2 ? 'w-10 h-0.5 rounded-full transition-all duration-500 bg-accent' : 'w-10 h-0.5 rounded-full transition-all duration-500 bg-surface-overlay'"></div>
           <div class="flex items-center">
-            <div [class]="state.currentStep() >= 2 ? 'w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500' : 'w-9 h-9 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
+            <div [class]="state.currentStep() >= 2
+              ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
+              : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
               @if (state.currentStep() > 2) {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                </svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
               } @else { 2 }
             </div>
-            <span [class]="state.currentStep() >= 2 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Payments</span>
+            <span [class]="state.currentStep() >= 2 ? 'ml-2 font-semibold text-sm text-content' : 'ml-2 font-semibold text-sm text-content-muted'">Payments</span>
           </div>
-          <div [class]="state.currentStep() >= 3 ? 'w-10 h-0.5 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-10 h-0.5 rounded-full transition-all duration-500 bg-white/10'"></div>
+          <div [class]="state.currentStep() >= 3 ? 'w-10 h-0.5 rounded-full transition-all duration-500 bg-accent' : 'w-10 h-0.5 rounded-full transition-all duration-500 bg-surface-overlay'"></div>
           <div class="flex items-center">
-            <div [class]="state.currentStep() >= 3 ? 'w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500' : 'w-9 h-9 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
+            <div [class]="state.currentStep() >= 3
+              ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
+              : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
               @if (state.currentStep() > 3) {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                </svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
               } @else { 3 }
             </div>
-            <span [class]="state.currentStep() >= 3 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Monetization</span>
+            <span [class]="state.currentStep() >= 3 ? 'ml-2 font-semibold text-sm text-content' : 'ml-2 font-semibold text-sm text-content-muted'">Monetization</span>
           </div>
-          <div [class]="state.currentStep() >= 4 ? 'w-10 h-0.5 rounded-full transition-all duration-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'w-10 h-0.5 rounded-full transition-all duration-500 bg-white/10'"></div>
+          <div [class]="state.currentStep() >= 4 ? 'w-10 h-0.5 rounded-full transition-all duration-500 bg-accent' : 'w-10 h-0.5 rounded-full transition-all duration-500 bg-surface-overlay'"></div>
           <div class="flex items-center">
-            <div [class]="state.currentStep() >= 4 ? 'w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500' : 'w-9 h-9 bg-white/10 text-white/40 border border-white/10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
+            <div [class]="state.currentStep() >= 4
+              ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
+              : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'">
               4
             </div>
-            <span [class]="state.currentStep() >= 4 ? 'ml-2 font-semibold text-sm text-white' : 'ml-2 font-semibold text-sm text-white/40'">Review</span>
+            <span [class]="state.currentStep() >= 4 ? 'ml-2 font-semibold text-sm text-content' : 'ml-2 font-semibold text-sm text-content-muted'">Review</span>
           </div>
         </div>
       </div>
 
       <!-- Main Card -->
-      <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-xl animate-slide-up">
-        <!-- Step 1: Profile Setup -->
+      <div class="card p-6 animate-slide-up">
+
+        <!-- ── Step 1: Profile Setup ── -->
         @if (state.currentStep() === 1) {
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
-              <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Set up your profile</h2>
-                <p class="text-white/60 text-sm mt-1">Tell your fans who you are</p>
+                <h2 class="text-2xl font-bold text-content">Set up your profile</h2>
+                <p class="text-content-muted text-sm mt-1">Tell your fans who you are</p>
               </div>
             </div>
 
             @if (state.hasOAuthData()) {
-              <div class="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 backdrop-blur-2xl rounded-2xl">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/50">
-                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="font-bold text-white">Auto-filled from {{ state.oauthProvider() }}</p>
-                    <p class="text-emerald-300 text-sm">We imported your details — feel free to edit them</p>
-                  </div>
+              <div class="alert-success mb-6">
+                <svg class="w-5 h-5 text-[#1a9e3f] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                  <p class="font-semibold text-content">Auto-filled from {{ state.oauthProvider() }}</p>
+                  <p class="text-content-secondary text-sm">We imported your details — feel free to edit them</p>
                 </div>
               </div>
             }
-            
-            <div class="space-y-6">
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Display Name *</label>
-                <div class="relative group">
-                  <input
-                    type="text"
-                    [value]="state.displayName()"
-                    (input)="state.updateDisplayName(inputValue($event))"
-                    placeholder="Your Name"
-                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                    required
-                  />
-                </div>
+
+            <div class="space-y-5">
+              <!-- Display Name -->
+              <div>
+                <label class="form-label">Display Name <span class="text-[#d70015]">*</span></label>
+                <input
+                  type="text"
+                  [value]="state.displayName()"
+                  (input)="state.updateDisplayName(inputValue($event))"
+                  placeholder="Your Name"
+                  class="input"
+                  required
+                />
               </div>
 
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Your Convozo URL *</label>
+              <!-- URL / Slug -->
+              <div>
+                <label class="form-label">Your Convozo URL <span class="text-[#d70015]">*</span></label>
                 <div class="flex items-center gap-3">
-                  <span class="text-white/60 text-sm font-medium">convozo.com/</span>
-                  <div class="relative flex-1 group">
+                  <span class="text-content-muted text-sm font-medium">convozo.com/</span>
+                  <div class="relative flex-1">
                     <input
                       type="text"
                       [value]="state.slug()"
                       (input)="state.updateSlug(inputValue($event))"
                       placeholder="yourname"
-                      class="w-full px-5 py-4 bg-white/5 border rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                      [ngClass]="state.slugStatus() === 'available' ? 'border-green-500/60 focus:ring-green-500' : state.slugStatus() === 'taken' || state.slugStatus() === 'invalid' ? 'border-red-500/60 focus:ring-red-500' : 'border-white/10 focus:ring-purple-500'"
+                      class="input pr-10"
+                      [ngClass]="state.slugStatus() === 'available' ? '!border-[#1a9e3f]/40 !ring-[#1a9e3f]' : state.slugStatus() === 'taken' || state.slugStatus() === 'invalid' ? '!border-[#d70015]/40 !ring-[#d70015]' : ''"
                       required
                     />
-                    <!-- Status indicator inside input -->
                     <div class="absolute right-3 top-1/2 -translate-y-1/2">
                       @if (state.slugStatus() === 'checking') {
-                        <svg class="w-5 h-5 text-white/40 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
+                        <svg class="w-5 h-5 text-content-muted animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                       } @else if (state.slugStatus() === 'available') {
-                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
+                        <svg class="w-5 h-5 text-[#1a9e3f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                       } @else if (state.slugStatus() === 'taken') {
-                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                        <svg class="w-5 h-5 text-[#d70015]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                       } @else if (state.slugStatus() === 'invalid') {
-                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <svg class="w-5 h-5 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                       }
                     </div>
                   </div>
                 </div>
                 @if (state.slugStatus() === 'taken') {
-                  <p class="text-xs text-red-400 mt-1">This URL is already taken — try a different one</p>
+                  <p class="form-hint text-[#d70015]">This URL is already taken — try a different one</p>
                 } @else if (state.slugStatus() === 'invalid' && state.slug()) {
-                  <p class="text-xs text-amber-400 mt-1">Must be at least 2 characters: lowercase letters, numbers, and hyphens</p>
+                  <p class="form-hint text-[#b85c00]">Must be at least 2 characters: lowercase letters, numbers, and hyphens</p>
                 } @else if (state.slugStatus() === 'available') {
-                  <p class="text-xs text-green-400 mt-1">This URL is available!</p>
+                  <p class="form-hint text-[#1a9e3f]">This URL is available!</p>
                 } @else {
-                  <p class="text-xs text-white/50 mt-1">This will be your unique message page URL</p>
+                  <p class="form-hint">This will be your unique message page URL</p>
                 }
               </div>
 
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Bio</label>
-                <div class="relative group">
-                  <textarea
-                    [value]="state.bio()"
-                    (input)="state.bio.set(inputValue($event))"
-                    placeholder="Tell people about yourself..."
-                    rows="3"
-                    class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10 resize-none"
-                  ></textarea>
-                </div>
+              <!-- Bio -->
+              <div>
+                <label class="form-label">Bio</label>
+                <textarea
+                  [value]="state.bio()"
+                  (input)="state.bio.set(inputValue($event))"
+                  placeholder="Tell people about yourself..."
+                  rows="3"
+                  class="input resize-none"
+                ></textarea>
               </div>
 
+              <!-- Profile Photo -->
               <app-image-upload
                 [imageUrl]="state.profileImageUrl()"
                 [variant]="'compact'"
@@ -204,28 +191,26 @@
                 (uploadError)="onImageUploadError($event)"
               />
 
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Instagram Username (optional)</label>
+              <!-- Instagram -->
+              <div>
+                <label class="form-label">Instagram Username (optional)</label>
                 <div class="flex items-center gap-3">
-                  <span class="text-purple-400 text-xl font-bold">&#64;</span>
-                  <div class="relative flex-1 group">
-                    <input
-                      type="text"
-                      [value]="state.instagramUsername()"
-                      (input)="state.instagramUsername.set(inputValue($event))"
-                      placeholder="yourhandle"
-                      class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
-                    />
-                  </div>
+                  <span class="text-accent text-xl font-bold">&#64;</span>
+                  <input
+                    type="text"
+                    [value]="state.instagramUsername()"
+                    (input)="state.instagramUsername.set(inputValue($event))"
+                    placeholder="yourhandle"
+                    class="input flex-1"
+                  />
                 </div>
-                <p class="text-xs text-white/50 mt-2">Your Instagram handle to display your feed on your profile</p>
+                <p class="form-hint">Your Instagram handle to display your feed on your profile</p>
               </div>
 
               <!-- Phone Number -->
-              <div class="space-y-3">
-                <label class="block text-sm font-bold text-white">Phone Number *</label>
+              <div>
+                <label class="form-label">Phone Number <span class="text-[#d70015]">*</span></label>
                 <div class="flex flex-col sm:flex-row items-stretch gap-2">
-                  <!-- Country Code Dropdown -->
                   <div class="sm:min-w-[10rem]">
                     <app-searchable-select
                       [options]="state.countryCodeOptions"
@@ -234,22 +219,21 @@
                       placeholder="Country"
                     />
                   </div>
-                  <!-- Phone Number Input -->
-                  <div class="relative flex-1 group">
+                  <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                      <span class="text-white/60 text-base font-medium">{{ state.countryCodes[state.selectedCountryIndex()].code }}</span>
+                      <span class="text-content-muted text-base font-medium">{{ state.countryCodes[state.selectedCountryIndex()].code }}</span>
                     </div>
                     <input
                       type="tel"
                       [value]="state.phoneNumber()"
                       (input)="state.phoneNumber.set(inputValue($event))"
                       placeholder="Phone number"
-                      class="w-full pl-14 pr-5 py-4 bg-white/5 border border-white/10 rounded-xl text-base text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/10"
+                      class="input pl-14"
                       required
                     />
                   </div>
                 </div>
-                <p class="text-xs text-white/50 mt-2">Your phone number with country code — we auto-detected your region</p>
+                <p class="form-hint">Your phone number with country code — we auto-detected your region</p>
               </div>
             </div>
 
@@ -257,303 +241,254 @@
               <button
                 (click)="state.nextStep()"
                 [disabled]="!state.canProceedStep1()"
-                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
+                class="btn-primary btn-lg flex items-center gap-3"
               >
                 <span>Continue</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </button>
             </div>
           </div>
         }
 
-        <!-- Step 3: Monetization Preview (locked — activate in Settings after Stripe) -->
-        @if (state.currentStep() === 3) {
+        <!-- ── Step 2: Payments Info ── -->
+        @if (state.currentStep() === 2) {
           <div class="animate-fade-in">
-
             <div class="flex items-center gap-4 mb-8">
-              <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Monetization channels</h2>
-                <p class="text-white/60 text-sm mt-1">Here's what you can enable once your account is live</p>
+                <h2 class="text-2xl font-bold text-content">Getting paid</h2>
+                <p class="text-content-muted text-sm mt-1">Here's how payments work on Convozo</p>
               </div>
             </div>
 
             <!-- Info banner -->
-            <div class="mb-8 p-5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl flex items-start gap-4">
-              <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30 mt-0.5">
-                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
+            <div class="alert-info mb-8">
+              <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <div>
-                <p class="font-bold text-amber-300 text-sm mb-1">These channels are activated after setup</p>
-                <p class="text-amber-200/80 text-sm leading-relaxed">
-                  To turn on paid channels, first connect Stripe in <strong class="text-amber-200">Settings → Payments</strong>, then enable each channel in <strong class="text-amber-200">Settings → Monetization</strong>. You're just a few taps away after creating your profile.
-                </p>
+                <p class="font-semibold text-content mb-1">Set up payments after your profile is live</p>
+                <p class="text-content-secondary text-sm leading-relaxed">Once your account is created, go to <strong class="text-content">Settings → Payments</strong> to connect your Stripe account. This is what allows you to receive money from fans.</p>
               </div>
             </div>
 
-            <!-- Locked channel previews -->
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
-                <div>
-                  <h3 class="font-bold text-white">💬 Paid Messages</h3>
-                  <p class="text-sm text-white/50 mt-0.5">Allow fans to send you paid messages</p>
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator">
+                <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
-                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
-                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
+                <div>
+                  <p class="font-bold text-content">78% goes to you</p>
+                  <p class="text-sm text-content-secondary">Every payment a fan makes, you keep 78% — sent directly to your bank account via Stripe.</p>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
-                <div>
-                  <h3 class="font-bold text-white">📞 Video Call Bookings</h3>
-                  <p class="text-sm text-white/50 mt-0.5">Allow fans to book video calls with you</p>
+              <div class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator">
+                <div class="w-10 h-10 bg-[#1a9e3f]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-[#1a9e3f]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                 </div>
-                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
-                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
+                <div>
+                  <p class="font-bold text-content">Secure & trusted</p>
+                  <p class="text-sm text-content-secondary">Payments are powered by Stripe — the same platform used by millions of businesses worldwide.</p>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
+              <div class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator">
+                <div class="w-10 h-10 bg-[#b85c00]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
                 <div>
-                  <h3 class="font-bold text-white">🔄 Follow-Back Requests</h3>
-                  <p class="text-sm text-white/50 mt-0.5">Allow fans to pay for a follow-back</p>
-                </div>
-                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
-                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-2xl opacity-60 cursor-not-allowed select-none">
-                <div>
-                  <h3 class="font-bold text-white">❤️ Fan Support</h3>
-                  <p class="text-sm text-white/50 mt-0.5">Let fans tip you with any amount they choose</p>
-                </div>
-                <div class="w-14 h-7 bg-white/10 rounded-full relative flex-shrink-0">
-                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white/30 rounded-full"></div>
+                  <p class="font-bold text-content">Takes just a few minutes</p>
+                  <p class="text-sm text-content-secondary">Connecting Stripe is quick. You'll need your bank details and a form of ID to complete setup.</p>
                 </div>
               </div>
             </div>
 
             <div class="mt-8 flex justify-between">
-              <button (click)="state.prevStep()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                </svg>
+              <button (click)="state.prevStep()" class="btn-ghost btn-lg flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
                 Back
               </button>
-              <button
-                (click)="state.nextStep()"
-                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 flex items-center gap-3"
-              >
+              <button (click)="state.nextStep()" class="btn-primary btn-lg flex items-center gap-3">
                 <span>Continue</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </button>
             </div>
           </div>
         }
 
-        <!-- Step 4: Review and Complete -->
+        <!-- ── Step 3: Monetization Preview ── -->
+        @if (state.currentStep() === 3) {
+          <div class="animate-fade-in">
+            <div class="flex items-center gap-4 mb-8">
+              <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold text-content">Monetization channels</h2>
+                <p class="text-content-muted text-sm mt-1">Here's what you can enable once your account is live</p>
+              </div>
+            </div>
+
+            <!-- Info banner -->
+            <div class="alert-warning mb-8">
+              <svg class="w-5 h-5 text-[#b85c00] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+              <div>
+                <p class="font-semibold text-content mb-1">These channels are activated after setup</p>
+                <p class="text-content-secondary text-sm leading-relaxed">To turn on paid channels, first connect Stripe in <strong class="text-content">Settings → Payments</strong>, then enable each channel in <strong class="text-content">Settings → Monetization</strong>.</p>
+              </div>
+            </div>
+
+            <!-- Locked channel previews -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-5 bg-surface-raised border border-separator rounded-xl opacity-50 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-content">💬 Paid Messages</h3>
+                  <p class="text-sm text-content-muted mt-0.5">Allow fans to send you paid messages</p>
+                </div>
+                <div class="w-12 h-7 bg-surface-overlay rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-surface-elevated rounded-full"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between p-5 bg-surface-raised border border-separator rounded-xl opacity-50 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-content">📞 Video Call Bookings</h3>
+                  <p class="text-sm text-content-muted mt-0.5">Allow fans to book video calls with you</p>
+                </div>
+                <div class="w-12 h-7 bg-surface-overlay rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-surface-elevated rounded-full"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between p-5 bg-surface-raised border border-separator rounded-xl opacity-50 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-content">🔄 Follow-Back Requests</h3>
+                  <p class="text-sm text-content-muted mt-0.5">Allow fans to pay for a follow-back</p>
+                </div>
+                <div class="w-12 h-7 bg-surface-overlay rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-surface-elevated rounded-full"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between p-5 bg-surface-raised border border-separator rounded-xl opacity-50 cursor-not-allowed select-none">
+                <div>
+                  <h3 class="font-bold text-content">❤️ Fan Support</h3>
+                  <p class="text-sm text-content-muted mt-0.5">Let fans tip you with any amount they choose</p>
+                </div>
+                <div class="w-12 h-7 bg-surface-overlay rounded-full relative flex-shrink-0">
+                  <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-surface-elevated rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 flex justify-between">
+              <button (click)="state.prevStep()" class="btn-ghost btn-lg flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Back
+              </button>
+              <button (click)="state.nextStep()" class="btn-primary btn-lg flex items-center gap-3">
+                <span>Continue</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── Step 4: Review and Complete ── -->
         @if (state.currentStep() === 4) {
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
-              <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Review your profile</h2>
-                <p class="text-white/60 text-sm mt-1">Make sure everything looks good</p>
+                <h2 class="text-2xl font-bold text-content">Review your profile</h2>
+                <p class="text-content-muted text-sm mt-1">Make sure everything looks good</p>
               </div>
             </div>
-            
-            <div class="space-y-4 mb-8">
-              <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
-                <div class="text-sm text-white/60 mb-1">Display Name</div>
-                <div class="font-bold text-white text-lg">{{ state.displayName() }}</div>
+
+            <div class="space-y-3 mb-8">
+              <div class="p-4 bg-surface-raised border border-separator rounded-xl">
+                <div class="text-sm text-content-muted mb-1">Display Name</div>
+                <div class="font-bold text-content text-lg">{{ state.displayName() }}</div>
               </div>
 
-              <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
-                <div class="text-sm text-white/60 mb-1">Your URL</div>
-                <div class="font-bold text-white text-lg">convozo.com/{{ state.slug() }}</div>
+              <div class="p-4 bg-surface-raised border border-separator rounded-xl">
+                <div class="text-sm text-content-muted mb-1">Your URL</div>
+                <div class="font-bold text-content text-lg">convozo.com/{{ state.slug() }}</div>
               </div>
 
-              <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
-                <div class="text-sm text-white/60 mb-1">Phone Number</div>
-                <div class="font-bold text-white text-lg">{{ state.fullPhoneNumber() }}</div>
+              <div class="p-4 bg-surface-raised border border-separator rounded-xl">
+                <div class="text-sm text-content-muted mb-1">Phone Number</div>
+                <div class="font-bold text-content text-lg">{{ state.fullPhoneNumber() }}</div>
               </div>
 
               @if (state.bio()) {
-                <div class="p-5 bg-white/5 border border-white/10 rounded-xl">
-                  <div class="text-sm text-white/60 mb-1">Bio</div>
-                  <div class="font-semibold text-white">{{ state.bio() }}</div>
+                <div class="p-4 bg-surface-raised border border-separator rounded-xl">
+                  <div class="text-sm text-content-muted mb-1">Bio</div>
+                  <div class="font-semibold text-content">{{ state.bio() }}</div>
                 </div>
               }
 
               <!-- Next steps notice -->
-              <div class="p-6 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-blue-500/20">
-                <div class="flex items-start gap-4">
-                  <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/50 mt-0.5">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="font-bold text-white mb-2">What happens next</p>
-                    <ul class="space-y-1.5 text-sm text-blue-200">
-                      <li class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
-                        Your profile goes live immediately at <strong>convozo.com/{{ state.slug() }}</strong>
-                      </li>
-                      <li class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
-                        Connect Stripe in <strong>Settings → Payments</strong> to start receiving money
-                      </li>
-                      <li class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
-                        Enable paid channels in <strong>Settings → Monetization</strong>
-                      </li>
-                    </ul>
-                  </div>
+              <div class="alert-info">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                  <p class="font-semibold text-content mb-2">What happens next</p>
+                  <ul class="space-y-1.5 text-sm text-content-secondary">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                      Your profile goes live immediately at <strong class="text-content">convozo.com/{{ state.slug() }}</strong>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                      Connect Stripe in <strong class="text-content">Settings → Payments</strong> to start receiving money
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                      Enable paid channels in <strong class="text-content">Settings → Monetization</strong>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
 
             @if (state.error()) {
-              <div class="mb-6 p-5 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-red-500/20 text-red-200 text-sm">
-                {{ state.error() }}
+              <div class="alert-error mb-6">
+                <svg class="w-5 h-5 text-[#d70015] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="text-content-secondary text-sm">{{ state.error() }}</span>
               </div>
             }
 
             <div class="mt-8 flex justify-between">
-              <button (click)="state.prevStep()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2" [disabled]="state.loading()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                </svg>
+              <button (click)="state.prevStep()" class="btn-ghost btn-lg flex items-center gap-2" [disabled]="state.loading()">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
                 Back
               </button>
               <button
                 (click)="state.completeOnboarding()"
                 [disabled]="state.loading()"
-                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3"
+                class="btn-primary btn-lg flex items-center gap-3"
               >
                 @if (state.loading()) {
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   <span>Creating...</span>
                 } @else {
                   <span>Create Account</span>
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                 }
               </button>
             </div>
           </div>
         }
 
-        <!-- Step 2: Payments Info -->
-        @if (state.currentStep() === 2) {
-          <div class="animate-fade-in">
-            <div class="flex items-center gap-4 mb-8">
-              <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Getting paid</h2>
-                <p class="text-white/60 text-sm mt-1">Here's how payments work on Convozo</p>
-              </div>
-            </div>
-            
-            <!-- Main info card -->
-            <div class="mb-8 p-6 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 backdrop-blur-2xl rounded-2xl shadow-lg shadow-blue-500/20">
-              <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50 flex-shrink-0">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <p class="font-bold text-white mb-2">Set up payments after your profile is live</p>
-                  <p class="text-blue-200 text-sm leading-relaxed">
-                    Once your account is created, go to <strong>Settings → Payments</strong> to connect your Stripe account. This is what allows you to receive money from fans.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- How it works -->
-            <div class="space-y-4 mb-8">
-              <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/30">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-bold text-white">78% goes to you</p>
-                  <p class="text-sm text-white/60">Every payment a fan makes, you keep 78% — sent directly to your bank account via Stripe.</p>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/30">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-bold text-white">Secure & trusted</p>
-                  <p class="text-sm text-white/60">Payments are powered by Stripe — the same platform used by millions of businesses worldwide.</p>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-bold text-white">Takes just a few minutes</p>
-                  <p class="text-sm text-white/60">Connecting Stripe is quick. You'll need your bank details and a form of ID to complete setup.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-8 flex justify-between">
-              <button (click)="state.prevStep()" class="px-8 py-4 bg-white/10 border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                </svg>
-                Back
-              </button>
-              <button
-                (click)="state.nextStep()"
-                class="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all duration-300 flex items-center gap-3"
-              >
-                <span>Continue</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        }
       </div>
     </div>
   </div>

@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
 
       // ── Call booking ────────────────────────────────────────────────────────
       } else if (session.metadata?.type === 'call_booking') {
-        const { creator_id, booker_name, booker_email, booker_instagram, message_content, duration } =
+        const { creator_id, booker_name, booker_email, booker_instagram, message_content, duration, scheduled_at, fan_timezone } =
           session.metadata as {
             creator_id: string;
             booker_name: string;
@@ -267,6 +267,8 @@ Deno.serve(async (req) => {
             booker_instagram: string;
             message_content: string;
             duration: string;
+            scheduled_at: string;
+            fan_timezone: string;
           };
 
         const amountInCents = session.amount_total || 0;
@@ -321,6 +323,9 @@ Deno.serve(async (req) => {
             call_notes: message_content || null,
             stripe_session_id: session.id,
             stripe_payment_intent_id: session.payment_intent as string,
+            // Fan's chosen call time — set at booking, displayed in dashboard
+            scheduled_at: scheduled_at || null,
+            fan_timezone: fan_timezone || 'UTC',
             // Daily.co room fields
             daily_room_name: dailyRoomName,
             daily_room_url: dailyRoomUrl,

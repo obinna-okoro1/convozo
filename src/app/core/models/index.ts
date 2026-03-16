@@ -8,6 +8,7 @@ export interface Creator {
   email: string;
   display_name: string;
   profile_image_url: string | null;
+  banner_image_url: string | null;
   bio: string | null;
   slug: string;
   phone_number: string;
@@ -114,6 +115,8 @@ export interface CallBooking {
   payout_status: PayoutStatus;
   payout_released_at: string | null;
   refunded_at: string | null;
+  // Fan timezone captured at booking time (IANA, e.g. "America/New_York")
+  fan_timezone: string;
   created_at: string;
   updated_at: string;
 }
@@ -140,8 +143,12 @@ export interface CallBookingPayload {
   booker_name: string;
   booker_email: string;
   booker_instagram: string;
-  message_content: string; // Optional message about preferred times
+  message_content: string;
   price: number;
+  /** ISO 8601 UTC datetime of the fan's chosen time slot */
+  scheduled_at: string;
+  /** IANA timezone string captured from fan's browser (e.g. "America/New_York") */
+  fan_timezone: string;
 }
 
 // ── Video Call Types ─────────────────────────────────────────────────────────

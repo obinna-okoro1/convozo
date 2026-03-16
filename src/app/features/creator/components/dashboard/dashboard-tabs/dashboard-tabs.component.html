@@ -1,21 +1,24 @@
 @if (tabs().length > 1) {
-<div class="flex gap-2 sm:gap-3 mt-4 sm:mt-6 border-t border-white/10 pt-4 sm:pt-6 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+<div class="flex gap-1 p-1.5 mt-5 rounded-2xl glass-panel overflow-x-auto scrollbar-hide">
   @for (tab of tabs(); track tab.path) {
     <a
       [routerLink]="tab.path"
-      routerLinkActive="tab-active"
+      routerLinkActive
       #rla="routerLinkActive"
-      [class]="rla.isActive
-        ? 'px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl backdrop-blur-xl transition-all duration-300 active:scale-95 sm:hover:scale-105 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50'
-        : 'px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl backdrop-blur-xl transition-all duration-300 active:scale-95 sm:hover:scale-105 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap flex-shrink-0 bg-white/5 text-slate-400 border border-white/10'"
+      class="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap flex-shrink-0 transition-all duration-300 relative overflow-hidden"
+      [class]="rla.isActive ? 'text-white shadow-lg' : 'text-content-secondary hover:text-content hover:bg-white/20'"
+      [style]="rla.isActive ? 'background:linear-gradient(135deg,rgba(124,58,237,0.85),rgba(147,51,234,0.85),rgba(236,72,153,0.85));backdrop-filter:saturate(200%) blur(1rem);-webkit-backdrop-filter:saturate(200%) blur(1rem);border:1px solid rgba(255,255,255,0.28);box-shadow:0 0.25rem 1rem rgba(124,58,237,0.32),inset 0 1px 0 rgba(255,255,255,0.22)' : ''"
     >
-      <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      @if (rla.isActive) {
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shine-sweep pointer-events-none"></div>
+      }
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="tab.icon" />
       </svg>
       <span class="hidden sm:inline">{{ tab.label }}</span>
       <span class="sm:hidden">{{ tab.mobileLabel }}</span>
       @if (tab.badgeCount && tab.badgeCount() > 0) {
-        <span [class]="'px-2 sm:px-3 py-0.5 sm:py-1 text-xs rounded-full border font-bold ' + tab.badgeColor">
+        <span class="min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-white/25 text-white rounded-full">
           {{ tab.badgeCount() }}
         </span>
       }

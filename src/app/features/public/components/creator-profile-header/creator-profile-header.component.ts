@@ -18,6 +18,7 @@ export class CreatorProfileHeaderComponent {
   public readonly responseExpectation = input<string>('24-48 hours');
 
   protected readonly imageLoadError = signal(false);
+  protected readonly bannerLoadError = signal(false);
 
   protected readonly initial = computed(() => {
     const name = this.creator()?.display_name;

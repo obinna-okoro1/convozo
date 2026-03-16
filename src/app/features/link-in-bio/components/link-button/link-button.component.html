@@ -3,9 +3,8 @@
   target="_blank"
   rel="noopener noreferrer"
   (click)="onLinkClick($event)"
-  class="group flex items-center gap-3 w-full px-6 py-4 rounded-2xl border backdrop-blur-xl transition-all duration-300 active:scale-[0.98] sm:hover:scale-[1.02]"
-  [style.background]="'rgba(255,255,255,0.05)'"
-  [style.border-color]="(themeColor() || '#7c3aed') + '30'"
+  class="group flex items-center gap-3 w-full px-6 py-4 rounded-2xl border bg-white transition-all duration-300 active:scale-[0.98] sm:hover:scale-[1.02] hover:shadow-md"
+  [style.border-color]="(themeColor() || '#7c3aed') + '40'"
 >
   <!-- Brand icon or generic globe -->
   <div
@@ -17,7 +16,8 @@
         <path [attr.d]="brandInfo.svgPath" />
       </svg>
     } @else {
-      <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        [style.color]="themeColor() || '#7c3aed'">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -29,11 +29,11 @@
   </div>
 
   <!-- Title -->
-  <span class="flex-1 text-white font-semibold text-base truncate">{{ link().title }}</span>
+  <span class="flex-1 text-content font-semibold text-base truncate">{{ link().title }}</span>
 
   <!-- Arrow -->
   <svg
-    class="w-4 h-4 text-slate-500 group-hover:text-white transition-colors flex-shrink-0"
+    class="w-4 h-4 text-content-tertiary group-hover:text-content transition-colors flex-shrink-0"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"

@@ -49,6 +49,12 @@ export class ImageUploadComponent {
   /** Label shown above the upload area. */
   public readonly label = input<string>('Profile Photo');
 
+  /**
+   * Storage sub-folder within the `public` bucket.
+   * Defaults to `avatars` (original behaviour). Pass `banners` for banner uploads.
+   */
+  public readonly folder = input<string>('avatars');
+
   /** Emits whenever the stored URL changes (upload or remove). */
   public readonly imageChanged = output<ImageChangeEvent>();
 
@@ -107,7 +113,7 @@ export class ImageUploadComponent {
       }
 
       const fileName = `${userId}-${String(Date.now())}.jpg`;
-      const filePath = `avatars/${userId}/${fileName}`;
+      const filePath = `${this.folder()}/${userId}/${fileName}`;
 
       const { data, error } = await this.supabaseService.uploadFile('public', filePath, compressed);
       if (error) {

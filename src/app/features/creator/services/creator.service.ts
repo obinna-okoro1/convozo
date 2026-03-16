@@ -76,6 +76,7 @@ export class CreatorService {
     bio: string | null;
     phoneNumber: string;
     profileImageUrl?: string;
+    bannerImageUrl?: string;
     instagramUsername?: string;
   }): Promise<SupabaseResponse<Creator>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -87,6 +88,7 @@ export class CreatorService {
         bio: data.bio,
         phone_number: data.phoneNumber,
         profile_image_url: data.profileImageUrl,
+        banner_image_url: data.bannerImageUrl,
         instagram_username: data.instagramUsername,
       })
       .eq('id', data.creatorId)

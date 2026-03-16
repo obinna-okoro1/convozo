@@ -7,14 +7,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import { SettingsStateService } from './settings-state.service';
 import { SettingsTabsComponent } from './settings-tabs/settings-tabs.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, AnimatedBackgroundComponent, SettingsTabsComponent],
+  imports: [CommonModule, RouterOutlet, SettingsTabsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

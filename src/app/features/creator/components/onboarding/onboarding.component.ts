@@ -5,7 +5,6 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import {
   ImageUploadComponent,
   ImageChangeEvent,
@@ -15,7 +14,7 @@ import { OnboardingStateService } from './onboarding-state.service';
 
 @Component({
   selector: 'app-onboarding',
-  imports: [NgClass, ImageUploadComponent, AnimatedBackgroundComponent, SearchableSelectComponent],
+  imports: [NgClass, ImageUploadComponent, SearchableSelectComponent],
   templateUrl: './onboarding.component.html',
   styleUrls: ['./onboarding.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

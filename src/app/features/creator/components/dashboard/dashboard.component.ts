@@ -22,7 +22,6 @@ import { Subscription } from 'rxjs';
 import { ROUTES } from '../../../../core/constants';
 import { PushNotificationService } from '../../../../core/services/push-notification.service';
 import { ResponseTemplateService } from '../../../../core/services/response-template.service';
-import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { errorMessage } from '../../../../shared/utils/error.utils';
 import { AuthService } from '../../../auth/services/auth.service';
@@ -39,7 +38,6 @@ import { DeleteConfirmModalComponent } from './delete-confirm-modal/delete-confi
     CommonModule,
     RouterLink,
     RouterOutlet,
-    AnimatedBackgroundComponent,
     DashboardTabsComponent,
     DeleteConfirmModalComponent,
   ],

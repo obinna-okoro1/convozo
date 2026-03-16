@@ -30,7 +30,7 @@
   }
 
   <!-- Display name -->
-  <h1 class="text-2xl font-bold text-white mb-1">{{ displayName() }}</h1>
+  <h1 class="text-2xl font-bold text-content mb-1">{{ displayName() }}</h1>
 
   <!-- Instagram handle -->
   @if (instagramUsername()) {
@@ -38,7 +38,7 @@
       [href]="'https://instagram.com/' + instagramUsername()"
       target="_blank"
       rel="noopener noreferrer"
-      class="text-sm text-slate-300 hover:text-pink-400 transition-colors flex items-center gap-1 mb-2"
+      class="text-sm text-content-secondary hover:text-accent transition-colors flex items-center gap-1 mb-2"
     >
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
         <path
@@ -51,6 +51,6 @@
 
   <!-- Bio -->
   @if (bio()) {
-    <p class="text-sm text-slate-400 max-w-xs leading-relaxed">{{ bio() }}</p>
+    <p class="text-sm text-content-secondary max-w-xs leading-relaxed">{{ bio() }}</p>
   }
 </div>
