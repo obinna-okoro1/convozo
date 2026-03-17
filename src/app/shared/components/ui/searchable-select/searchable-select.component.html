@@ -9,15 +9,15 @@
       (size() === 'sm'
         ? 'px-3 py-2 text-sm rounded-lg'
         : 'px-4 py-3 rounded-xl') +
-      ' bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent hover:bg-white/10 backdrop-blur-xl' +
+      ' bg-surface-overlay border border-separator text-content focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent hover:bg-surface-elevated' +
       (disabled() ? ' opacity-50 cursor-not-allowed' : '') +
-      (isOpen() ? ' ring-2 ring-purple-500 border-transparent' : '')"
+      (isOpen() ? ' ring-2 ring-accent/40 border-transparent' : '')"
   >
-    <span [class]="selectedLabel() ? 'truncate' : 'truncate text-white/40'">
+    <span [class]="selectedLabel() ? 'truncate' : 'truncate text-content-muted'">
       {{ selectedLabel() || placeholder() }}
     </span>
     <svg
-      [class]="'w-4 h-4 flex-shrink-0 text-white/40 transition-transform duration-200 ' + (isOpen() ? 'rotate-180' : '')"
+      [class]="'w-4 h-4 flex-shrink-0 text-content-muted transition-transform duration-200 ' + (isOpen() ? 'rotate-180' : '')"
       fill="none" stroke="currentColor" viewBox="0 0 24 24"
     >
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -26,12 +26,12 @@
 
   <!-- Dropdown Panel -->
   @if (isOpen()) {
-    <div class="absolute z-50 mt-1.5 w-full min-w-[12rem] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 overflow-hidden animate-fade-in">
+    <div class="absolute z-[200] mt-1.5 w-full min-w-[12rem] bg-surface border border-separator rounded-xl shadow-xl shadow-black/20 overflow-hidden animate-fade-in">
       <!-- Search Input -->
       @if (searchable() && options().length > 5) {
-        <div class="p-2 border-b border-white/10">
+        <div class="p-2 border-b border-separator">
           <div class="relative">
-            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -41,7 +41,7 @@
               (input)="onSearchInput($event)"
               placeholder="Search…"
               autocomplete="off"
-              class="w-full pl-8 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+              class="w-full pl-8 pr-3 py-2 bg-surface-overlay border border-separator rounded-lg text-sm text-content placeholder-content-muted focus:outline-none focus:ring-1 focus:ring-accent/40 focus:border-transparent"
             />
           </div>
         </div>
@@ -56,20 +56,20 @@
             [disabled]="option.disabled"
             [class]="'w-full text-left px-3 py-2.5 text-sm transition-colors duration-100 flex items-center gap-2 ' +
               (option.value === value()
-                ? 'bg-purple-500/20 text-purple-200 font-medium'
-                : 'text-white/80 hover:bg-white/10') +
-              (i === highlightedIndex() ? ' bg-white/10 ss-highlighted' : '') +
+                ? 'bg-accent/10 text-accent font-medium'
+                : 'text-content hover:bg-surface-overlay') +
+              (i === highlightedIndex() ? ' bg-surface-overlay ss-highlighted' : '') +
               (option.disabled ? ' opacity-40 cursor-not-allowed' : ' cursor-pointer')"
           >
             <span class="truncate flex-1">{{ option.label }}</span>
             @if (option.value === value()) {
-              <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
             }
           </button>
         } @empty {
-          <div class="px-3 py-4 text-center text-white/30 text-sm">No results found</div>
+          <div class="px-3 py-4 text-center text-content-muted text-sm">No results found</div>
         }
       </div>
     </div>

@@ -22,11 +22,10 @@ export const DASHBOARD_ROUTES: Routes = [
       import('./views/bookings-view/bookings-view.component').then((m) => m.BookingsViewComponent),
   },
   {
+    // Availability is now embedded in Settings > Monetization > Video Calls.
+    // Redirect any old bookmarked links gracefully.
     path: 'availability',
-    loadComponent: () =>
-      import('./views/availability-view/availability-view.component').then(
-        (m) => m.AvailabilityViewComponent,
-      ),
+    redirectTo: 'bookings',
   },
   {
     path: 'analytics',

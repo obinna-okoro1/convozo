@@ -256,8 +256,20 @@ export interface ShopItem {
   /** Price in cents — minimum 100 ($1.00) */
   price: number;
   item_type: ShopItemType;
-  /** Download / delivery URL. Null for request-based items. */
+  /**
+   * Path in the private shop-files Supabase Storage bucket.
+   * Buyers receive a short-lived signed URL via the get-shop-download edge function.
+   * Null for request-based items.
+   */
+  file_storage_path: string | null;
+  /**
+   * Path in the public shop-thumbnails bucket.
+   * Derive the public URL via supabase.storage.from('shop-thumbnails').getPublicUrl(path).
+   */
+  thumbnail_storage_path: string | null;
+  /** Legacy external URL — kept for backward compat; superseded by file_storage_path. */
   file_url: string | null;
+  /** Legacy external thumbnail URL — superseded by thumbnail_storage_path. */
   thumbnail_url: string | null;
   preview_text: string | null;
   delivery_note: string | null;

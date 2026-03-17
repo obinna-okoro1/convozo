@@ -59,7 +59,8 @@ export class AvailabilityManagerComponent implements OnInit {
   protected readonly loading = signal<boolean>(true);
   protected readonly saving = signal<boolean>(false);
   protected readonly saved = signal<boolean>(false);
-  protected readonly hasChanges = signal<boolean>(false);
+  /** Exposed publicly so the parent monetization view can gate its Save Changes button */
+  public readonly hasChanges = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
   protected readonly schedule = signal<DaySchedule[]>([]);
 
@@ -202,9 +203,11 @@ export class AvailabilityManagerComponent implements OnInit {
   }
 
   /**
-   * Save availability to database
+   * Save availability to database.
+   * Called both internally (legacy) and externally by the parent
+   * monetization view's Save Changes button.
    */
-  protected async saveAvailability(): Promise<void> {
+  public async save(): Promise<void> {
     this.saving.set(true);
     this.error.set(null);
     this.saved.set(false);

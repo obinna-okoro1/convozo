@@ -135,6 +135,65 @@ export class SupabaseService {
     return { error };
   }
 
+  /**
+   * Upload a digital file to the private shop-files bucket.
+   * Returns the storage path (never a public URL — access via signed URLs only).
+   * Path format: {creatorId}/{timestamp}_{safeFilename}
+   */
+  public async uploadShopFile(
+    creatorId: string,
+    file: File,
+  ): Promise<{ path: string | null; error: Error | null }> {
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
+      const path = `${creatorId}/${Date.now()}_${safeName}`;
+      const { data, error } = await this.client.storage
+        .from('shop-files')
+        .upload(path, file, { upsert: false });
+      if (error) throw error;
+      return { path: data.path, error: null };
+    } catch (error) {
+      return { path: null, error: error instanceof Error ? error : new Error('Upload failed') };
+    }
+  }
+
+  /**
+   * Upload a thumbnail to the public shop-thumbnails bucket.
+   * Returns both the storage path and the derived public URL.
+   */
+  public async uploadShopThumbnail(
+    creatorId: string,
+    file: File,
+  ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
+      const path = `${creatorId}/${Date.now()}_${safeName}`;
+      const { data, error } = await this.client.storage
+        .from('shop-thumbnails')
+        .upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = this.client.storage.from('shop-thumbnails').getPublicUrl(data.path);
+      return { path: data.path, publicUrl, error: null };
+    } catch (error) {
+      return { path: null, publicUrl: null, error: error instanceof Error ? error : new Error('Upload failed') };
+    }
+  }
+
+  /**
+   * Fetch a short-lived signed download URL for a purchased shop item.
+   * Calls the get-shop-download edge function with the Stripe session ID.
+   * No auth token needed — the session ID is proof of purchase.
+   */
+  public async getShopDownloadUrl(
+    sessionId: string,
+  ): Promise<EdgeFunctionResponse<{ url: string; filename: string }>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.client.functions.invoke('get-shop-download', {
+      body: { session_id: sessionId },
+    });
+    return { data: data as { url: string; filename: string } | undefined, error };
+  }
+
   // ==================== CREATOR METHODS ====================
 
   /**

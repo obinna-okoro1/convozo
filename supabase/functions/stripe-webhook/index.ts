@@ -88,9 +88,10 @@ Deno.serve(async (req) => {
 
       // ── Shop order ─────────────────────────────────────────────────────────
       if (session.metadata?.type === 'shop') {
-        const { creator_id, item_id, item_title, item_type, is_request_based, buyer_name, buyer_email, request_details } =
+        const { creator_id, creator_slug: shopCreatorSlug, item_id, item_title, item_type, is_request_based, buyer_name, buyer_email, request_details } =
           session.metadata as {
             creator_id: string;
+            creator_slug: string;
             item_id: string;
             item_title: string;
             item_type: string;
@@ -139,17 +140,6 @@ Deno.serve(async (req) => {
 
         console.log('[stripe-webhook] Shop order created:', order.id, 'item:', item_id);
 
-        // Retrieve the item file_url for immediate delivery (digital downloads)
-        let fileUrl: string | null = null;
-        if (!isRequestBased) {
-          const { data: shopItem } = await supabase
-            .from('shop_items')
-            .select('file_url')
-            .eq('id', item_id)
-            .single();
-          fileUrl = shopItem?.file_url ?? null;
-        }
-
         // Look up creator for email notification
         const { data: shopCreator } = await supabase
           .from('creators')
@@ -165,6 +155,9 @@ Deno.serve(async (req) => {
           const emoji = typeEmoji[item_type] ?? '📦';
 
           // 1. Buyer confirmation email
+          // For digital downloads: direct buyer to the success page (app handles signed URL).
+          // For request-based items: inform buyer the creator will deliver manually.
+          const downloadUrl = `${appUrl}/success?session_id=${session.id}&creator=${shopCreatorSlug}&shop=1&item_id=${item_id}`;
           const buyerHtml = isRequestBased
             ? `
               <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0f0d1a;color:#fff;border-radius:1rem;overflow:hidden">
@@ -190,17 +183,15 @@ Deno.serve(async (req) => {
               <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0f0d1a;color:#fff;border-radius:1rem;overflow:hidden">
                 <div style="background:linear-gradient(135deg,#7c3aed,#ec4899);padding:2rem;text-align:center">
                   <h1 style="margin:0;font-size:1.75rem">${emoji} Purchase Complete!</h1>
-                  <p style="margin:.5rem 0 0;opacity:.9">Your digital item is ready</p>
+                  <p style="margin:.5rem 0 0;opacity:.9">Your download is ready</p>
                 </div>
                 <div style="padding:2rem">
                   <p style="color:#c4b5fd;font-size:1rem">Hi <strong>${buyer_name}</strong>,</p>
                   <p style="color:#e2e8f0">Thanks for purchasing <strong>${item_title}</strong> from <strong>${shopCreator.display_name}</strong>! 🎉</p>
-                  ${fileUrl ? `
                   <div style="text-align:center;margin:2rem 0">
-                    <a href="${fileUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;padding:1rem 2.5rem;border-radius:.75rem;font-weight:700;font-size:1.1rem">⬇️ Download Your Item</a>
+                    <a href="${downloadUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;padding:1rem 2.5rem;border-radius:.75rem;font-weight:700;font-size:1.1rem">⬇️ Download Your Item</a>
                   </div>
-                  <p style="color:#94a3b8;font-size:.875rem;text-align:center">This link is your personal download. Please save your file after downloading.</p>
-                  ` : `<p style="color:#94a3b8">Your download details will be sent shortly.</p>`}
+                  <p style="color:#94a3b8;font-size:.875rem;text-align:center">Your file is stored securely on Convozo. Click the button above to go to your download page.</p>
                   <p style="color:#64748b;font-size:.875rem">Amount paid: <strong>$${(amountInCents / 100).toFixed(2)}</strong></p>
                 </div>
                 <div style="background:rgba(255,255,255,.05);padding:1.5rem;text-align:center">

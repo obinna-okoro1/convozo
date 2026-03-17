@@ -80,4 +80,38 @@ export class ShopService {
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     return this.supabaseService.createShopCheckout(payload);
   }
+
+  // ── File storage ──────────────────────────────────────────────────────────
+
+  /**
+   * Upload a digital file to the private shop-files bucket.
+   * Returns the storage path — never a public URL.
+   */
+  public async uploadShopFile(
+    creatorId: string,
+    file: File,
+  ): Promise<{ path: string | null; error: Error | null }> {
+    return this.supabaseService.uploadShopFile(creatorId, file);
+  }
+
+  /**
+   * Upload a thumbnail image to the public shop-thumbnails bucket.
+   * Returns the path and the derived public URL for display.
+   */
+  public async uploadShopThumbnail(
+    creatorId: string,
+    file: File,
+  ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
+    return this.supabaseService.uploadShopThumbnail(creatorId, file);
+  }
+
+  /**
+   * Fetch a signed download URL for a verified purchaser.
+   * Calls the get-shop-download edge function — no auth required (session_id proves purchase).
+   */
+  public async getShopDownloadUrl(
+    sessionId: string,
+  ): Promise<EdgeFunctionResponse<{ url: string; filename: string }>> {
+    return this.supabaseService.getShopDownloadUrl(sessionId);
+  }
 }

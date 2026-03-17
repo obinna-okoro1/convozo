@@ -6,6 +6,11 @@
  *  - Add, edit, activate/deactivate, and delete digital shop items
  *
  * Item types: video | audio | pdf | image | shoutout_request
+ *
+ * Files are uploaded directly to Supabase Storage:
+ *  - Digital files → private 'shop-files' bucket (fans get signed URLs via edge function)
+ *  - Thumbnails    → public 'shop-thumbnails' bucket (direct public URL)
+ *
  * All prices stored/sent as integer cents. Never use floats for money.
  */
 
@@ -28,8 +33,14 @@ interface ItemFormState {
   description: string;
   priceDollars: number;
   itemType: ShopItemType;
-  fileUrl: string;
-  thumbnailUrl: string;
+  /** Path in private shop-files bucket — set after upload */
+  fileStoragePath: string | null;
+  /** Friendly display name shown in the UI after upload */
+  fileDisplayName: string | null;
+  /** Path in public shop-thumbnails bucket — set after thumbnail upload */
+  thumbnailStoragePath: string | null;
+  /** Public URL for the thumbnail preview */
+  thumbnailPublicUrl: string | null;
   previewText: string;
   deliveryNote: string;
   isRequestBased: boolean;
@@ -40,24 +51,51 @@ const EMPTY_FORM: ItemFormState = {
   description: '',
   priceDollars: 10,
   itemType: 'pdf',
-  fileUrl: '',
-  thumbnailUrl: '',
+  fileStoragePath: null,
+  fileDisplayName: null,
+  thumbnailStoragePath: null,
+  thumbnailPublicUrl: null,
   previewText: '',
   deliveryNote: '',
   isRequestBased: false,
 };
 
-const TYPE_META: Record<ShopItemType, { emoji: string; label: string; hint: string }> = {
-  video: { emoji: '🎬', label: 'Video', hint: 'Tutorial, clip, exclusive footage, etc.' },
-  audio: { emoji: '🎵', label: 'Audio', hint: 'Music, podcast, voice memo, soundpack, etc.' },
-  pdf: { emoji: '📄', label: 'PDF / E-book', hint: 'Guide, template, preset, LUTs, etc.' },
-  image: { emoji: '🖼️', label: 'Image / Photo', hint: 'Presets, wallpapers, artwork, prints, etc.' },
+const TYPE_META: Record<ShopItemType, { emoji: string; label: string; hint: string; accept: string }> = {
+  video: {
+    emoji: '🎬',
+    label: 'Video',
+    hint: 'Tutorial, clip, exclusive footage, etc.',
+    accept: 'video/mp4,video/quicktime,video/webm,video/x-msvideo',
+  },
+  audio: {
+    emoji: '🎵',
+    label: 'Audio',
+    hint: 'Music, podcast, voice memo, soundpack, etc.',
+    accept: 'audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/x-m4a',
+  },
+  pdf: {
+    emoji: '📄',
+    label: 'PDF / E-book',
+    hint: 'Guide, template, preset, LUTs, etc.',
+    accept: 'application/pdf',
+  },
+  image: {
+    emoji: '🖼️',
+    label: 'Image / Photo',
+    hint: 'Presets, wallpapers, artwork, prints, etc.',
+    accept: 'image/jpeg,image/png,image/webp,application/zip',
+  },
   shoutout_request: {
     emoji: '🎥',
     label: 'Shoutout / Video Request',
     hint: 'Fan requests a custom video you record and deliver.',
+    accept: '',
   },
 };
+
+/** Maximum file sizes in bytes */
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024; // 10 MB
 
 @Component({
   selector: 'app-shop-view',
@@ -78,7 +116,13 @@ export class ShopViewComponent implements OnInit {
   protected readonly showForm = signal(false);
   protected readonly editingId = signal<string | null>(null);
 
-  /** Form state held in a signal so canSaveItem() computed tracks it reactively */
+  /** Upload states — kept as separate signals so the UI updates independently */
+  protected readonly uploadingFile = signal(false);
+  protected readonly uploadingThumbnail = signal(false);
+  protected readonly fileUploadError = signal<string | null>(null);
+  protected readonly thumbnailUploadError = signal<string | null>(null);
+
+  /** Form state held in a signal so computed properties react to changes */
   protected readonly form = signal<ItemFormState>({ ...EMPTY_FORM });
 
   protected readonly typeMeta = TYPE_META;
@@ -88,11 +132,14 @@ export class ShopViewComponent implements OnInit {
 
   protected readonly canSaveItem = computed(() => {
     const f = this.form();
+    const hasFile = f.isRequestBased || f.fileStoragePath !== null;
     return (
       f.title.trim().length > 0 &&
       f.title.length <= 100 &&
       f.priceDollars >= 1 &&
-      (f.isRequestBased || f.fileUrl.trim().length > 0)
+      hasFile &&
+      !this.uploadingFile() &&
+      !this.uploadingThumbnail()
     );
   });
 
@@ -100,7 +147,7 @@ export class ShopViewComponent implements OnInit {
     void this.loadItems();
   }
 
-  // ── Named form-field setters (arrow functions forbidden in Angular templates) ──
+  // ── Named form-field setters ───────────────────────────────────────────────
 
   protected setTitle(value: string): void {
     this.form.update((f) => ({ ...f, title: value }));
@@ -114,14 +161,6 @@ export class ShopViewComponent implements OnInit {
     this.form.update((f) => ({ ...f, priceDollars: +value }));
   }
 
-  protected setFileUrl(value: string): void {
-    this.form.update((f) => ({ ...f, fileUrl: value }));
-  }
-
-  protected setThumbnailUrl(value: string): void {
-    this.form.update((f) => ({ ...f, thumbnailUrl: value }));
-  }
-
   protected setPreviewText(value: string): void {
     this.form.update((f) => ({ ...f, previewText: value }));
   }
@@ -130,11 +169,95 @@ export class ShopViewComponent implements OnInit {
     this.form.update((f) => ({ ...f, deliveryNote: value }));
   }
 
+  // ── File upload handlers ───────────────────────────────────────────────────
+
+  protected async onFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      this.fileUploadError.set('File is too large. Maximum size is 500 MB.');
+      input.value = '';
+      return;
+    }
+
+    const creator = this.state.creator();
+    if (!creator) return;
+
+    this.fileUploadError.set(null);
+    this.uploadingFile.set(true);
+
+    const result = await this.shopService.uploadShopFile(creator.id, file);
+    this.uploadingFile.set(false);
+
+    if (result.error || !result.path) {
+      this.fileUploadError.set('Upload failed. Please try again.');
+      input.value = '';
+      return;
+    }
+
+    this.form.update((f) => ({
+      ...f,
+      fileStoragePath: result.path,
+      fileDisplayName: file.name,
+    }));
+    // Reset input so re-selecting the same file triggers change event
+    input.value = '';
+  }
+
+  protected async onThumbnailSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_THUMBNAIL_SIZE) {
+      this.thumbnailUploadError.set('Image is too large. Maximum size is 10 MB.');
+      input.value = '';
+      return;
+    }
+
+    const creator = this.state.creator();
+    if (!creator) return;
+
+    this.thumbnailUploadError.set(null);
+    this.uploadingThumbnail.set(true);
+
+    const result = await this.shopService.uploadShopThumbnail(creator.id, file);
+    this.uploadingThumbnail.set(false);
+
+    if (result.error || !result.path) {
+      this.thumbnailUploadError.set('Thumbnail upload failed. Please try again.');
+      input.value = '';
+      return;
+    }
+
+    this.form.update((f) => ({
+      ...f,
+      thumbnailStoragePath: result.path,
+      thumbnailPublicUrl: result.publicUrl,
+    }));
+    input.value = '';
+  }
+
+  protected clearFile(): void {
+    // Note: we don't delete from storage here — orphan cleanup handled separately
+    this.form.update((f) => ({ ...f, fileStoragePath: null, fileDisplayName: null }));
+    this.fileUploadError.set(null);
+  }
+
+  protected clearThumbnail(): void {
+    this.form.update((f) => ({ ...f, thumbnailStoragePath: null, thumbnailPublicUrl: null }));
+    this.thumbnailUploadError.set(null);
+  }
+
   // ── Form actions ───────────────────────────────────────────────────────────
 
   protected openAddForm(): void {
     this.editingId.set(null);
     this.form.set({ ...EMPTY_FORM });
+    this.fileUploadError.set(null);
+    this.thumbnailUploadError.set(null);
     this.shopError.set(null);
     this.showForm.set(true);
   }
@@ -146,12 +269,18 @@ export class ShopViewComponent implements OnInit {
       description: item.description ?? '',
       priceDollars: item.price / 100,
       itemType: item.item_type,
-      fileUrl: item.file_url ?? '',
-      thumbnailUrl: item.thumbnail_url ?? '',
+      fileStoragePath: item.file_storage_path ?? null,
+      fileDisplayName: item.file_storage_path
+        ? item.file_storage_path.split('/').pop()?.replace(/^\d+_/, '') ?? 'Uploaded file'
+        : null,
+      thumbnailStoragePath: item.thumbnail_storage_path ?? null,
+      thumbnailPublicUrl: null, // will be loaded lazily
       previewText: item.preview_text ?? '',
       deliveryNote: item.delivery_note ?? '',
       isRequestBased: item.is_request_based,
     });
+    this.fileUploadError.set(null);
+    this.thumbnailUploadError.set(null);
     this.shopError.set(null);
     this.showForm.set(true);
   }
@@ -160,6 +289,8 @@ export class ShopViewComponent implements OnInit {
     this.showForm.set(false);
     this.editingId.set(null);
     this.shopError.set(null);
+    this.fileUploadError.set(null);
+    this.thumbnailUploadError.set(null);
   }
 
   protected onTypeChange(type: ShopItemType): void {
@@ -167,7 +298,12 @@ export class ShopViewComponent implements OnInit {
       ...f,
       itemType: type,
       isRequestBased: type === 'shoutout_request',
+      // Clear file data when switching type — file may not be compatible
+      fileStoragePath: null,
+      fileDisplayName: null,
+      fileUploadError: null,
     }));
+    this.fileUploadError.set(null);
   }
 
   protected async saveItem(): Promise<void> {
@@ -185,8 +321,11 @@ export class ShopViewComponent implements OnInit {
       description: f.description.trim() || null,
       price: priceCents,
       item_type: f.itemType,
-      file_url: f.isRequestBased ? null : (f.fileUrl.trim() || null),
-      thumbnail_url: f.thumbnailUrl.trim() || null,
+      file_storage_path: f.isRequestBased ? null : (f.fileStoragePath ?? null),
+      thumbnail_storage_path: f.thumbnailStoragePath ?? null,
+      // Keep legacy fields null for new items
+      file_url: null,
+      thumbnail_url: null,
       preview_text: f.previewText.trim() || null,
       delivery_note: f.deliveryNote.trim() || null,
       is_active: true,
@@ -252,7 +391,7 @@ export class ShopViewComponent implements OnInit {
     return '$' + (cents / 100).toFixed(2);
   }
 
-  protected getTypeMeta(type: ShopItemType): { emoji: string; label: string; hint: string } {
+  protected getTypeMeta(type: ShopItemType): { emoji: string; label: string; hint: string; accept: string } {
     return TYPE_META[type];
   }
 
@@ -276,3 +415,4 @@ export class ShopViewComponent implements OnInit {
     setTimeout(() => this.shopSuccess.set(null), 3500);
   }
 }
+

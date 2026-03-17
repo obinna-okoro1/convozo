@@ -10,7 +10,7 @@
       </div>
       <div>
         <h2 class="text-lg font-semibold text-content">Digital Shop</h2>
-        <p class="text-sm text-content-muted">Sell videos, audio, PDFs, images & personalised shoutouts</p>
+        <p class="text-sm text-content-muted">Upload and sell videos, audio, PDFs, images & personalised shoutouts</p>
       </div>
     </div>
 
@@ -103,7 +103,7 @@
             <textarea [value]="form().description" (input)="setDescription($any($event.target).value)" placeholder="What does the buyer get?" rows="3" maxlength="500" class="input resize-none"></textarea>
           </div>
 
-          <!-- Price + File URL -->
+          <!-- Price -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="form-label">Price (USD) <span class="text-red-400">*</span></label>
@@ -113,15 +113,11 @@
               </div>
               <p class="form-hint">Minimum $1.00</p>
             </div>
-            @if (!form().isRequestBased) {
+
+            <!-- Request-based info badge (shown for shoutout_request type) -->
+            @if (form().isRequestBased) {
               <div>
-                <label class="form-label">File / Download URL <span class="text-red-400">*</span></label>
-                <input type="url" [value]="form().fileUrl" (input)="setFileUrl($any($event.target).value)" placeholder="https://drive.google.com/…" class="input" />
-                <p class="form-hint">Google Drive, Dropbox, or any direct link</p>
-              </div>
-            } @else {
-              <div>
-                <label class="form-label">Request Type</label>
+                <label class="form-label">Delivery</label>
                 <div class="flex items-center gap-2.5 p-3 bg-accent/10 border border-accent/20 rounded-xl">
                   <span class="text-lg">🎥</span>
                   <div>
@@ -133,10 +129,93 @@
             }
           </div>
 
-          <!-- Thumbnail -->
+          <!-- File upload (only for non-request types) -->
+          @if (!form().isRequestBased) {
+            <div>
+              <label class="form-label">
+                Digital File <span class="text-red-400">*</span>
+                <span class="text-content-muted font-normal ml-1">— max 500 MB</span>
+              </label>
+
+              @if (form().fileStoragePath) {
+                <!-- File already uploaded -->
+                <div class="flex items-center gap-3 p-3 bg-[#1a9e3f]/10 border border-[#1a9e3f]/30 rounded-xl">
+                  <svg class="w-5 h-5 text-[#1a9e3f] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-content text-sm font-medium truncate">{{ form().fileDisplayName ?? 'Uploaded file' }}</p>
+                    <p class="text-content-muted text-xs">File stored securely</p>
+                  </div>
+                  <button type="button" (click)="clearFile()" class="text-content-muted hover:text-[#d70015] transition-colors flex-shrink-0" title="Remove file">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              } @else {
+                <!-- Upload zone -->
+                <label class="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-separator rounded-xl cursor-pointer hover:border-accent/50 hover:bg-accent/5 transition-all duration-200" [class.opacity-60]="uploadingFile()">
+                  @if (uploadingFile()) {
+                    <svg class="animate-spin w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <p class="text-content-muted text-sm">Uploading…</p>
+                  } @else {
+                    <svg class="w-8 h-8 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <div class="text-center">
+                      <p class="text-content text-sm font-medium">Click to upload your file</p>
+                      <p class="text-content-muted text-xs mt-0.5">{{ getTypeMeta(form().itemType).accept.split(',').join(', ') }}</p>
+                    </div>
+                  }
+                  <input type="file" class="hidden" [accept]="getTypeMeta(form().itemType).accept" (change)="onFileSelected($event)" [disabled]="uploadingFile()" />
+                </label>
+              }
+
+              @if (fileUploadError()) {
+                <p class="text-[#d70015] text-xs mt-1.5">{{ fileUploadError() }}</p>
+              }
+            </div>
+          }
+
+          <!-- Thumbnail upload -->
           <div>
-            <label class="form-label">Cover / Thumbnail URL <span class="text-content-muted font-normal">(optional)</span></label>
-            <input type="url" [value]="form().thumbnailUrl" (input)="setThumbnailUrl($any($event.target).value)" placeholder="https://… (image shown on your shop card)" class="input" />
+            <label class="form-label">Cover Image <span class="text-content-muted font-normal">(optional — max 10 MB)</span></label>
+
+            @if (form().thumbnailStoragePath) {
+              <!-- Thumbnail preview -->
+              <div class="flex items-center gap-3 p-3 bg-surface-raised border border-separator rounded-xl">
+                @if (form().thumbnailPublicUrl) {
+                  <img [src]="form().thumbnailPublicUrl" alt="Thumbnail preview" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                } @else {
+                  <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  </div>
+                }
+                <div class="flex-1 min-w-0">
+                  <p class="text-content text-sm font-medium">Cover image uploaded</p>
+                  <p class="text-content-muted text-xs">Shown on your shop card</p>
+                </div>
+                <button type="button" (click)="clearThumbnail()" class="text-content-muted hover:text-[#d70015] transition-colors flex-shrink-0" title="Remove thumbnail">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+            } @else {
+              <label class="flex items-center gap-3 p-4 border border-dashed border-separator rounded-xl cursor-pointer hover:border-accent/50 hover:bg-accent/5 transition-all duration-200" [class.opacity-60]="uploadingThumbnail()">
+                @if (uploadingThumbnail()) {
+                  <svg class="animate-spin w-5 h-5 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  <span class="text-content-muted text-sm">Uploading…</span>
+                } @else {
+                  <svg class="w-5 h-5 text-content-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-content-muted text-sm">Upload cover image (JPG, PNG, WebP)</span>
+                }
+                <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onThumbnailSelected($event)" [disabled]="uploadingThumbnail()" />
+              </label>
+            }
+
+            @if (thumbnailUploadError()) {
+              <p class="text-[#d70015] text-xs mt-1.5">{{ thumbnailUploadError() }}</p>
+            }
           </div>
 
           <!-- Preview + Delivery -->
@@ -183,7 +262,7 @@
           </svg>
         </div>
         <p class="text-content font-semibold mb-1">Your shop is empty</p>
-        <p class="text-content-muted text-sm mb-4 max-w-xs">Add your first digital item and start making money from your content.</p>
+        <p class="text-content-muted text-sm mb-4 max-w-xs">Upload your first digital item and start making money from your content.</p>
         @if (!showForm()) {
           <button type="button" (click)="openAddForm()" class="btn-primary btn-sm flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
@@ -237,8 +316,8 @@
   <div class="p-5 bg-accent/5 border border-accent/15 rounded-xl">
     <p class="font-semibold text-content text-sm mb-2">How the Digital Shop works</p>
     <ul class="space-y-1.5 text-sm text-content-secondary">
-      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>Fans visit your public profile and browse your shop tab</span></li>
-      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>They pay securely via Stripe and receive their item by email</span></li>
+      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>Upload your file directly — it's stored securely on our servers</span></li>
+      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>Fans pay securely via Stripe and are taken straight to their download</span></li>
       <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>For shoutout requests, you see the fan's brief and deliver manually</span></li>
       <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>You keep 78% of every sale — Convozo's 22% platform fee applies</span></li>
     </ul>

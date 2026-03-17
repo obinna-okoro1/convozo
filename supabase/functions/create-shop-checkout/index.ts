@@ -8,7 +8,7 @@
  *     creator_slug:    string   — URL slug of the creator
  *     item_id:         string   — UUID of the shop_item to purchase
  *     buyer_name:      string   — Full name of the buyer
- *     buyer_email:     string   — Email address (download link sent here)
+ *     buyer_email:     string   — Email address (used for receipt and creator notification)
  *     request_details: string?  — Required for is_request_based items (e.g. shoutout brief)
  *   }
  *
@@ -165,7 +165,8 @@ Deno.serve(async (req) => {
     const appUrl = getAppUrl();
 
     // SECURITY: all redirect URLs are server-generated — never client-supplied.
-    const successUrl = `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&creator=${creator_slug}&shop=1`;
+    // item_id is included so the success page can call get-shop-download directly.
+    const successUrl = `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&creator=${creator_slug}&shop=1&item_id=${item.id}`;
     const cancelUrl  = `${appUrl}/${creator_slug}/shop`;
 
     const sessionConfig = {
@@ -197,6 +198,7 @@ Deno.serve(async (req) => {
         // 'type' discriminates this from message/call webhooks in stripe-webhook
         type:             'shop',
         creator_id:       creator.id,
+        creator_slug:     creator_slug,
         item_id:          item.id,
         item_title:       item.title.slice(0, 490),
         item_type:        item.item_type,
