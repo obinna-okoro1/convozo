@@ -388,6 +388,24 @@ verify_jwt = false  # Public — fans pay without being logged in
 [functions.create-call-booking-session]
 verify_jwt = false  # Public — fans book calls without being logged in
 
+[functions.create-shop-checkout]
+verify_jwt = false  # Public — fans purchase shop items without being logged in
+
+[functions.get-shop-download]
+verify_jwt = false  # Purchase verified via stripe session_id, not JWT
+
+[functions.check-no-show]
+verify_jwt = false  # Internal cron — auth handled via service role key
+
+[functions.complete-call]
+verify_jwt = false  # Auth handled internally via getUser(token)
+
+[functions.join-call]
+verify_jwt = false  # Auth handled internally via getUser(token)
+
+[functions.send-push-notification]
+verify_jwt = false  # Auth handled internally via service role key
+
 [edge_runtime.secrets]
 STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
