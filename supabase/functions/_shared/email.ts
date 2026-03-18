@@ -23,6 +23,30 @@ function formatUsd(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+/**
+ * Format an ISO date string into a human-readable call time.
+ * Falls back to the raw string if the timezone is invalid.
+ */
+function formatCallTime(isoString: string, timezone: string): string {
+  try {
+    const date = new Date(isoString);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: timezone,
+      timeZoneName: 'short',
+    }).format(date);
+  } catch {
+    // Fallback: raw ISO string if timezone string is unrecognised
+    return isoString;
+  }
+}
+
 // ─── Core mailer ──────────────────────────────────────────────────────────────
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
@@ -150,10 +174,21 @@ export function callBookingConfirmationEmail(opts: {
   durationMinutes: number;
   amountCents: number;
   callJoinUrl?: string;
+  /** ISO 8601 timestamp of the booked call slot */
+  scheduledAt?: string;
+  /** IANA timezone string the fan chose at booking (e.g. 'America/New_York') */
+  fanTimezone?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(opts.bookerName);
   const creator = escapeHtml(opts.creatorName);
   const amount = formatUsd(opts.amountCents);
+
+  const scheduleBlock = opts.scheduledAt
+    ? `<div style="background:#ede9fe;border-left:4px solid #7c3aed;padding:14px 16px;border-radius:6px;margin:20px 0;">
+        <p style="margin:0 0 4px;font-weight:700;color:#5b21b6;">📅 Your call is scheduled for:</p>
+        <p style="margin:0;color:#374151;font-size:15px;">${escapeHtml(formatCallTime(opts.scheduledAt, opts.fanTimezone || 'UTC'))}</p>
+      </div>`
+    : '';
 
   const joinBlock = opts.callJoinUrl
     ? `<div style="text-align:center;margin:24px 0;">
@@ -162,10 +197,10 @@ export function callBookingConfirmationEmail(opts: {
         </a>
       </div>
       <p style="color:#6b7280;font-size:13px;line-height:1.6;">
-        Use this link when it's time for your call. Both you and ${creator} need to join for the call to start.
+        Use this link at the scheduled time. Both you and ${creator} need to join for the call to start.
       </p>`
     : `<p style="color:#4b5563;line-height:1.6;">
-        ${creator} will reach out to you to schedule the call. Keep an eye on your inbox!
+        ${creator} will reach out to you to confirm the details. Keep an eye on your inbox!
       </p>`;
 
   return {
@@ -176,6 +211,7 @@ export function callBookingConfirmationEmail(opts: {
         Your <strong>${amount}</strong> booking for a <strong>${opts.durationMinutes}-minute</strong>
         video call with <strong>${creator}</strong> is confirmed.
       </p>
+      ${scheduleBlock}
       ${joinBlock}
       <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">What happens next:</p>
@@ -241,6 +277,12 @@ export function newCallBookingNotificationEmail(opts: {
   durationMinutes: number;
   amountCents: number;
   callNotes: string | null;
+  /** ISO 8601 timestamp of the booked call slot */
+  scheduledAt?: string;
+  /** Fan's IANA timezone string (e.g. 'America/New_York') */
+  fanTimezone?: string;
+  /** Creator's unique join URL for the call room */
+  creatorJoinUrl?: string;
 }): { subject: string; html: string } {
   const creator = escapeHtml(opts.creatorName);
   const booker = escapeHtml(opts.bookerName);
@@ -251,8 +293,22 @@ export function newCallBookingNotificationEmail(opts: {
     : '';
   const notesBlock = opts.callNotes
     ? `<div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
-        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Call notes:</p>
+        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Call notes from booker:</p>
         <p style="margin:0;color:#4b5563;white-space:pre-wrap;">${escapeHtml(opts.callNotes)}</p>
+      </div>`
+    : '';
+  const scheduleBlock = opts.scheduledAt
+    ? `<div style="background:#ede9fe;border-left:4px solid #7c3aed;padding:14px 16px;border-radius:6px;margin:20px 0;">
+        <p style="margin:0 0 4px;font-weight:700;color:#5b21b6;">📅 Scheduled for:</p>
+        <p style="margin:0;color:#374151;font-size:15px;">${escapeHtml(formatCallTime(opts.scheduledAt, opts.fanTimezone || 'UTC'))}</p>
+        ${opts.fanTimezone ? `<p style="margin:4px 0 0;color:#6b7280;font-size:12px;">Fan's timezone: ${escapeHtml(opts.fanTimezone)}</p>` : ''}
+      </div>`
+    : '';
+  const joinBlock = opts.creatorJoinUrl
+    ? `<div style="text-align:center;margin:24px 0;">
+        <a href="${escapeHtml(opts.creatorJoinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 40px;border-radius:12px;">
+          Join Video Call
+        </a>
       </div>`
     : '';
 
@@ -264,6 +320,7 @@ export function newCallBookingNotificationEmail(opts: {
         <strong>${booker}</strong> just booked a <strong>${opts.durationMinutes}-minute</strong>
         video call for <strong>${amount}</strong>.
       </p>
+      ${scheduleBlock}
       <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Booker details:</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Name:</strong> ${booker}</p>
@@ -271,8 +328,10 @@ export function newCallBookingNotificationEmail(opts: {
         ${igLine}
       </div>
       ${notesBlock}
+      ${joinBlock}
       <p style="color:#4b5563;line-height:1.6;">
-        Please reach out to <strong>${booker}</strong> at <strong>${email}</strong> to schedule the call.
+        You can also join from your <a href="${escapeHtml(opts.creatorJoinUrl || '')}"
+          style="color:#7c3aed;font-weight:600;">Convozo dashboard</a> on the day of the call.
       </p>
     `),
   };

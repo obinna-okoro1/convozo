@@ -206,11 +206,14 @@ Deno.serve(async (req) => {
     const durationMinutes = (booking.duration as number) || 30;
     const appUrl = getAppUrl();
     const fanAccessToken = booking.fan_access_token as string;
-    const callUrl = `${appUrl}/call/${booking_id}?role=fan&token=${fanAccessToken}`;
+    // Fan's unique link — requires the secret token instead of a JWT
+    const fanCallUrl = `${appUrl}/call/${booking_id}?role=fan&token=${fanAccessToken}`;
+    // Creator's link — no token; they authenticate via their session JWT
+    const creatorCallUrl = `${appUrl}/call/${booking_id}?role=creator`;
 
-    // Creator joins → always email the fan with the join link
+    // Creator joins → always email the fan with their (fan) join link
     if (role === 'creator' && bookerEmail) {
-      const emailPayload = callStartNotificationEmail({ creatorName, durationMinutes, joinUrl: callUrl });
+      const emailPayload = callStartNotificationEmail({ creatorName, durationMinutes, joinUrl: fanCallUrl });
       const sent = await sendEmail({
         to: bookerEmail,
         subject: emailPayload.subject,
@@ -220,9 +223,9 @@ Deno.serve(async (req) => {
       console.log(`[join-call] Creator joined → fan email (${bookerEmail}): ${sent ? '✅' : '⚠️ failed'}`);
     }
 
-    // Fan joins → email the creator (idempotency key prevents spam on re-joins)
+    // Fan joins → email the creator with their (creator) join link
     if (role === 'fan' && creatorEmail) {
-      const emailPayload = fanJoinedEmail({ creatorName, bookerName, durationMinutes, joinUrl: callUrl });
+      const emailPayload = fanJoinedEmail({ creatorName, bookerName, durationMinutes, joinUrl: creatorCallUrl });
       const sent = await sendEmail({
         to: creatorEmail,
         subject: emailPayload.subject,
