@@ -31,6 +31,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { VideoCallService } from '../../services/video-call.service';
 import { CompleteCallResponse } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
@@ -325,6 +326,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   // Polls participants() every 2s as a fallback for the participant-joined event,
   // which can be unreliable in iframe-wrapped Daily sessions.
   private participantPollInterval: ReturnType<typeof setInterval> | null = null;
+  // Supabase Realtime channel — authoritative signal for when the other party joins.
+  // Fires as soon as the join-call Edge Function sets call_started_at on the DB row.
+  private bookingChannel: RealtimeChannel | null = null;
 
   readonly otherParticipantName = computed(() => {
     const booking = this.videoCallService.currentBooking();
@@ -485,35 +489,45 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Transition from 'waiting' to 'in_progress' when both participants are in the room.
-   * Optimistically starts the countdown, then refreshes from DB for the authoritative
-   * call_started_at so both parties see the same timer.
+   *
+   * Can be triggered by three sources (first one wins due to state guard):
+   *   1. Supabase Realtime UPDATE on the booking row — most reliable, fires immediately
+   *      when the join-call Edge Function sets call_started_at on the DB.
+   *   2. Daily.co participant-joined event — fires when the other party enters the room.
+   *   3. Daily.co participant poll (every 2s) — fallback if events don't fire.
+   *
+   * @param callStartedAt - Pre-fetched ISO timestamp from Realtime payload (skips DB round-trip).
+   *                        When undefined, falls back to an optimistic 'now' then re-fetches.
    */
-  private async transitionToInProgress(): Promise<void> {
-    // Guard: if we already moved past waiting (event + poll both fired), do nothing
+  private async transitionToInProgress(callStartedAt?: string): Promise<void> {
+    // Guard: if we already moved past waiting (multiple sources may fire), do nothing
     if (this.videoCallService.callState() !== 'waiting') return;
     const booking = this.videoCallService.currentBooking();
     if (!booking) return;
 
-    // Stop polling — we got the signal, no need to keep checking
+    // Stop both polling mechanisms — we have the signal
     this.stopParticipantPolling();
+    this.unsubscribeBookingRealtime();
 
-    // Optimistic: start countdown from now for immediate UX
+    // Use server-authoritative timestamp if available (from Realtime payload or DB fetch).
+    // Fall back to 'now' for an immediate optimistic UX start.
+    const startedAt = callStartedAt ? new Date(callStartedAt) : new Date();
     this.videoCallService.callState.set('in_progress');
-    this.videoCallService.callStartedAt.set(new Date());
+    this.videoCallService.callStartedAt.set(startedAt);
     this.videoCallService.startCountdown(booking.duration);
 
-    // Authoritative: re-fetch booking to get server-recorded call_started_at.
-    // This query may fail for fans (RLS blocks unauthenticated SELECT), so
-    // treat it as a best-effort refresh — the optimistic values above are
-    // close enough for a smooth UX.
-    try {
-      const { data: fresh } = await this.videoCallService.loadBooking(this.bookingId);
-      if (fresh?.call_started_at) {
-        this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at));
-        this.videoCallService.startCountdown(fresh.duration);
+    // If we didn't have a timestamp from Realtime, fetch authoritative value from DB.
+    // With the anon SELECT policy in migration 025, this now works for fans too.
+    if (!callStartedAt) {
+      try {
+        const { data: fresh } = await this.videoCallService.loadBooking(this.bookingId);
+        if (fresh?.call_started_at) {
+          this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at));
+          this.videoCallService.startCountdown(fresh.duration);
+        }
+      } catch {
+        // Continue with optimistic timer on any unexpected error
       }
-    } catch {
-      // Fan RLS blocked — continue with optimistic timer
     }
   }
 
@@ -555,9 +569,17 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     //  3. Handles camera/mic permission prompts
     await this.joinDailyRoom(joinResult.room_url, joinResult.token);
 
-    // Start polling as a safety net in case participant-joined doesn't fire.
-    // Cleared automatically once the call transitions to in_progress.
-    this.startParticipantPolling();
+    // Only subscribe to waiting-state detectors if we're actually waiting.
+    // If call_started_at was already set (reconnect case), we're already in_progress.
+    if (this.videoCallService.callState() === 'waiting') {
+      // Primary: Supabase Realtime subscription — fires immediately when the DB is updated
+      // by the join-call Edge Function. Works for both creator and fan (migration 025).
+      this.subscribeToBookingRealtime();
+
+      // Secondary: Daily.co participant poll — catches cases where Realtime delivery
+      // is delayed (e.g. network hiccup). Runs every 2s and stops when no longer needed.
+      this.startParticipantPolling();
+    }
   }
 
   /**
@@ -591,6 +613,59 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.participantPollInterval) {
       clearInterval(this.participantPollInterval);
       this.participantPollInterval = null;
+    }
+  }
+
+  /**
+   * Subscribe to Supabase Realtime changes on the call_bookings row.
+   *
+   * This is the most reliable mechanism to detect when the other party joins:
+   * the join-call Edge Function writes call_started_at to the DB, which
+   * immediately pushes a WebSocket message to all subscribers.
+   *
+   * Works for both creator (authenticated) and fan (anon — allowed by migration 025).
+   * Unsubscribed as soon as the call transitions away from 'waiting'.
+   */
+  private subscribeToBookingRealtime(): void {
+    if (this.bookingChannel) return; // already subscribed
+
+    this.bookingChannel = this.supabaseService.client
+      .channel(`call_room_${this.bookingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'call_bookings',
+          filter: `id=eq.${this.bookingId}`,
+        },
+        (payload) => {
+          this.ngZone.run(() => {
+            if (this.videoCallService.callState() !== 'waiting') return;
+
+            // The join-call Edge Function sets both call_started_at and status='in_progress'
+            // when both parties have joined. Either field being set is our trigger.
+            const updated = payload.new as {
+              call_started_at: string | null;
+              status: string;
+            };
+
+            if (updated.call_started_at || updated.status === 'in_progress') {
+              console.log('[Realtime] Both parties joined — transitioning to in_progress');
+              void this.transitionToInProgress(updated.call_started_at ?? undefined);
+            }
+          });
+        },
+      )
+      .subscribe((status) => {
+        console.log(`[Realtime] call_bookings subscription: ${status}`);
+      });
+  }
+
+  private unsubscribeBookingRealtime(): void {
+    if (this.bookingChannel) {
+      void this.supabaseService.client.removeChannel(this.bookingChannel);
+      this.bookingChannel = null;
     }
   }
 
@@ -687,6 +762,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       clearTimeout(this.autoCompleteTimeout);
     }
     this.stopParticipantPolling();
+    this.unsubscribeBookingRealtime();
 
     // If the creator navigates away while the call is in_progress, fire-and-forget
     // a complete-call request so the booking doesn't stay stuck in 'in_progress'.
