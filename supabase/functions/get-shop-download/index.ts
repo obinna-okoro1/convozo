@@ -1,10 +1,10 @@
 /**
  * get-shop-download
  *
- * Generates a short-lived (5-minute) signed download URL for a purchased
- * digital shop item. Buyers land on the success page after Stripe payment
- * and click "Download" — this function validates their purchase and serves
- * a signed URL from the private shop-files bucket.
+ * Generates a 1-hour signed download URL for a purchased digital shop item.
+ * Buyers land on the success page after Stripe payment and click "Download" —
+ * this function validates their purchase and serves a signed URL from the
+ * private shop-files bucket.
  *
  * Expects POST body:
  *   { session_id: string }  — the Stripe checkout session ID (from success URL)
@@ -17,7 +17,7 @@
  *   - No JWT required — buyers are unauthenticated fans
  *   - Purchase verified via stripe_session_id in shop_orders (status = 'completed')
  *   - Rate-limited: 10 requests per session_id per hour
- *   - Signed URL expires in 300 seconds (5 minutes) — must be used promptly
+ *   - Signed URL expires in 3600 seconds (1 hour)
  *   - Files are in a private bucket — never publicly accessible without a signed URL
  *
  * Errors:
@@ -108,20 +108,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── Generate a 5-minute signed URL from the private shop-files bucket ────
+    // ── Generate a 1-hour signed URL from the private shop-files bucket ─────
+    //
+    // The `download` option causes the storage server to include
+    // Content-Disposition: attachment; filename="<filename>" in its response
+    // headers. This is the ONLY reliable way to trigger a file download on
+    // mobile browsers (iOS Safari, Android Chrome) — the HTML `download`
+    // attribute is silently ignored for cross-origin URLs on mobile.
+
+    // Strip the storage path prefix to get the clean filename
+    const rawFilename = item.file_storage_path.split('/').pop() ?? 'download';
+    const filename = rawFilename.replace(/^\d+_/, '') || rawFilename;
 
     const { data: signed, error: signedError } = await supabase.storage
       .from('shop-files')
-      .createSignedUrl(item.file_storage_path, 300);
+      .createSignedUrl(item.file_storage_path, 3600, { download: filename });
 
     if (signedError || !signed?.signedUrl) {
       console.error('[get-shop-download] failed to create signed URL:', signedError);
       return jsonError('Failed to generate download link. Please try again.', 500, corsHeaders);
     }
-
-    // Storage paths are `{creator_id}/{timestamp}_{originalFilename}` — strip the prefix
-    const rawFilename = item.file_storage_path.split('/').pop() ?? 'download';
-    const filename = rawFilename.replace(/^\d+_/, '') || rawFilename;
 
     console.log('[get-shop-download] signed URL generated for order:', order.id, 'item:', order.item_id);
     return jsonOk({ url: signed.signedUrl, filename }, corsHeaders);
