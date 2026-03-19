@@ -330,6 +330,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   // Polls participants() every 2s as a fallback for the participant-joined event,
   // which can be unreliable in iframe-wrapped Daily sessions.
   private participantPollInterval: ReturnType<typeof setInterval> | null = null;
+  // Polls get_call_status RPC every 3s — guaranteed fallback that transitions the
+  // waiting screen within 3s even if Realtime broadcast and Daily.co events both miss.
+  private callStatusPollInterval: ReturnType<typeof setInterval> | null = null;
   // Supabase Realtime channel — authoritative signal for when the other party joins.
   // Fires as soon as the join-call Edge Function sets call_started_at on the DB row.
   private bookingChannel: RealtimeChannel | null = null;
@@ -509,8 +512,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     const booking = this.videoCallService.currentBooking();
     if (!booking) return;
 
-    // Stop both polling mechanisms — we have the signal
+    // Stop all polling mechanisms — we have the signal
     this.stopParticipantPolling();
+    this.stopCallStatusPolling();
     this.unsubscribeBookingRealtime();
 
     // Use server-authoritative timestamp if available (from Realtime payload or DB fetch).
@@ -571,22 +575,31 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       this.videoCallService.startCountdown(joinResult.booking.duration);
     }
 
+    // Subscribe to Realtime BEFORE starting the Daily WebRTC handshake.
+    // joinDailyRoom() is async and can take several seconds (WebRTC setup, STUN/TURN
+    // negotiation). If the other participant joins during this window, the join-call
+    // Edge Function broadcasts 'call_started' — if we're not subscribed yet, that
+    // message is lost. Subscribing here closes that race.
+    if (this.videoCallService.callState() === 'waiting') {
+      this.subscribeToBookingRealtime();
+    }
+
     // Join the Daily room via the SDK. The SDK:
     //  1. Sets the iframe src to the Daily Prebuilt UI
     //  2. Passes the scoped meeting token for access control
     //  3. Handles camera/mic permission prompts
     await this.joinDailyRoom(joinResult.room_url, joinResult.token);
 
-    // Only subscribe to waiting-state detectors if we're actually waiting.
-    // If call_started_at was already set (reconnect case), we're already in_progress.
+    // Start participant-count fallbacks only if we are still waiting after the Daily join.
     if (this.videoCallService.callState() === 'waiting') {
-      // Primary: Supabase Realtime subscription — fires immediately when the DB is updated
-      // by the join-call Edge Function. Works for both creator and fan (migration 025).
-      this.subscribeToBookingRealtime();
-
-      // Secondary: Daily.co participant poll — catches cases where Realtime delivery
-      // is delayed (e.g. network hiccup). Runs every 2s and stops when no longer needed.
+      // Daily.co participant poll — catches cases where Realtime delivery is delayed.
       this.startParticipantPolling();
+
+      // DB status poll — guaranteed fallback that transitions the waiting screen within
+      // 3 seconds of the backend setting call_started_at, independent of Realtime and
+      // Daily.co event delivery. Works for both fans (get_call_status RPC, anon-safe)
+      // and creators (same RPC, authenticated).
+      this.startCallStatusPolling();
     }
   }
 
@@ -621,6 +634,47 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.participantPollInterval) {
       clearInterval(this.participantPollInterval);
       this.participantPollInterval = null;
+    }
+  }
+
+  /**
+   * Poll get_call_status RPC every 3 seconds while in the 'waiting' state.
+   *
+   * This is the most reliable fallback mechanism. It is independent of:
+   *   - Supabase Realtime delivery (which can miss broadcasts if the subscription
+   *     isn't established before the broadcast fires)
+   *   - Daily.co iframe events (which can be delayed in cross-origin iframe mode)
+   *
+   * The get_call_status RPC (migration 029) is accessible to both anon (fans) and
+   * authenticated (creators), so this works for both roles without special-casing.
+   *
+   * As soon as call_started_at is non-null in the DB, the waiting screen disappears
+   * within 3 seconds, guaranteed.
+   */
+  private startCallStatusPolling(): void {
+    if (this.callStatusPollInterval) return;
+
+    this.callStatusPollInterval = setInterval(() => {
+      if (this.videoCallService.callState() !== 'waiting') {
+        this.stopCallStatusPolling();
+        return;
+      }
+
+      void this.videoCallService.loadCallStatus(this.bookingId).then(({ data }) => {
+        if (data?.call_started_at) {
+          this.ngZone.run(() => {
+            console.log('[DB poll] call_started_at detected — transitioning to in_progress');
+            void this.transitionToInProgress(data.call_started_at as string);
+          });
+        }
+      });
+    }, 3000);
+  }
+
+  private stopCallStatusPolling(): void {
+    if (this.callStatusPollInterval) {
+      clearInterval(this.callStatusPollInterval);
+      this.callStatusPollInterval = null;
     }
   }
 
@@ -767,6 +821,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       clearTimeout(this.autoCompleteTimeout);
     }
     this.stopParticipantPolling();
+    this.stopCallStatusPolling();
     this.unsubscribeBookingRealtime();
 
     // If the creator navigates away while the call is in_progress, fire-and-forget
