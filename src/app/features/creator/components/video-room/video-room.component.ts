@@ -54,12 +54,12 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
 
     <!-- ─── In-call overlays (timer + end button) ─── -->
     @if (videoCallService.callState() === 'in_progress') {
-      <!-- Top bar: live indicator + countdown timer -->
+      <!-- Top bar: live dot · participant name · timer · end/leave button -->
       <div class="fixed top-0 left-0 right-0 z-20 flex items-center justify-between
-                  px-4 pt-safe-top pb-3 pt-3
-                  bg-gradient-to-b from-black/75 via-black/40 to-transparent pointer-events-none">
+                  px-4 pt-3 pb-3
+                  bg-gradient-to-b from-black/80 via-black/50 to-transparent pointer-events-none">
+        <!-- Left: live dot + participant name -->
         <div class="flex items-center gap-2.5">
-          <!-- Pulsing live dot -->
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                   style="background: #4ade80;"></span>
@@ -69,40 +69,44 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
           <span class="w-px h-3 opacity-30" style="background: white;"></span>
           <span class="text-sm" style="color: rgba(255,255,255,0.65);">{{ otherParticipantName() }}</span>
         </div>
-        <!-- Countdown timer -->
-        <div class="flex items-center gap-1.5 tabular-nums transition-colors duration-300"
-             [style.color]="videoCallService.remainingSeconds() < 60 ? '#f87171' : 'rgba(255,255,255,0.9)'">
-          <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <span class="font-mono font-bold text-base">{{ videoCallService.formattedTimeRemaining() }}</span>
+
+        <!-- Right: countdown timer + end/leave button -->
+        <div class="flex items-center gap-3 pointer-events-auto">
+          <!-- Countdown timer -->
+          <div class="flex items-center gap-1.5 tabular-nums transition-colors duration-300"
+               [style.color]="videoCallService.remainingSeconds() < 60 ? '#f87171' : 'rgba(255,255,255,0.85)'">
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="font-mono font-bold text-sm">{{ videoCallService.formattedTimeRemaining() }}</span>
+          </div>
+
+          <!-- Divider -->
+          <span class="w-px h-4 opacity-25" style="background: white;"></span>
+
+          <!-- End / Leave button — compact pill in the top bar -->
+          <button
+            (click)="endCall()"
+            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full
+                   font-semibold text-xs text-white transition-all duration-150
+                   shadow-lg min-h-[2rem]"
+            style="background: rgba(239,68,68,0.85); backdrop-filter: blur(0.5rem);"
+            onmouseover="this.style.background='rgba(220,38,38,0.95)';"
+            onmouseout="this.style.background='rgba(239,68,68,0.85)';">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24
+                       1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17
+                       0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+            </svg>
+            {{ isCreator() ? 'End Call' : 'Leave' }}
+          </button>
         </div>
       </div>
 
-      <!-- Bottom bar: end call button -->
-      <div class="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-center
-                  py-6 bg-gradient-to-t from-black/75 via-black/40 to-transparent pointer-events-none">
-        <button
-          (click)="endCall()"
-          class="pointer-events-auto flex items-center gap-2 px-7 py-3.5 rounded-full
-                 font-semibold text-sm text-white transition-all duration-200
-                 shadow-xl min-h-[2.75rem]"
-          style="background: #ef4444; box-shadow: 0 0.5rem 1.5rem rgba(239,68,68,0.35);"
-          onmouseover="this.style.background='#dc2626';"
-          onmouseout="this.style.background='#ef4444';">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24
-                     1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17
-                     0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-          </svg>
-          {{ isCreator() ? 'End Call' : 'Leave Call' }}
-        </button>
-      </div>
-
-      <!-- Low-time warning pill — replaces the old animate-pulse banner -->
+      <!-- Low-time warning pill — sits below the top bar -->
       @if (videoCallService.remainingSeconds() <= 60 && videoCallService.remainingSeconds() > 0) {
-        <div class="fixed top-14 left-1/2 -translate-x-1/2 z-30 animate-fade-in
+        <div class="fixed top-16 left-1/2 -translate-x-1/2 z-30 animate-fade-in
                     flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white"
              style="background: rgba(239,68,68,0.85); backdrop-filter: blur(0.5rem);">
           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -517,13 +521,17 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     this.videoCallService.startCountdown(booking.duration);
 
     // If we didn't have a timestamp from Realtime, fetch authoritative value from DB.
-    // With the anon SELECT policy in migration 025, this now works for fans too.
+    // Fans use the get_call_status RPC (no direct table SELECT since migration 029).
+    // Creators use the full loadBooking (authenticated RLS access).
     if (!callStartedAt) {
       try {
-        const { data: fresh } = await this.videoCallService.loadBooking(this.bookingId);
+        const loadFn = this.role === 'fan'
+          ? this.videoCallService.loadCallStatus(this.bookingId)
+          : this.videoCallService.loadBooking(this.bookingId);
+        const { data: fresh } = await loadFn;
         if (fresh?.call_started_at) {
-          this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at));
-          this.videoCallService.startCountdown(fresh.duration);
+          this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at as string));
+          this.videoCallService.startCountdown(fresh.duration as number);
         }
       } catch {
         // Continue with optimistic timer on any unexpected error
@@ -617,14 +625,16 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Subscribe to Supabase Realtime changes on the call_bookings row.
+   * Subscribe to Supabase Realtime broadcast on the call channel.
    *
-   * This is the most reliable mechanism to detect when the other party joins:
-   * the join-call Edge Function writes call_started_at to the DB, which
-   * immediately pushes a WebSocket message to all subscribers.
+   * Since migration 029 removed the anon SELECT policy on call_bookings, fans
+   * can no longer use postgres_changes (which requires SELECT access). Instead,
+   * the join-call Edge Function broadcasts a 'call_started' event via the
+   * Supabase Realtime REST API when both parties have joined. This subscription
+   * receives that broadcast — no table permission required.
    *
-   * Works for both creator (authenticated) and fan (anon — allowed by migration 025).
-   * Unsubscribed as soon as the call transitions away from 'waiting'.
+   * Works for both creator and fan. Unsubscribed as soon as the call transitions
+   * away from 'waiting'.
    */
   private subscribeToBookingRealtime(): void {
     if (this.bookingChannel) return; // already subscribed
@@ -632,33 +642,28 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     this.bookingChannel = this.supabaseService.client
       .channel(`call_room_${this.bookingId}`)
       .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'call_bookings',
-          filter: `id=eq.${this.bookingId}`,
-        },
+        // Use broadcast instead of postgres_changes — no SELECT permission needed.
+        // The join-call Edge Function broadcasts to this channel via the Realtime REST API.
+        'broadcast',
+        { event: 'call_started' },
         (payload) => {
           this.ngZone.run(() => {
             if (this.videoCallService.callState() !== 'waiting') return;
 
-            // The join-call Edge Function sets both call_started_at and status='in_progress'
-            // when both parties have joined. Either field being set is our trigger.
-            const updated = payload.new as {
-              call_started_at: string | null;
-              status: string;
-            };
+            // The broadcast payload contains { call_started_at, status }
+            // (nested under payload.payload in the Supabase broadcast envelope).
+            const data = (payload as { payload?: { call_started_at?: string; status?: string } }).payload ?? {};
+            const callStartedAt = data.call_started_at ?? undefined;
 
-            if (updated.call_started_at || updated.status === 'in_progress') {
-              console.log('[Realtime] Both parties joined — transitioning to in_progress');
-              void this.transitionToInProgress(updated.call_started_at ?? undefined);
+            if (callStartedAt || data.status === 'in_progress') {
+              console.log('[Realtime] Broadcast: both parties joined — transitioning to in_progress');
+              void this.transitionToInProgress(callStartedAt);
             }
           });
         },
       )
       .subscribe((status) => {
-        console.log(`[Realtime] call_bookings subscription: ${status}`);
+        console.log(`[Realtime] call_room_${this.bookingId} broadcast subscription: ${status}`);
       });
   }
 

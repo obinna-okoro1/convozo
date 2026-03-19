@@ -3,6 +3,22 @@
 # index.html must NEVER be cached — every deploy changes chunk filenames.
 # If a stale index.html is served, it references old JS chunks that no longer
 # exist, causing "text/html" MIME errors when the browser tries to load them.
+
+# ── Security headers applied to ALL routes ─────────────────────────────────────
+/*
+  # Prevent this site from being embedded in iframes on other origins (clickjacking)
+  X-Frame-Options: SAMEORIGIN
+  # Prevent browsers from MIME-sniffing the content-type (MIME confusion attacks)
+  X-Content-Type-Options: nosniff
+  # Don't leak the full Referrer URL to third-party origins
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Restrict browser feature access — permit camera/mic (Daily.co calls), deny everything else
+  Permissions-Policy: camera=self, microphone=self, payment=(), geolocation=(), usb=(), serial=(), bluetooth=()
+  # Force HTTPS for 1 year and include subdomains (requires HTTPS-only deployment — Cloudflare Pages)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  # XSS auditor hint for legacy browsers (modern browsers ignore it but it doesn't hurt)
+  X-XSS-Protection: 1; mode=block
+
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache

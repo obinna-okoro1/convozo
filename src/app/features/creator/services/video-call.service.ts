@@ -181,6 +181,8 @@ export class VideoCallService {
 
   /**
    * Load a booking by ID (used by VideoRoomComponent on init and after participant-joined)
+   * Uses direct table SELECT — requires the caller to have SELECT access via RLS.
+   * Creators are authenticated and pass RLS. Fans should use loadCallStatus() instead.
    */
   async loadBooking(bookingId: string): Promise<SupabaseResponse<CallBooking>> {
     const { data, error } = await this.supabaseService.client
@@ -194,6 +196,29 @@ export class VideoCallService {
     }
 
     return { data: data as CallBooking | null, error };
+  }
+
+  /**
+   * Load non-sensitive booking status fields via the get_call_status RPC function.
+   * Safe for unauthenticated fans — does NOT expose fan_access_token, meeting tokens,
+   * booker email, or payment IDs (migration 029 security requirement).
+   * Use this instead of loadBooking() when the caller may be an anon fan.
+   */
+  async loadCallStatus(bookingId: string): Promise<SupabaseResponse<Partial<CallBooking>>> {
+    const { data, error } = await this.supabaseService.client
+      .rpc('get_call_status', { p_booking_id: bookingId });
+
+    if (error) return { data: null, error };
+
+    // rpc returns an array; take the first row (there will be 0 or 1 result)
+    const row = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
+    if (row) {
+      // Merge into currentBooking without overwriting sensitive creator fields
+      const current = this.currentBooking();
+      this.currentBooking.set({ ...current, ...row } as CallBooking);
+    }
+
+    return { data: row as Partial<CallBooking> | null, error: null };
   }
 
   /**
