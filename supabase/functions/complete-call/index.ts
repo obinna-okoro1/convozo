@@ -2,7 +2,7 @@
  * complete-call Edge Function
  *
  * Called when the video call ends (either by time expiry or manual leave).
- * Computes actual duration, verifies the 80% completion threshold,
+ * Computes actual duration, verifies the 30% completion threshold,
  * marks the booking as completed, and releases the creator payout.
  *
  * Expects:
@@ -23,6 +23,10 @@
  *   404 — booking not found
  *   403 — unauthorized (bad JWT or wrong/missing fan_access_token)
  *   409 — already completed/cancelled/refunded
+ *
+ * Payout / refund policy:
+ *   > 30% of booked duration → creator payout released, no refund to fan
+ *   ≤ 30% of booked duration → fan refunded in full, payout kept held
  */
 
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
@@ -31,8 +35,9 @@ import { stripe } from '../_shared/stripe.ts';
 import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
 import { deleteRoom } from '../_shared/daily.ts';
 
-/** Minimum completion threshold: 80% of booked duration */
-const COMPLETION_THRESHOLD = 0.80;
+/** Completion threshold: if the call ran for at least 30% of the booked duration,
+ *  the creator keeps the payment. Below 30%, the fan is refunded in full. */
+const COMPLETION_THRESHOLD = 0.30;
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -106,7 +111,8 @@ Deno.serve(async (req) => {
     const actualDurationSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
     const bookedDurationSeconds = (booking.duration as number) * 60;
 
-    // Check completion threshold (80%)
+    // Check completion threshold (30%): call must run for at least 30% of booked duration
+    // for the creator to keep the payment. Below 30% → fan is refunded.
     const meetsThreshold = actualDurationSeconds >= bookedDurationSeconds * COMPLETION_THRESHOLD;
 
     // ── Update booking ──────────────────────────────────────────────────
@@ -117,31 +123,34 @@ Deno.serve(async (req) => {
     };
 
     let payoutReleased = false;
+    let refunded = false;
 
     if (meetsThreshold && booking.payout_status === 'held') {
-      // Release payout to creator via Stripe Transfer
-      const stripeAccounts = (booking.creators as { stripe_accounts: { stripe_account_id: string } | null }).stripe_accounts;
+      // Call ran for > 30% of booked time — release payout to creator.
+      // The payment was already captured with application_fee_amount during checkout;
+      // the transfer to the connected account happens automatically via transfer_data.
+      updatePayload.payout_status = 'released';
+      updatePayload.payout_released_at = now.toISOString();
+      payoutReleased = true;
+      console.log(`[complete-call] Payout released for booking ${booking_id} (${actualDurationSeconds}s / ${bookedDurationSeconds}s)`);
+    } else if (!meetsThreshold) {
+      // Call was too short (≤ 30% of booked duration) — refund the fan in full.
       const paymentIntentId = booking.stripe_payment_intent_id as string | null;
-
-      if (stripeAccounts?.stripe_account_id && paymentIntentId) {
+      if (paymentIntentId && booking.payout_status === 'held') {
         try {
-          // The payment was already captured with application_fee_amount during checkout.
-          // The transfer to the connected account happens automatically via transfer_data.
-          // We just need to confirm the payment intent completed (it did if we got here).
-          // Mark payout as released — Stripe handles the actual transfer.
-          updatePayload.payout_status = 'released';
-          updatePayload.payout_released_at = now.toISOString();
-          payoutReleased = true;
-
-          console.log(`[complete-call] Payout released for booking ${booking_id}`);
-        } catch (payoutErr) {
-          // Payout failure is logged but does not block call completion
-          console.error('[complete-call] Payout release error:', (payoutErr as Error).message);
+          await stripe.refunds.create({
+            payment_intent: paymentIntentId,
+            reason: 'requested_by_customer',
+          });
+          updatePayload.payout_status = 'refunded';
+          updatePayload.refunded_at = now.toISOString();
+          refunded = true;
+          console.log(`[complete-call] Fan refunded — call too short (${actualDurationSeconds}s / ${bookedDurationSeconds}s, threshold 30%)`);
+        } catch (refundErr) {
+          // Refund failure is logged; payout remains held for manual review
+          console.error('[complete-call] Refund error (payout held for review):', (refundErr as Error).message);
         }
       }
-    } else if (!meetsThreshold) {
-      // Call was too short — keep payout held for manual review
-      console.log(`[complete-call] Call too short (${actualDurationSeconds}s / ${bookedDurationSeconds}s) — payout held for review`);
     }
 
     await supabase
@@ -167,6 +176,7 @@ Deno.serve(async (req) => {
         actual_seconds: actualDurationSeconds,
         booked_seconds: bookedDurationSeconds,
         payout_released: payoutReleased,
+        refunded,
       },
     });
 
@@ -176,6 +186,15 @@ Deno.serve(async (req) => {
         event_type: 'payout_released',
         actor: 'system',
         metadata: { released_at: now.toISOString() },
+      });
+    }
+
+    if (refunded) {
+      await supabase.from('call_events').insert({
+        booking_id,
+        event_type: 'refund_issued',
+        actor: 'system',
+        metadata: { reason: 'call_too_short', threshold_percent: COMPLETION_THRESHOLD * 100 },
       });
     }
 
@@ -190,6 +209,7 @@ Deno.serve(async (req) => {
       booked_duration_seconds: bookedDurationSeconds,
       meets_threshold: meetsThreshold,
       payout_released: payoutReleased,
+      refunded,
     }, corsHeaders);
 
   } catch (err) {

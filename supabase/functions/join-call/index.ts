@@ -20,10 +20,45 @@
  */
 
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-import { supabase } from '../_shared/supabase.ts';
+import { supabase, supabaseUrl, supabaseServiceKey } from '../_shared/supabase.ts';
 import { jsonOk, jsonError, requireAuth, getAppUrl } from '../_shared/http.ts';
 import { createRoom, createMeetingToken } from '../_shared/daily.ts';
 import { sendEmail, callStartNotificationEmail, fanJoinedEmail } from '../_shared/email.ts';
+
+/**
+ * Broadcast a call_started event to the Supabase Realtime channel so that
+ * fans (who now have NO direct SELECT access to call_bookings after migration 029)
+ * can still be notified in real-time when the call transitions to 'in_progress'.
+ *
+ * Uses the Supabase Realtime REST broadcast API — no WebSocket connection required.
+ * Errors are non-fatal: the Angular component also polls Daily.co participants as a fallback.
+ */
+async function broadcastCallStarted(bookingId: string, callStartedAt: string): Promise<void> {
+  try {
+    const res = await fetch(`${supabaseUrl}/realtime/v1/api/broadcast`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceKey,
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({
+        messages: [{
+          topic: `realtime:call_room_${bookingId}`,
+          event: 'call_started',
+          payload: { call_started_at: callStartedAt, status: 'in_progress' },
+        }],
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.warn('[join-call] Realtime broadcast failed (non-fatal):', res.status, text);
+    }
+  } catch (err) {
+    // Never let broadcast failure break the join-call response
+    console.warn('[join-call] Realtime broadcast error (non-fatal):', (err as Error).message);
+  }
+}
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -189,6 +224,11 @@ Deno.serve(async (req) => {
           actor: 'system',
           metadata: { started_at: now },
         });
+
+        // Broadcast to Supabase Realtime so the fan's browser (which has no direct
+        // SELECT access to call_bookings after migration 029) gets the 'in_progress'
+        // transition instantly without needing the postgres_changes Realtime feed.
+        void broadcastCallStarted(booking_id, now);
       }
 
     }

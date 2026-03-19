@@ -48,6 +48,19 @@ Deno.serve(async (req) => {
 
   const corsHeaders = getCorsHeaders(req);
 
+  // SECURITY: This function triggers refunds and payouts — it must only be callable
+  // by the cron scheduler or other internal services, never by external clients.
+  // Require the shared INTERNAL_SECRET header (same pattern as send-push-notification).
+  const internalSecret = Deno.env.get('INTERNAL_SECRET') || '';
+  const providedSecret = req.headers.get('x-internal-secret') || '';
+  if (!internalSecret || providedSecret !== internalSecret) {
+    console.warn('[check-no-show] Unauthorized access attempt — missing or invalid x-internal-secret');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const body: unknown = await req.json().catch(() => ({}));
     const bookingId = (body as { booking_id?: string })?.booking_id;
@@ -100,10 +113,12 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Auto-complete the stuck call
+        // Auto-complete the stuck call.
+        // Policy: if the call ran for > 30% of booked duration, creator keeps the payment.
+        // Below 30% → fan is refunded in full.
         const actualDurationSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
         const bookedDurationSeconds = (booking.duration || 30) * 60;
-        const COMPLETION_THRESHOLD = 0.80;
+        const COMPLETION_THRESHOLD = 0.30;
         const meetsThreshold = actualDurationSeconds >= bookedDurationSeconds * COMPLETION_THRESHOLD;
 
         const updatePayload: Record<string, unknown> = {
@@ -113,10 +128,24 @@ Deno.serve(async (req) => {
         };
 
         let payoutReleased = false;
+        let autoRefunded = false;
         if (meetsThreshold) {
           updatePayload.payout_status = 'released';
           updatePayload.payout_released_at = now.toISOString();
           payoutReleased = true;
+        } else if (booking.stripe_payment_intent_id && booking.payout_status === 'held') {
+          // Call was too short — refund the fan
+          try {
+            await stripe.refunds.create({
+              payment_intent: booking.stripe_payment_intent_id,
+              reason: 'requested_by_customer',
+            });
+            updatePayload.payout_status = 'refunded';
+            updatePayload.refunded_at = now.toISOString();
+            autoRefunded = true;
+          } catch (refundErr) {
+            console.error(`[check-no-show] Auto-refund failed for booking ${booking.id}:`, (refundErr as Error).message);
+          }
         }
 
         await supabase
@@ -132,8 +161,10 @@ Deno.serve(async (req) => {
             reason: 'stuck_in_progress',
             actual_seconds: actualDurationSeconds,
             booked_seconds: bookedDurationSeconds,
+            threshold_percent: COMPLETION_THRESHOLD * 100,
             meets_threshold: meetsThreshold,
             payout_released: payoutReleased,
+            refunded: autoRefunded,
           },
         });
 
@@ -145,9 +176,9 @@ Deno.serve(async (req) => {
         results.push({
           booking_id: booking.id,
           action: 'skipped', // Re-using type; logged as auto-completed in events
-          refunded: false,
+          refunded: autoRefunded,
           payout_released: payoutReleased,
-          reason: `Auto-completed stuck in_progress call (${actualDurationSeconds}s actual)`,
+          reason: `Auto-completed stuck in_progress call (${actualDurationSeconds}s / ${bookedDurationSeconds}s, threshold 30%, refunded: ${autoRefunded})`,
         });
         continue;
       }

@@ -140,7 +140,14 @@ Deno.serve(async (req) => {
       cancel_url: `${appUrl}/${payload.creator_slug}`,
     };
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    // Idempotency key prevents duplicate sessions on network retries within a 10-minute window.
+    // Includes serverPrice so a different amount (future pricing changes) always creates a new session.
+    // Includes the scheduled_at slot so a second booking for a different time is a distinct session.
+    const windowSlot = Math.floor(Date.now() / (10 * 60 * 1000)); // 10-minute slots
+    const idempotencyRaw = `${payload.booker_email}:${payload.creator_slug}:call:${serverPrice}:${payload.scheduled_at}:${windowSlot}`;
+    const idempotencyKey = btoa(idempotencyRaw).slice(0, 64);
+
+    const session = await stripe.checkout.sessions.create(sessionConfig, { idempotencyKey });
 
     return jsonOk({ sessionId: session.id, url: session.url }, corsHeaders);
   } catch (err) {
