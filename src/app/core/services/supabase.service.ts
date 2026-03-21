@@ -1,9 +1,6 @@
-/**
- * Supabase service with proper access modifiers and type safety
- */
-
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User, PostgrestError } from '@supabase/supabase-js';
+import { FunctionsHttpError } from '@supabase/functions-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -24,6 +21,32 @@ import {
 interface SupabaseResponse<T> {
   data: T | null;
   error: PostgrestError | null;
+}
+
+// Unwrap real server error from Edge Function non-2xx responses.
+// FunctionsHttpError.message is always generic — the actual error is in error.context.json().
+async function invokeFunction<T>(
+  invokeFn: () => Promise<{ data: T | null; error: unknown }>,
+): Promise<EdgeFunctionResponse<T>> {
+  const { data, error } = await invokeFn();
+  if (!error) {
+    return { data: data ?? undefined, error: undefined };
+  }
+
+  // Unwrap FunctionsHttpError: read the real JSON error body from the response
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = await error.context.json() as { error?: string };
+      const message = body?.error ?? error.message;
+      return { data: undefined, error: { message } };
+    } catch {
+      return { data: undefined, error: { message: error.message } };
+    }
+  }
+
+  // Fallback for any other error type
+  const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+  return { data: undefined, error: { message } };
 }
 
 @Injectable({
@@ -48,9 +71,6 @@ export class SupabaseService {
     this.initializeAuthState();
   }
 
-  /**
-   * Wait for initial session to be loaded
-   */
   public async waitForSession(): Promise<User | null> {
     if (!this.sessionInitialized && this.sessionInitPromise) {
       await this.sessionInitPromise;
@@ -58,11 +78,8 @@ export class SupabaseService {
     return this.currentUserSubject.value;
   }
 
-  // ==================== AUTH METHODS ====================
+  // Auth
 
-  /**
-   * Sign in with email using magic link
-   */
   public async signInWithEmail(email: string): Promise<{ data: unknown; error: Error | null }> {
     const { data, error } = await this.client.auth.signInWithOtp({
       email,
@@ -73,26 +90,17 @@ export class SupabaseService {
     return { data, error };
   }
 
-  /**
-   * Sign out current user
-   */
   public async signOut(): Promise<{ data: null; error: Error | null }> {
     const { error } = await this.client.auth.signOut();
     return { data: null, error };
   }
 
-  /**
-   * Get current authenticated user
-   */
   public getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
-  // ==================== STORAGE METHODS ====================
+  // Storage
 
-  /**
-   * Upload file to Supabase Storage
-   */
   public async uploadFile(
     bucket: string,
     path: string,
@@ -127,9 +135,6 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * Delete file from Supabase Storage
-   */
   public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
     const { error } = await this.client.storage.from(bucket).remove([path]);
     return { error };
@@ -187,18 +192,13 @@ export class SupabaseService {
   public async getShopDownloadUrl(
     sessionId: string,
   ): Promise<EdgeFunctionResponse<{ url: string; filename: string }>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('get-shop-download', {
-      body: { session_id: sessionId },
-    });
-    return { data: data as { url: string; filename: string } | undefined, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('get-shop-download', { body: { session_id: sessionId } }),
+    );
   }
 
-  // ==================== CREATOR METHODS ====================
+  // Creator
 
-  /**
-   * Get creator by user ID
-   */
   public async getCreatorByUserId(userId: string): Promise<SupabaseResponse<Creator>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
@@ -209,9 +209,6 @@ export class SupabaseService {
     return { data: data as Creator | null, error };
   }
 
-  /**
-   * Get creator by slug with settings
-   */
   public async getCreatorBySlug(slug: string): Promise<SupabaseResponse<Creator>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
@@ -223,18 +220,12 @@ export class SupabaseService {
     return { data: data as Creator | null, error };
   }
 
-  /**
-   * Create a new creator profile
-   */
   public async createCreator(creator: Partial<Creator>): Promise<SupabaseResponse<Creator>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.from('creators').insert(creator).select().single();
     return { data: data as Creator | null, error };
   }
 
-  /**
-   * Update creator profile
-   */
   public async updateCreator(
     id: string,
     updates: Partial<Creator>,
@@ -249,11 +240,8 @@ export class SupabaseService {
     return { data: data as Creator | null, error };
   }
 
-  // ==================== CREATOR SETTINGS METHODS ====================
+  // Creator settings
 
-  /**
-   * Get creator settings by creator ID
-   */
   public async getCreatorSettings(creatorId: string): Promise<SupabaseResponse<CreatorSettings>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
@@ -264,9 +252,6 @@ export class SupabaseService {
     return { data: data as CreatorSettings | null, error };
   }
 
-  /**
-   * Create creator settings
-   */
   public async createCreatorSettings(
     settings: Partial<CreatorSettings>,
   ): Promise<SupabaseResponse<CreatorSettings>> {
@@ -279,9 +264,6 @@ export class SupabaseService {
     return { data: data as CreatorSettings | null, error };
   }
 
-  /**
-   * Update creator settings
-   */
   public async updateCreatorSettings(
     id: string,
     updates: Partial<CreatorSettings>,
@@ -296,11 +278,8 @@ export class SupabaseService {
     return { data: data as CreatorSettings | null, error };
   }
 
-  // ==================== STRIPE ACCOUNT METHODS ====================
+  // Stripe account
 
-  /**
-   * Get Stripe account by creator ID
-   */
   public async getStripeAccount(creatorId: string): Promise<SupabaseResponse<StripeAccount>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
@@ -311,11 +290,8 @@ export class SupabaseService {
     return { data: data as StripeAccount | null, error };
   }
 
-  // ==================== MESSAGE METHODS ====================
+  // Messages
 
-  /**
-   * Get all messages for a creator
-   */
   public async getMessages(creatorId: string): Promise<SupabaseResponse<Message[]>> {
     const { data, error } = await this.client
       .from('messages')
@@ -325,9 +301,6 @@ export class SupabaseService {
     return { data: data as Message[] | null, error };
   }
 
-  /**
-   * Update a message
-   */
   public async updateMessage(
     id: string,
     updates: Partial<Message>,
@@ -342,86 +315,57 @@ export class SupabaseService {
     return { data: data as Message | null, error };
   }
 
-  // ==================== EDGE FUNCTION METHODS ====================
+  // Edge functions
 
-  /**
-   * Create checkout session via Edge Function (Stripe)
-   */
   public async createCheckoutSession(
     payload: CheckoutSessionPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('create-checkout-session', {
-      body: payload,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('create-checkout-session', { body: payload }),
+    );
   }
 
-  /**
-   * Create call booking checkout session via Edge Function (Stripe)
-   */
   public async createCallBookingSession(
     payload: CallBookingPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('create-call-booking-session', {
-      body: payload,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('create-call-booking-session', { body: payload }),
+    );
   }
 
-  /**
-   * Send reply email via Edge Function
-   */
   public async sendReplyEmail(
     messageId: string,
     replyContent: string,
   ): Promise<EdgeFunctionResponse<void>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('send-reply-email', {
-      body: { message_id: messageId, reply_content: replyContent },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('send-reply-email', {
+        body: { message_id: messageId, reply_content: replyContent },
+      }),
+    );
   }
 
-  /**
-   * Create Stripe Connect account via Edge Function
-   */
   public async createConnectAccount(
     creatorId: string,
     email: string,
     displayName: string,
   ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('create-connect-account', {
-      body: { creator_id: creatorId, email, display_name: displayName },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('create-connect-account', {
+        body: { creator_id: creatorId, email, display_name: displayName },
+      }),
+    );
   }
 
-  /**
-   * Verify Stripe Connect account status via Edge Function
-   */
   public async verifyConnectAccount(
     accountId: string,
   ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('verify-connect-account', {
-      body: { account_id: accountId },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('verify-connect-account', { body: { account_id: accountId } }),
+    );
   }
 
-  // ==================== SHOP METHODS ====================
+  // Shop
 
-  /**
-   * Get all shop items for a creator (creator-side — includes inactive items)
-   */
   public async getShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
     const { data, error } = await this.client
       .from('shop_items')
@@ -432,9 +376,6 @@ export class SupabaseService {
     return { data: data as ShopItem[] | null, error };
   }
 
-  /**
-   * Get active shop items for a creator (public-facing — active only)
-   */
   public async getActiveShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
     const { data, error } = await this.client
       .from('shop_items')
@@ -446,9 +387,6 @@ export class SupabaseService {
     return { data: data as ShopItem[] | null, error };
   }
 
-  /**
-   * Create a new shop item
-   */
   public async createShopItem(
     item: Omit<ShopItem, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<{ data: ShopItem | null; error: unknown }> {
@@ -461,9 +399,6 @@ export class SupabaseService {
     return { data: data as ShopItem | null, error };
   }
 
-  /**
-   * Update an existing shop item
-   */
   public async updateShopItem(
     id: string,
     updates: Partial<Omit<ShopItem, 'id' | 'creator_id' | 'created_at' | 'updated_at'>>,
@@ -478,9 +413,6 @@ export class SupabaseService {
     return { data: data as ShopItem | null, error };
   }
 
-  /**
-   * Delete a shop item
-   */
   public async deleteShopItem(id: string): Promise<{ error: unknown }> {
     const { error } = await this.client
       .from('shop_items')
@@ -489,9 +421,6 @@ export class SupabaseService {
     return { error };
   }
 
-  /**
-   * Get shop orders for a creator (creator-side)
-   */
   public async getShopOrders(creatorId: string): Promise<{ data: ShopOrder[] | null; error: unknown }> {
     const { data, error } = await this.client
       .from('shop_orders')
@@ -501,23 +430,14 @@ export class SupabaseService {
     return { data: data as ShopOrder[] | null, error };
   }
 
-  /**
-   * Create a Stripe Checkout session for purchasing a shop item via Edge Function
-   */
   public async createShopCheckout(
     payload: ShopCheckoutPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, error } = await this.client.functions.invoke('create-shop-checkout', {
-      body: payload,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return invokeFunction(() =>
+      this.client.functions.invoke('create-shop-checkout', { body: payload }),
+    );
   }
 
-  /**
-   * Initialize authentication state
-   */
   private initializeAuthState(): void {
     this.sessionInitPromise = this.client.auth.getSession().then(({ data: { session } }) => {
       this.currentUserSubject.next(session?.user ?? null);

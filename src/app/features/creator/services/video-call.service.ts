@@ -1,20 +1,3 @@
-/**
- * Video Call Service
- *
- * Handles all video call operations:
- * - Joining a call (creator or fan) via the join-call Edge Function
- * - Completing a call via the complete-call Edge Function
- * - Loading bookings from the database
- * - Tracking reactive call state (idle → joining → waiting → in_progress → completed)
- *
- * The VideoRoomComponent uses @daily-co/daily-js for real-time participant events
- * and calls this service for state management and backend communication.
- *
- * Expects: SupabaseService for Edge Function invocations and DB queries
- * Returns: typed responses
- * Errors: all methods handle errors internally and never throw to callers
- */
-
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import {
@@ -65,10 +48,6 @@ export class VideoCallService {
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  /**
-   * Join a video call as either 'creator' or 'fan'.
-   * Calls the join-call Edge Function to get room URL + meeting token.
-   */
   async joinCall(bookingId: string, role: 'creator' | 'fan', fanAccessToken?: string): Promise<JoinCallResponse | null> {
     this.callState.set('joining');
     this.errorMessage.set(null);
@@ -135,13 +114,6 @@ export class VideoCallService {
     }
   }
 
-  /**
-   * Complete the call — called when the timer expires or either participant ends.
-   * Creator: authenticated via JWT.
-   * Fan: authenticated via fan_access_token issued at booking time.
-   * If the call is already completed (409), treat it as success — the other
-   * party already triggered completion.
-   */
   async completeCall(bookingId: string, endedBy: 'creator' | 'fan' | 'system' = 'system', fanAccessToken?: string): Promise<CompleteCallResponse | null> {
     this.callState.set('ending');
     this.stopCountdown();
@@ -221,9 +193,6 @@ export class VideoCallService {
     return { data: row as Partial<CallBooking> | null, error: null };
   }
 
-  /**
-   * Stop the countdown timer.
-   */
   startCountdown(durationMinutes: number): void {
     this.stopCountdown(); // Clear any existing timer
 
@@ -244,9 +213,6 @@ export class VideoCallService {
     }, 1000);
   }
 
-  /**
-   * Stop the countdown timer.
-   */
   stopCountdown(): void {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
@@ -254,9 +220,6 @@ export class VideoCallService {
     }
   }
 
-  /**
-   * Reset all state — called by VideoRoomComponent on ngOnDestroy.
-   */
   reset(): void {
     this.stopCountdown();
     this.callState.set('idle');
