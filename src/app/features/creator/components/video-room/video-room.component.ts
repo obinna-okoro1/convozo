@@ -567,6 +567,10 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!joinResult) return; // joinCall already set error state
 
+    // Start warming up camera/mic permissions immediately so the browser prompt
+    // appears on the waiting screen — not after the call begins.
+    void this.requestMediaPermissions();
+
     // If the call was already in progress when we joined (e.g. reconnecting),
     // skip the 'waiting' state and go straight to 'in_progress'.
     if (joinResult.booking.call_started_at) {
@@ -679,7 +683,33 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Subscribe to Supabase Realtime broadcast on the call channel.
+   * Pre-request camera and microphone permissions while the user is still on
+   * the waiting screen, so the browser's "Allow Camera & Microphone" prompt
+   * appears before the call starts rather than interrupting it mid-join.
+   *
+   * Strategy: open a native getUserMedia stream, immediately stop every track
+   * (no actual media is consumed), then let Daily.co open its own stream when
+   * join() is called. The browser caches the permission grant, so Daily's
+   * internal getUserMedia goes through without triggering a second prompt.
+   *
+   * Non-fatal: if the user denies or the device has no camera/mic, Daily.co
+   * will surface its own in-room error state when join() is called.
+   */
+  private async requestMediaPermissions(): Promise<void> {
+    if (!navigator.mediaDevices?.getUserMedia) return; // unsupported environment
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      // Release immediately — Daily.co reopens its own stream during join()
+      stream.getTracks().forEach(track => track.stop());
+      console.log('[Media] Camera/mic permissions granted early');
+    } catch (err) {
+      // Permission denied or no devices — non-fatal, Daily.co handles its own error
+      console.warn('[Media] Early permission request failed (non-fatal):', (err as Error).message);
+    }
+  }
+
+  /**
+   * Subscribe to Supabase Realtime presence + broadcast on the call channel.
    *
    * Since migration 029 removed the anon SELECT policy on call_bookings, fans
    * can no longer use postgres_changes (which requires SELECT access). Instead,
@@ -694,10 +724,45 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.bookingChannel) return; // already subscribed
 
     this.bookingChannel = this.supabaseService.client
-      .channel(`call_room_${this.bookingId}`)
+      .channel(`call_room_${this.bookingId}`, {
+        // Self-broadcast must be enabled so each client receives its own presence join,
+        // which is needed to detect when the first participant is already waiting.
+        config: { presence: { key: this.bookingId } },
+      })
+
+      // ── PRIMARY: Presence sync ─────────────────────────────────────────────
+      // Each participant tracks { role } on this shared channel. Every time the
+      // presence state changes (join or leave), ALL subscribers get a 'sync' event
+      // with the complete current state. When we see both 'creator' and 'fan' in
+      // the state, we transition immediately — no Edge Function broadcast required.
+      //
+      // Advantages over broadcast:
+      //   - Works even if the second participant joined before the first subscribed
+      //     (presence state is replayed on subscription, broadcast is not)
+      //   - Both sides fire independently from the same event — no coordination needed
+      //   - Heartbeat-based: if a participant disconnects, their presence expires
+      //     automatically (~10 s) so state stays accurate
+      .on('presence', { event: 'sync' }, () => {
+        this.ngZone.run(() => {
+          if (this.videoCallService.callState() !== 'waiting' || !this.bookingChannel) return;
+
+          const state = this.bookingChannel.presenceState<{ role: string }>();
+          const presences = Object.values(state).flat();
+          const hasCreator = presences.some(p => p['role'] === 'creator');
+          const hasFan = presences.some(p => p['role'] === 'fan');
+
+          if (hasCreator && hasFan) {
+            console.log('[Presence] Both participants online — transitioning to in_progress');
+            void this.transitionToInProgress();
+          }
+        });
+      })
+
+      // ── SECONDARY: Broadcast from join-call Edge Function ─────────────────
+      // The join-call Edge Function still broadcasts 'call_started' with the
+      // authoritative call_started_at timestamp. Use it to get the exact server
+      // timestamp for the countdown timer rather than relying on client clocks.
       .on(
-        // Use broadcast instead of postgres_changes — no SELECT permission needed.
-        // The join-call Edge Function broadcasts to this channel via the Realtime REST API.
         'broadcast',
         { event: 'call_started' },
         (payload) => {
@@ -710,19 +775,31 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
             const callStartedAt = data.call_started_at ?? undefined;
 
             if (callStartedAt || data.status === 'in_progress') {
-              console.log('[Realtime] Broadcast: both parties joined — transitioning to in_progress');
+              console.log('[Realtime] Broadcast: server call_started_at received — transitioning to in_progress');
               void this.transitionToInProgress(callStartedAt);
             }
           });
         },
       )
+
       .subscribe((status) => {
-        console.log(`[Realtime] call_room_${this.bookingId} broadcast subscription: ${status}`);
+        console.log(`[Realtime] call_room_${this.bookingId} subscription: ${status}`);
+        if (status === 'SUBSCRIBED' && this.bookingChannel) {
+          // Announce this participant's role so the other side's presence sync fires.
+          // Both sides track immediately on subscribe so neither needs to re-join to
+          // detect the other.
+          void this.bookingChannel
+            .track({ role: this.role, joined_at: new Date().toISOString() })
+            .catch(err => console.warn('[Presence] track() failed (non-fatal):', err));
+        }
       });
   }
 
   private unsubscribeBookingRealtime(): void {
     if (this.bookingChannel) {
+      // Untrack presence first so the other participant's 'sync' fires immediately
+      // on our departure rather than waiting for the ~10 s heartbeat timeout.
+      void this.bookingChannel.untrack().catch(() => { /* non-fatal */ });
       void this.supabaseService.client.removeChannel(this.bookingChannel);
       this.bookingChannel = null;
     }
