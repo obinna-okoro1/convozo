@@ -55,7 +55,7 @@
               />
             } @else {
               <div class="w-16 h-16 flex items-center justify-center rounded-xl flex-shrink-0 text-3xl bg-surface-elevated">
-                {{ typeEmoji[item.item_type] ?? '📦' }}
+                {{ typeEmoji[item.item_type] }}
               </div>
             }
 
@@ -71,7 +71,7 @@
               }
               <div class="flex items-center gap-2 mt-2">
                 <span class="badge text-xs">
-                  {{ typeLabel[item.item_type] ?? item.item_type }}
+                  {{ typeLabel[item.item_type] }}
                 </span>
                 @if (item.is_request_based) {
                   <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-system-orange/10 text-system-orange">
