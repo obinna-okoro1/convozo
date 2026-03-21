@@ -41,7 +41,7 @@ export class MessagePageStateService {
   readonly followBackPriceCents = computed(() => this.settings()?.follow_back_price ?? 0);
   readonly followBackEnabled = computed(() => this.settings()?.follow_back_enabled ?? false);
   readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
-  readonly callDuration = computed(() => this.settings()?.call_duration ?? 30);
+  readonly callDuration = computed(() => this.settings()?.call_duration ?? 10);
   readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
   readonly tipsEnabled = computed(() => this.settings()?.tips_enabled ?? false);
   readonly shopEnabled = computed(() => this.settings()?.shop_enabled ?? false);

@@ -274,10 +274,10 @@ export class OnboardingStateService implements OnDestroy {
       // in Settings -> Payments.
       const { error: settingsError } = await this.creatorService.createCreatorSettings({
         creatorId,
-        messagePrice: 1000,
+        messagePrice: 500,
         messagesEnabled: false,
-        callPrice: 5000,
-        callDuration: 30,
+        callPrice: 2000,
+        callDuration: 10,
         callsEnabled: false,
         followBackPrice: 2000,
         followBackEnabled: false,

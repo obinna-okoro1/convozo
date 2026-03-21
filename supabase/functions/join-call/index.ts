@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       // if the participant is joining long after the booking was created).
       const creatorDisplayName = (booking.creators as { display_name: string }).display_name;
       const participantName = role === 'creator' ? creatorDisplayName : (booking.booker_name as string);
-      const durationMins = (booking.duration as number) || 30;
+      const durationMins = (booking.duration as number) || 10;
       token = await createMeetingToken(roomName, participantName, role === 'creator', durationMins);
     }
 
@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
     const creatorEmail = creatorData.email;
     const bookerName = booking.booker_name as string;
     const bookerEmail = booking.booker_email as string;
-    const durationMinutes = (booking.duration as number) || 30;
+    const durationMinutes = (booking.duration as number) || 10;
     const appUrl = getAppUrl();
     const fanAccessToken = booking.fan_access_token as string;
     // Fan's unique link — requires the secret token instead of a JWT
