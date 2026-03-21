@@ -1,3 +1,11 @@
 {
-  "importMap": "./import_map.json"
+  "importMap": "./import_map.json",
+  "tasks": {
+    "test": "deno test --allow-env _shared/cors.test.ts _shared/http.test.ts",
+    "test:watch": "deno test --allow-env --watch _shared/cors.test.ts _shared/http.test.ts",
+    "test:coverage": "deno test --allow-env --coverage=coverage _shared/cors.test.ts _shared/http.test.ts && deno coverage coverage"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.0"
+  }
 }

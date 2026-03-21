@@ -7,13 +7,12 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { AnimatedBackgroundComponent } from '../../../../shared/components/animated-background/animated-background.component';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AnimatedBackgroundComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +43,7 @@ export class SignupComponent {
 
     if (!result.success) {
       this.loading.set(false);
-      this.error.set(result.error || `Failed to sign up with ${provider}`);
+      this.error.set(result.error ?? `Failed to sign up with ${provider}`);
     }
     // If successful, user will be redirected to OAuth flow
   }
@@ -100,7 +99,7 @@ export class SignupComponent {
     if (result.success) {
       this.success.set(true);
     } else {
-      this.error.set(result.error || 'Failed to create account');
+      this.error.set(result.error ?? 'Failed to create account');
     }
   }
 }

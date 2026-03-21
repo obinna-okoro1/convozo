@@ -59,7 +59,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "510kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -80,7 +80,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "510kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -121,7 +121,32 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "tsconfig.spec.json",
+            "runner": "karma",
+            "runnerConfig": "karma.conf.js",
+            "browsers": [
+              "ChromeHeadless"
+            ],
+            "coverage": true,
+            "coverageReporters": [
+              "html",
+              "text-summary",
+              "lcovonly"
+            ],
+            "setupFiles": [
+              "src/test-setup.ts"
+            ]
+          },
+          "configurations": {
+            "ci": {
+              "browsers": [
+                "ChromeHeadlessCI"
+              ],
+              "watch": false
+            }
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

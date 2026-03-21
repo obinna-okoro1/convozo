@@ -408,6 +408,76 @@
     },
 
     /*──────────────────────────────────────────────────────────────────────────
+     *  SPEC / TEST FILES  (*.spec.ts)
+     *
+     *  Relaxes rules that are either inapplicable or intentionally violated
+     *  in unit tests: testing utilities are expected, Jasmine globals are
+     *  safe, and individual `it()` blocks routinely exceed function-length
+     *  limits that apply to production code.
+     *──────────────────────────────────────────────────────────────────────────
+*/
+    {
+      "files": ["*.spec.ts"],
+
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": ["tsconfig.spec.json"],
+        "createDefaultProgram": false
+      },
+
+      "plugins": ["@typescript-eslint", "@angular-eslint", "import", "prettier"],
+
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/strict-type-checked",
+        "plugin:@typescript-eslint/stylistic-type-checked",
+        "plugin:prettier/recommended"
+      ],
+
+      "rules": {
+        /* Allow importing Angular testing utilities in spec files */
+        "no-restricted-imports": "off",
+
+        /* Relax length limits — describe/it blocks are intentionally verbose */
+        "max-lines-per-function": "off",
+        "max-lines": "off",
+        "max-params": "off",
+        "complexity": "off",
+
+        /* Spec files are allowed to have floating promises (e.g. fakeAsync) */
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/require-await": "off",
+
+        /* No-op methods and empty arrow functions are common in test spies */
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-extraneous-class": "off",
+
+        /* Jasmine spy properties are dynamically typed — relax unsafe rules */
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+
+        /* Test IDs do not need to be exported */
+        "import/no-unused-modules": "off",
+
+        /* Prettier still applies */
+        "prettier/prettier": [
+          "warn",
+          {
+            "printWidth": 100,
+            "singleQuote": true,
+            "trailingComma": "all",
+            "arrowParens": "always",
+            "endOfLine": "lf",
+            "bracketSpacing": true
+          }
+        ]
+      }
+    },
+
+    /*──────────────────────────────────────────────────────────────────────────
      *  ANGULAR HTML TEMPLATES  (.html)
      *
      *  Uses @angular-eslint/template-parser to lint

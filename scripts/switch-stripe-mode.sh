@@ -50,13 +50,13 @@ fi
 
 # ── Validate keys are not placeholder values ───────────────────────────────────
 if [[ -z "$STRIPE_SECRET_KEY" || "$STRIPE_SECRET_KEY" == *"REPLACE"* ]]; then
-  echo "❌ ${MODE^^} STRIPE_SECRET_KEY is not set in $KEYS_FILE"
+  echo "❌ $(echo "$MODE" | tr '[:lower:]' '[:upper:]') STRIPE_SECRET_KEY is not set in $KEYS_FILE"
   echo "   Fill in the correct key before switching to $MODE mode."
   exit 1
 fi
 
 if [[ -z "$STRIPE_WEBHOOK_SECRET" || "$STRIPE_WEBHOOK_SECRET" == *"REPLACE"* ]]; then
-  echo "❌ ${MODE^^} STRIPE_WEBHOOK_SECRET is not set in $KEYS_FILE"
+  echo "❌ $(echo "$MODE" | tr '[:lower:]' '[:upper:]') STRIPE_WEBHOOK_SECRET is not set in $KEYS_FILE"
   echo "   Fill in the correct secret before switching to $MODE mode."
   exit 1
 fi
@@ -65,7 +65,7 @@ fi
 KEY_PREFIX="${STRIPE_SECRET_KEY:0:14}..."
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Switching production Stripe → ${MODE^^} mode"
+echo "  Switching production Stripe → $(echo "$MODE" | tr '[:lower:]' '[:upper:]') mode"
 echo "  Project: $PRODUCTION_PROJECT_REF"
 echo "  Key:     $KEY_PREFIX"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -88,7 +88,7 @@ echo "🔑 Setting STRIPE_WEBHOOK_SECRET..."
 supabase secrets set "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
 
 echo ""
-echo "✅ Production is now on Stripe ${MODE^^} mode."
+echo "✅ Production is now on Stripe $(echo "$MODE" | tr '[:lower:]' '[:upper:]') mode."
 
 if [[ "$MODE" == "test" ]]; then
   echo ""
