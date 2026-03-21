@@ -1,7 +1,7 @@
 /**
  * Support View Component
  * Displays the fan support / tipping form on the public message page.
- * Fans pick their own amount and leave a name, email, optional Instagram, and a note.
+ * Fans pick their own amount and leave a name, email, and a note.
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
@@ -12,7 +12,6 @@ import { TrustIndicatorsComponent } from '../../../../../../shared/components/tr
 export interface SupportFormData {
   senderName: string;
   senderEmail: string;
-  senderInstagram: string;
   messageContent: string;
   amountCents: number;
 }
@@ -28,7 +27,6 @@ export class SupportViewComponent {
 
   protected senderName = '';
   protected senderEmail = '';
-  protected senderInstagram = '';
   protected messageContent = '';
   protected amountDollars = 5;
 
@@ -45,7 +43,6 @@ export class SupportViewComponent {
     void this.state.onSupportSubmit({
       senderName: this.senderName,
       senderEmail: this.senderEmail,
-      senderInstagram: this.senderInstagram,
       messageContent: this.messageContent,
       amountCents,
     });

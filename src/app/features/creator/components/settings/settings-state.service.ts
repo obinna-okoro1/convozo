@@ -38,7 +38,6 @@ export class SettingsStateService {
   readonly profileImageUrl = signal('');
   readonly bannerImageUrl = signal('');
   readonly phoneNumber = signal('');
-  readonly instagramUsername = signal('');
 
   private originalSlug = '';
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
@@ -63,7 +62,6 @@ export class SettingsStateService {
     profileImageUrl: '',
     bannerImageUrl: '',
     phoneNumber: '',
-    instagramUsername: '',
   });
   readonly originalMonetization = signal({
     messagePrice: 500,
@@ -87,8 +85,7 @@ export class SettingsStateService {
       this.bio() !== o.bio ||
       this.profileImageUrl() !== o.profileImageUrl ||
       this.bannerImageUrl() !== o.bannerImageUrl ||
-      this.phoneNumber() !== o.phoneNumber ||
-      this.instagramUsername() !== o.instagramUsername
+      this.phoneNumber() !== o.phoneNumber
     );
   });
 
@@ -211,7 +208,6 @@ export class SettingsStateService {
       phoneNumber: this.phoneNumber(),
       profileImageUrl: this.profileImageUrl() || undefined,
       bannerImageUrl: this.bannerImageUrl() || undefined,
-      instagramUsername: this.instagramUsername() || undefined,
     });
 
     this.saving.set(false);
@@ -225,7 +221,6 @@ export class SettingsStateService {
         profileImageUrl: this.profileImageUrl(),
         bannerImageUrl: this.bannerImageUrl(),
         phoneNumber: this.phoneNumber(),
-        instagramUsername: this.instagramUsername(),
       });
       this.slugStatus.set('idle');
       this.success.set(true);
@@ -381,7 +376,6 @@ export class SettingsStateService {
       this.profileImageUrl.set(creatorData.profile_image_url || '');
       this.bannerImageUrl.set(creatorData.banner_image_url || '');
       this.phoneNumber.set(creatorData.phone_number || '');
-      this.instagramUsername.set(creatorData.instagram_username || '');
       this.originalProfile.set({
         displayName: creatorData.display_name,
         slug: creatorData.slug,
@@ -389,7 +383,6 @@ export class SettingsStateService {
         profileImageUrl: creatorData.profile_image_url || '',
         bannerImageUrl: creatorData.banner_image_url || '',
         phoneNumber: creatorData.phone_number || '',
-        instagramUsername: creatorData.instagram_username || '',
       });
 
       const settingsData = await this.creatorService.getCreatorSettings(creatorData.id);

@@ -44,13 +44,12 @@ Deno.serve(async (req) => {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
-        country: 'US',
         email: email,
+        business_type: 'individual',
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-        business_type: 'individual',
         metadata: {
           creator_id,
           display_name: display_name || '',
@@ -97,13 +96,12 @@ Deno.serve(async (req) => {
 
       const freshAccount = await stripe.accounts.create({
         type: 'express',
-        country: 'US',
         email: email,
+        business_type: 'individual',
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-        business_type: 'individual',
         metadata: { creator_id, display_name: display_name || '' },
       });
 

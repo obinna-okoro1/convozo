@@ -191,22 +191,6 @@
                 (uploadError)="onImageUploadError($event)"
               />
 
-              <!-- Instagram -->
-              <div>
-                <label class="form-label">Instagram Username (optional)</label>
-                <div class="flex items-center gap-3">
-                  <span class="text-accent text-xl font-bold">&#64;</span>
-                  <input
-                    type="text"
-                    [value]="state.instagramUsername()"
-                    (input)="state.instagramUsername.set(inputValue($event))"
-                    placeholder="yourhandle"
-                    class="input flex-1"
-                  />
-                </div>
-                <p class="form-hint">Your Instagram handle to display your feed on your profile</p>
-              </div>
-
               <!-- Phone Number -->
               <div>
                 <label class="form-label">Phone Number <span class="text-[#d70015]">*</span></label>

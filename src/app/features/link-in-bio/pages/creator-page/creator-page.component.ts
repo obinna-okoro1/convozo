@@ -18,7 +18,6 @@ interface CreatorProfile {
   bio: string | null;
   profile_image_url: string | null;
   slug: string;
-  instagram_username: string | null;
   theme_color: string | null;
   is_active: boolean;
   creator_settings: {
@@ -85,7 +84,7 @@ export class CreatorPageComponent implements OnInit {
         .select(
           `
           id, display_name, bio, profile_image_url, slug,
-          instagram_username, theme_color, is_active,
+          theme_color, is_active,
           creator_settings (
             message_price, calls_enabled, call_price,
             follow_back_enabled, follow_back_price

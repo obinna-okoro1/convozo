@@ -29,9 +29,9 @@ export class SuccessComponent implements OnInit {
   }));
 
   protected readonly callSteps = [
-    { n: 1, text: "Check your email — a booking confirmation and receipt has been sent to you." },
-    { n: 2, text: 'The creator will DM you on Instagram to agree on an exact date and time.' },
-    { n: 3, text: "You'll receive a private call link by email. Join at the scheduled time — enjoy!" },
+    { n: 1, text: "Check your email — a booking confirmation with all the details has been sent to you." },
+    { n: 2, text: "You'll receive a secure join link by email before your call. No action needed until then." },
+    { n: 3, text: "Click the join link at the scheduled time — your call starts automatically. Enjoy!" },
   ];
 
   protected readonly messageSteps = [

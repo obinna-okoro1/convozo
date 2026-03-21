@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    const { creator_slug, message_content, sender_name, sender_email, sender_instagram, message_type, price } =
+    const { creator_slug, message_content, sender_name, sender_email, message_type, price } =
       await req.json();
 
     // Validate input
@@ -133,7 +133,6 @@ Deno.serve(async (req) => {
         message_content: message_content.slice(0, 490),
         sender_name: sender_name.slice(0, 490),
         sender_email,
-        sender_instagram: (sender_instagram || '').slice(0, 490),
         message_type: validMessageType,
         amount: serverPrice.toString(),
       },

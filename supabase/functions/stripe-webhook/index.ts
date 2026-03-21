@@ -250,12 +250,11 @@ Deno.serve(async (req) => {
 
       // ── Call booking ────────────────────────────────────────────────────────
       } else if (session.metadata?.type === 'call_booking') {
-        const { creator_id, booker_name, booker_email, booker_instagram, message_content, duration, scheduled_at, fan_timezone } =
+        const { creator_id, booker_name, booker_email, message_content, duration, scheduled_at, fan_timezone } =
           session.metadata as {
             creator_id: string;
             booker_name: string;
             booker_email: string;
-            booker_instagram: string;
             message_content: string;
             duration: string;
             scheduled_at: string;
@@ -307,7 +306,6 @@ Deno.serve(async (req) => {
             creator_id,
             booker_name,
             booker_email,
-            booker_instagram,
             duration: durationMinutes,
             amount_paid: amountInCents,
             status: 'confirmed',
@@ -384,7 +382,6 @@ Deno.serve(async (req) => {
             creatorName: callCreator.display_name,
             bookerName: booker_name,
             bookerEmail: booker_email,
-            bookerInstagram: booker_instagram || null,
             durationMinutes: durationMinutes,
             amountCents: amountInCents,
             callNotes: message_content || null,
@@ -404,13 +401,12 @@ Deno.serve(async (req) => {
 
       } else {
         // Handle regular message payment
-        const { creator_id, message_content, sender_name, sender_email, sender_instagram, message_type } =
+        const { creator_id, message_content, sender_name, sender_email, message_type } =
           session.metadata as {
             creator_id: string;
             message_content: string;
             sender_name: string;
             sender_email: string;
-            sender_instagram: string;
             message_type: string;
           };
 
@@ -425,7 +421,6 @@ Deno.serve(async (req) => {
             creator_id,
             sender_name,
             sender_email,
-            sender_instagram: sender_instagram || null,
             message_content,
             amount_paid: amountInCents,
             message_type: validMessageType,
@@ -497,7 +492,6 @@ Deno.serve(async (req) => {
             creatorName: msgCreator.display_name,
             senderName: sender_name,
             senderEmail: sender_email,
-            senderInstagram: sender_instagram || null,
             messageContent: message_content,
             amountCents: amountInCents,
           });

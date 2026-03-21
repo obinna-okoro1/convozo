@@ -48,7 +48,6 @@ export class CreatorService {
     slug: string;
     phoneNumber: string;
     profileImageUrl?: string;
-    instagramUsername?: string;
   }): Promise<SupabaseResponse<Creator>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: creator, error } = await this.supabaseService.client
@@ -61,7 +60,6 @@ export class CreatorService {
         slug: data.slug,
         phone_number: data.phoneNumber,
         profile_image_url: data.profileImageUrl ?? null,
-        instagram_username: data.instagramUsername ?? null,
       })
       .select()
       .single();
@@ -77,7 +75,6 @@ export class CreatorService {
     phoneNumber: string;
     profileImageUrl?: string;
     bannerImageUrl?: string;
-    instagramUsername?: string;
   }): Promise<SupabaseResponse<Creator>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: creator, error } = await this.supabaseService.client
@@ -89,7 +86,6 @@ export class CreatorService {
         phone_number: data.phoneNumber,
         profile_image_url: data.profileImageUrl,
         banner_image_url: data.bannerImageUrl,
-        instagram_username: data.instagramUsername,
       })
       .eq('id', data.creatorId)
       .select()
