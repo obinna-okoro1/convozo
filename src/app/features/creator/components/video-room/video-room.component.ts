@@ -172,6 +172,33 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
       </div>
     }
 
+    <!-- ─── Connecting overlay — brief FaceTime-style transition ─── -->
+    @if (connecting()) {
+      <div class="fixed inset-0 z-40 flex items-center justify-center"
+           style="background: rgba(10,10,10,0.85); backdrop-filter: blur(1rem);
+                  animation: fadeIn 200ms ease-out;">
+        <div class="text-center">
+          <div class="relative w-16 h-16 mx-auto mb-5">
+            <div class="absolute inset-0 rounded-full animate-spin"
+                 style="background: conic-gradient(from 0deg, transparent 0%, #4ade80 60%, #22d3ee 100%);
+                        mask: radial-gradient(farthest-side, transparent 62%, black 63%);
+                        -webkit-mask: radial-gradient(farthest-side, transparent 62%, black 63%);
+                        animation-duration: 0.8s;"></div>
+            <div class="absolute inset-[0.25rem] rounded-full flex items-center justify-center"
+                 style="background: #0a0a0a;">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                   style="color: #4ade80;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-base font-semibold" style="color: #4ade80;">Connected</p>
+          <p class="text-xs mt-1" style="color: rgba(255,255,255,0.4);">Starting call…</p>
+        </div>
+      </div>
+    }
+
     <!-- ─── Loading overlay ─── -->
     @if (loading()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center" style="background: #0a0a0a;">
@@ -320,6 +347,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('dailyIframe') dailyIframeRef!: ElementRef<HTMLIFrameElement>;
 
   readonly loading = signal(true);
+  readonly connecting = signal(false);
   readonly completionResult = signal<CompleteCallResponse | null>(null);
 
   private bookingId = '';
@@ -444,8 +472,30 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.dailyCall
       // Fires when the local user successfully enters the meeting room.
+      // This is the BEST moment to do a one-shot participant check because:
+      //   1. The local user is now in the room and participants() is reliable
+      //   2. If the other party joined DURING our WebRTC handshake, they're
+      //      already in participants() but participant-joined may have been missed
+      //   3. Polling + presence might not have started/connected yet
       .on('joined-meeting', () => {
-        console.log('[Daily] Joined meeting room');
+        this.ngZone.run(() => {
+          if (!this.dailyCall || this.videoCallService.callState() !== 'waiting') return;
+
+          // Immediate participant check — catches the race window
+          const count = Object.keys(this.dailyCall.participants()).length;
+          if (count >= 2) {
+            void this.transitionToInProgress();
+            return;
+          }
+
+          // Also do an immediate DB check in case the Edge Function already
+          // set call_started_at but the broadcast was missed
+          void this.videoCallService.loadCallStatus(this.bookingId).then(({ data }) => {
+            if (data?.call_started_at && this.videoCallService.callState() === 'waiting') {
+              void this.transitionToInProgress(data.call_started_at as string);
+            }
+          });
+        });
       })
 
       // Fires when ANY participant (local or remote) joins.
@@ -467,18 +517,12 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           if (!this.dailyCall || this.videoCallService.callState() !== 'in_progress') return;
           const count = Object.keys(this.dailyCall.participants()).length;
           if (count < 2) {
-            console.log('[Daily] Remote participant left — auto-ending call');
             // Auto-end the call when the other participant disconnects.
             // For creators: calls complete-call to finalize payout.
             // For fans: just leaves and shows completion screen.
             void this.endCall();
           }
         });
-      })
-
-      // Fires when the local user leaves (via call.leave() or network drop).
-      .on('left-meeting', () => {
-        console.log('[Daily] Left the meeting');
       })
 
       // Fires on SDK or network errors (e.g. bad token, room expired).
@@ -507,26 +551,31 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    *                        When undefined, falls back to an optimistic 'now' then re-fetches.
    */
   private async transitionToInProgress(callStartedAt?: string): Promise<void> {
-    // Guard: if we already moved past waiting (multiple sources may fire), do nothing
-    if (this.videoCallService.callState() !== 'waiting') return;
+    // Guard: if we already moved past waiting (multiple sources may fire), do nothing.
+    // Accept transition from both 'waiting' (normal) and 'connecting' (already transitioning).
+    const currentState = this.videoCallService.callState();
+    if (currentState !== 'waiting') return;
     const booking = this.videoCallService.currentBooking();
     if (!booking) return;
 
-    // Stop all polling mechanisms — we have the signal
+    // ── Stop all detection mechanisms — we have the signal ──
     this.stopParticipantPolling();
     this.stopCallStatusPolling();
     this.unsubscribeBookingRealtime();
 
+    // ── Show brief "Connected" overlay — FaceTime-style feedback ──
+    // Setting callState away from 'waiting' hides the waiting overlay.
+    // The 'connecting' signal shows a brief green spinner + "Connected" text.
+    // This gives both sides immediate visual feedback that the other party
+    // has been detected, even before the Daily.co video fully renders.
+    this.connecting.set(true);
+    this.videoCallService.callState.set('joining'); // hides waiting overlay, not 'in_progress' yet
+
     // Use server-authoritative timestamp if available (from Realtime payload or DB fetch).
     // Fall back to 'now' for an immediate optimistic UX start.
-    const startedAt = callStartedAt ? new Date(callStartedAt) : new Date();
-    this.videoCallService.callState.set('in_progress');
-    this.videoCallService.callStartedAt.set(startedAt);
-    this.videoCallService.startCountdown(booking.duration);
+    let startedAt = callStartedAt ? new Date(callStartedAt) : new Date();
 
-    // If we didn't have a timestamp from Realtime, fetch authoritative value from DB.
-    // Fans use the get_call_status RPC (no direct table SELECT since migration 029).
-    // Creators use the full loadBooking (authenticated RLS access).
+    // If we didn't have a timestamp from the trigger source, fetch it from DB
     if (!callStartedAt) {
       try {
         const loadFn = this.role === 'fan'
@@ -534,13 +583,23 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           : this.videoCallService.loadBooking(this.bookingId);
         const { data: fresh } = await loadFn;
         if (fresh?.call_started_at) {
-          this.videoCallService.callStartedAt.set(new Date(fresh.call_started_at as string));
-          this.videoCallService.startCountdown(fresh.duration as number);
+          startedAt = new Date(fresh.call_started_at as string);
         }
       } catch {
         // Continue with optimistic timer on any unexpected error
       }
     }
+
+    // Brief pause so the "Connected" overlay is visible — feels intentional,
+    // like FaceTime's "Connecting..." → video transition. 600 ms is enough
+    // to register visually without feeling sluggish.
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    // ── Transition to live call ──
+    this.connecting.set(false);
+    this.videoCallService.callState.set('in_progress');
+    this.videoCallService.callStartedAt.set(startedAt);
+    this.videoCallService.startCountdown(booking.duration);
   }
 
   private async initializeCall(): Promise<void> {
@@ -579,13 +638,24 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       this.videoCallService.startCountdown(joinResult.booking.duration);
     }
 
-    // Subscribe to Realtime BEFORE starting the Daily WebRTC handshake.
-    // joinDailyRoom() is async and can take several seconds (WebRTC setup, STUN/TURN
-    // negotiation). If the other participant joins during this window, the join-call
-    // Edge Function broadcasts 'call_started' — if we're not subscribed yet, that
-    // message is lost. Subscribing here closes that race.
+    // ── Start ALL detection mechanisms BEFORE joinDailyRoom ──────────────
+    //
+    // joinDailyRoom() is async and blocks for 2-5 seconds (WebRTC handshake,
+    // STUN/TURN, iframe load). If the other participant joins during this window,
+    // we need every mechanism active to catch it:
+    //
+    //   1. Supabase Presence — instant mutual detection (primary)
+    //   2. Supabase Broadcast — server-authoritative timestamp from Edge Function
+    //   3. DB status poll — guaranteed fallback, checks call_started_at
+    //   4. Daily.co participant poll — catches iframe-level joins
+    //   5. Daily.co joined-meeting event — one-shot check on connect (see setupDailyEvents)
+    //
+    // Starting them BEFORE the blocking joinDailyRoom() call ensures they're
+    // active during the entire WebRTC handshake window.
     if (this.videoCallService.callState() === 'waiting') {
       this.subscribeToBookingRealtime();
+      this.startParticipantPolling();
+      this.startCallStatusPolling();
     }
 
     // Join the Daily room via the SDK. The SDK:
@@ -593,18 +663,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     //  2. Passes the scoped meeting token for access control
     //  3. Handles camera/mic permission prompts
     await this.joinDailyRoom(joinResult.room_url, joinResult.token);
-
-    // Start participant-count fallbacks only if we are still waiting after the Daily join.
-    if (this.videoCallService.callState() === 'waiting') {
-      // Daily.co participant poll — catches cases where Realtime delivery is delayed.
-      this.startParticipantPolling();
-
-      // DB status poll — guaranteed fallback that transitions the waiting screen within
-      // 3 seconds of the backend setting call_started_at, independent of Realtime and
-      // Daily.co event delivery. Works for both fans (get_call_status RPC, anon-safe)
-      // and creators (same RPC, authenticated).
-      this.startCallStatusPolling();
-    }
   }
 
   /**
@@ -626,7 +684,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
         const count = Object.keys(this.dailyCall.participants()).length;
         if (count >= 2) {
-          console.log('[Daily] Poll detected 2 participants — transitioning to in_progress');
           this.stopParticipantPolling();
           void this.transitionToInProgress();
         }
@@ -658,21 +715,26 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   private startCallStatusPolling(): void {
     if (this.callStatusPollInterval) return;
 
-    this.callStatusPollInterval = setInterval(() => {
+    // Do an immediate first check (no initial delay) then poll every 1.5s.
+    // This catches the case where call_started_at was set before any mechanism
+    // had time to detect it (e.g. during WebRTC handshake).
+    const doCheck = (): void => {
       if (this.videoCallService.callState() !== 'waiting') {
         this.stopCallStatusPolling();
         return;
       }
-
       void this.videoCallService.loadCallStatus(this.bookingId).then(({ data }) => {
         if (data?.call_started_at) {
           this.ngZone.run(() => {
-            console.log('[DB poll] call_started_at detected — transitioning to in_progress');
             void this.transitionToInProgress(data.call_started_at as string);
           });
         }
       });
-    }, 3000);
+    };
+
+    // Immediate first check
+    doCheck();
+    this.callStatusPollInterval = setInterval(doCheck, 1500);
   }
 
   private stopCallStatusPolling(): void {
@@ -701,7 +763,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       // Release immediately — Daily.co reopens its own stream during join()
       stream.getTracks().forEach(track => track.stop());
-      console.log('[Media] Camera/mic permissions granted early');
     } catch (err) {
       // Permission denied or no devices — non-fatal, Daily.co handles its own error
       console.warn('[Media] Early permission request failed (non-fatal):', (err as Error).message);
@@ -725,9 +786,11 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.bookingChannel = this.supabaseService.client
       .channel(`call_room_${this.bookingId}`, {
-        // Self-broadcast must be enabled so each client receives its own presence join,
-        // which is needed to detect when the first participant is already waiting.
-        config: { presence: { key: this.bookingId } },
+        // Each participant uses a UNIQUE presence key (bookingId:role) so Supabase
+        // tracks them as separate entries. Using the same key for both would cause
+        // the second tracker to overwrite the first, making the sync event only
+        // ever show one participant.
+        config: { presence: { key: `${this.bookingId}:${this.role}` } },
       })
 
       // ── PRIMARY: Presence sync ─────────────────────────────────────────────
@@ -752,7 +815,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           const hasFan = presences.some(p => p['role'] === 'fan');
 
           if (hasCreator && hasFan) {
-            console.log('[Presence] Both participants online — transitioning to in_progress');
             void this.transitionToInProgress();
           }
         });
@@ -775,7 +837,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
             const callStartedAt = data.call_started_at ?? undefined;
 
             if (callStartedAt || data.status === 'in_progress') {
-              console.log('[Realtime] Broadcast: server call_started_at received — transitioning to in_progress');
               void this.transitionToInProgress(callStartedAt);
             }
           });
@@ -783,7 +844,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       )
 
       .subscribe((status) => {
-        console.log(`[Realtime] call_room_${this.bookingId} subscription: ${status}`);
         if (status === 'SUBSCRIBED' && this.bookingChannel) {
           // Announce this participant's role so the other side's presence sync fires.
           // Both sides track immediately on subscribe so neither needs to re-join to
@@ -904,10 +964,11 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // If the creator navigates away while the call is in_progress, fire-and-forget
     // a complete-call request so the booking doesn't stay stuck in 'in_progress'.
     const state = this.videoCallService.callState();
-    if (this.isCreator() && (state === 'in_progress' || state === 'waiting')) {
+    if (this.isCreator() && (state === 'in_progress' || state === 'waiting' || state === 'joining')) {
       void this.videoCallService.completeCall(this.bookingId, 'creator');
     }
 
+    this.connecting.set(false);
     this.videoCallService.reset();
 
     // Leave and destroy the Daily call object to release all camera/mic resources.

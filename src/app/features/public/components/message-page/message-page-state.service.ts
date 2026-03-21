@@ -1,9 +1,3 @@
-/**
- * Message Page State Service
- * Shared state for the message page shell and its child route views.
- * Provided at the route level — not in root.
- */
-
 import { Injectable, signal, computed } from '@angular/core';
 import { ERROR_MESSAGES } from '../../../../core/constants';
 import {

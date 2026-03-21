@@ -174,20 +174,4 @@ export class CallBookingFormComponent {
 }
 
 
-export interface CallBookingFormData {
-  senderName: string;
-  senderEmail: string;
-  instagramHandle: string;
-  messageContent: string;
-  /** ISO 8601 UTC datetime of the fan's selected call slot */
-  scheduledAt: string;
-  /** IANA timezone string captured from fan's browser (e.g. "America/New_York") */
-  timezone: string;
-}
-
-interface BookingSlot {
-  iso: string;       // UTC ISO string — stored as scheduled_at on the booking
-  label: string;     // "9:00 AM – 9:30 AM"
-  dateLabel: string; // "Monday, Mar 16" — used for grouping
-}
 
