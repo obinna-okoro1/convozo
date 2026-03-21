@@ -12,7 +12,6 @@ export interface Creator {
   bio: string | null;
   slug: string;
   phone_number: string;
-  instagram_username: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -41,7 +40,6 @@ export interface Message {
   creator_id: string;
   sender_name: string;
   sender_email: string;
-  sender_instagram: string | null;
   message_content: string;
   amount_paid: number;
   message_type: MessageType;
@@ -90,7 +88,6 @@ export interface CallBooking {
   creator_id: string;
   booker_name: string;
   booker_email: string;
-  booker_instagram: string;
   scheduled_at: string | null;
   duration: number;
   amount_paid: number;
@@ -133,7 +130,6 @@ export interface CheckoutSessionPayload {
   message_content: string;
   sender_name: string;
   sender_email: string;
-  sender_instagram?: string;
   message_type: MessageType;
   price: number;
 }
@@ -142,7 +138,6 @@ export interface CallBookingPayload {
   creator_slug: string;
   booker_name: string;
   booker_email: string;
-  booker_instagram: string;
   message_content: string;
   price: number;
   /** ISO 8601 UTC datetime of the fan's chosen time slot */

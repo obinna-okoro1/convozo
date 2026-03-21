@@ -13,7 +13,6 @@ export interface SocialProofData {
   totalEarnings?: number;
   verifiedCreator?: boolean;
   joinedDate?: string;
-  instagramFollowers?: number;
 }
 
 @Component({

@@ -12,7 +12,6 @@ interface CallBookingPayload {
   creator_slug: string;
   booker_name: string;
   booker_email: string;
-  booker_instagram: string;
   message_content: string;
   price: number;
   /** ISO 8601 UTC datetime of the fan's chosen time slot */
@@ -31,7 +30,7 @@ Deno.serve(async (req) => {
     const payload: CallBookingPayload = await req.json();
 
     // Validate required fields
-    if (!payload.creator_slug || !payload.booker_name || !payload.booker_email || !payload.booker_instagram || !payload.scheduled_at) {
+    if (!payload.creator_slug || !payload.booker_name || !payload.booker_email || !payload.scheduled_at) {
       return jsonError('Missing required fields', 400, corsHeaders);
     }
 
@@ -121,7 +120,6 @@ Deno.serve(async (req) => {
         creator_slug: payload.creator_slug,
         booker_name: payload.booker_name,
         booker_email: payload.booker_email,
-        booker_instagram: payload.booker_instagram,
         message_content: payload.message_content || '',
         duration: settings.call_duration.toString(),
         amount: serverPrice.toString(),
@@ -136,7 +134,7 @@ Deno.serve(async (req) => {
         },
       },
       customer_email: payload.booker_email,
-      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=call`,
+      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=call&creator=${payload.creator_slug}`,
       cancel_url: `${appUrl}/${payload.creator_slug}`,
     };
 

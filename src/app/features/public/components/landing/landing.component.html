@@ -55,7 +55,7 @@
 
           <!-- Subheading -->
           <p class="animate-fade-in text-lg text-content-secondary leading-relaxed max-w-lg" style="animation-delay: 200ms">
-            Paid DMs. Video calls. Fan tips.&nbsp;All from one link —
+            Paid DMs. Video calls. Fan tips. Digital shop.&nbsp;All from one link —
             <code class="px-1.5 py-0.5 bg-surface-raised rounded-lg text-accent font-mono text-sm">convozo.com/you</code>.
             Keep&nbsp;<strong class="text-content">78%</strong>&nbsp;of every payment. No brand deals. No algorithm.
           </p>
@@ -132,7 +132,7 @@
 
             <!-- Activity feed -->
             <div class="space-y-2">
-              @for (tx of [{icon:'S',color:'bg-accent',label:'DM from Alex',time:'Just now',amt:'+$50'},{icon:'J',color:'bg-blue-500',label:'Call — Jordan',time:'3 min ago',amt:'+$200'},{icon:'M',color:'bg-[#b85c00]',label:'Fan tip',time:'12 min ago',amt:'+$25'}]; track tx.label) {
+              @for (tx of [{icon:'S',color:'bg-accent',label:'DM from Alex',time:'Just now',amt:'+$50'},{icon:'J',color:'bg-blue-500',label:'Call — Jordan',time:'3 min ago',amt:'+$200'},{icon:'M',color:'bg-[#b85c00]',label:'Shop sale',time:'12 min ago',amt:'+$35'}]; track tx.label) {
                 <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-overlay border border-separator">
                   <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" [class]="tx.color">{{ tx.icon }}</div>
                   <div class="flex-1 min-w-0">
@@ -235,8 +235,8 @@
   <section class="relative z-10 py-10 px-4 sm:px-6">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-14">
-        <p class="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-3">Four revenue streams</p>
-        <h2 class="text-4xl sm:text-5xl font-black text-content tracking-tight">Four ways fans pay you</h2>
+        <p class="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-3">Five revenue streams</p>
+        <h2 class="text-4xl sm:text-5xl font-black text-content tracking-tight">Five ways fans pay you</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -262,8 +262,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
             </svg>
           </div>
-          <h3 class="text-xl font-black text-content mb-2">Fan Tips</h3>
-          <p class="text-content-secondary text-sm leading-relaxed">Let fans show love with a tip. No awkward asks. Pure appreciation, straight to your account.</p>
+          <h3 class="text-xl font-black text-content mb-2">Donations</h3>
+          <p class="text-content-secondary text-sm leading-relaxed">Let fans show love with a donation. No awkward asks. Pure appreciation, straight to your account.</p>
         </div>
 
         <!-- Card 3 — Video Calls -->
@@ -288,7 +288,18 @@
           <p class="text-content-secondary text-sm leading-relaxed">Stripe-powered payouts. Bank-level security. Your money in 24 hours, every time.</p>
         </div>
 
-        <!-- Card 5 — LARGE — Analytics -->
+        <!-- Card 5 — Digital Shop -->
+        <div class="group card-glass p-6 transition-all duration-300 hover:-translate-y-1">
+          <div class="w-12 h-12 rounded-xl bg-[#b85c00]/10 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300">
+            <svg class="w-6 h-6 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-black text-content mb-2">Digital Shop</h3>
+          <p class="text-content-secondary text-sm leading-relaxed">Sell presets, guides, templates, and more. Fans pay once, download instantly — zero manual delivery.</p>
+        </div>
+
+        <!-- Card 6 — LARGE — Analytics -->
         <div class="group sm:col-span-2 card-glass p-6 transition-all duration-300 hover:-translate-y-1">
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div class="flex-1">

@@ -70,7 +70,6 @@ export class MessagePageStateService {
     await this.processCheckout(
       formData.senderName,
       formData.senderEmail,
-      formData.senderInstagram,
       formData.messageContent,
       'message',
     );
@@ -83,7 +82,6 @@ export class MessagePageStateService {
     await this.processCheckout(
       formData.senderName,
       formData.senderEmail,
-      formData.senderInstagram,
       formData.messageContent,
       'follow_back',
     );
@@ -248,10 +246,6 @@ export class MessagePageStateService {
       this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
       return false;
     }
-    if (!FormValidators.isNotEmpty(data.instagramHandle)) {
-      this.toast.error('Instagram handle is required for call bookings');
-      return false;
-    }
     if (!data.scheduledAt) {
       this.toast.error('Please select a time slot for your call');
       return false;
@@ -262,7 +256,6 @@ export class MessagePageStateService {
   private async processCheckout(
     senderName: string,
     senderEmail: string,
-    senderInstagram: string,
     messageContent: string,
     messageType: MessageType,
   ): Promise<void> {
@@ -284,10 +277,6 @@ export class MessagePageStateService {
         message_type: messageType,
         price: priceCents,
       };
-
-      if (senderInstagram.trim()) {
-        payload.sender_instagram = senderInstagram.trim();
-      }
 
       const { data, error } = await this.supabaseService.createCheckoutSession(payload);
 
@@ -314,7 +303,6 @@ export class MessagePageStateService {
         creator_slug: creatorData.slug,
         booker_name: formData.senderName,
         booker_email: formData.senderEmail,
-        booker_instagram: formData.instagramHandle,
         message_content: formData.messageContent || '',
         price: this.callPriceCents(),
         scheduled_at: formData.scheduledAt,
@@ -348,10 +336,6 @@ export class MessagePageStateService {
         message_type: 'support',
         price: formData.amountCents,
       };
-
-      if (formData.senderInstagram.trim()) {
-        payload.sender_instagram = formData.senderInstagram.trim();
-      }
 
       const { data, error } = await this.supabaseService.createCheckoutSession(payload);
 

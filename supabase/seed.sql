@@ -120,7 +120,7 @@ WHERE NOT EXISTS (
 
 -- Sample Creator 1: The Rock (Real Instagram Profile Data)
 -- Note: In production, use a third-party Instagram API service to fetch real-time data
-INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, phone_number, is_active)
+INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, phone_number, is_active)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   '11111111-1111-1111-1111-111111111111',
@@ -129,7 +129,6 @@ VALUES (
   'sarahjohnson',
   'builder of stuff cheat meal crusher tequila sipper og girl dad 💕',
   'https://i.pravatar.cc/400?img=33',
-  'therock',
   '+1 310-555-0199',
   true
 ) ON CONFLICT (user_id) DO NOTHING;
@@ -148,7 +147,7 @@ VALUES (
 
 -- Sample Creator 2: Cristiano Ronaldo (Real Instagram Profile Data)
 -- Note: In production, use a third-party Instagram API service to fetch real-time data
-INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, instagram_username, phone_number, is_active)
+INSERT INTO public.creators (id, user_id, email, display_name, slug, bio, profile_image_url, phone_number, is_active)
 VALUES (
   '44444444-4444-4444-4444-444444444444',
   '22222222-2222-2222-2222-222222222222',
@@ -157,7 +156,6 @@ VALUES (
   'mikechen',
   'Passion & Joy ⚽️❤️',
   'https://i.pravatar.cc/400?img=12',
-  'cristiano',
   '+351 912-345-678',
   true
 ) ON CONFLICT (user_id) DO NOTHING;
@@ -332,7 +330,7 @@ VALUES
 
 -- Sample Call Booking with Daily.co room
 INSERT INTO public.call_bookings (
-  creator_id, booker_name, booker_email, booker_instagram, scheduled_at, duration, amount_paid, 
+  creator_id, booker_name, booker_email, scheduled_at, duration, amount_paid,
   status, stripe_session_id, stripe_payment_intent_id, created_at,
   daily_room_name, daily_room_url, creator_meeting_token, fan_meeting_token, payout_status
 )
@@ -340,7 +338,6 @@ VALUES (
   '33333333-3333-3333-3333-333333333333',
   'Alex Rodriguez',
   'alex@example.com',
-  '@alexrodriguez',
   NOW() + INTERVAL '3 days' + INTERVAL '10 hours', -- 3 days from now at 10 AM
   30,
   5000,

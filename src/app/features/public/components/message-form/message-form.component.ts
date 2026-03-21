@@ -12,7 +12,6 @@ import { TrustIndicatorsComponent } from '../../../../shared/components/trust-in
 export interface MessageFormData {
   senderName: string;
   senderEmail: string;
-  senderInstagram: string;
   messageContent: string;
 }
 
@@ -34,7 +33,6 @@ export class MessageFormComponent {
 
   protected senderName = '';
   protected senderEmail = '';
-  protected senderInstagram = '';
   protected messageContent = '';
 
   protected readonly priceInDollars = computed(
@@ -79,7 +77,6 @@ export class MessageFormComponent {
     this.formSubmit.emit({
       senderName: this.senderName,
       senderEmail: this.senderEmail,
-      senderInstagram: this.senderInstagram.replace(/^@/, ''),
       messageContent: this.messageContent,
     });
   }

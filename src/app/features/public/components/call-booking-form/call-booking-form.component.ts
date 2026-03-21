@@ -24,7 +24,6 @@ import { TrustIndicatorsComponent } from '../../../../shared/components/trust-in
 export interface CallBookingFormData {
   senderName: string;
   senderEmail: string;
-  instagramHandle: string;
   messageContent: string;
   /** ISO 8601 UTC datetime of the fan's selected call slot */
   scheduledAt: string;
@@ -55,7 +54,6 @@ export class CallBookingFormComponent {
 
   protected senderName = '';
   protected senderEmail = '';
-  protected instagramHandle = '';
   protected messageContent = '';
 
   /** Selected day label — drives the time options list. */
@@ -156,7 +154,6 @@ export class CallBookingFormComponent {
     this.formSubmit.emit({
       senderName: this.senderName,
       senderEmail: this.senderEmail,
-      instagramHandle: this.instagramHandle.replace(/^@/, ''),
       messageContent: this.messageContent,
       scheduledAt: this.selectedIso,
       timezone: this.timezone,

@@ -30,7 +30,7 @@ export class LandingComponent {
     {
       num: '02',
       title: 'Share your link',
-      body: 'Post it everywhere — Instagram bio, TikTok, Twitter, YouTube. One link, four revenue streams.',
+      body: 'Post it everywhere — Instagram bio, TikTok, Twitter, YouTube. One link, five revenue streams.',
       icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
       grad: 'from-pink-500 to-rose-600',
     },
@@ -61,12 +61,14 @@ export class LandingComponent {
 
   protected readonly tickerItems = [
     { dot: '#a855f7', name: 'creator earned', amt: '$250 · ' },
-    { dot: '#ec4899', name: 'fan tip received', amt: '$75 · ' },
+    { dot: '#ec4899', name: 'fan donation', amt: '$75 · ' },
     { dot: '#22c55e', name: 'call booked', amt: '$300 · ' },
     { dot: '#3b82f6', name: 'DM replied', amt: '$50 · ' },
+    { dot: '#f59e0b', name: 'digital shop sale', amt: '$35 · ' },
     { dot: '#f59e0b', name: 'follow-back sent', amt: '$100 · ' },
     { dot: '#a855f7', name: 'payout delivered', amt: '$1,240 · ' },
     { dot: '#ec4899', name: 'new message', amt: '$30 · ' },
     { dot: '#22c55e', name: 'video call done', amt: '$200 · ' },
+    { dot: '#3b82f6', name: 'shop download', amt: '$49 · ' },
   ];
 }

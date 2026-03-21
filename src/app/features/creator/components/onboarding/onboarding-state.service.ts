@@ -42,7 +42,6 @@ export class OnboardingStateService implements OnDestroy {
   readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   readonly slugManuallyEdited = signal<boolean>(false);
   readonly profileImageUrl = signal<string>('');
-  readonly instagramUsername = signal<string>('');
 
   // ── Phone number ───────────────────────────────────────────────────
   readonly countryCodes = COUNTRY_CODES;
@@ -223,7 +222,6 @@ export class OnboardingStateService implements OnDestroy {
       slug: this.slug(),
       phoneNumber: this.fullPhoneNumber(),
       profileImageUrl: this.profileImageUrl() || undefined,
-      instagramUsername: this.instagramUsername() || undefined,
     };
   }
 

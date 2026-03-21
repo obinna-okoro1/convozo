@@ -200,7 +200,7 @@ export function callBookingConfirmationEmail(opts: {
         Use this link at the scheduled time. Both you and ${creator} need to join for the call to start.
       </p>`
     : `<p style="color:#4b5563;line-height:1.6;">
-        ${creator} will reach out to you to confirm the details. Keep an eye on your inbox!
+        All your booking details are in this email. We'll send you a secure join link before your call — keep an eye on your inbox!
       </p>`;
 
   return {
@@ -231,7 +231,6 @@ export function newMessageNotificationEmail(opts: {
   creatorName: string;
   senderName: string;
   senderEmail: string;
-  senderInstagram: string | null;
   messageContent: string;
   amountCents: number;
 }): { subject: string; html: string } {
@@ -240,9 +239,6 @@ export function newMessageNotificationEmail(opts: {
   const email = escapeHtml(opts.senderEmail);
   const msg = escapeHtml(opts.messageContent);
   const amount = formatUsd(opts.amountCents);
-  const igLine = opts.senderInstagram
-    ? `<p style="margin:4px 0;color:#4b5563;"><strong>Instagram:</strong> @${escapeHtml(opts.senderInstagram)}</p>`
-    : '';
 
   return {
     subject: `💰 New ${amount} message from ${sender}`,
@@ -255,7 +251,6 @@ export function newMessageNotificationEmail(opts: {
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Sender details:</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Name:</strong> ${sender}</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Email:</strong> ${email}</p>
-        ${igLine}
       </div>
       <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Message:</p>
@@ -273,7 +268,6 @@ export function newCallBookingNotificationEmail(opts: {
   creatorName: string;
   bookerName: string;
   bookerEmail: string;
-  bookerInstagram: string | null;
   durationMinutes: number;
   amountCents: number;
   callNotes: string | null;
@@ -288,9 +282,6 @@ export function newCallBookingNotificationEmail(opts: {
   const booker = escapeHtml(opts.bookerName);
   const email = escapeHtml(opts.bookerEmail);
   const amount = formatUsd(opts.amountCents);
-  const igLine = opts.bookerInstagram
-    ? `<p style="margin:4px 0;color:#4b5563;"><strong>Instagram:</strong> @${escapeHtml(opts.bookerInstagram)}</p>`
-    : '';
   const notesBlock = opts.callNotes
     ? `<div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Call notes from booker:</p>
@@ -325,7 +316,6 @@ export function newCallBookingNotificationEmail(opts: {
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Booker details:</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Name:</strong> ${booker}</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Email:</strong> ${email}</p>
-        ${igLine}
       </div>
       ${notesBlock}
       ${joinBlock}
