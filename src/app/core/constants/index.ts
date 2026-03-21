@@ -8,7 +8,7 @@ export const FEATURE_FLAGS = {
    * Controls whether creators can connect a Stripe account in Settings → Payments.
    * Set to `true` when Stripe Connect is ready for production onboarding.
    */
-  STRIPE_CONNECT_ENABLED: false,
+  STRIPE_CONNECT_ENABLED: true,
 } as const;
 
 /**

@@ -44,10 +44,10 @@ export class SettingsStateService {
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ── Monetization fields ────────────────────────────────────────────
-  readonly messagePrice = signal(1000);
+  readonly messagePrice = signal(500);
   readonly messagesEnabled = signal(false);
-  readonly callPrice = signal(5000);
-  readonly callDuration = signal(30);
+  readonly callPrice = signal(2000);
+  readonly callDuration = signal(10);
   readonly callsEnabled = signal(false);
   readonly followBackPrice = signal(2000);
   readonly followBackEnabled = signal(false);
@@ -66,10 +66,10 @@ export class SettingsStateService {
     instagramUsername: '',
   });
   readonly originalMonetization = signal({
-    messagePrice: 1000,
+    messagePrice: 500,
     messagesEnabled: false,
-    callPrice: 5000,
-    callDuration: 30,
+    callPrice: 2000,
+    callDuration: 10,
     callsEnabled: false,
     followBackPrice: 2000,
     followBackEnabled: false,
@@ -397,8 +397,8 @@ export class SettingsStateService {
         this.settings.set(settingsData.data);
         this.messagePrice.set(settingsData.data.message_price);
         this.messagesEnabled.set(settingsData.data.messages_enabled ?? false);
-        this.callPrice.set(settingsData.data.call_price ?? 5000);
-        this.callDuration.set(settingsData.data.call_duration ?? 30);
+        this.callPrice.set(settingsData.data.call_price ?? 2000);
+        this.callDuration.set(settingsData.data.call_duration ?? 10);
         this.callsEnabled.set(settingsData.data.calls_enabled);
         this.followBackPrice.set(settingsData.data.follow_back_price ?? 2000);
         this.followBackEnabled.set(settingsData.data.follow_back_enabled);
@@ -408,8 +408,8 @@ export class SettingsStateService {
         this.originalMonetization.set({
           messagePrice: settingsData.data.message_price,
           messagesEnabled: settingsData.data.messages_enabled ?? false,
-          callPrice: settingsData.data.call_price ?? 5000,
-          callDuration: settingsData.data.call_duration ?? 30,
+          callPrice: settingsData.data.call_price ?? 2000,
+          callDuration: settingsData.data.call_duration ?? 10,
           callsEnabled: settingsData.data.calls_enabled,
           followBackPrice: settingsData.data.follow_back_price ?? 2000,
           followBackEnabled: settingsData.data.follow_back_enabled,
