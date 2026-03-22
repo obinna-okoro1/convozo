@@ -12,7 +12,9 @@ import {
   Message,
   CallBooking,
   StripeAccount,
+  CreatorMonthlyAnalytics,
 } from '../../../../core/models';
+import { SupabaseService } from '../../../../core/services/supabase.service';
 import { MessageService } from '../../services/message.service';
 import { BookingService } from '../../services/booking.service';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -26,6 +28,11 @@ export class DashboardStateService {
   readonly messages = signal<Message[]>([]);
   readonly callBookings = signal<CallBooking[]>([]);
   readonly stripeAccount = signal<StripeAccount | null>(null);
+  /**
+   * Retained monthly analytics — sourced from the DB, immune to inbox deletions.
+   * See migration 031 (analytics_retention).
+   */
+  readonly monthlyAnalytics = signal<CreatorMonthlyAnalytics[]>([]);
 
   // ── Computed ───────────────────────────────────────────────────────
   readonly unhandledMessageCount = computed(
@@ -64,9 +71,24 @@ export class DashboardStateService {
   constructor(
     private readonly messageService: MessageService,
     private readonly bookingService: BookingService,
+    private readonly supabase: SupabaseService,
     private readonly toast: ToastService,
     private readonly router: Router,
   ) {}
+
+  // ── Data loading ───────────────────────────────────────────────────
+
+  /**
+   * Load retained monthly analytics from the database.
+   * Called once on dashboard initialisation. Silently ignored on error —
+   * the live inbox stats remain the fallback display.
+   */
+  async loadMonthlyAnalytics(creatorId: string): Promise<void> {
+    const { data } = await this.supabase.getMonthlyAnalytics(creatorId);
+    if (data) {
+      this.monthlyAnalytics.set(data);
+    }
+  }
 
   // ── Actions ────────────────────────────────────────────────────────
 

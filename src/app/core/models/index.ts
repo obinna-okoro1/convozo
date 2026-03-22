@@ -300,3 +300,49 @@ export interface ShopCheckoutPayload {
   buyer_email: string;
   request_details?: string;
 }
+
+// ── Monthly Analytics (Migration 031) ────────────────────────────────────────
+//
+// Mirrors the creator_monthly_analytics table.
+// Written exclusively by DB triggers — never by the client.
+// All monetary values are integer cents.
+
+export interface CreatorMonthlyAnalytics {
+  id: string;
+  creator_id: string;
+  /** First day of the calendar month, e.g. '2026-03-01' */
+  month: string;
+
+  // Messages (paid DMs, tips, follow-back requests)
+  message_count: number;
+  message_gross: number;        // cents
+  message_platform_fee: number; // cents
+  message_net: number;          // cents
+  message_refund_count: number;
+  message_refund_amount: number; // cents
+
+  // Calls
+  call_count: number;
+  call_gross: number;
+  call_platform_fee: number;
+  call_net: number;
+  call_refund_count: number;
+  call_refund_amount: number;
+
+  // Shop orders
+  shop_order_count: number;
+  shop_gross: number;
+  shop_platform_fee: number;
+  shop_net: number;
+  shop_refund_count: number;
+  shop_refund_amount: number;
+
+  // Cross-stream totals
+  total_gross: number;
+  total_platform_fee: number;
+  total_net: number;
+  total_refunds: number;
+
+  created_at: string;
+  updated_at: string;
+}
