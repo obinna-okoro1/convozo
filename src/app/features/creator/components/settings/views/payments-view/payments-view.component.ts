@@ -11,15 +11,20 @@ import { FEATURE_FLAGS } from '../../../../../../core/constants';
 export class PaymentsViewComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   protected readonly refreshing = signal(false);
-
-  // Feature flag — remove this line (and the template guards) when Stripe Connect goes live.
   protected readonly stripeConnectEnabled = FEATURE_FLAGS.STRIPE_CONNECT_ENABLED;
+
+  // ── Paystack bank setup form ──────────────────────────────────────
+  protected readonly bankCode = signal('');
+  protected readonly accountNumber = signal('');
+  protected readonly businessName = signal('');
+  protected readonly resolvedAccountName = signal<string | null>(null);
+  protected readonly resolving = signal(false);
+  protected readonly resolveError = signal<string | null>(null);
+  protected readonly showBankForm = signal(false);
 
   constructor(protected readonly state: SettingsStateService) {}
 
   ngOnInit(): void {
-    // Always refresh when there's an account but it isn't fully onboarded yet,
-    // or when returning from Stripe onboarding via query params.
     const params = this.route.snapshot.queryParamMap;
     const returningFromStripe =
       params.get('connected') === 'true' || params.get('refresh') === 'true';
@@ -27,6 +32,12 @@ export class PaymentsViewComponent implements OnInit {
     const needsRefresh = returningFromStripe || (account != null && !account.onboarding_completed);
     if (needsRefresh) {
       void this.state.refreshStripeStatus();
+    }
+
+    // Pre-fill the business name with the creator's display name
+    const creator = this.state.creator();
+    if (creator) {
+      this.businessName.set(creator.display_name);
     }
   }
 
@@ -39,4 +50,65 @@ export class PaymentsViewComponent implements OnInit {
     await this.state.refreshStripeStatus();
     this.refreshing.set(false);
   }
+
+  // ── Paystack methods ──────────────────────────────────────────────
+
+  protected openBankForm(): void {
+    this.showBankForm.set(true);
+    this.resolvedAccountName.set(null);
+    this.resolveError.set(null);
+    void this.state.loadPaystackBanks();
+  }
+
+  protected onBankCodeChange(code: string): void {
+    this.bankCode.set(code);
+    this.resolvedAccountName.set(null);
+    this.resolveError.set(null);
+  }
+
+  protected onAccountNumberChange(num: string): void {
+    this.accountNumber.set(num.replace(/\D/g, ''));
+    this.resolvedAccountName.set(null);
+    this.resolveError.set(null);
+  }
+
+  /** Resolve the account name so the creator can confirm before submitting. */
+  protected async resolveAccount(): Promise<void> {
+    const num = this.accountNumber();
+    const code = this.bankCode();
+    if (!num || !code) return;
+
+    this.resolving.set(true);
+    this.resolveError.set(null);
+    this.resolvedAccountName.set(null);
+
+    const { accountName, error } = await this.state.resolvePaystackAccount(num, code);
+    this.resolvedAccountName.set(accountName);
+    this.resolveError.set(error);
+    this.resolving.set(false);
+  }
+
+  protected get canSubmitBank(): boolean {
+    return !!(
+      this.bankCode() &&
+      this.accountNumber().length >= 6 &&
+      this.businessName() &&
+      this.resolvedAccountName()
+    );
+  }
+
+  protected async submitBankAccount(): Promise<void> {
+    if (!this.canSubmitBank) return;
+
+    await this.state.connectPaystack({
+      bankCode: this.bankCode(),
+      accountNumber: this.accountNumber(),
+      businessName: this.businessName(),
+    });
+
+    if (!this.state.error()) {
+      this.showBankForm.set(false);
+    }
+  }
 }
+

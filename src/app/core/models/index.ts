@@ -12,6 +12,10 @@ export interface Creator {
   bio: string | null;
   slug: string;
   phone_number: string;
+  /** ISO 3166-1 alpha-2 country code detected at signup, e.g. 'NG', 'US'. */
+  country: string;
+  /** Payment provider assigned at signup based on country. NG/ZA → 'paystack'; all others → 'stripe'. */
+  payment_provider: 'stripe' | 'paystack';
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -60,6 +64,32 @@ export interface StripeAccount {
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/** A creator's registered bank account on Paystack (NG/ZA creators only). */
+export interface PaystackSubaccount {
+  id: string;
+  creator_id: string;
+  /** Paystack subaccount code, e.g. ACCT_xxxxxx */
+  subaccount_code: string;
+  business_name: string;
+  bank_name: string;
+  bank_code: string;
+  account_number: string;
+  account_name: string | null;
+  country: string;
+  is_verified: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A bank entry returned by the Paystack /bank list endpoint. */
+export interface PaystackBank {
+  name: string;
+  code: string;
+  country: string;
+  currency: string;
 }
 
 export interface CreatorProfile extends Creator {

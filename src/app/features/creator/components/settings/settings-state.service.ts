@@ -10,6 +10,8 @@ import {
   Creator,
   CreatorSettings,
   StripeAccount,
+  PaystackSubaccount,
+  PaystackBank,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -22,6 +24,14 @@ export class SettingsStateService {
   readonly creator = signal<Creator | null>(null);
   readonly settings = signal<CreatorSettings | null>(null);
   readonly paymentAccount = signal<StripeAccount | null>(null);
+  /** Paystack subaccount for NG/ZA creators. Null until loaded or not set up yet. */
+  readonly paystackSubaccount = signal<PaystackSubaccount | null>(null);
+  /** Bank list for the Paystack bank picker. */
+  readonly paystackBanks = signal<PaystackBank[]>([]);
+  /** True while the Paystack bank list is loading. */
+  readonly paystackBanksLoading = signal(false);
+  /** True while the Paystack subaccount is being created. */
+  readonly paystackConnecting = signal(false);
 
   // ── Shared UI state ────────────────────────────────────────────────
   readonly loading = signal(false);
@@ -123,6 +133,16 @@ export class SettingsStateService {
     const account = this.paymentAccount();
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
+
+  /** True when this creator uses Paystack (NG/ZA). */
+  readonly isPaystackCreator = computed(
+    () => this.creator()?.payment_provider === 'paystack',
+  );
+
+  /** True when the Paystack subaccount is set up and active. */
+  readonly isPaystackConnected = computed(
+    () => !!(this.paystackSubaccount()?.is_active),
+  );
 
   constructor(
     private readonly creatorService: CreatorService,
@@ -412,8 +432,12 @@ export class SettingsStateService {
         });
       }
 
-      // Load payment account
-      await this.loadPaymentAccount(creatorData.id);
+      // Load payment account based on the creator's provider
+      if (creatorData.payment_provider === 'paystack') {
+        await this.loadPaystackSubaccount(creatorData.id);
+      } else {
+        await this.loadPaymentAccount(creatorData.id);
+      }
     }
 
     this.loading.set(false);
@@ -430,6 +454,102 @@ export class SettingsStateService {
       if (!data.onboarding_completed || !data.charges_enabled) {
         await this.refreshStripeStatus();
       }
+    }
+  }
+
+  private async loadPaystackSubaccount(creatorId: string): Promise<void> {
+    const { data } = await this.creatorService.getPaystackSubaccount(creatorId);
+    if (data) {
+      this.paystackSubaccount.set(data);
+    }
+  }
+
+  /**
+   * Resolve a bank account number to the registered account name.
+   * Used by the UI to verify the account before submitting bank setup.
+   */
+  async resolvePaystackAccount(
+    accountNumber: string,
+    bankCode: string,
+  ): Promise<{ accountName: string | null; error: string | null }> {
+    try {
+      const { data, error } = await this.creatorService.resolvePaystackAccount(
+        accountNumber,
+        bankCode,
+      );
+      if (error) {
+        return { accountName: null, error: 'Could not verify account. Please check the details.' };
+      }
+      const name = (data as unknown as { account_name?: string })?.account_name ?? null;
+      return { accountName: name, error: null };
+    } catch {
+      return { accountName: null, error: 'Account verification failed. Please try again.' };
+    }
+  }
+
+  /**
+   * Load the bank list for the creator's country (NG or ZA).
+   * Called lazily when the creator opens the Paystack bank setup form.
+   */
+  async loadPaystackBanks(): Promise<void> {
+    const country = this.creator()?.country;
+    if (!country) return;
+
+    this.paystackBanksLoading.set(true);
+    try {
+      const { data, error } = await this.creatorService.getPaystackBanks(country);
+      if (error) {
+        this.error.set('Failed to load bank list. Please try again.');
+        return;
+      }
+      // Edge function returns { banks: [...] } — extract the array
+      const responseData = data as unknown as { banks?: PaystackBank[] } | PaystackBank[] | null;
+      const banks: PaystackBank[] = Array.isArray(responseData)
+        ? responseData
+        : (responseData as { banks?: PaystackBank[] } | null)?.banks ?? [];
+      this.paystackBanks.set(banks);
+    } catch {
+      this.error.set('Failed to load bank list. Please try again.');
+    } finally {
+      this.paystackBanksLoading.set(false);
+    }
+  }
+
+  /**
+   * Submit the creator's bank account details to set up a Paystack subaccount.
+   * Called from Settings → Payments for NG/ZA creators.
+   */
+  async connectPaystack(params: {
+    bankCode: string;
+    accountNumber: string;
+    businessName: string;
+  }): Promise<void> {
+    const country = this.creator()?.country;
+    if (!country) return;
+
+    this.paystackConnecting.set(true);
+    this.error.set(null);
+
+    try {
+      const { data, error } = await this.creatorService.createPaystackSubaccount({
+        bankCode: params.bankCode,
+        accountNumber: params.accountNumber,
+        businessName: params.businessName,
+        country,
+      });
+
+      if (error) {
+        this.error.set((error as { message?: string })?.message ?? 'Failed to set up bank account');
+        return;
+      }
+
+      this.paystackSubaccount.set(data as unknown as PaystackSubaccount);
+      this.success.set(true);
+      setTimeout(() => this.success.set(false), 3000);
+    } catch {
+      this.error.set('An unexpected error occurred. Please try again.');
+    } finally {
+      this.paystackConnecting.set(false);
     }
   }
 }
