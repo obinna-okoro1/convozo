@@ -250,6 +250,8 @@ export class OnboardingStateService implements OnDestroy {
         const { data: creator, error } = await this.creatorService.createCreator({
           userId: user.id,
           email: user.email ?? '',
+          // The ISO code of the selected phone prefix — determines payment_provider in the DB.
+          country: COUNTRY_CODES[this.selectedCountryIndex()].iso,
           ...this.profileFormFields(),
         });
         if (error || !creator) {

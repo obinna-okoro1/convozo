@@ -2,6 +2,7 @@ import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
 import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
+import { isPaystackCountry, initializePaystackTransaction } from '../_shared/paystack.ts';
 
 // Rate limit: 10 call booking requests per hour per booker email
 const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
     // Get creator with settings and stripe account (same pattern as create-checkout-session)
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, creator_settings(*), stripe_accounts(stripe_account_id)')
+      .select('id, display_name, payment_provider, country, creator_settings(*), stripe_accounts(stripe_account_id), paystack_subaccounts(subaccount_code, is_active)')
       .eq('slug', payload.creator_slug)
       .eq('is_active', true)
       .single();
@@ -86,16 +87,60 @@ Deno.serve(async (req) => {
       return jsonError('Creator call pricing not configured', 400, corsHeaders);
     }
 
-    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
-    if (!stripeAccount?.stripe_account_id) {
-      return jsonError('Creator payment setup incomplete', 400, corsHeaders);
-    }
-
     // Calculate platform fee (22%) — using server-authoritative price
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));
     // SECURITY: redirect URL is always server-controlled — never accept from client payload.
     const appUrl = getAppUrl();
+
+    // ── Route to the correct payment provider ──────────────────────────────────
+    const paymentProvider = (creator.payment_provider as string) ?? 'stripe';
+
+    if (paymentProvider === 'paystack' || isPaystackCountry((creator.country as string) ?? '')) {
+      // ── Paystack checkout (NG / ZA creators) ────────────────────────────────
+      const subaccountRow = creator.paystack_subaccounts as
+        | { subaccount_code: string; is_active: boolean }
+        | null;
+
+      if (!subaccountRow?.subaccount_code || !subaccountRow.is_active) {
+        return jsonError('Creator payment setup incomplete', 400, corsHeaders);
+      }
+
+      // Unique reference — stable within a 10-minute window for idempotency.
+      const windowSlot = Math.floor(Date.now() / (10 * 60 * 1000));
+      const refRaw = `${payload.booker_email}:${payload.creator_slug}:call:${serverPrice}:${payload.scheduled_at}:${windowSlot}`;
+      const reference = btoa(refRaw).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
+
+      const result = await initializePaystackTransaction({
+        email: payload.booker_email,
+        amountCents: serverPrice,
+        subaccountCode: subaccountRow.subaccount_code,
+        platformFeePct: platformFeePercentage,
+        callbackUrl: `${appUrl}/success?reference=${reference}&type=call&creator=${payload.creator_slug}`,
+        reference,
+        metadata: {
+          type: 'call_booking',
+          creator_id: creator.id,
+          creator_slug: payload.creator_slug,
+          booker_name: payload.booker_name,
+          booker_email: payload.booker_email,
+          message_content: payload.message_content || '',
+          duration: settings.call_duration.toString(),
+          amount: serverPrice.toString(),
+          scheduled_at: payload.scheduled_at,
+          fan_timezone: payload.fan_timezone || 'UTC',
+          provider: 'paystack',
+        },
+      });
+
+      return jsonOk({ url: result.authorizationUrl, reference: result.reference }, corsHeaders);
+    }
+
+    // ── Stripe checkout ────────────────────────────────────────────────────────
+    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
+    if (!stripeAccount?.stripe_account_id) {
+      return jsonError('Creator payment setup incomplete', 400, corsHeaders);
+    }
 
     // Create Stripe Checkout Session config
     const sessionConfig = {

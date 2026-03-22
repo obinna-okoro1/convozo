@@ -2,6 +2,7 @@ import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
 import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
+import { isPaystackCountry, initializePaystackTransaction } from '../_shared/paystack.ts';
 
 // Rate limit: 10 checkout requests per hour per sender email
 const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
@@ -40,10 +41,10 @@ Deno.serve(async (req) => {
       return jsonError('Invalid email address', 400, corsHeaders);
     }
 
-    // Get creator info
+    // Get creator info — fetch payment_provider and paystack_subaccounts alongside stripe_accounts.
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, stripe_accounts(stripe_account_id), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
+      .select('id, display_name, payment_provider, country, stripe_accounts(stripe_account_id), paystack_subaccounts(subaccount_code, is_active), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -90,17 +91,57 @@ Deno.serve(async (req) => {
       productDescription = 'Fan support / tip';
     }
 
-    // PostgREST returns one-to-one relationships as objects, not arrays
-    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
-    if (!stripeAccount?.stripe_account_id) {
-      return jsonError('Creator payment setup incomplete', 400, corsHeaders);
-    }
-
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     // Math.round for symmetric rounding — never Math.floor (undercounts) or Math.ceil (overcounts creator)
     const platformFee = Math.round(serverPrice * platformFeePercentage / 100);
     // SECURITY: redirect URL is always server-controlled — never accept from client payload.
     const appUrl = getAppUrl();
+
+    // ── Route to the correct payment provider ──────────────────────────────────
+    const paymentProvider = (creator.payment_provider as string) ?? 'stripe';
+
+    if (paymentProvider === 'paystack' || isPaystackCountry((creator.country as string) ?? '')) {
+      // ── Paystack checkout (NG / ZA creators) ────────────────────────────────
+      const subaccountRow = creator.paystack_subaccounts as
+        | { subaccount_code: string; is_active: boolean }
+        | null;
+
+      if (!subaccountRow?.subaccount_code || !subaccountRow.is_active) {
+        return jsonError('Creator payment setup incomplete', 400, corsHeaders);
+      }
+
+      // Unique reference — stable within a 10-minute window for idempotency.
+      const windowSlot = Math.floor(Date.now() / (10 * 60 * 1000));
+      const refRaw = `${sender_email}:${creator_slug}:${validMessageType}:${serverPrice}:${message_content.slice(0, 50)}:${windowSlot}`;
+      const reference = btoa(refRaw).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
+
+      const result = await initializePaystackTransaction({
+        email: sender_email,
+        amountCents: serverPrice,
+        subaccountCode: subaccountRow.subaccount_code,
+        platformFeePct: platformFeePercentage,
+        callbackUrl: `${appUrl}/success?reference=${reference}&creator=${creator_slug}`,
+        reference,
+        metadata: {
+          creator_id: creator.id,
+          message_content: message_content.slice(0, 490),
+          sender_name: sender_name.slice(0, 490),
+          sender_email,
+          message_type: validMessageType,
+          amount: serverPrice.toString(),
+          provider: 'paystack',
+        },
+      });
+
+      return jsonOk({ url: result.authorizationUrl, reference: result.reference }, corsHeaders);
+    }
+
+    // ── Stripe checkout (all other creators) ──────────────────────────────────
+    // PostgREST returns one-to-one relationships as objects, not arrays
+    const stripeAccount = creator.stripe_accounts as { stripe_account_id: string } | null;
+    if (!stripeAccount?.stripe_account_id) {
+      return jsonError('Creator payment setup incomplete', 400, corsHeaders);
+    }
 
     // Create Stripe Checkout session
     const sessionConfig = {
