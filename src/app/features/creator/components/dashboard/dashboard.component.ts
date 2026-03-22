@@ -198,6 +198,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const { data: stripeData } = await this.creatorService.getStripeAccount(creatorData.id);
       this.dashboardState.stripeAccount.set(stripeData ?? null);
 
+      // Load retained monthly analytics (non-blocking — not latency-critical)
+      await this.dashboardState.loadMonthlyAnalytics(creatorData.id);
+
       // Subscribe to real-time updates so the inbox refreshes instantly
       this.realtimeChannel = this.messageService.subscribeToMessages(
         creatorData.id,
