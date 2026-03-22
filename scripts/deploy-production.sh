@@ -15,6 +15,14 @@ if [[ -n $(git status --porcelain) ]]; then
   exit 1
 fi
 
+echo "🧪 Running unit tests..."
+npx ng test --watch=false --browsers=ChromeHeadless
+if [[ $? -ne 0 ]]; then
+  echo "❌ Tests failed. Deployment aborted."
+  exit 1
+fi
+echo "✅ All tests passed."
+
 echo "📦 Pulling latest develop..."
 git checkout develop
 git pull origin develop
