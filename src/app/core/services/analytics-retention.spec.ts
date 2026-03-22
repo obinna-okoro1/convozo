@@ -54,6 +54,13 @@ function makeMonthlyAnalytics(
     message_refund_count: 0,
     message_refund_amount: 0,
 
+    support_count: 0,
+    support_gross: 0,
+    support_platform_fee: 0,
+    support_net: 0,
+    support_refund_count: 0,
+    support_refund_amount: 0,
+
     call_count: 0,
     call_gross: 0,
     call_platform_fee: 0,
