@@ -313,13 +313,21 @@ export interface CreatorMonthlyAnalytics {
   /** First day of the calendar month, e.g. '2026-03-01' */
   month: string;
 
-  // Messages (paid DMs, tips, follow-back requests)
+  // Messages (paid DMs and follow-back requests — does NOT include support tips)
   message_count: number;
   message_gross: number;        // cents
   message_platform_fee: number; // cents
   message_net: number;          // cents
   message_refund_count: number;
   message_refund_amount: number; // cents
+
+  // Support tips / donations (fan-initiated, no response expected)
+  support_count: number;
+  support_gross: number;        // cents
+  support_platform_fee: number; // cents
+  support_net: number;          // cents
+  support_refund_count: number;
+  support_refund_amount: number; // cents
 
   // Calls
   call_count: number;

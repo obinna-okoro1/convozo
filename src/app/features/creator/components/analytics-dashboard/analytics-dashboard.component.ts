@@ -95,7 +95,12 @@ export class AnalyticsDashboardComponent implements OnInit {
 
   protected readonly totalRefundCount = computed<number>(() =>
     this.refundRows().reduce(
-      (sum, r) => sum + r.message_refund_count + r.call_refund_count + r.shop_refund_count,
+      (sum, r) =>
+        sum +
+        r.message_refund_count +
+        r.support_refund_count +
+        r.call_refund_count +
+        r.shop_refund_count,
       0,
     ),
   );
@@ -107,6 +112,11 @@ export class AnalyticsDashboardComponent implements OnInit {
       label: 'Messages',
       count: this.refundRows().reduce((s, r) => s + r.message_refund_count, 0),
       amount: this.refundRows().reduce((s, r) => s + r.message_refund_amount, 0) / 100,
+    },
+    {
+      label: 'Donations',
+      count: this.refundRows().reduce((s, r) => s + r.support_refund_count, 0),
+      amount: this.refundRows().reduce((s, r) => s + r.support_refund_amount, 0) / 100,
     },
     {
       label: 'Calls',
@@ -122,10 +132,114 @@ export class AnalyticsDashboardComponent implements OnInit {
 
   protected Math = Math;
 
+  /**
+   * Gross revenue from retained DB rows — immune to deletions.
+   * Null when no monthly rows exist yet (new creator); falls back to live calc.
+   */
+  protected readonly retainedRevenue = computed<number | null>(() => {
+    const rows = this.refundRows();
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows.reduce((sum, r) => sum + r.total_gross, 0) / 100;
+  });
+
+  /** Creator net revenue (after 22% platform fee) from retained DB rows. */
+  protected readonly retainedNetRevenue = computed<number | null>(() => {
+    const rows = this.refundRows();
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows.reduce((sum, r) => sum + r.total_net, 0) / 100;
+  });
+
+  /**
+   * Per-stream breakdown (messages / calls / shop) from retained DB rows.
+   * Immune to deletions. Null when no rows exist — template falls back to live calc.
+   */
+  protected readonly retainedTypeBreakdown = computed<
+    { type: string; count: number; revenue: number }[] | null
+  >(() => {
+    const rows = this.refundRows();
+    if (rows.length === 0) {
+      return null;
+    }
+    const msgs = {
+      type: 'Messages',
+      count: rows.reduce((s, r) => s + r.message_count, 0),
+      revenue: rows.reduce((s, r) => s + r.message_gross, 0) / 100,
+    };
+    const donations = {
+      type: 'Donations',
+      count: rows.reduce((s, r) => s + r.support_count, 0),
+      revenue: rows.reduce((s, r) => s + r.support_gross, 0) / 100,
+    };
+    const calls = {
+      type: 'Calls',
+      count: rows.reduce((s, r) => s + r.call_count, 0),
+      revenue: rows.reduce((s, r) => s + r.call_gross, 0) / 100,
+    };
+    const shop = {
+      type: 'Shop',
+      count: rows.reduce((s, r) => s + r.shop_order_count, 0),
+      revenue: rows.reduce((s, r) => s + r.shop_gross, 0) / 100,
+    };
+    // Only include streams that have activity
+    return [msgs, donations, calls, shop].filter((s) => s.count > 0);
+  });
+
+  /**
+   * Month-over-month growth derived from retained DB rows.
+   * Compares the selected month against the preceding month's retained row.
+   * For 'all' view, falls back to the live growth calculation.
+   * Null when insufficient retained data for comparison.
+   */
+  protected readonly retainedGrowth = computed<{
+    revenueGrowth: number;
+    messageGrowth: number;
+  } | null>(() => {
+    const filter = this.selectedFilter();
+    const allRows = this.monthlyAnalytics();
+    if (allRows.length < 2 || filter === 'all') {
+      return null;
+    }
+    const currentRow = this.selectedMonthRow();
+    if (!currentRow) {
+      return null;
+    }
+    // Find the row for the preceding calendar month
+    const [cy, cm] = currentRow.month.split('-').map(Number);
+    const prevDate = new Date(cy, cm - 2, 1); // month is 1-based, subtract 2 for prev
+    const prevKey = `${String(prevDate.getFullYear())}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-01`;
+    const prevRow = allRows.find((r) => r.month === prevKey);
+    if (!prevRow) {
+      return null;
+    }
+    const revenueGrowth =
+      prevRow.total_gross === 0
+        ? 0
+        : ((currentRow.total_gross - prevRow.total_gross) / prevRow.total_gross) * 100;
+    const prevCount = prevRow.message_count + prevRow.call_count + prevRow.shop_order_count;
+    const currCount =
+      currentRow.message_count + currentRow.call_count + currentRow.shop_order_count;
+    const messageGrowth = prevCount === 0 ? 0 : ((currCount - prevCount) / prevCount) * 100;
+    return { revenueGrowth, messageGrowth };
+  });
+
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   public ngOnInit(): void {
     this.updateAnalytics();
+  }
+
+  /** Bar width for the type breakdown — computed from retained rows only. */
+  protected getRetainedTypePercentage(count: number): number {
+    const breakdown = this.retainedTypeBreakdown();
+    if (!breakdown) {
+      return 0;
+    }
+    const total = breakdown.reduce((s, t) => s + t.count, 0);
+    return total > 0 ? (count / total) * 100 : 0;
   }
 
   protected onFilterChange(value: string): void {
@@ -144,11 +258,6 @@ export class AnalyticsDashboardComponent implements OnInit {
   protected getBarHeight(revenue: number): number {
     const maxRevenue = Math.max(...this.analytics().dailyStats.map((d) => d.revenue), 1);
     return Math.max((revenue / maxRevenue) * 100, 2);
-  }
-
-  protected getTypePercentage(count: number): number {
-    const total = this.analytics().messageTypeBreakdown.reduce((s, t) => s + t.count, 0);
-    return total > 0 ? (count / total) * 100 : 0;
   }
 
   private updateAnalytics(): void {
