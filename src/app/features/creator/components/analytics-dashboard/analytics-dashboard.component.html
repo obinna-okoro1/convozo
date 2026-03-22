@@ -14,20 +14,22 @@
       </div>
     </div>
 
-    <!-- Time Range Segment Control -->
-    <div class="segment-control">
-      <button
-        (click)="setTimeRange('7d')"
-        [class]="timeRange() === '7d' ? 'segment-active' : 'segment-inactive'"
-      >7 days</button>
-      <button
-        (click)="setTimeRange('30d')"
-        [class]="timeRange() === '30d' ? 'segment-active' : 'segment-inactive'"
-      >30 days</button>
-      <button
-        (click)="setTimeRange('all')"
-        [class]="timeRange() === 'all' ? 'segment-active' : 'segment-inactive'"
-      >All time</button>
+    <!-- Period filter dropdown -->
+    <div class="relative flex-shrink-0">
+      <select
+        [value]="selectedFilter()"
+        (change)="onFilterChange($any($event.target).value)"
+        class="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-medium text-content bg-surface-elevated border border-separator focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 cursor-pointer"
+      >
+        @for (opt of monthOptions(); track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <svg class="w-4 h-4 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
     </div>
   </div>
 
@@ -118,6 +120,44 @@
     </div>
   </div>
 
+  <!-- Refunds Issued – sourced from retained monthly analytics (migration 031).        -->
+  <!-- Gross revenue in the grid above is always preserved; refunds are shown here.    -->
+  @if (hasRefunds()) {
+    <div class="card p-5 border-system-red/20">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-system-red/10 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-system-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-content">Refunds Issued</div>
+            <div class="text-xs text-content-tertiary">All-time &middot; Gross revenue above is preserved</div>
+          </div>
+        </div>
+        <div class="text-right ml-4">
+          <div class="text-xl font-bold text-system-red">-{{ formatCurrency(totalRefundsAmount()) }}</div>
+          <div class="text-xs text-content-tertiary mt-0.5">
+            {{ totalRefundCount() }} {{ totalRefundCount() === 1 ? 'refund' : 'refunds' }}
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-separator">
+        @for (item of refundBreakdown(); track item.label) {
+          @if (item.count > 0) {
+            <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-elevated text-xs">
+              <span class="text-content-tertiary">{{ item.label }}</span>
+              <span class="font-semibold text-system-red">-{{ formatCurrency(item.amount) }}</span>
+              <span class="text-content-tertiary">({{ item.count }})</span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+
   <!-- Projected Revenue -->
   <div class="card p-6 border-accent/20">
     <div class="flex items-center justify-between">
@@ -144,7 +184,12 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
       </svg>
-      Revenue Trend (Last 30 Days)
+      Revenue Trend
+      @if (selectedFilter() === 'all') {
+        <span class="font-normal text-content-tertiary text-sm">(Last 30 Days)</span>
+      } @else {
+        <span class="font-normal text-content-tertiary text-sm">&mdash; {{ selectedLabel() }}</span>
+      }
     </h3>
     <div class="h-44 flex items-end justify-between gap-[0.125rem]">
       @for (day of analytics().dailyStats; track day.date) {

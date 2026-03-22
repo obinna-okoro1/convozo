@@ -16,6 +16,7 @@ import {
   EdgeFunctionResponse,
   StripeConnectResponse,
   StripeAccountStatus,
+  CreatorMonthlyAnalytics,
 } from '../models';
 
 interface SupabaseResponse<T> {
@@ -436,6 +437,24 @@ export class SupabaseService {
     return invokeFunction(() =>
       this.client.functions.invoke('create-shop-checkout', { body: payload }),
     );
+  }
+
+  // Analytics
+
+  /**
+   * Fetch retained monthly analytics for a creator, most-recent month first.
+   * These rows are immune to message/booking deletions — only account deletion removes them.
+   * See migration 031 (analytics_retention).
+   */
+  public async getMonthlyAnalytics(
+    creatorId: string,
+  ): Promise<{ data: CreatorMonthlyAnalytics[] | null; error: unknown }> {
+    const { data, error } = await this.client
+      .from('creator_monthly_analytics')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .order('month', { ascending: false });
+    return { data: data as CreatorMonthlyAnalytics[] | null, error };
   }
 
   private initializeAuthState(): void {
