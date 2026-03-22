@@ -11,6 +11,8 @@ import { Injectable } from '@angular/core';
 import {
   Creator,
   CreatorSettings,
+  PaystackSubaccount,
+  PaystackBank,
   SupabaseResponse,
   EdgeFunctionResponse,
   StripeConnectResponse,
@@ -48,7 +50,17 @@ export class CreatorService {
     slug: string;
     phoneNumber: string;
     profileImageUrl?: string;
+    /**
+     * ISO 3166-1 alpha-2 country code detected from the phone code picker.
+     * Determines payment_provider: NG/ZA → 'paystack'; all others → 'stripe'.
+     */
+    country: string;
   }): Promise<SupabaseResponse<Creator>> {
+    // Determine the payment provider based on country.
+    // NG and ZA creators use Paystack; all others use Stripe.
+    const PAYSTACK_COUNTRIES = new Set(['NG', 'ZA']);
+    const paymentProvider = PAYSTACK_COUNTRIES.has(data.country.toUpperCase()) ? 'paystack' : 'stripe';
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -60,6 +72,8 @@ export class CreatorService {
         slug: data.slug,
         phone_number: data.phoneNumber,
         profile_image_url: data.profileImageUrl ?? null,
+        country: data.country.toUpperCase(),
+        payment_provider: paymentProvider,
       })
       .select()
       .single();
@@ -211,5 +225,76 @@ export class CreatorService {
     accountId: string,
   ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
     return this.supabaseService.verifyConnectAccount(accountId);
+  }
+
+  // ── Paystack ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Fetch the creator's Paystack subaccount, if one has been set up.
+   * Returns null data if no subaccount exists yet.
+   */
+  public async getPaystackSubaccount(
+    creatorId: string,
+  ): Promise<SupabaseResponse<PaystackSubaccount | null>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabaseService.client
+      .from('paystack_subaccounts')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .maybeSingle();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
+
+  /**
+   * Fetch the list of banks for the given country from the Paystack API (via Edge Function).
+   * Returns bank name + code pairs used to populate the bank picker in Settings.
+   */
+  public async getPaystackBanks(
+    country: string,
+  ): Promise<EdgeFunctionResponse<PaystackBank[]>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'get-paystack-banks',
+      { body: { country } },
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
+
+  /**
+   * Resolve a bank account number to the registered account name.
+   * Called before the creator confirms their bank setup in Settings.
+   */
+  public async resolvePaystackAccount(
+    accountNumber: string,
+    bankCode: string,
+  ): Promise<EdgeFunctionResponse<{ account_name: string }>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'get-paystack-banks',
+      { body: { resolve: true, account_number: accountNumber, bank_code: bankCode } },
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
+
+  /**
+   * Register the creator's bank account as a Paystack subaccount.
+   * Called from Settings → Payments when the creator submits their bank details.
+   */
+  public async createPaystackSubaccount(params: {
+    bankCode: string;
+    accountNumber: string;
+    businessName: string;
+    country: string;
+  }): Promise<EdgeFunctionResponse<PaystackSubaccount>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'create-paystack-subaccount',
+      { body: params },
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
   }
 }

@@ -8,98 +8,275 @@
     </div>
     <div>
       <h2 class="text-lg font-semibold text-content">Payment Settings</h2>
-      <p class="text-sm text-content-muted hidden sm:block">Manage your Stripe account and payouts</p>
+      <p class="text-sm text-content-muted hidden sm:block">
+        @if (state.isPaystackCreator()) { Manage your bank account for Paystack payouts }
+        @else { Manage your Stripe account and payouts }
+      </p>
     </div>
   </div>
 
-  @if (state.paymentAccount()) {
-    <!-- ── Connected ── -->
-    <div class="alert-success mb-6">
-      <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-[#1a9e3f] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-        </svg>
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-content text-sm">Stripe Account Connected</p>
-          <p class="text-content-secondary text-sm mt-1">Your account is ready to receive payments.</p>
+  @if (state.isPaystackCreator()) {
+    <!-- PAYSTACK (NG / ZA creators) -->
+    @if (state.isPaystackConnected()) {
+      <div class="alert-success mb-6">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-[#1a9e3f] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+          </svg>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-content text-sm">Bank Account Connected</p>
+            <p class="text-content-secondary text-sm mt-1">You're all set to receive payments via Paystack.</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Account details -->
-    <div class="grid grid-cols-2 gap-3 mb-6">
-      <div class="p-3 bg-surface-raised rounded-xl">
-        <span class="text-xs text-content-muted block mb-1">Account ID</span>
-        <span class="text-content text-xs font-mono break-all">{{ state.paymentAccount()?.stripe_account_id }}</span>
-      </div>
-      <div class="p-3 bg-surface-raised rounded-xl">
-        <span class="text-xs text-content-muted block mb-1">Charges</span>
-        <span class="text-content text-sm">
-          @if (state.paymentAccount()?.charges_enabled) {
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Enabled</span>
-          } @else {
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Pending</span>
-          }
-        </span>
-      </div>
-      <div class="p-3 bg-surface-raised rounded-xl">
-        <span class="text-xs text-content-muted block mb-1">Payouts</span>
-        <span class="text-content text-sm">
-          @if (state.paymentAccount()?.payouts_enabled) {
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Enabled</span>
-          } @else {
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Pending</span>
-          }
-        </span>
-      </div>
-      <div class="p-3 bg-surface-raised rounded-xl">
-        <span class="text-xs text-content-muted block mb-1">Onboarding</span>
-        <span class="text-content text-sm">
-          @if (state.paymentAccount()?.onboarding_completed) {
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Completed</span>
-          } @else {
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Incomplete</span>
-          }
-        </span>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-6">
-      @if (stripeConnectEnabled) {
-        @if (!state.paymentAccount()?.onboarding_completed) {
-          <button (click)="connectStripe()" [disabled]="state.paymentConnecting()" class="btn-primary btn-md flex items-center justify-center gap-2">
-            @if (state.paymentConnecting()) {
-              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-              <span>Redirecting...</span>
-            } @else {
-              <span>Complete Stripe Onboarding</span>
-            }
-          </button>
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Bank</span>
+          <span class="text-content text-sm font-medium">{{ state.paystackSubaccount()?.bank_name }}</span>
+        </div>
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Account Number</span>
+          <span class="text-content text-sm font-mono">{{ state.paystackSubaccount()?.account_number }}</span>
+        </div>
+        @if (state.paystackSubaccount()?.account_name) {
+          <div class="p-3 bg-surface-raised rounded-xl col-span-2">
+            <span class="text-xs text-content-muted block mb-1">Account Name</span>
+            <span class="text-content text-sm font-medium">{{ state.paystackSubaccount()?.account_name }}</span>
+          </div>
         }
-        <button (click)="connectStripe()" [disabled]="state.paymentConnecting()" class="btn-ghost btn-md flex items-center justify-center gap-2 text-sm">
-          @if (state.paymentConnecting()) {
-            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-          } @else {
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          }
-          Reconnect Stripe
-        </button>
-      } @else {
-        <div class="alert-warning">
-          <span class="text-sm">Stripe payouts coming soon — we'll notify you when it's ready</span>
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Verified</span>
+          <span class="text-content text-sm">
+            @if (state.paystackSubaccount()?.is_verified) {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Yes</span>
+            } @else {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Pending</span>
+            }
+          </span>
         </div>
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Subaccount Code</span>
+          <span class="text-content text-xs font-mono break-all">{{ state.paystackSubaccount()?.subaccount_code }}</span>
+        </div>
+      </div>
+
+      @if (!showBankForm()) {
+        <button (click)="openBankForm()" class="btn-ghost btn-md text-sm">Update Bank Account</button>
       }
-      <button (click)="refreshStatus()" [disabled]="refreshing()" class="btn-ghost btn-md flex items-center justify-center gap-2 text-sm">
-        <svg class="w-4 h-4" [class.animate-spin]="refreshing()" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-        Refresh Status
-      </button>
-    </div>
-    @if (!state.paymentAccount()?.onboarding_completed) {
-      <p class="text-xs text-content-muted">Your onboarding is incomplete. Click above to finish setting up your Stripe account.</p>
+    } @else {
+      <div class="alert-warning mb-6">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          <div>
+            <p class="font-semibold text-content text-sm">Bank Account Not Connected</p>
+            <p class="text-content-secondary text-sm mt-1">Add your bank account to start receiving payments from fans.</p>
+          </div>
+        </div>
+      </div>
+      @if (!showBankForm()) {
+        <button (click)="openBankForm()" class="btn-primary btn-md w-full flex items-center justify-center gap-2">
+          Connect Bank Account
+        </button>
+      }
     }
 
-    <!-- Payout Info -->
+    @if (showBankForm()) {
+      <div class="mt-6 p-5 bg-surface-raised rounded-xl">
+        <h3 class="font-semibold text-content mb-4">Bank Account Details</h3>
+
+        @if (state.error()) { <div class="alert-error mb-4 text-sm">{{ state.error() }}</div> }
+        @if (state.success()) { <div class="alert-success mb-4 text-sm">Bank account saved successfully!</div> }
+
+        <div class="mb-4">
+          <label class="form-label">Business / Display Name</label>
+          <input type="text" class="form-input" [value]="businessName()" (input)="businessName.set($any($event.target).value)" placeholder="Your name or business name" maxlength="100" />
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Bank</label>
+          @if (state.paystackBanksLoading()) {
+            <div class="form-input flex items-center gap-2 text-content-muted text-sm">
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              Loading banks...
+            </div>
+          } @else {
+            <select class="form-input" [value]="bankCode()" (change)="onBankCodeChange($any($event.target).value)">
+              <option value="">Select your bank</option>
+              @for (bank of state.paystackBanks(); track bank.code) {
+                <option [value]="bank.code">{{ bank.name }}</option>
+              }
+            </select>
+          }
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Account Number</label>
+          <div class="flex gap-2">
+            <input type="text" class="form-input flex-1" [value]="accountNumber()" (input)="onAccountNumberChange($any($event.target).value)" placeholder="e.g. 0123456789" inputmode="numeric" maxlength="20" />
+            <button (click)="resolveAccount()" [disabled]="resolving() || !accountNumber() || !bankCode()" class="btn-ghost btn-md text-sm flex-shrink-0">
+              @if (resolving()) {
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              } @else { Verify }
+            </button>
+          </div>
+          @if (resolveError()) { <p class="form-error mt-1">{{ resolveError() }}</p> }
+          @if (resolvedAccountName()) {
+            <div class="mt-2 flex items-center gap-2 text-sm text-[#1a9e3f]">
+              <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+              <span>Account name: <strong>{{ resolvedAccountName() }}</strong></span>
+            </div>
+          }
+        </div>
+
+        <p class="text-xs text-content-muted mb-4">Verify your account number before saving. Paystack will use this to send your payouts.</p>
+
+        <div class="flex gap-3">
+          <button (click)="submitBankAccount()" [disabled]="!canSubmitBank || state.paystackConnecting()" class="btn-primary btn-md flex items-center gap-2">
+            @if (state.paystackConnecting()) {
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              Saving...
+            } @else { Save Bank Account }
+          </button>
+          <button (click)="showBankForm.set(false)" class="btn-ghost btn-md text-sm">Cancel</button>
+        </div>
+      </div>
+    }
+
+    <div class="mt-6 p-5 bg-surface-raised rounded-xl">
+      <h3 class="font-semibold text-content mb-4">How Payouts Work</h3>
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <svg class="w-4 h-4 text-accent mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="text-content-secondary text-sm">You earn <strong class="text-content">78% of each payment</strong> — processing fees come out of our cut</span>
+        </div>
+        <div class="flex items-start gap-3">
+          <svg class="w-4 h-4 text-accent mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="text-content-secondary text-sm">Convozo takes a <strong class="text-content">22% platform fee</strong></span>
+        </div>
+        <div class="flex items-start gap-3">
+          <svg class="w-4 h-4 text-accent mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="text-content-secondary text-sm">Payouts sent to your bank via <strong class="text-content">Paystack</strong> in USD, settled locally</span>
+        </div>
+      </div>
+    </div>
+
+  } @else {
+    <!-- STRIPE (all other creators) -->
+    @if (state.paymentAccount()) {
+      <div class="alert-success mb-6">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-[#1a9e3f] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+          </svg>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-content text-sm">Stripe Account Connected</p>
+            <p class="text-content-secondary text-sm mt-1">Your account is ready to receive payments.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Account ID</span>
+          <span class="text-content text-xs font-mono break-all">{{ state.paymentAccount()?.stripe_account_id }}</span>
+        </div>
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Charges</span>
+          <span class="text-content text-sm">
+            @if (state.paymentAccount()?.charges_enabled) {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Enabled</span>
+            } @else {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Pending</span>
+            }
+          </span>
+        </div>
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Payouts</span>
+          <span class="text-content text-sm">
+            @if (state.paymentAccount()?.payouts_enabled) {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Enabled</span>
+            } @else {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Pending</span>
+            }
+          </span>
+        </div>
+        <div class="p-3 bg-surface-raised rounded-xl">
+          <span class="text-xs text-content-muted block mb-1">Onboarding</span>
+          <span class="text-content text-sm">
+            @if (state.paymentAccount()?.onboarding_completed) {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#1a9e3f] rounded-full"></span> Completed</span>
+            } @else {
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#b85c00] rounded-full"></span> Incomplete</span>
+            }
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        @if (stripeConnectEnabled) {
+          @if (!state.paymentAccount()?.onboarding_completed) {
+            <button (click)="connectStripe()" [disabled]="state.paymentConnecting()" class="btn-primary btn-md flex items-center justify-center gap-2">
+              @if (state.paymentConnecting()) {
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                <span>Redirecting...</span>
+              } @else { <span>Complete Stripe Onboarding</span> }
+            </button>
+          }
+          <button (click)="connectStripe()" [disabled]="state.paymentConnecting()" class="btn-ghost btn-md flex items-center justify-center gap-2 text-sm">
+            @if (state.paymentConnecting()) {
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            }
+            Reconnect Stripe
+          </button>
+        } @else {
+          <div class="alert-warning">
+            <span class="text-sm">Stripe payouts coming soon — we'll notify you when it's ready</span>
+          </div>
+        }
+        <button (click)="refreshStatus()" [disabled]="refreshing()" class="btn-ghost btn-md flex items-center justify-center gap-2 text-sm">
+          <svg class="w-4 h-4" [class.animate-spin]="refreshing()" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          Refresh Status
+        </button>
+      </div>
+      @if (!state.paymentAccount()?.onboarding_completed) {
+        <p class="text-xs text-content-muted">Your onboarding is incomplete. Click above to finish setting up your Stripe account.</p>
+      }
+    } @else {
+      <div class="alert-warning mb-6">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          <div>
+            <p class="font-semibold text-content text-sm">Payment Account Not Connected</p>
+            <p class="text-content-secondary text-sm mt-1">Connect your Stripe account to start receiving payments from fans.</p>
+          </div>
+        </div>
+      </div>
+
+      @if (state.error()) { <div class="alert-error mb-4">{{ state.error() }}</div> }
+
+      @if (stripeConnectEnabled) {
+        <button (click)="connectStripe()" [disabled]="state.paymentConnecting()" class="btn-primary btn-md w-full flex items-center justify-center gap-2">
+          @if (state.paymentConnecting()) {
+            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <span>Redirecting to Stripe...</span>
+          } @else { <span>Connect with Stripe</span> }
+        </button>
+        <p class="form-hint text-center mt-3">You'll be redirected to Stripe to complete your account setup securely.</p>
+      } @else {
+        <div class="alert-warning text-center">
+          <p class="font-semibold text-content">Stripe payouts — coming soon</p>
+          <p class="text-content-secondary text-sm mt-1">We're finalising our Stripe integration. You'll be able to connect your account very soon.</p>
+        </div>
+      }
+    }
+
     <div class="mt-6 p-5 bg-surface-raised rounded-xl">
       <h3 class="font-semibold text-content mb-4">How Payouts Work</h3>
       <div class="space-y-3">
@@ -117,39 +294,5 @@
         </div>
       </div>
     </div>
-  } @else {
-    <!-- ── Not Connected ── -->
-    <div class="alert-warning mb-6">
-      <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-        </svg>
-        <div>
-          <p class="font-semibold text-content text-sm">Payment Account Not Connected</p>
-          <p class="text-content-secondary text-sm mt-1">Connect your Stripe account to start receiving payments from fans.</p>
-        </div>
-      </div>
-    </div>
-
-    @if (state.error()) {
-      <div class="alert-error mb-4">{{ state.error() }}</div>
-    }
-
-    @if (stripeConnectEnabled) {
-      <button (click)="connectStripe()" [disabled]="state.paymentConnecting()" class="btn-primary btn-md w-full flex items-center justify-center gap-2">
-        @if (state.paymentConnecting()) {
-          <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-          <span>Redirecting to Stripe...</span>
-        } @else {
-          <span>Connect with Stripe</span>
-        }
-      </button>
-      <p class="form-hint text-center mt-3">You'll be redirected to Stripe to complete your account setup securely.</p>
-    } @else {
-      <div class="alert-warning text-center">
-        <p class="font-semibold text-content">Stripe payouts — coming soon</p>
-        <p class="text-content-secondary text-sm mt-1">We're finalising our Stripe integration. You'll be able to connect your account very soon.</p>
-      </div>
-    }
   }
 </div>
