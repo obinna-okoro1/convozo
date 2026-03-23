@@ -42,7 +42,7 @@ jobs:
           version: latest
 
       - name: Apply database migrations (staging)
-        run: supabase db push --db-url "postgresql://postgres:${{ secrets.STAGING_DB_PASSWORD }}@db.fzltvpbyhnvviuzanyha.supabase.co:5432/postgres" --yes
+        run: supabase db push --db-url "postgresql://postgres.fzltvpbyhnvviuzanyha:${{ secrets.STAGING_DB_PASSWORD }}@aws-0-eu-central-1.pooler.supabase.com:5432/postgres" --yes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 

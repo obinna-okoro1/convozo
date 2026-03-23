@@ -42,7 +42,7 @@ jobs:
           version: latest
 
       - name: Apply database migrations (production)
-        run: supabase db push --db-url "postgresql://postgres:${{ secrets.PRODUCTION_DB_PASSWORD }}@db.pfmscnpmpwxpdlrbeokb.supabase.co:5432/postgres" --yes
+        run: supabase db push --db-url "postgresql://postgres.pfmscnpmpwxpdlrbeokb:${{ secrets.PRODUCTION_DB_PASSWORD }}@aws-0-eu-central-1.pooler.supabase.com:5432/postgres" --yes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
