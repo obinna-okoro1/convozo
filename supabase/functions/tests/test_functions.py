@@ -11,6 +11,7 @@ Tests every function handler against the LOCAL Supabase stack
 Usage:
   python3 supabase/functions/tests/test_functions.py
   python3 supabase/functions/tests/test_functions.py --function create-checkout-session
+  python3 supabase/functions/tests/test_functions.py --function get-paystack-banks
   python3 supabase/functions/tests/test_functions.py --verbose
 
 Structure:
@@ -25,6 +26,9 @@ Covered functions:
   ✓ create-connect-account
   ✓ verify-connect-account
   ✓ stripe-webhook (signature validation, idempotency, payment_status guard)
+  ✓ get-paystack-banks (country validation, resolve mode, live bank list for NG/ZA)
+  ✓ create-paystack-subaccount (auth guard, body validation, country routing)
+  ✓ paystack-webhook (HMAC-SHA512 signature, event routing, Paystack verify)
 """
 
 import argparse
@@ -72,6 +76,62 @@ def _read_webhook_secret() -> str:
 
 
 WEBHOOK_SECRET = _read_webhook_secret()
+
+
+# Paystack secret key — read from supabase/.env (same file, different key)
+def _read_paystack_secret() -> str:
+    env_path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "..", ".env"
+    )
+    if not os.path.exists(env_path):
+        env_path = "supabase/.env"
+    try:
+        with open(env_path) as f:
+            for line in f:
+                if "PAYSTACK_SECRET_KEY" in line and "=" in line:
+                    return line.split("=", 1)[1].strip()
+    except FileNotFoundError:
+        pass
+    return ""
+
+
+PAYSTACK_SECRET_KEY = _read_paystack_secret()
+
+# Cached creator JWT — obtained by signing in with the seed creator credentials.
+# Lazy-loaded by _get_creator_jwt() the first time a test needs it.
+_CREATOR_JWT: Optional[str] = None
+
+
+def _get_creator_jwt() -> Optional[str]:
+    """
+    Sign in as the seed creator (creator@example.com / sample123) via the local
+    Supabase Auth REST endpoint and return their access token.
+
+    The token is cached for the process lifetime so we only sign in once per run.
+    Returns None if the local stack is not running or sign-in fails.
+    """
+    global _CREATOR_JWT
+    if _CREATOR_JWT:
+        return _CREATOR_JWT
+    url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
+    data = json.dumps({"email": "creator@example.com", "password": "sample123"}).encode()
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "apikey": ANON_KEY,
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+            _CREATOR_JWT = body.get("access_token")
+            return _CREATOR_JWT
+    except Exception:
+        return None
+
 
 # ── HTTP helpers ──────────────────────────────────────────────────────────────
 
@@ -126,6 +186,39 @@ def _make_stripe_sig(payload: str) -> str:
         hashlib.sha256,
     ).hexdigest()
     return f"t={ts},v1={sig}"
+
+
+def _make_paystack_sig(payload: str) -> str:
+    """
+    Build a valid x-paystack-signature header value.
+
+    Paystack uses HMAC-SHA512 of the raw body bytes (not the timestamp-prefixed
+    format Stripe uses). The result is a 128-character lowercase hex digest.
+    """
+    return hmac.new(
+        PAYSTACK_SECRET_KEY.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha512,
+    ).hexdigest()
+
+
+def _post_no_auth(path: str, body: dict) -> tuple:
+    """POST JSON without any Authorization header — used for auth-guard tests."""
+    url = f"{BASE_URL}/{path}"
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return resp.status, json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read().decode())
+        except Exception:
+            return e.code, {"error": "unreadable"}
 
 
 def _post_raw(path: str, body: str, headers: dict) -> tuple:
@@ -592,6 +685,456 @@ def test_webhook_wrong_event_type() -> list[TestResult]:
     )]
 
 
+# ── get-paystack-banks ────────────────────────────────────────────────────────
+
+def test_paystack_banks_missing_country() -> list[TestResult]:
+    """No country field — must return 400 with a clear error."""
+    status, body = _post("get-paystack-banks", {})
+    return [expect_status(
+        "get-paystack-banks – missing country returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_banks_invalid_country() -> list[TestResult]:
+    """US is not a Paystack-supported country — must reject with 400."""
+    status, body = _post("get-paystack-banks", {"country": "US"})
+    results = [expect_status(
+        "get-paystack-banks – unsupported country returns 400",
+        status, 400, body,
+    )]
+    results.append(expect_error(
+        "get-paystack-banks – error message mentions NG and ZA",
+        body, "NG and ZA",
+    ))
+    return results
+
+
+def test_paystack_banks_resolve_missing_fields() -> list[TestResult]:
+    """`resolve=true` without account_number or bank_code — must return 400."""
+    status, body = _post("get-paystack-banks", {"resolve": True})
+    return [expect_status(
+        "get-paystack-banks – resolve with no fields returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_banks_resolve_bad_account_format() -> list[TestResult]:
+    """`resolve=true` with a non-numeric account_number — must return 400."""
+    status, body = _post("get-paystack-banks", {
+        "resolve": True,
+        "account_number": "not-a-number",
+        "bank_code": "044",
+    })
+    return [expect_status(
+        "get-paystack-banks – resolve with non-digit account returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_banks_nigeria() -> list[TestResult]:
+    """
+    NG country triggers a live Paystack API call.
+    Expects a non-empty list of banks with the correct shape.
+
+    NOTE: Requires PAYSTACK_SECRET_KEY in supabase/.env and internet access
+    from the local functions server. Will return 502 if Paystack is unreachable.
+    """
+    status, body = _post("get-paystack-banks", {"country": "NG"})
+    results = [expect_status(
+        "get-paystack-banks – NG returns 200",
+        status, 200, body,
+    )]
+    if status == 200:
+        banks = body.get("banks", [])
+        results.append(TestResult(
+            "get-paystack-banks – NG response contains a non-empty banks list",
+            isinstance(banks, list) and len(banks) > 0,
+            f"banks count: {len(banks) if isinstance(banks, list) else type(banks).__name__}",
+        ))
+        if isinstance(banks, list) and banks:
+            first = banks[0]
+            required_keys = ("name", "code", "country", "currency")
+            results.append(TestResult(
+                "get-paystack-banks – each NG bank has name, code, country, currency",
+                all(k in first for k in required_keys),
+                f"keys present: {[k for k in required_keys if k in first]}",
+            ))
+    return results
+
+
+def test_paystack_banks_south_africa() -> list[TestResult]:
+    """
+    ZA country returns a non-empty list of South African banks.
+    Validates that the country-name mapping (south africa, not 'za') works correctly.
+    """
+    status, body = _post("get-paystack-banks", {"country": "ZA"})
+    results = [expect_status(
+        "get-paystack-banks – ZA returns 200",
+        status, 200, body,
+    )]
+    if status == 200:
+        banks = body.get("banks", [])
+        results.append(TestResult(
+            "get-paystack-banks – ZA response contains a non-empty banks list",
+            isinstance(banks, list) and len(banks) > 0,
+            f"banks count: {len(banks) if isinstance(banks, list) else type(banks).__name__}",
+        ))
+    return results
+
+
+def test_paystack_banks_lowercase_country() -> list[TestResult]:
+    """
+    Country code is case-insensitive — 'ng' must work exactly like 'NG'.
+    The function uppercases the country before calling isPaystackCountry().
+    """
+    status, body = _post("get-paystack-banks", {"country": "ng"})
+    return [expect_status(
+        "get-paystack-banks – lowercase 'ng' is accepted (case-insensitive)",
+        status, 200, body,
+    )]
+
+
+# ── create-paystack-subaccount ────────────────────────────────────────────────
+
+def test_paystack_sub_no_auth() -> list[TestResult]:
+    """
+    Request without any Authorization header must return 401.
+    requireAuth() checks for the header before reading the body.
+    """
+    status, body = _post_no_auth("create-paystack-subaccount", {
+        "bank_code": "044",
+        "account_number": "1234567890",
+        "country": "NG",
+        "business_name": "Test",
+    })
+    return [expect_status(
+        "create-paystack-subaccount – no Authorization header returns 401",
+        status, 401, body,
+    )]
+
+
+def test_paystack_sub_anon_key_rejected() -> list[TestResult]:
+    """
+    The Supabase anon key is a role JWT, NOT a user session token.
+    requireAuth() calls supabase.auth.getUser(token) which rejects it → 401.
+
+    NOTE: _post() always sends ANON_KEY as Bearer — this test verifies that
+    anon-role JWTs cannot be used to authenticate as a creator.
+    """
+    status, body = _post("create-paystack-subaccount", {
+        "bank_code": "044",
+        "account_number": "1234567890",
+        "country": "NG",
+        "business_name": "Test",
+    })
+    return [expect_status(
+        "create-paystack-subaccount – anon key is rejected with 401",
+        status, 401, body,
+    )]
+
+
+def test_paystack_sub_missing_fields() -> list[TestResult]:
+    """
+    Authenticated request with an empty body must return 400.
+    bank_code, account_number, and country are all required.
+    """
+    jwt = _get_creator_jwt()
+    if not jwt:
+        return [fail(
+            "create-paystack-subaccount – missing fields returns 400",
+            "Could not obtain creator JWT — is `supabase start` running?",
+        )]
+    status, body = _post(
+        "create-paystack-subaccount",
+        {},
+        headers={"Authorization": f"Bearer {jwt}"},
+    )
+    return [expect_status(
+        "create-paystack-subaccount – empty body returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_sub_non_paystack_country() -> list[TestResult]:
+    """
+    country='US' in the request body is not a Paystack country.
+    Must be rejected with 403 before any DB lookup.
+    """
+    jwt = _get_creator_jwt()
+    if not jwt:
+        return [fail(
+            "create-paystack-subaccount – non-Paystack country returns 403",
+            "Could not obtain creator JWT",
+        )]
+    status, body = _post(
+        "create-paystack-subaccount",
+        {
+            "bank_code": "044",
+            "account_number": "1234567890",
+            "country": "US",
+            "business_name": "Test",
+        },
+        headers={"Authorization": f"Bearer {jwt}"},
+    )
+    return [expect_status(
+        "create-paystack-subaccount – country=US is rejected with 403",
+        status, 403, body,
+    )]
+
+
+def test_paystack_sub_missing_business_name() -> list[TestResult]:
+    """
+    NG country passes the isPaystackCountry() check but missing business_name
+    returns 400. Validates that the post-country validation is also enforced.
+    """
+    jwt = _get_creator_jwt()
+    if not jwt:
+        return [fail(
+            "create-paystack-subaccount – missing business_name returns 400",
+            "Could not obtain creator JWT",
+        )]
+    status, body = _post(
+        "create-paystack-subaccount",
+        {
+            "bank_code": "044",
+            "account_number": "1234567890",
+            "country": "NG",
+            # business_name intentionally omitted
+        },
+        headers={"Authorization": f"Bearer {jwt}"},
+    )
+    return [expect_status(
+        "create-paystack-subaccount – missing business_name returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_sub_invalid_account_format() -> list[TestResult]:
+    """
+    account_number must be 6-20 digits. Non-digit characters are rejected with 400.
+    This regex check happens server-side regardless of what Paystack would do.
+    """
+    jwt = _get_creator_jwt()
+    if not jwt:
+        return [fail(
+            "create-paystack-subaccount – invalid account format returns 400",
+            "Could not obtain creator JWT",
+        )]
+    status, body = _post(
+        "create-paystack-subaccount",
+        {
+            "bank_code": "044",
+            "account_number": "not-digits",  # fails /^\d{6,20}$/
+            "country": "NG",
+            "business_name": "Test Creator",
+        },
+        headers={"Authorization": f"Bearer {jwt}"},
+    )
+    return [expect_status(
+        "create-paystack-subaccount – non-digit account_number returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_sub_invalid_bank_code_format() -> list[TestResult]:
+    """
+    bank_code must be 2-10 digits. Alphabetic bank codes are rejected with 400.
+    This validates that the bank_code format check runs before any Paystack call.
+    """
+    jwt = _get_creator_jwt()
+    if not jwt:
+        return [fail(
+            "create-paystack-subaccount – invalid bank code format returns 400",
+            "Could not obtain creator JWT",
+        )]
+    status, body = _post(
+        "create-paystack-subaccount",
+        {
+            "bank_code": "NOTDIGITS",  # fails /^\d{2,10}$/
+            "account_number": "1234567890",
+            "country": "NG",
+            "business_name": "Test Creator",
+        },
+        headers={"Authorization": f"Bearer {jwt}"},
+    )
+    return [expect_status(
+        "create-paystack-subaccount – non-digit bank_code returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_sub_non_paystack_creator() -> list[TestResult]:
+    """
+    sarahjohnson (seed creator) has no country in seed.sql — country is NULL.
+    After all body validation passes, the DB lookup finds the creator but
+    isPaystackCountry(null → '') returns false → 403 'not set up for Paystack'.
+
+    This validates that the server enforces payment_provider routing via the DB,
+    not just by trusting the request body country field.
+    """
+    jwt = _get_creator_jwt()
+    if not jwt:
+        return [fail(
+            "create-paystack-subaccount – non-Paystack creator returns 403",
+            "Could not obtain creator JWT",
+        )]
+    # All body fields are valid — the rejection comes from the creator's DB record
+    status, body = _post(
+        "create-paystack-subaccount",
+        {
+            "bank_code": "044",
+            "account_number": "1234567890",
+            "country": "NG",
+            "business_name": "Dwayne Johnson",
+        },
+        headers={"Authorization": f"Bearer {jwt}"},
+    )
+    return [expect_status(
+        "create-paystack-subaccount – creator without Paystack country returns 403",
+        status, 403, body,
+    )]
+
+
+# ── paystack-webhook ──────────────────────────────────────────────────────────
+
+def test_paystack_webhook_no_signature() -> list[TestResult]:
+    """
+    POST to paystack-webhook without x-paystack-signature must return 400
+    immediately — the function checks the header before reading the body.
+    """
+    if not PAYSTACK_SECRET_KEY:
+        return [fail(
+            "paystack-webhook – missing signature returns 400",
+            "PAYSTACK_SECRET_KEY not found in supabase/.env — skipping",
+        )]
+    payload = json.dumps({"event": "charge.success", "data": {}})
+    status, body = _post_raw("paystack-webhook", payload, {
+        "Content-Type": "application/json",
+        # x-paystack-signature intentionally absent
+    })
+    return [expect_status(
+        "paystack-webhook – missing x-paystack-signature returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_webhook_invalid_signature() -> list[TestResult]:
+    """
+    POST with a malformed / wrong signature must return 400.
+    HMAC-SHA512 verification happens before any payload processing.
+    """
+    if not PAYSTACK_SECRET_KEY:
+        return [fail(
+            "paystack-webhook – invalid signature returns 400",
+            "PAYSTACK_SECRET_KEY not found — skipping",
+        )]
+    payload = json.dumps({"event": "charge.success", "data": {}})
+    status, body = _post_raw("paystack-webhook", payload, {
+        "Content-Type": "application/json",
+        "x-paystack-signature": "deadbeef" * 16,  # 128-char hex but wrong key
+    })
+    return [expect_status(
+        "paystack-webhook – wrong x-paystack-signature returns 400",
+        status, 400, body,
+    )]
+
+
+def test_paystack_webhook_unhandled_event() -> list[TestResult]:
+    """
+    Non-charge.success events (e.g. transfer.success) must be accepted silently
+    with 200 and skipped=true. No DB writes should occur. This validates the
+    event-type guard at the top of the handler.
+    """
+    if not PAYSTACK_SECRET_KEY:
+        return [fail(
+            "paystack-webhook – unhandled event returns 200",
+            "PAYSTACK_SECRET_KEY not found — skipping",
+        )]
+    payload = json.dumps({
+        "event": "transfer.success",
+        "data": {
+            "status": "success",
+            "reference": "TEST_TRANSFER_001",
+            "amount": 50000,
+            "currency": "NGN",
+            "customer": {"email": "test@example.com"},
+            "metadata": {},
+        },
+    })
+    sig = _make_paystack_sig(payload)
+    status, body = _post_raw("paystack-webhook", payload, {
+        "Content-Type": "application/json",
+        "x-paystack-signature": sig,
+    })
+    results = [expect_status(
+        "paystack-webhook – transfer.success returns 200",
+        status, 200, body,
+    )]
+    results.append(TestResult(
+        "paystack-webhook – unhandled event body has skipped=true",
+        body.get("skipped") is True,
+        f"body={body}",
+    ))
+    return results
+
+
+def test_paystack_webhook_charge_triggers_verify() -> list[TestResult]:
+    """
+    charge.success with a valid HMAC-SHA512 signature and a fake reference
+    passes signature verification but then calls verifyPaystackTransaction()
+    against the live Paystack API. Paystack rejects the fake reference,
+    causing the function to return 500.
+
+    This confirms:
+      1. HMAC-SHA512 signature verification works correctly
+      2. The server-side Paystack transaction verify call is made (not skipped)
+      3. Error handling returns a structured 500 (not a crash or 200)
+
+    In production, the reference is a real Paystack reference — this test
+    exercises the exact same code path but with a fake reference so no money moves.
+    """
+    if not PAYSTACK_SECRET_KEY:
+        return [fail(
+            "paystack-webhook – charge.success triggers Paystack verify",
+            "PAYSTACK_SECRET_KEY not found — skipping",
+        )]
+    fake_ref = f"TEST_FAKE_REF_{int(time.time())}"
+    payload = json.dumps({
+        "event": "charge.success",
+        "data": {
+            "status": "success",
+            "reference": fake_ref,
+            "amount": 100000,  # 1000 NGN in kobo
+            "currency": "NGN",
+            "customer": {"email": "fan@example.com"},
+            "metadata": {
+                "custom_fields": [
+                    {"variable_name": "creator_id",
+                     "value": "33333333-3333-3333-3333-333333333333"},
+                    {"variable_name": "provider", "value": "paystack"},
+                    {"variable_name": "message_type", "value": "message"},
+                    {"variable_name": "sender_name", "value": "Test Fan"},
+                    {"variable_name": "sender_email", "value": "fan@example.com"},
+                    {"variable_name": "message_content", "value": "Test message"},
+                ],
+            },
+        },
+    })
+    sig = _make_paystack_sig(payload)
+    status, body = _post_raw("paystack-webhook", payload, {
+        "Content-Type": "application/json",
+        "x-paystack-signature": sig,
+    })
+    # Valid sig + fake reference → verifyPaystackTransaction() throws
+    # → function returns 500 "Could not verify transaction"
+    # This is the expected response confirming the verify call was made.
+    return [expect_status(
+        "paystack-webhook – charge.success calls Paystack verify (fake ref → 500)",
+        status, 500, body,
+    )]
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 ALL_SUITES = {
@@ -635,6 +1178,31 @@ ALL_SUITES = {
         test_webhook_invalid_signature,
         test_webhook_valid_sig_unpaid_session,
         test_webhook_wrong_event_type,
+    ],
+    "get-paystack-banks": [
+        test_paystack_banks_missing_country,
+        test_paystack_banks_invalid_country,
+        test_paystack_banks_resolve_missing_fields,
+        test_paystack_banks_resolve_bad_account_format,
+        test_paystack_banks_nigeria,
+        test_paystack_banks_south_africa,
+        test_paystack_banks_lowercase_country,
+    ],
+    "create-paystack-subaccount": [
+        test_paystack_sub_no_auth,
+        test_paystack_sub_anon_key_rejected,
+        test_paystack_sub_missing_fields,
+        test_paystack_sub_non_paystack_country,
+        test_paystack_sub_missing_business_name,
+        test_paystack_sub_invalid_account_format,
+        test_paystack_sub_invalid_bank_code_format,
+        test_paystack_sub_non_paystack_creator,
+    ],
+    "paystack-webhook": [
+        test_paystack_webhook_no_signature,
+        test_paystack_webhook_invalid_signature,
+        test_paystack_webhook_unhandled_event,
+        test_paystack_webhook_charge_triggers_verify,
     ],
 }
 
@@ -703,7 +1271,9 @@ def main() -> None:
 
     print("Convozo Edge Function Integration Tests")
     print(f"Target: {BASE_URL}")
-    print(f"Webhook secret: {'found' if WEBHOOK_SECRET else 'NOT FOUND (some tests will skip)'}")
+    print(f"Stripe webhook secret:   {'found' if WEBHOOK_SECRET else 'NOT FOUND (stripe-webhook tests will skip)'}")
+    print(f"Paystack secret key:     {'found' if PAYSTACK_SECRET_KEY else 'NOT FOUND (paystack tests will skip)'}")
+    print(f"Creator JWT:             will sign in as creator@example.com on first use")
 
     sys.exit(run(suites, verbose=args.verbose))
 
