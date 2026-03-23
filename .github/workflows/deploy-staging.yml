@@ -42,7 +42,14 @@ jobs:
           version: latest
 
       - name: Apply database migrations (staging)
-        run: supabase db push --db-url "postgresql://postgres:${{ secrets.STAGING_DB_PASSWORD }}@db.fzltvpbyhnvviuzanyha.supabase.co:5432/postgres" --yes
+        # Direct DB (db.PROJECT.supabase.co) is IPv6-only — unreachable from GitHub Actions.
+        # Session pooler requires Supavisor to be enabled in the Supabase dashboard:
+        #   Project Settings → Database → Connection Pooling → Enable
+        # Until then, run `supabase db push --linked` locally before deploying.
+        run: |
+          supabase link --project-ref fzltvpbyhnvviuzanyha
+          supabase db push --db-url "postgresql://postgres.fzltvpbyhnvviuzanyha:${{ secrets.STAGING_DB_PASSWORD }}@aws-0-eu-central-1.pooler.supabase.com:5432/postgres" --yes
+        continue-on-error: true
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 

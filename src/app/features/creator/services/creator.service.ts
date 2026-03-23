@@ -292,7 +292,14 @@ export class CreatorService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'create-paystack-subaccount',
-      { body: params },
+      {
+        body: {
+          bank_code: params.bankCode,
+          account_number: params.accountNumber,
+          business_name: params.businessName,
+          country: params.country,
+        },
+      },
     );
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };
