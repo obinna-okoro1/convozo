@@ -406,6 +406,15 @@ verify_jwt = false  # Auth handled internally via getUser(token)
 [functions.send-push-notification]
 verify_jwt = false  # Auth handled internally via service role key
 
+[functions.get-paystack-banks]
+verify_jwt = false  # Public — bank list is public information, no auth needed
+
+[functions.create-paystack-subaccount]
+verify_jwt = false  # Auth handled internally via getUser(token)
+
+[functions.paystack-webhook]
+verify_jwt = false  # Paystack authenticates via webhook signature verification
+
 [edge_runtime.secrets]
 STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
