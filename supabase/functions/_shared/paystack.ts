@@ -250,14 +250,27 @@ export interface PaystackBank {
 }
 
 /**
+ * Paystack's bank list API requires the full country name, not the ISO code.
+ * e.g. 'nigeria' not 'ng', 'south%20africa' not 'za'.
+ */
+const PAYSTACK_COUNTRY_NAMES: Record<string, string> = {
+  NG: 'nigeria',
+  ZA: 'south africa',
+};
+
+/**
  * Fetch the list of banks available for a given country.
  * Used by the creator settings UI to populate the bank picker.
  *
  * @param country ISO country code: 'NG' | 'ZA'
  */
 export async function getPaystackBanks(country: string): Promise<PaystackBank[]> {
+  const countryName = PAYSTACK_COUNTRY_NAMES[country.toUpperCase()];
+  if (!countryName) {
+    throw new Error(`Unsupported Paystack country: ${country}`);
+  }
   const res = await fetch(
-    `${PAYSTACK_BASE_URL}/bank?country=${country.toLowerCase()}&use_cursor=false&perPage=100`,
+    `${PAYSTACK_BASE_URL}/bank?country=${encodeURIComponent(countryName)}&use_cursor=false&perPage=100`,
     {
       headers: {
         Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
