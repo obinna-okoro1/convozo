@@ -12,6 +12,7 @@ import {
   Message,
   CallBooking,
   StripeAccount,
+  PaystackSubaccount,
   CreatorMonthlyAnalytics,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
@@ -28,6 +29,8 @@ export class DashboardStateService {
   readonly messages = signal<Message[]>([]);
   readonly callBookings = signal<CallBooking[]>([]);
   readonly stripeAccount = signal<StripeAccount | null>(null);
+  /** Paystack subaccount for NG/ZA creators. Null until loaded or not applicable. */
+  readonly paystackSubaccount = signal<PaystackSubaccount | null>(null);
   /**
    * Retained monthly analytics — sourced from the DB, immune to inbox deletions.
    * See migration 031 (analytics_retention).
@@ -50,6 +53,19 @@ export class DashboardStateService {
   readonly isStripeConnected = computed(() => {
     const account = this.stripeAccount();
     return !!(account?.onboarding_completed && account?.charges_enabled);
+  });
+
+  /**
+   * Provider-agnostic payment readiness.
+   * True when the creator can accept payments — regardless of whether they use
+   * Stripe or Paystack. Used to show/hide Inbox, Bookings, and Analytics tabs.
+   */
+  readonly isPaymentReady = computed(() => {
+    if (this.creator()?.payment_provider === 'paystack') {
+      const sub = this.paystackSubaccount();
+      return !!(sub?.is_active && sub?.is_verified);
+    }
+    return this.isStripeConnected();
   });
 
   // ── Delete confirmation state ─────────────────────────────────────

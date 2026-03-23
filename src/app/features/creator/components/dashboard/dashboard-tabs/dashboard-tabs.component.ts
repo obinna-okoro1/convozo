@@ -19,10 +19,11 @@ interface Tab {
 })
 export class DashboardTabsComponent {
   private readonly callsEnabled = computed(() => this.state.settings()?.calls_enabled ?? false);
-  private readonly stripeConnected = computed(() => this.state.isStripeConnected());
+  /** Gate on isPaymentReady so Paystack creators see their tabs once verified. */
+  private readonly paymentReady = computed(() => this.state.isPaymentReady());
 
   protected readonly tabs = computed<Tab[]>(() => {
-    const connected = this.stripeConnected();
+    const connected = this.paymentReady();
     const allTabs: Tab[] = [
       {
         path: 'links',

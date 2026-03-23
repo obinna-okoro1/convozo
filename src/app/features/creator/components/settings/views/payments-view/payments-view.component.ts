@@ -51,6 +51,13 @@ export class PaymentsViewComponent implements OnInit {
     this.refreshing.set(false);
   }
 
+  /** Re-fetch is_verified / is_active from Paystack and update the UI badge. */
+  protected async refreshPaystackStatus(): Promise<void> {
+    this.refreshing.set(true);
+    await this.state.refreshPaystackStatus();
+    this.refreshing.set(false);
+  }
+
   // ── Paystack methods ──────────────────────────────────────────────
 
   protected openBankForm(): void {

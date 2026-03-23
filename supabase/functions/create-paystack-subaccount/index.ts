@@ -1,12 +1,14 @@
 /**
  * create-paystack-subaccount
  *
- * Registers a creator's bank account as a Paystack subaccount.
+ * Registers a creator's bank account as a Paystack subaccount, OR syncs the
+ * latest verification status from Paystack's API.
  * Called from Settings → Payments when a NG/ZA creator sets up their bank account.
  *
  * What it does:
  *   - Validates the request body (bank_code, account_number, business_name, country)
  *   - Optionally resolves the account name before creation if `resolve_only=true`
+ *   - If `sync_status=true`, re-fetches is_verified/is_active from Paystack and updates DB
  *   - Calls Paystack POST /subaccount to register the bank account
  *   - Upserts the result into the paystack_subaccounts table
  *   - Returns the created/updated subaccount record
@@ -18,6 +20,7 @@
  *     business_name:   string  — Creator's display name / business name
  *     country:         string  — ISO country code: 'NG' | 'ZA'
  *     resolve_only?:   boolean — If true, only resolves account name and returns it
+ *     sync_status?:    boolean — If true, syncs is_verified/is_active from Paystack API
  *   }
  *
  * What it returns:
@@ -28,6 +31,7 @@
  *   400 — Missing/invalid fields
  *   401 — Not authenticated
  *   403 — Creator is not a Paystack country (NG/ZA)
+ *   404 — No subaccount found (when sync_status=true)
  *   500 — Paystack API error or DB error
  */
 
@@ -38,6 +42,7 @@ import {
   isPaystackCountry,
   createPaystackSubaccount,
   resolvePaystackAccountName,
+  fetchPaystackSubaccountStatus,
 } from '../_shared/paystack.ts';
 
 Deno.serve(async (req) => {
@@ -63,13 +68,59 @@ Deno.serve(async (req) => {
       business_name,
       country,
       resolve_only,
+      sync_status,
     } = body as {
       bank_code?: string;
       account_number?: string;
       business_name?: string;
       country?: string;
       resolve_only?: boolean;
+      sync_status?: boolean;
     };
+
+    // ── Status sync ─────────────────────────────────────────────────────────
+    // Re-fetch is_verified / is_active from Paystack's API and update our DB.
+    // Called when the creator clicks "Refresh Status" after Paystack verifies their account.
+    if (sync_status) {
+      const { data: creator, error: creatorError } = await supabase
+        .from('creators')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (creatorError || !creator) {
+        return jsonError('Creator not found', 404, corsHeaders);
+      }
+
+      const { data: existing, error: fetchError } = await supabase
+        .from('paystack_subaccounts')
+        .select('*')
+        .eq('creator_id', creator.id)
+        .maybeSingle();
+
+      if (fetchError || !existing) {
+        return jsonError('No Paystack subaccount found — connect a bank account first', 404, corsHeaders);
+      }
+
+      // Fetch live status from Paystack
+      const status = await fetchPaystackSubaccountStatus(existing.subaccount_code as string);
+
+      const { data: updated, error: updateError } = await supabase
+        .from('paystack_subaccounts')
+        .update({ is_verified: status.isVerified, is_active: status.isActive })
+        .eq('creator_id', creator.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('[create-paystack-subaccount] Status sync DB update failed:', updateError);
+        return jsonError('Failed to update subaccount status', 500, corsHeaders);
+      }
+
+      console.log('[create-paystack-subaccount] Status synced for creator:', creator.id,
+        { isVerified: status.isVerified, isActive: status.isActive });
+      return jsonOk(updated, corsHeaders);
+    }
 
     if (!bank_code || !account_number || !country) {
       return jsonError('bank_code, account_number, and country are required', 400, corsHeaders);

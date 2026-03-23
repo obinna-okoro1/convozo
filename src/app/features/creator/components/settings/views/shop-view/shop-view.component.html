@@ -14,23 +14,29 @@
       </div>
     </div>
 
-    @if (!state.isStripeConnected()) {
+    @if (!state.isPaymentReady()) {
       <div class="alert-warning mb-6">
         <div class="flex items-start gap-3">
           <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <div>
-            <p class="font-semibold text-content text-sm">Connect Stripe to enable your shop</p>
-            <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Stripe is connected.</p>
-            <a routerLink="../payments" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Connect with Stripe <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            @if (state.isPaystackCreator()) {
+              <p class="font-semibold text-content text-sm">Bank account verification pending</p>
+              <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Paystack has verified your bank account.</p>
+              <a routerLink="../payments" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Go to Payments <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            } @else {
+              <p class="font-semibold text-content text-sm">Connect Stripe to enable your shop</p>
+              <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Stripe is connected.</p>
+              <a routerLink="../payments" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Connect with Stripe <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            }
           </div>
         </div>
       </div>
     }
 
     <!-- Shop toggle -->
-    <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isStripeConnected()">
+    <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
       <div>
         <h3 class="font-semibold text-content">Shop Active</h3>
         <p class="text-sm text-content-muted mt-0.5">Show your shop tab on your public profile</p>
@@ -39,8 +45,8 @@
         @if (state.saving()) {
           <svg class="animate-spin h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
         }
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
-          <input type="checkbox" [checked]="state.shopEnabled()" (change)="state.isStripeConnected() && toggleShop()" [disabled]="!state.isStripeConnected() || state.saving()" class="sr-only peer" />
+        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
+          <input type="checkbox" [checked]="state.shopEnabled()" (change)="state.isPaymentReady() && toggleShop()" [disabled]="!state.isPaymentReady() || state.saving()" class="sr-only peer" />
           <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
         </label>
       </div>

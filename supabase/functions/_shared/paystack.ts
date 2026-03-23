@@ -328,6 +328,48 @@ export async function resolvePaystackAccountName(
 
 // ── Webhook Signature Verification ────────────────────────────────────────────
 
+// ── Subaccount Status Refresh ──────────────────────────────────────────────────
+
+/**
+ * Fetch the latest status of a Paystack subaccount directly from Paystack's API.
+ *
+ * Used to sync `is_verified` and `is_active` after Paystack completes its internal
+ * verification (which may happen asynchronously after subaccount creation).
+ *
+ * @param subaccountCode  The Paystack subaccount code, e.g. "ACCT_xxxxxx"
+ * @returns Current `isVerified` and `isActive` values from Paystack.
+ * @throws Error if the Paystack API returns a non-success response.
+ */
+export async function fetchPaystackSubaccountStatus(
+  subaccountCode: string,
+): Promise<{ isVerified: boolean; isActive: boolean }> {
+  const res = await fetch(
+    `${PAYSTACK_BASE_URL}/subaccount/${encodeURIComponent(subaccountCode)}`,
+    { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } },
+  );
+
+  const json = await res.json() as {
+    status: boolean;
+    message: string;
+    data?: {
+      is_verified: boolean;
+      // Paystack uses "active" (not "is_active") in their GET /subaccount response
+      active: boolean;
+    };
+  };
+
+  if (!json.status || !json.data) {
+    throw new Error(`Paystack subaccount fetch failed: ${json.message}`);
+  }
+
+  return {
+    isVerified: json.data.is_verified,
+    isActive: json.data.active,
+  };
+}
+
+// ── Signature Verification ─────────────────────────────────────────────────────
+
 /**
  * Verify the Paystack webhook signature.
  *
