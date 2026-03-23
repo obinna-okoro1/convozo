@@ -41,6 +41,11 @@ jobs:
         with:
           version: latest
 
+      - name: Apply database migrations (production)
+        run: supabase db push --db-url "postgresql://postgres:${{ secrets.PRODUCTION_DB_PASSWORD }}@db.pfmscnpmpwxpdlrbeokb.supabase.co:5432/postgres" --yes
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Deploy Supabase Edge Functions (production)
         run: supabase functions deploy --project-ref pfmscnpmpwxpdlrbeokb
         env:
