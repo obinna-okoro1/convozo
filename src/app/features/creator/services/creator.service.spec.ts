@@ -346,9 +346,9 @@ describe('CreatorService', () => {
         'create-paystack-subaccount',
         jasmine.objectContaining({
           body: {
-            bankCode: '044',
-            accountNumber: '1234567890',
-            businessName: 'Test Creator',
+            bank_code: '044',
+            account_number: '1234567890',
+            business_name: 'Test Creator',
             country: 'NG',
           },
         }),
@@ -366,12 +366,12 @@ describe('CreatorService', () => {
       const [, options] = mockClient.functions.invoke.calls.mostRecent().args as [
         string,
         {
-          body: { bankCode: string; accountNumber: string; businessName: string; country: string };
+          body: { bank_code: string; account_number: string; business_name: string; country: string };
         },
       ];
-      expect(options.body.bankCode).toBe('FNB');
-      expect(options.body.accountNumber).toBe('6200123456');
-      expect(options.body.businessName).toBe('Nomsa Dlamini');
+      expect(options.body.bank_code).toBe('FNB');
+      expect(options.body.account_number).toBe('6200123456');
+      expect(options.body.business_name).toBe('Nomsa Dlamini');
       expect(options.body.country).toBe('ZA');
     });
 
