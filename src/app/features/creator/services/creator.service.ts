@@ -304,4 +304,20 @@ export class CreatorService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { data, error };
   }
+
+  /**
+   * Re-fetch the creator's Paystack subaccount verification status from Paystack's
+   * API and update the DB record. Called when the creator clicks "Refresh Status"
+   * in Settings → Payments. Paystack verifies bank accounts asynchronously after
+   * subaccount creation, so the creator may need to refresh once Paystack is done.
+   */
+  public async syncPaystackStatus(): Promise<EdgeFunctionResponse<PaystackSubaccount>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'create-paystack-subaccount',
+      { body: { sync_status: true } },
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return { data, error };
+  }
 }

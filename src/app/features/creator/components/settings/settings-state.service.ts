@@ -139,9 +139,23 @@ export class SettingsStateService {
     () => this.creator()?.payment_provider === 'paystack',
   );
 
-  /** True when the Paystack subaccount is set up and active. */
+  /**
+   * True when the Paystack subaccount is set up, active, AND verified by Paystack.
+   * Requires both is_active and is_verified so we don't accept payments before
+   * Paystack has confirmed the bank account is legitimate.
+   */
   readonly isPaystackConnected = computed(
-    () => !!(this.paystackSubaccount()?.is_active),
+    () => !!(this.paystackSubaccount()?.is_active && this.paystackSubaccount()?.is_verified),
+  );
+
+  /**
+   * True when payments are ready to accept — regardless of provider.
+   * Stripe creators: onboarding completed + charges enabled.
+   * Paystack creators: bank account active and verified by Paystack.
+   * Used to gate the Monetization and Shop settings views.
+   */
+  readonly isPaymentReady = computed(
+    () => this.isStripeConnected() || this.isPaystackConnected(),
   );
 
   constructor(
@@ -550,6 +564,28 @@ export class SettingsStateService {
       this.error.set('An unexpected error occurred. Please try again.');
     } finally {
       this.paystackConnecting.set(false);
+    }
+  }
+
+  /**
+   * Re-fetch is_verified / is_active from Paystack's API and update our DB.
+   * Called when the creator clicks "Refresh Status" on the Payments view.
+   * Paystack verifies bank accounts asynchronously after subaccount creation,
+   * so the creator may need to refresh once Paystack has completed verification.
+   */
+  async refreshPaystackStatus(): Promise<void> {
+    this.error.set(null);
+    try {
+      const { data, error } = await this.creatorService.syncPaystackStatus();
+      if (error) {
+        this.error.set((error as { message?: string })?.message ?? 'Failed to refresh status');
+        return;
+      }
+      if (data) {
+        this.paystackSubaccount.set(data as unknown as PaystackSubaccount);
+      }
+    } catch {
+      this.error.set('Failed to refresh Paystack status. Please try again.');
     }
   }
 }

@@ -12,19 +12,28 @@
     </div>
   </div>
 
-  @if (!state.isStripeConnected()) {
+  @if (!state.isPaymentReady()) {
     <div class="alert-warning mb-6">
       <div class="flex items-start gap-3">
         <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
         <div>
-          <p class="font-semibold text-content text-sm">Stripe account required</p>
-          <p class="text-content-secondary text-sm mt-1">Connect your Stripe account first so you can receive payments. You can set prices here, but toggles are locked until connected.</p>
-          <a routerLink="../payments" class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5">
-            Connect with Stripe
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-          </a>
+          @if (state.isPaystackCreator()) {
+            <p class="font-semibold text-content text-sm">Bank account verification pending</p>
+            <p class="text-content-secondary text-sm mt-1">Your Paystack bank account is still being verified. Toggles will unlock once Paystack approves your account.</p>
+            <a routerLink="../payments" class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5">
+              Go to Payments
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+          } @else {
+            <p class="font-semibold text-content text-sm">Stripe account required</p>
+            <p class="text-content-secondary text-sm mt-1">Connect your Stripe account first so you can receive payments. You can set prices here, but toggles are locked until connected.</p>
+            <a routerLink="../payments" class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5">
+              Connect with Stripe
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+          }
         </div>
       </div>
     </div>
@@ -33,13 +42,13 @@
   <form class="space-y-6">
     <!-- ── Paid Messages ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isStripeConnected()">
+      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
           <h3 class="font-semibold text-content">Paid Messages</h3>
           <p class="text-sm text-content-muted mt-0.5">Allow fans to send you paid messages</p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
-          <input type="checkbox" [checked]="state.messagesEnabled()" (change)="state.isStripeConnected() && state.messagesEnabled.set(state.inputChecked($event))" [disabled]="!state.isStripeConnected()" class="sr-only peer" />
+        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
+          <input type="checkbox" [checked]="state.messagesEnabled()" (change)="state.isPaymentReady() && state.messagesEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
           <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
         </label>
       </div>
@@ -58,13 +67,13 @@
 
     <!-- ── Video Calls ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isStripeConnected()">
+      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
           <h3 class="font-semibold text-content">Video Call Bookings</h3>
           <p class="text-sm text-content-muted mt-0.5">Allow fans to book video calls with you</p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
-          <input type="checkbox" [checked]="state.callsEnabled()" (change)="state.isStripeConnected() && state.callsEnabled.set(state.inputChecked($event))" [disabled]="!state.isStripeConnected()" class="sr-only peer" />
+        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
+          <input type="checkbox" [checked]="state.callsEnabled()" (change)="state.isPaymentReady() && state.callsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
           <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
         </label>
       </div>
@@ -109,13 +118,13 @@
 
     <!-- ── Follow-Back Requests ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isStripeConnected()">
+      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
           <h3 class="font-semibold text-content">Follow-Back Requests</h3>
           <p class="text-sm text-content-muted mt-0.5">Let fans pay for a follow-back on Instagram</p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
-          <input type="checkbox" [checked]="state.followBackEnabled()" (change)="state.isStripeConnected() && state.followBackEnabled.set(state.inputChecked($event))" [disabled]="!state.isStripeConnected()" class="sr-only peer" />
+        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
+          <input type="checkbox" [checked]="state.followBackEnabled()" (change)="state.isPaymentReady() && state.followBackEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
           <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
         </label>
       </div>
@@ -134,13 +143,13 @@
 
     <!-- ── Fan Support ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isStripeConnected()">
+      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
           <h3 class="font-semibold text-content">Fan Support</h3>
           <p class="text-sm text-content-muted mt-0.5">Let fans show their love with a custom tip</p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isStripeConnected()" [class.cursor-pointer]="state.isStripeConnected()">
-          <input type="checkbox" [checked]="state.tipsEnabled()" (change)="state.isStripeConnected() && state.tipsEnabled.set(state.inputChecked($event))" [disabled]="!state.isStripeConnected()" class="sr-only peer" />
+        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
+          <input type="checkbox" [checked]="state.tipsEnabled()" (change)="state.isPaymentReady() && state.tipsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
           <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
         </label>
       </div>

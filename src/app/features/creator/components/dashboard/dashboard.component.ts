@@ -198,6 +198,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const { data: stripeData } = await this.creatorService.getStripeAccount(creatorData.id);
       this.dashboardState.stripeAccount.set(stripeData ?? null);
 
+      // For Paystack creators (NG/ZA), also load the subaccount so isPaymentReady works.
+      if (creatorData.payment_provider === 'paystack') {
+        const { data: pstData } = await this.creatorService.getPaystackSubaccount(creatorData.id);
+        this.dashboardState.paystackSubaccount.set(pstData ?? null);
+      }
+
       // Load retained monthly analytics (non-blocking — not latency-critical)
       await this.dashboardState.loadMonthlyAnalytics(creatorData.id);
 
