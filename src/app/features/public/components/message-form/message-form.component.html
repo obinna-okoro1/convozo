@@ -1,22 +1,33 @@
 <!-- Apple-style message form -->
 <div class="card-glass overflow-hidden animate-fade-in">
 
-  <!-- ── Price hero ── -->
-  <div class="px-8 pt-8 pb-6 text-center border-b border-separator">
-    <p class="text-xs font-semibold text-accent uppercase tracking-widest mb-3">{{ productLabel() }}</p>
-    <div class="flex items-start justify-center gap-1 mb-2">
-      <span class="text-2xl font-bold text-content-muted mt-2">$</span>
-      <span class="text-7xl font-black text-content leading-none tracking-tight">{{ priceInDollars() }}</span>
-      @if (!isFollowBack()) {
-        <span class="text-sm text-content-muted self-end mb-2 ml-1">{{ priceUnit() }}</span>
+  <!-- ── Service header ── -->
+  <div class="px-6 pt-7 pb-5 text-center border-b border-separator">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(236,72,153,0.10) 100%);">
+      @if (isFollowBack()) {
+        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+        </svg>
+      } @else {
+        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      }
+    </div>
+    <h3 class="text-lg font-bold text-content mb-1">{{ productLabel() }}</h3>
+    <p class="text-content-secondary text-sm mb-3">{{ serviceDescription() }}</p>
+    <div class="inline-flex items-baseline gap-1.5 px-4 py-2 rounded-full" style="background: rgba(124,58,237,0.06); border: 1px solid rgba(124,58,237,0.12);">
+      <span class="text-2xl font-bold text-content">${{ priceInDollars() }}</span>
+      @if (!isFollowBack() && priceUnit()) {
+        <span class="text-xs text-content-muted">{{ priceUnit() }}</span>
       }
     </div>
     @if (!isFollowBack()) {
-      <div class="flex items-center justify-center gap-1.5 text-content-muted text-xs">
+      <div class="flex items-center justify-center gap-1.5 text-content-muted text-xs mt-3">
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
         </svg>
-        Response within {{ responseExpectation() }}
+        Responds within {{ responseExpectation() }}
       </div>
     }
   </div>

@@ -202,18 +202,19 @@ SUPABASE_SERVICE_ROLE_KEY  # auto-available in Edge Functions, but set explicitl
 - Use Angular signals (`signal()`, `computed()`) for all state — no `BehaviorSubject` or `Observable` for local state.
 - Use `@if`, `@for`, `@switch` control flow — never `*ngIf`, `*ngFor`, `*ngSwitch`.
 - Password policy: **8-character minimum**, enforced on both client and server.
-- Creator payout: platform takes **22%**, creator keeps **78%** — `platformFeePercentage = 22`.
+- Expert payout: platform takes **22%**, expert keeps **78%** — `platformFeePercentage = 22`.
 
 ---
 
 ## Key Application Concepts
 
-- **Creator slug** — the URL-safe username that forms `convozo.com/:slug` (the creator's public profile).
-- **Message types**: `message` (paid DM), `call` (video call booking), `support` (fan tip), `follow` (follow-back request).
-- **Stripe Connect**: creators connect their own Stripe account via Connect Express. Payments go to the platform, then transferred to the creator's connected account minus the platform fee.
+- **Expert slug** — the URL-safe username that forms `convozo.com/:slug` (the expert's public profile). Experts are lawyers, coaches, doctors, advisors, consultants, and other knowledge professionals.
+- **Terminology**: people paying are **clients**; people receiving payment are **experts** or **professionals** — never "fans" or "creators" in any user-facing text, copy, or UI label.
+- **Message types**: `message` (paid consultation inquiry), `call` (video consultation booking), `support` (client support/tip), `follow` (follow-back request).
+- **Stripe Connect**: experts connect their own Stripe account via Connect Express. Payments go to the platform, then transferred to the expert's connected account minus the platform fee.
 - **RLS**: All Supabase tables have Row Level Security. Use `service_role` key only in Edge Functions for admin operations. The client always uses `anon` key.
-- **Response time label**: stored as a short fragment (e.g., `24-48 hours`) — rendered as "Replies in 24-48 hours" on the public profile. Never store as a full sentence.
-- **Dashboard tab visibility**: Inbox, Analytics, Bookings, and Availability tabs are hidden until the creator connects Stripe (`onboarding_completed = true` AND `charges_enabled = true`). The Links tab is always visible.
+- **Response time label**: stored as a short fragment (e.g., `24-48 hours`) — rendered as "Responds within 24-48 hours" on the public profile. Never store as a full sentence.
+- **Dashboard tab visibility**: Inbox, Analytics, Bookings, and Availability tabs are hidden until the expert connects Stripe (`onboarding_completed = true` AND `charges_enabled = true`). The Links tab is always visible.
 
 ---
 
@@ -249,10 +250,10 @@ const { price } = body; // now typed
 
 - **Never use floating point for money.** All prices, amounts, and fees are stored and computed in **integer cents** (e.g., `1000` = $10.00).
 - Never use `*` or `/` on floats for fee calculations. Use integer arithmetic only.
-- The platform fee is exactly **22%**. The creator receives exactly **78%**. Compute as:
+- The platform fee is exactly **22%**. The expert receives exactly **78%**. Compute as:
   ```typescript
   const platformFee = Math.round(amount * 22 / 100); // integer cents
-  const creatorAmount = amount - platformFee;         // integer cents, no rounding error
+  const expertAmount = amount - platformFee;          // integer cents, no rounding error
   ```
 - Never pass a float to Stripe. Stripe amounts are always integers in the smallest currency unit.
 
@@ -271,10 +272,10 @@ const { data } = await supabase.from('creators').select('*').eq('slug', slug).si
 return data;
 
 // ✅ CORRECT
-const { data, error } = await supabase.from('creators').select('*').eq('slug', slug).single();
+const { data, error } = await supabase.from('experts').select('*').eq('slug', slug).single();
 if (error || !data) {
-  console.error('[create-checkout] creator lookup failed:', error);
-  return new Response(JSON.stringify({ error: 'Creator not found' }), { status: 404 });
+  console.error('[create-checkout] expert lookup failed:', error);
+  return new Response(JSON.stringify({ error: 'Expert not found' }), { status: 404 });
 }
 ```
 
@@ -292,7 +293,7 @@ if (error || !data) {
 
 - **All business logic and permission checks happen server-side** (Edge Functions + RLS), never in the Angular frontend.
 - The Angular client is for display only. It must never be the sole enforcer of: pricing, fee calculations, access control, or payment amounts.
-- The `price` sent from the client to `create-checkout-session` must be validated against the creator's actual `settings.price` in the database — never use the client-supplied price directly.
+- The `price` sent from the client to `create-checkout-session` must be validated against the expert's actual `settings.price` in the database — never use the client-supplied price directly.
 - RLS policies are the last line of defence. Never disable or bypass them. Never use the `service_role` key in client-side code.
 
 ---
@@ -301,7 +302,7 @@ if (error || !data) {
 
 - All user-supplied strings must be validated for length, format, and content before being stored or used.
 - Email addresses must be validated with a proper regex or library — not just `includes('@')`.
-- Creator slugs must be validated against `^[a-z0-9_-]{3,30}$` — reject anything outside this pattern.
+- Expert slugs must be validated against `^[a-z0-9_-]{3,30}$` — reject anything outside this pattern.
 - Message content must be trimmed and have a maximum character limit enforced on both client and server.
 - Never interpolate user input directly into SQL, HTML, or URLs. Use parameterised queries (Supabase handles this) and Angular's built-in sanitization.
 
@@ -349,7 +350,7 @@ if (error || !data) {
 - Every non-obvious decision must have a comment explaining **why**, not what. The code already shows what.
 - Every Edge Function must have a comment block at the top describing: what it does, what it expects, what it returns, and what errors it can produce.
 - Magic numbers must be named constants. `22` is `PLATFORM_FEE_PERCENTAGE`. `1000` is a price in cents, always labelled.
-- Function names must be verbs that describe the action: `createCheckoutSession`, `verifyWebhookSignature`, `loadCreatorProfile`.
+- Function names must be verbs that describe the action: `createCheckoutSession`, `verifyWebhookSignature`, `loadExpertProfile`.
 - No function longer than 60 lines. If it's longer, split it.
 
 ---

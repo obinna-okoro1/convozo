@@ -123,3 +123,4 @@ supabase secrets set KEY=VALUE
 - **Units** — always use `rem` instead of `px` (see `.github/copilot-instructions.md`)
 - **No NgModules** — every component is standalone
 - **Signals over RxJS** — use `signal()`, `computed()`, `input()`, `output()` for component state
+- **Client vs Expert** — people paying are “clients”, people receiving payment are “experts” or “professionals” — never “fans” or “creators” in user-facing text

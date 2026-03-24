@@ -45,7 +45,7 @@
       <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
           <h3 class="font-semibold text-content">Paid Messages</h3>
-          <p class="text-sm text-content-muted mt-0.5">Allow fans to send you paid messages</p>
+          <p class="text-sm text-content-muted mt-0.5">Allow clients to send you paid messages</p>
         </div>
         <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
           <input type="checkbox" [checked]="state.messagesEnabled()" (change)="state.isPaymentReady() && state.messagesEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
@@ -70,7 +70,7 @@
       <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
           <h3 class="font-semibold text-content">Video Call Bookings</h3>
-          <p class="text-sm text-content-muted mt-0.5">Allow fans to book video calls with you</p>
+          <p class="text-sm text-content-muted mt-0.5">Allow clients to book video calls with you</p>
         </div>
         <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
           <input type="checkbox" [checked]="state.callsEnabled()" (change)="state.isPaymentReady() && state.callsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
@@ -120,8 +120,8 @@
     <div class="border-b border-separator pb-6">
       <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
-          <h3 class="font-semibold text-content">Follow-Back Requests</h3>
-          <p class="text-sm text-content-muted mt-0.5">Let fans pay for a follow-back on Instagram</p>
+          <h3 class="font-semibold text-content">Connection Requests</h3>
+          <p class="text-sm text-content-muted mt-0.5">Let clients pay for a connection request</p>
         </div>
         <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
           <input type="checkbox" [checked]="state.followBackEnabled()" (change)="state.isPaymentReady() && state.followBackEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
@@ -131,22 +131,22 @@
 
       @if (state.followBackEnabled()) {
         <div class="mt-4 animate-fade-in">
-          <label for="followBackPrice" class="form-label">Follow-Back Price <span class="text-red-400">*</span></label>
+          <label for="followBackPrice" class="form-label">Connection Request Price <span class="text-red-400">*</span></label>
           <div class="flex items-center gap-3">
             <span class="text-xl font-semibold text-content-secondary">$</span>
             <input type="number" id="followBackPrice" [value]="state.followBackPrice() / 100" (input)="state.followBackPrice.set(state.inputNumber($event) * 100)" min="1" step="1" required class="input flex-1" />
           </div>
-          <p class="form-hint">Price per follow-back request in USD</p>
+          <p class="form-hint">Price per connection request in USD</p>
         </div>
       }
     </div>
 
-    <!-- ── Fan Support ── -->
+    <!-- ── Tips & Appreciation ── -->
     <div class="border-b border-separator pb-6">
       <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
-          <h3 class="font-semibold text-content">Fan Support</h3>
-          <p class="text-sm text-content-muted mt-0.5">Let fans show their love with a custom tip</p>
+          <h3 class="font-semibold text-content">Tips & Appreciation</h3>
+          <p class="text-sm text-content-muted mt-0.5">Let clients show appreciation with a custom tip</p>
         </div>
         <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
           <input type="checkbox" [checked]="state.tipsEnabled()" (change)="state.isPaymentReady() && state.tipsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
@@ -157,7 +157,7 @@
       @if (state.tipsEnabled()) {
         <div class="mt-4 p-4 bg-pink-500/8 border border-pink-500/15 rounded-xl animate-fade-in">
           <p class="font-semibold text-content text-sm">How it works</p>
-          <p class="text-content-secondary text-sm mt-1">Fans choose their own amount — no fixed price. A "Support" tab will appear on your public page where anyone can send you a tip with a note.</p>
+          <p class="text-content-secondary text-sm mt-1">Clients choose their own amount — no fixed price. A “Tip” tab will appear on your public page where anyone can send you a tip with a note.</p>
         </div>
       }
     </div>

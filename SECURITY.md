@@ -13,8 +13,8 @@
 ### Database
 
 - **Row Level Security (RLS)** — enabled on every table, no exceptions
-- **Creator data isolation** — creators can only read/write their own messages, settings, and bookings
-- **Public read access** — limited to creator profiles and settings only (no messages, no payments)
+- **Expert data isolation** — professionals can only read/write their own inquiries, settings, and bookings
+- **Public read access** — limited to expert profiles and settings only (no messages, no payments)
 - **Service role separation** — Edge Functions use the service role key for privileged operations; the frontend uses the anon key only
 
 ### Payments
@@ -22,8 +22,8 @@
 - **PCI compliance** — Stripe handles all card data; no sensitive payment info touches our servers
 - **Webhook signature verification** — all Stripe webhook payloads are verified using `stripe.webhooks.constructEvent` with the signing secret
 - **Webhook idempotency** — duplicate transaction IDs are rejected to prevent double-processing
-- **Server-side price validation** — Edge Functions verify amounts against creator settings before creating payment sessions
-- **Connect Express** — creators onboard via Stripe Connect Express; Convozo never holds creator funds
+- **Server-side price validation** — Edge Functions verify amounts against expert settings before creating payment sessions
+- **Connect Express** — experts onboard via Stripe Connect Express; Convozo never holds expert funds
 
 ### Input Validation
 

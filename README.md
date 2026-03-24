@@ -1,31 +1,31 @@
 # Convozo
 
-A creator monetization platform that lets influencers earn from their audience through paid messages and video call bookings. Built with Angular 21, Supabase, and Stripe.
+A professional monetization platform that lets experts, consultants, coaches, lawyers, and advisors earn from their knowledge through paid consultations, video sessions, and digital products. Built with Angular 21, Supabase, and Stripe.
 
 ## Product
 
-Creators sign up, set their prices, and get a public link (`convozo.com/yourname`). Fans visit the link, pay via Stripe, and send a message or book a call. Creators manage everything from a single dashboard.
+Professionals sign up, set their prices, and get a public profile link (`convozo.com/yourname`). Clients visit the link, pay via Stripe, and send a consultation request or book a video session. Professionals manage everything from a single dashboard.
 
-**Revenue model:** 78 / 22 split — creators keep 78%, Convozo takes 22%. Stripe processing fees come out of the platform's cut.
+**Revenue model:** 78 / 22 split — professionals keep 78%, Convozo takes 22%. Stripe processing fees come out of the platform's cut.
 
 ### User Flows
 
 ```
-Fan → /:slug → Pay via Stripe → Message delivered to creator inbox
-Creator → Sign up → Onboarding → Connect Stripe → Dashboard
-Creator → Dashboard → View messages → Reply (email notification sent)
+Client  → /:slug → Pay via Stripe → Inquiry delivered to expert's inbox
+Expert  → Sign up → Onboarding → Connect Stripe → Dashboard
+Expert  → Dashboard → View inquiries → Reply (email notification sent)
 ```
 
 ### Features
 
-- **Public message page** — custom slug, pricing card, trust indicators, social proof
-- **Video call bookings** — weekly availability schedule, call pricing, booking form
-- **Creator dashboard** — inbox with filters, reply modal, response templates, analytics
+- **Public profile page** — custom slug, service card, trust indicators, social proof
+- **Video consultation bookings** — weekly availability schedule, session pricing, booking form
+- **Expert dashboard** — inbox with filters, reply modal, response templates, analytics
 - **Stripe payments** — Connect Express onboarding, Checkout Sessions, webhook handling
 - **OAuth & email auth** — Google OAuth, magic link, password login
 - **Push notifications** — web push via VAPID keys
 - **Profile uploads** — avatar upload to Supabase Storage
-- **Dark glassmorphism UI** — gradient backgrounds, backdrop-blur, animated interactions
+- **Glass-morphism UI** — gradient backgrounds, backdrop-blur, animated interactions
 
 ## Tech Stack
 
@@ -174,13 +174,13 @@ supabase/
 
 | Table | Purpose |
 |-------|---------|
-| `creators` | Creator profiles (name, slug, bio, avatar, instagram) |
+| `creators` | Expert profiles (name, slug, bio, avatar, instagram) |
 | `creator_settings` | Pricing config (message_price, call_price, calls_enabled, messages_enabled) |
 | `stripe_accounts` | Stripe Connect account status & onboarding state |
-| `messages` | Paid messages from fans |
+| `messages` | Paid consultation inquiries from clients |
 | `payments` | Payment transaction records |
-| `availability_slots` | Weekly call availability schedule |
-| `call_bookings` | Booked video calls |
+| `availability_slots` | Weekly availability schedule |
+| `call_bookings` | Booked video consultation sessions |
 
 All tables use Row Level Security. Creators access only their own data. Public users get read-only access to creator profiles and settings.
 
@@ -200,11 +200,11 @@ Transactional emails are sent via [Resend](https://resend.com) through a shared 
 
 | Trigger | Recipient | What they receive |
 |---------|-----------|-------------------|
-| Fan sends a paid message | **Fan (sender)** | Payment confirmation with the message content and amount |
-| Fan sends a paid message | **Creator** | New message alert with sender name, email, Instagram handle, message content, and payment amount |
-| Fan books a video call | **Fan (booker)** | Booking confirmation with duration, amount, and next steps |
-| Fan books a video call | **Creator** | New booking alert with booker name, email, Instagram handle, duration, amount, and call notes |
-| Creator replies to a message | **Fan (sender)** | Reply notification showing the original message and the creator's response |
+| Client sends a paid consultation | **Client (sender)** | Payment confirmation with the inquiry content and amount |
+| Client sends a paid consultation | **Expert** | New inquiry alert with sender name, email, message content, and payment amount |
+| Client books a consultation session | **Client (booker)** | Booking confirmation with duration, amount, and next steps |
+| Client books a consultation session | **Expert** | New booking alert with booker name, email, duration, amount, and session notes |
+| Expert replies to an inquiry | **Client (sender)** | Reply notification showing the original inquiry and the expert's response |
 
 All emails are fire-and-forget — failures are logged but never block the main flow. The `RESEND_API_KEY` environment variable must be set for emails to send; if missing, sends are silently skipped.
 
