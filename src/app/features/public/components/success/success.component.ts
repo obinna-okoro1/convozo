@@ -13,7 +13,9 @@ import { ShopService } from '../../../creator/services/shop.service';
 export class SuccessComponent implements OnInit {
   protected readonly isCallBooking = signal(false);
   protected readonly isShopPurchase = signal(false);
+  protected readonly isSupportTip = signal(false);
   protected readonly creatorSlug = signal<string | null>(null);
+  protected readonly creatorName = signal<string | null>(null);
 
   // ── Shop download state ────────────────────────────────────────────────────
   protected readonly shopItemTitle = signal<string | null>(null);
@@ -21,12 +23,6 @@ export class SuccessComponent implements OnInit {
   protected readonly shopFilename = signal<string | null>(null);
   protected readonly loadingDownload = signal(false);
   protected readonly downloadError = signal<string | null>(null);
-
-  protected readonly confettiItems = Array.from({ length: 12 }, (_, i) => i);
-  protected readonly confettiPositions = this.confettiItems.map(() => ({
-    left: `${Math.floor(Math.random() * 100)}%`,
-    delay: `${(Math.random() * 2).toFixed(1)}s`,
-  }));
 
   protected readonly callSteps = [
     { n: 1, text: "Check your email — a booking confirmation with all the details has been sent to you." },
@@ -43,7 +39,7 @@ export class SuccessComponent implements OnInit {
   protected readonly shopSteps = [
     { n: 1, text: "Your payment is confirmed and your file is stored securely on Convozo." },
     { n: 2, text: "Click 'Download Your File' below — a secure link will open immediately." },
-    { n: 3, text: "Save your file after downloading — the download link expires in 5 minutes." },
+    { n: 3, text: "Save your file after downloading \u2014 the download link expires in 1 hour." },
   ];
 
   constructor(
@@ -59,7 +55,9 @@ export class SuccessComponent implements OnInit {
 
     this.isCallBooking.set(type === 'call');
     this.isShopPurchase.set(shop === '1');
+    this.isSupportTip.set(type === 'support');
     this.creatorSlug.set(creator);
+    this.creatorName.set(this.route.snapshot.queryParamMap.get('name'));
 
     // Fetch the signed download URL from our edge function
     if (shop === '1') {
@@ -93,6 +91,30 @@ export class SuccessComponent implements OnInit {
     } else {
       void this.router.navigate(['/']);
     }
+  }
+
+  /**
+   * Build a Google Calendar "add event" URL for call bookings.
+   * Reads scheduled_at from query params.
+   */
+  protected getGoogleCalendarUrl(): string {
+    const scheduledAt = this.route.snapshot.queryParamMap.get('scheduled_at') ?? '';
+    const duration = Number(this.route.snapshot.queryParamMap.get('duration') ?? '30');
+    const expert = this.creatorName() ?? 'Expert';
+
+    const start = scheduledAt ? new Date(scheduledAt) : new Date();
+    const end = new Date(start.getTime() + duration * 60 * 1000);
+
+    const fmt = (d: Date): string => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `Convozo Consultation with ${expert}`,
+      dates: `${fmt(start)}/${fmt(end)}`,
+      details: 'Your video consultation booked via Convozo. Check your email for the join link.',
+    });
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 }
 

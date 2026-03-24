@@ -4,13 +4,14 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MessagePageStateService } from '../../message-page-state.service';
 import { LinkListComponent } from '../../../../../link-in-bio/components/link-list/link-list.component';
 import { CreatorLink } from '../../../../../../core/models';
 
 @Component({
   selector: 'app-links-view',
-  imports: [LinkListComponent],
+  imports: [RouterLink, LinkListComponent],
   templateUrl: './links-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

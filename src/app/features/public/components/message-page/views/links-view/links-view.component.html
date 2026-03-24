@@ -1,3 +1,61 @@
+<!-- Service cards — the primary calls-to-action; links are secondary content below -->
+@if (state.messagesEnabled() || state.callsEnabled() || state.shopEnabled() || state.tipsEnabled()) {
+  <div class="grid grid-cols-2 gap-2.5 mb-6">
+    @if (state.messagesEnabled()) {
+      <a routerLink="../message"
+         class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Consultation</p>
+        <p class="text-sm font-black text-accent mt-0.5">${{ state.messagePriceCents() / 100 }}</p>
+      </a>
+    }
+    @if (state.callsEnabled()) {
+      <a routerLink="../call"
+         class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Session</p>
+        <p class="text-sm font-black text-accent mt-0.5">${{ state.callPriceCents() / 100 }}<span class="text-[0.6rem] text-content-muted font-normal"> / {{ state.callDuration() }}min</span></p>
+      </a>
+    }
+    @if (state.shopEnabled()) {
+      <a routerLink="../shop"
+         class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Products</p>
+        <p class="text-[0.65rem] text-content-muted mt-0.5">Digital resources</p>
+      </a>
+    }
+    @if (state.tipsEnabled()) {
+      <a routerLink="../support"
+         class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(236,72,153,0.12) 0%, rgba(239,68,68,0.12) 100%);">
+          <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Support</p>
+        <p class="text-[0.65rem] text-content-muted mt-0.5">Show appreciation</p>
+      </a>
+    }
+  </div>
+}
+
 @if (state.creatorLinks().length > 0) {
   <app-link-list
     [links]="state.creatorLinks()"

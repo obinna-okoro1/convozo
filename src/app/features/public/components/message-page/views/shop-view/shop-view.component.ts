@@ -1,13 +1,13 @@
 /**
  * Public Shop View Component
  *
- * Fan-facing storefront. Displays all active shop items for a creator.
- * Fans can purchase digital downloads or submit a shoutout / video request.
+ * Client-facing storefront. Displays all active shop items for an expert.
+ * Clients can purchase digital downloads or submit a shoutout / video request.
  *
  * Flow:
  *  1. Page loads → fetch active items via ShopService
- *  2. Fan clicks an item card → inline form expands
- *  3. Fan submits name + email (+ brief for request-based) → Stripe Checkout
+ *  2. Client clicks an item card → inline form expands
+ *  3. Client submits name + email (+ brief for request-based) → Stripe Checkout
  */
 
 import {
@@ -18,6 +18,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { TrustIndicatorsComponent } from '../../../../../../shared/components/trust-indicators/trust-indicators.component';
 import { ShopItem } from '../../../../../../core/models';
 import { ShopService } from '../../../../../creator/services/shop.service';
 import { MessagePageStateService } from '../../message-page-state.service';
@@ -40,7 +42,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 @Component({
   selector: 'app-shop-view',
-  imports: [FormsModule],
+  imports: [RouterLink, FormsModule, TrustIndicatorsComponent],
   templateUrl: './shop-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

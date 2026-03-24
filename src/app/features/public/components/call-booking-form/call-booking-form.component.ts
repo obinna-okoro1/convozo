@@ -1,10 +1,10 @@
 /**
  * Call Booking Form Component
- * Public-facing form for fans to book a video call with a creator.
+ * Public-facing form for clients to book a video consultation with an expert.
  *
  * Slot generation:
- *   - Reads creator's weekly availability_slots (day_of_week, start_time, end_time)
- *   - Reads the creator's call_duration setting (minutes)
+ *   - Reads expert's weekly availability_slots (day_of_week, start_time, end_time)
+ *   - Reads the expert's call_duration setting (minutes)
  *   - Generates concrete bookable slots for the next 5 available days at
  *     call_duration-minute intervals within each availability window
  *
@@ -12,7 +12,7 @@
  *
  * Form output:
  *   scheduledAt — ISO 8601 UTC string of the selected slot
- *   timezone    — fan's browser IANA timezone (e.g. "America/New_York")
+ *   timezone    — client's browser IANA timezone (e.g. "America/New_York")
  */
 
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
@@ -25,9 +25,9 @@ export interface CallBookingFormData {
   senderName: string;
   senderEmail: string;
   messageContent: string;
-  /** ISO 8601 UTC datetime of the fan's selected call slot */
+  /** ISO 8601 UTC datetime of the client's selected call slot */
   scheduledAt: string;
-  /** IANA timezone string captured from fan's browser (e.g. "America/New_York") */
+  /** IANA timezone string captured from client's browser (e.g. "America/New_York") */
   timezone: string;
 }
 
@@ -62,8 +62,21 @@ export class CallBookingFormComponent {
   /** ISO datetime of the chosen time slot — resets whenever the day changes. */
   protected selectedIso = '';
 
-  /** Fan's local timezone, captured once from the browser. */
+  /** Client's local timezone, captured once from the browser. */
   protected readonly timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  /** Human-readable timezone label (e.g. "America/New_York — EDT") */
+  protected readonly timezoneLabel = (() => {
+    const tz = this.timezone;
+    try {
+      const abbr = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+        .formatToParts(new Date())
+        .find(p => p.type === 'timeZoneName')?.value ?? '';
+      return `${tz.replace(/_/g, ' ')} (${abbr})`;
+    } catch {
+      return tz.replace(/_/g, ' ');
+    }
+  })();
 
   protected readonly priceInDollars = computed(
     () => (this.priceCents() ?? 0) / APP_CONSTANTS.PRICE_MULTIPLIER,
