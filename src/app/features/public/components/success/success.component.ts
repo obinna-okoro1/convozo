@@ -35,9 +35,9 @@ export class SuccessComponent implements OnInit {
   ];
 
   protected readonly messageSteps = [
-    { n: 1, text: 'The creator receives your message in their priority inbox.' },
+    { n: 1, text: 'Your message has been delivered to their priority inbox.' },
     { n: 2, text: "You'll receive a confirmation email with your message details." },
-    { n: 3, text: "When the creator replies, you'll get an email with their response." },
+    { n: 3, text: "When they reply, you'll get an email with their response." },
   ];
 
   protected readonly shopSteps = [

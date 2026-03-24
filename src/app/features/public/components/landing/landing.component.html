@@ -40,24 +40,24 @@
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1a9e3f] opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-[#1a9e3f]"></span>
               </span>
-              500+ creators earning right now
+              500+ experts earning right now
             </span>
           </div>
 
           <!-- Headline -->
           <div class="animate-fade-in" style="animation-delay: 100ms">
             <h1 class="text-[3rem] sm:text-[4rem] lg:text-[5rem] font-black leading-[0.92] tracking-[-0.03em]">
-              <span class="text-content block">Your fans</span>
-              <span class="text-gradient block">want to pay you.</span>
-              <span class="text-content block">Give them a way.</span>
+              <span class="text-content block">Your expertise</span>
+              <span class="text-gradient block">deserves more than</span>
+              <span class="text-content block">free DMs.</span>
             </h1>
           </div>
 
           <!-- Subheading -->
           <p class="animate-fade-in text-lg text-content-secondary leading-relaxed max-w-lg" style="animation-delay: 200ms">
-            Paid DMs. Video calls. Fan tips. Digital shop.&nbsp;All from one link —
+            Paid consultations. Video calls. Premium content. Digital products.&nbsp;All from one link —
             <code class="px-1.5 py-0.5 bg-surface-raised rounded-lg text-accent font-mono text-sm">convozo.com/you</code>.
-            Keep&nbsp;<strong class="text-content">78%</strong>&nbsp;of every payment. No brand deals. No algorithm.
+            Keep&nbsp;<strong class="text-content">78%</strong>&nbsp;of every payment. No middlemen. No gatekeepers.
           </p>
 
           <!-- CTAs -->
@@ -88,7 +88,7 @@
                 }
                 <span class="text-sm font-semibold text-content ml-1.5">4.9</span>
               </div>
-              <p class="text-xs text-content-muted">Loved by 500+ creators</p>
+              <p class="text-xs text-content-muted">Loved by 500+ professionals</p>
             </div>
           </div>
         </div>
@@ -122,7 +122,7 @@
 
             <!-- Stats -->
             <div class="grid grid-cols-3 gap-2 mb-4">
-              @for (stat of [{v:'243',l:'DMs'},{v:'31',l:'Calls'},{v:'98%',l:'Reply'}]; track stat.l) {
+              @for (stat of [{v:'243',l:'Messages'},{v:'31',l:'Calls'},{v:'98%',l:'Reply'}]; track stat.l) {
                 <div class="text-center py-3 rounded-xl bg-surface-overlay border border-separator">
                   <div class="text-base font-black text-content">{{ stat.v }}</div>
                   <div class="text-[0.6rem] text-content-muted uppercase tracking-wider mt-0.5">{{ stat.l }}</div>
@@ -132,7 +132,7 @@
 
             <!-- Activity feed -->
             <div class="space-y-2">
-              @for (tx of [{icon:'S',color:'bg-accent',label:'DM from Alex',time:'Just now',amt:'+$50'},{icon:'J',color:'bg-blue-500',label:'Call — Jordan',time:'3 min ago',amt:'+$200'},{icon:'M',color:'bg-[#b85c00]',label:'Shop sale',time:'12 min ago',amt:'+$35'}]; track tx.label) {
+              @for (tx of [{icon:'S',color:'bg-accent',label:'Message from Alex',time:'Just now',amt:'+$50'},{icon:'J',color:'bg-blue-500',label:'Consultation — Jordan',time:'3 min ago',amt:'+$200'},{icon:'M',color:'bg-[#b85c00]',label:'Shop sale',time:'12 min ago',amt:'+$35'}]; track tx.label) {
                 <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-overlay border border-separator">
                   <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" [class]="tx.color">{{ tx.icon }}</div>
                   <div class="flex-1 min-w-0">
@@ -211,7 +211,7 @@
       <div class="text-center mb-14">
         <p class="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-3">Simple as it gets</p>
         <h2 class="text-4xl sm:text-5xl font-black text-content tracking-tight mb-4">Live in under 5 minutes</h2>
-        <p class="text-content-secondary text-lg max-w-xl mx-auto">No tech skills. No brand deals. No middlemen. Just you and your audience.</p>
+        <p class="text-content-secondary text-lg max-w-xl mx-auto">No tech skills. No agencies. No middlemen. Just you and your clients.</p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-5">
@@ -235,8 +235,8 @@
   <section class="relative z-10 py-10 px-4 sm:px-6">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-14">
-        <p class="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-3">Five revenue streams</p>
-        <h2 class="text-4xl sm:text-5xl font-black text-content tracking-tight">Five ways fans pay you</h2>
+        <p class="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-3">Multiple revenue streams</p>
+        <h2 class="text-4xl sm:text-5xl font-black text-content tracking-tight">Every way to monetize your expertise</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -248,22 +248,22 @@
             </svg>
           </div>
           <h3 class="text-2xl font-black text-content mb-2">Paid Messages</h3>
-          <p class="text-content-secondary leading-relaxed mb-6">Fans and brands pay to get your attention. You set the price. You reply on your schedule. Every message that makes it through has already paid for your time.</p>
+          <p class="text-content-secondary leading-relaxed mb-6">Clients pay to get your expert opinion. You set the price. You reply on your schedule. Every message that reaches you has already paid for your time.</p>
           <div class="flex items-center gap-4">
             <div class="badge bg-accent/10 text-accent font-bold">From $5/message</div>
             <div class="badge">You keep 78%</div>
           </div>
         </div>
 
-        <!-- Card 2 — Fan Tips -->
+        <!-- Card 2 — Tips & Appreciation -->
         <div class="group card-glass p-6 transition-all duration-300 hover:-translate-y-1">
           <div class="w-12 h-12 rounded-xl bg-[#d70015]/10 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300">
             <svg class="w-6 h-6 text-[#d70015]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
             </svg>
           </div>
-          <h3 class="text-xl font-black text-content mb-2">Donations</h3>
-          <p class="text-content-secondary text-sm leading-relaxed">Let fans show love with a donation. No awkward asks. Pure appreciation, straight to your account.</p>
+          <h3 class="text-xl font-black text-content mb-2">Tips & Appreciation</h3>
+          <p class="text-content-secondary text-sm leading-relaxed">Let grateful clients show appreciation with a tip. No awkward asks. Pure gratitude, straight to your account.</p>
         </div>
 
         <!-- Card 3 — Video Calls -->
@@ -273,8 +273,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
           </div>
-          <h3 class="text-xl font-black text-content mb-2">Video Calls</h3>
-          <p class="text-content-secondary text-sm leading-relaxed">Book 1-on-1 calls. Automated scheduling, secure payments, real connection with your biggest fans.</p>
+          <h3 class="text-xl font-black text-content mb-2">Video Consultations</h3>
+          <p class="text-content-secondary text-sm leading-relaxed">Book 1-on-1 sessions. Automated scheduling, secure payments, real connection with your clients.</p>
         </div>
 
         <!-- Card 4 — Instant Payouts -->
@@ -295,8 +295,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
           </div>
-          <h3 class="text-xl font-black text-content mb-2">Digital Shop</h3>
-          <p class="text-content-secondary text-sm leading-relaxed">Sell presets, guides, templates, and more. Fans pay once, download instantly — zero manual delivery.</p>
+          <h3 class="text-xl font-black text-content mb-2">Digital Products</h3>
+          <p class="text-content-secondary text-sm leading-relaxed">Sell guides, templates, frameworks, and more. Clients pay once, download instantly — zero manual delivery.</p>
         </div>
 
         <!-- Card 6 — LARGE — Analytics -->
@@ -347,7 +347,7 @@
         Your first payment<br/>is 5 minutes away
       </h2>
       <p class="text-xl text-content-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
-        Creators turned their existing audience into real income — no brand deals, no sponsorships, no gatekeepers.
+        Professionals turned their expertise into real income — no agencies, no complex platforms, no gatekeepers.
       </p>
 
       <a routerLink="/auth/signup" class="btn-primary btn-lg inline-flex items-center justify-center gap-3 text-xl font-black mb-10 group">

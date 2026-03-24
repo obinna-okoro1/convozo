@@ -44,33 +44,39 @@ export class MessageFormComponent {
   protected readonly isFollowBack = computed(() => this.productType() === 'follow_back');
 
   protected readonly productLabel = computed(() =>
-    this.isFollowBack() ? 'Follow-Back Request' : 'Priority Message',
+    this.isFollowBack() ? 'Connection Request' : 'Private Consultation',
+  );
+
+  protected readonly serviceDescription = computed(() =>
+    this.isFollowBack()
+      ? `Request a direct connection with ${this.creatorName()}`
+      : 'Get personalized advice delivered privately to you',
   );
 
   protected readonly priceUnit = computed(() =>
-    this.isFollowBack() ? 'per request' : 'per message',
+    this.isFollowBack() ? '' : 'per consultation',
   );
 
   protected readonly messageLabel = computed(() =>
-    this.isFollowBack() ? 'Your Note' : 'Your Message',
+    this.isFollowBack() ? 'Your Note' : 'Your Inquiry',
   );
 
   protected readonly messagePlaceholder = computed(() =>
     this.isFollowBack()
-      ? "Tell them why you'd love a follow-back..."
-      : 'Share your thoughts, questions, or feedback...',
+      ? "Tell them why you'd like to connect..."
+      : 'Describe what you need help with or would like to discuss...',
   );
 
   protected readonly inboxNote = computed(() =>
     this.isFollowBack()
-      ? `Sent directly to ${this.creatorName()}`
-      : `Sent directly to ${this.creatorName()}'s inbox`,
+      ? `Delivered privately to ${this.creatorName()}`
+      : `Delivered privately to ${this.creatorName()}`,
   );
 
   protected readonly submitLabel = computed(() =>
     this.isFollowBack()
-      ? `Pay $${String(this.priceInDollars())} & Request Follow-Back`
-      : `Pay $${String(this.priceInDollars())} & Send Message`,
+      ? `Request Connection — $${String(this.priceInDollars())}`
+      : `Send Inquiry — $${String(this.priceInDollars())}`,
   );
 
   protected onSubmit(): void {

@@ -330,7 +330,7 @@ export class MessagePageStateService {
     try {
       const payload: CheckoutSessionPayload = {
         creator_slug: creatorData.slug,
-        message_content: formData.messageContent || 'Fan support ❤️',
+        message_content: formData.messageContent || 'Support ❤️',
         sender_name: formData.senderName,
         sender_email: formData.senderEmail,
         message_type: 'support',

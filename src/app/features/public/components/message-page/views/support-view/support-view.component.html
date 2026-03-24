@@ -4,10 +4,10 @@
       <!-- Support Header -->
       <div class="text-center mb-6">
         <div class="w-14 h-14 rounded-xl bg-pink-500/10 flex items-center justify-center mx-auto mb-3">
-          <span class="text-2xl">❤️</span>
+          <span class="text-2xl">🤝</span>
         </div>
         <h3 class="text-lg font-bold text-content">Support {{ state.creator()?.display_name }}</h3>
-        <p class="text-content-tertiary text-sm mt-1">Choose your amount</p>
+        <p class="text-content-tertiary text-sm mt-1">Select an amount</p>
       </div>
 
       <!-- Amount Presets -->
@@ -81,7 +81,7 @@
         <textarea
           [(ngModel)]="messageContent"
           name="messageContent"
-          placeholder="Say something nice..."
+          placeholder="Add a personal note..."
           rows="4"
           maxlength="500"
           class="input resize-none"
@@ -101,8 +101,7 @@
           </svg>
           Processing…
         } @else {
-          <span>❤️</span>
-          <span>Support with ${{ amountDollars }}</span>
+          <span>Send Support — ${{ amountDollars }}</span>
         }
       </button>
 
@@ -115,6 +114,6 @@
     <svg class="w-10 h-10 text-content-tertiary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
     </svg>
-    <p class="text-content-tertiary text-sm">Fan support is not available for this creator</p>
+    <p class="text-content-tertiary text-sm">Tips are not available for this professional</p>
   </div>
 }

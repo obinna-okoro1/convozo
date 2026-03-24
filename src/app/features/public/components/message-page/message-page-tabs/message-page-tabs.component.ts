@@ -54,39 +54,32 @@ export class MessagePageTabsComponent {
   }
 
   readonly visibleTabs = computed<Tab[]>(() => {
-    const tabs: Tab[] = [
-      {
-        path: 'links',
-        label: 'Links',
-        iconPath:
-          'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
-      },
-    ];
+    const tabs: Tab[] = [];
 
     if (this.state.messagesEnabled()) {
       tabs.push({
         path: 'message',
-        label: 'Message',
+        label: 'Consult',
         iconPath:
           'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-      });
-    }
-
-    if (this.state.followBackEnabled()) {
-      tabs.push({
-        path: 'follow-back',
-        label: 'Follow Back',
-        iconPath:
-          'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
       });
     }
 
     if (this.state.callsEnabled()) {
       tabs.push({
         path: 'call',
-        label: 'Call',
+        label: 'Session',
         iconPath:
           'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+      });
+    }
+
+    if (this.state.followBackEnabled()) {
+      tabs.push({
+        path: 'follow-back',
+        label: 'Connect',
+        iconPath:
+          'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
       });
     }
 
@@ -102,10 +95,18 @@ export class MessagePageTabsComponent {
     if (this.state.shopEnabled()) {
       tabs.push({
         path: 'shop',
-        label: 'Shop',
+        label: 'Products',
         iconPath: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
       });
     }
+
+    // Links always available, placed after services
+    tabs.push({
+      path: 'links',
+      label: 'Links',
+      iconPath:
+        'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
+    });
 
     return tabs;
   });
