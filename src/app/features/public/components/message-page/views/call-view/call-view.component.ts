@@ -4,6 +4,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MessagePageStateService } from '../../message-page-state.service';
 import {
   CallBookingFormComponent,
@@ -12,7 +13,7 @@ import {
 
 @Component({
   selector: 'app-call-view',
-  imports: [CallBookingFormComponent],
+  imports: [RouterLink, CallBookingFormComponent],
   templateUrl: './call-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

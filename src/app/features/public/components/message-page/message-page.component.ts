@@ -4,18 +4,12 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { CreatorProfileHeaderComponent } from '../creator-profile-header/creator-profile-header.component';
-import { MessagePageTabsComponent } from './message-page-tabs/message-page-tabs.component';
 import { MessagePageStateService } from './message-page-state.service';
+import { CreatorProfileHeaderComponent } from '../creator-profile-header/creator-profile-header.component';
 
 @Component({
   selector: 'app-message-page',
-  imports: [
-    RouterLink,
-    RouterOutlet,
-    CreatorProfileHeaderComponent,
-    MessagePageTabsComponent,
-  ],
+  imports: [RouterLink, RouterOutlet, CreatorProfileHeaderComponent],
   templateUrl: './message-page.component.html',
   styleUrls: ['./message-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

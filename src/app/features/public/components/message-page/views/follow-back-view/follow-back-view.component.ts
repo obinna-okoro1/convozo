@@ -4,6 +4,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MessagePageStateService } from '../../message-page-state.service';
 import {
   MessageFormComponent,
@@ -12,7 +13,7 @@ import {
 
 @Component({
   selector: 'app-follow-back-view',
-  imports: [MessageFormComponent],
+  imports: [RouterLink, MessageFormComponent],
   templateUrl: './follow-back-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -92,9 +92,17 @@
 
       <!-- Step 1: Pick a day (next 5 available days) -->
     <div>
-      <label for="cbf-day" class="form-label">
-        Select a Day <span class="text-red-400">*</span>
-      </label>
+      <div class="flex items-center justify-between">
+        <label for="cbf-day" class="form-label">
+          Select a Day <span class="text-red-400">*</span>
+        </label>
+        <span class="flex items-center gap-1.5 text-[0.65rem] text-content-muted">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {{ timezoneLabel }}
+        </span>
+      </div>
 
       @if (availableDays().length === 0) {
         <div class="flex items-center gap-3 p-4 rounded-xl"

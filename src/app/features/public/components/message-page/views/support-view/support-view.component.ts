@@ -6,8 +6,9 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessagePageStateService } from '../../message-page-state.service';
+import { RouterLink } from '@angular/router';
 import { TrustIndicatorsComponent } from '../../../../../../shared/components/trust-indicators/trust-indicators.component';
+import { MessagePageStateService } from '../../message-page-state.service';
 
 export interface SupportFormData {
   senderName: string;
@@ -18,7 +19,7 @@ export interface SupportFormData {
 
 @Component({
   selector: 'app-support-view',
-  imports: [FormsModule, TrustIndicatorsComponent],
+  imports: [RouterLink, FormsModule, TrustIndicatorsComponent],
   templateUrl: './support-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

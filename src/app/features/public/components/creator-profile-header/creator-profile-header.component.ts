@@ -16,6 +16,8 @@ import { CreatorProfile } from '../../../../core/models';
 export class CreatorProfileHeaderComponent {
   public readonly creator = input.required<CreatorProfile>();
   public readonly responseExpectation = input<string>('24-48 hours');
+  /** Whether this expert has completed identity verification. Defaults to false. */
+  public readonly verified = input<boolean>(false);
 
   protected readonly imageLoadError = signal(false);
   protected readonly bannerLoadError = signal(false);

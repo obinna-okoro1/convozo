@@ -59,6 +59,15 @@ export class LandingComponent {
 
   protected readonly chartBars = [40, 55, 35, 70, 50, 85, 65, 90, 75, 100];
 
+  /** Kajabi-style "replaces these tools" section — positions Convozo as all-in-one */
+  protected readonly replacedTools = [
+    { emoji: '📬', name: 'Substack', what: 'Paid writing' },
+    { emoji: '📅', name: 'Calendly', what: 'Session booking' },
+    { emoji: '💜', name: 'Patreon', what: 'Fan support' },
+    { emoji: '🛒', name: 'Gumroad', what: 'Digital products' },
+    { emoji: '🔗', name: 'Linktree', what: 'Link-in-bio' },
+  ];
+
   protected readonly tickerItems = [
     { dot: '#a855f7', name: 'expert earned', amt: '$250 · ' },
     { dot: '#ec4899', name: 'client tip', amt: '$75 · ' },
