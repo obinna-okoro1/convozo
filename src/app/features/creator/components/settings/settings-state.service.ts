@@ -58,8 +58,6 @@ export class SettingsStateService {
   readonly callPrice = signal(2000);
   readonly callDuration = signal(10);
   readonly callsEnabled = signal(false);
-  readonly followBackPrice = signal(2000);
-  readonly followBackEnabled = signal(false);
   readonly tipsEnabled = signal(false);
   readonly shopEnabled = signal(false);
   readonly responseExpectation = signal('');
@@ -79,8 +77,6 @@ export class SettingsStateService {
     callPrice: 2000,
     callDuration: 10,
     callsEnabled: false,
-    followBackPrice: 2000,
-    followBackEnabled: false,
     tipsEnabled: false,
     shopEnabled: false,
     responseExpectation: '',
@@ -118,8 +114,6 @@ export class SettingsStateService {
       this.callPrice() !== o.callPrice ||
       this.callDuration() !== o.callDuration ||
       this.callsEnabled() !== o.callsEnabled ||
-      this.followBackPrice() !== o.followBackPrice ||
-      this.followBackEnabled() !== o.followBackEnabled ||
       this.tipsEnabled() !== o.tipsEnabled ||
       this.shopEnabled() !== o.shopEnabled ||
       this.responseExpectation() !== o.responseExpectation
@@ -284,8 +278,6 @@ export class SettingsStateService {
       callPrice: this.callsEnabled() ? this.callPrice() : undefined,
       callDuration: this.callsEnabled() ? this.callDuration() : undefined,
       callsEnabled: this.callsEnabled(),
-      followBackPrice: this.followBackEnabled() ? this.followBackPrice() : undefined,
-      followBackEnabled: this.followBackEnabled(),
       tipsEnabled: this.tipsEnabled(),
       shopEnabled: this.shopEnabled(),
       responseExpectation: this.responseExpectation() || '',
@@ -300,8 +292,6 @@ export class SettingsStateService {
         callPrice: this.callPrice(),
         callDuration: this.callDuration(),
         callsEnabled: this.callsEnabled(),
-        followBackPrice: this.followBackPrice(),
-        followBackEnabled: this.followBackEnabled(),
         tipsEnabled: this.tipsEnabled(),
         shopEnabled: this.shopEnabled(),
         responseExpectation: this.responseExpectation(),
@@ -427,8 +417,6 @@ export class SettingsStateService {
         this.callPrice.set(settingsData.data.call_price ?? 2000);
         this.callDuration.set(settingsData.data.call_duration ?? 10);
         this.callsEnabled.set(settingsData.data.calls_enabled);
-        this.followBackPrice.set(settingsData.data.follow_back_price ?? 2000);
-        this.followBackEnabled.set(settingsData.data.follow_back_enabled);
         this.tipsEnabled.set(settingsData.data.tips_enabled ?? false);
         this.shopEnabled.set(settingsData.data.shop_enabled ?? false);
         this.responseExpectation.set(settingsData.data.response_expectation || '');
@@ -438,8 +426,6 @@ export class SettingsStateService {
           callPrice: settingsData.data.call_price ?? 2000,
           callDuration: settingsData.data.call_duration ?? 10,
           callsEnabled: settingsData.data.calls_enabled,
-          followBackPrice: settingsData.data.follow_back_price ?? 2000,
-          followBackEnabled: settingsData.data.follow_back_enabled,
           tipsEnabled: settingsData.data.tips_enabled ?? false,
           shopEnabled: settingsData.data.shop_enabled ?? false,
           responseExpectation: settingsData.data.response_expectation || '',

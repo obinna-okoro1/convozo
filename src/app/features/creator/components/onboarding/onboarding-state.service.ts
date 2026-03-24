@@ -279,8 +279,6 @@ export class OnboardingStateService implements OnDestroy {
         callPrice: 2000,
         callDuration: 10,
         callsEnabled: false,
-        followBackPrice: 2000,
-        followBackEnabled: false,
         tipsEnabled: false,
         responseExpectation: APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
       });

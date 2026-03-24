@@ -198,14 +198,14 @@ describe('AnalyticsService', () => {
     it('groups messages by type', () => {
       const messages = [
         makeMessage({ message_type: 'message' }),
-        makeMessage({ id: 'msg-2', message_type: 'follow_back' }),
+        makeMessage({ id: 'msg-2', message_type: 'support' }),
         makeMessage({ id: 'msg-3', message_type: 'message' }),
       ];
       const result = service.calculateAnalytics(messages);
       const msgEntry = result.messageTypeBreakdown.find((e) => e.type === 'message');
-      const followEntry = result.messageTypeBreakdown.find((e) => e.type === 'follow_back');
+      const supportEntry = result.messageTypeBreakdown.find((e) => e.type === 'support');
       expect(msgEntry?.count).toBe(2);
-      expect(followEntry?.count).toBe(1);
+      expect(supportEntry?.count).toBe(1);
     });
 
     it('adds call bookings as a separate category', () => {

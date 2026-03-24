@@ -1,3 +1,14 @@
+/**
+ * Bookings Panel Component
+ *
+ * Displays consultation bookings as a scheduling management view — not an inbox.
+ * Cards lead with date/time; upcoming sessions have full inline actions;
+ * past sessions are visually muted with a delete option.
+ *
+ * Inputs:  bookings[] — all CallBooking records for this expert
+ * Outputs: markCompleted, cancelBooking, confirmDelete, joinCall
+ */
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,14 +19,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CallBooking } from '../../../../../core/models';
-import {
-  SearchableSelectComponent,
-  SelectOption,
-} from '../../../../../shared/components/ui/searchable-select/searchable-select.component';
+
+interface FilterTab {
+  readonly value: string;
+  readonly label: string;
+}
 
 @Component({
   selector: 'app-bookings-panel',
-  imports: [CommonModule, SearchableSelectComponent],
+  imports: [CommonModule],
   templateUrl: './bookings-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -27,56 +39,68 @@ export class BookingsPanelComponent {
   public readonly confirmDelete = output<CallBooking>();
   public readonly joinCall = output<CallBooking>();
 
-  protected readonly selectedBooking = signal<CallBooking | null>(null);
-  protected readonly showBookingModal = signal<boolean>(false);
-  protected readonly bookingFilterStatus = signal<string>(
-    'all',
-  );
+  protected readonly bookingFilterStatus = signal<string>('all');
 
   protected readonly bookingStats = computed(() => {
     const bookings = this.bookings();
-    const confirmed = bookings.filter((b) => b.status === 'confirmed').length;
+    const upcoming = bookings.filter(
+      (b) => b.status === 'confirmed' || b.status === 'in_progress',
+    ).length;
     const inProgress = bookings.filter((b) => b.status === 'in_progress').length;
     const completed = bookings.filter((b) => b.status === 'completed').length;
     const cancelled = bookings.filter((b) => b.status === 'cancelled').length;
     const noShow = bookings.filter((b) => b.status === 'no_show').length;
     const totalRevenue =
       Math.round((bookings.reduce((sum, b) => sum + (b.amount_paid ?? 0), 0) / 100) * 100) / 100;
-    return { total: bookings.length, confirmed, inProgress, completed, cancelled, noShow, totalRevenue };
+    const past = completed + cancelled + noShow;
+    return { total: bookings.length, upcoming, inProgress, completed, cancelled, noShow, totalRevenue, past };
   });
 
-  protected readonly filteredBookings = computed(() => {
-    const bookings = this.bookings();
-    const status = this.bookingFilterStatus();
-    if (status === 'all') return bookings;
-    return bookings.filter((b) => b.status === status);
-  });
-
-  protected readonly bookingFilterOptions = computed<SelectOption[]>(() => {
+  protected readonly filterTabs = computed<FilterTab[]>(() => {
     const s = this.bookingStats();
     return [
       { value: 'all', label: `All (${s.total})` },
-      { value: 'confirmed', label: `Confirmed (${s.confirmed})` },
-      { value: 'in_progress', label: `In Call (${s.inProgress})` },
-      { value: 'completed', label: `Completed (${s.completed})` },
-      { value: 'cancelled', label: `Cancelled (${s.cancelled})` },
-      { value: 'no_show', label: `No Show (${s.noShow})` },
+      { value: 'upcoming', label: `Upcoming (${s.upcoming})` },
+      { value: 'past', label: `Past (${s.past})` },
     ];
   });
 
-  protected onBookingFilterChange(value: string): void {
+  /** Upcoming sorted soonest-first; past sorted most-recent-first. */
+  protected readonly filteredBookings = computed(() => {
+    const bookings = this.bookings();
+    const filter = this.bookingFilterStatus();
+
+    const isUpcoming = (b: CallBooking): boolean =>
+      b.status === 'confirmed' || b.status === 'in_progress';
+
+    const sortAsc = (a: CallBooking, b: CallBooking): number => {
+      const da = a.scheduled_at ? new Date(a.scheduled_at).getTime() : 0;
+      const db = b.scheduled_at ? new Date(b.scheduled_at).getTime() : 0;
+      return da - db;
+    };
+
+    const sortDesc = (a: CallBooking, b: CallBooking): number => {
+      const da = a.scheduled_at
+        ? new Date(a.scheduled_at).getTime()
+        : new Date(a.created_at).getTime();
+      const db = b.scheduled_at
+        ? new Date(b.scheduled_at).getTime()
+        : new Date(b.created_at).getTime();
+      return db - da;
+    };
+
+    if (filter === 'upcoming') return bookings.filter(isUpcoming).sort(sortAsc);
+    if (filter === 'past') return bookings.filter((b) => !isUpcoming(b)).sort(sortDesc);
+
+    // All: upcoming first (soonest → latest), then past (newest → oldest)
+    return [
+      ...bookings.filter(isUpcoming).sort(sortAsc),
+      ...bookings.filter((b) => !isUpcoming(b)).sort(sortDesc),
+    ];
+  });
+
+  protected onFilterChange(value: string): void {
     this.bookingFilterStatus.set(value);
-  }
-
-  protected handleBookingClick(booking: CallBooking): void {
-    this.selectedBooking.set(booking);
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      this.showBookingModal.set(true);
-    }
-  }
-
-  protected closeBookingModal(): void {
-    this.showBookingModal.set(false);
   }
 
   protected markBookingCompleted(booking: CallBooking): void {
@@ -91,27 +115,7 @@ export class BookingsPanelComponent {
     this.confirmDelete.emit(booking);
   }
 
-  protected markBookingCompletedFromMobile(booking: CallBooking): void {
-    this.closeBookingModal();
-    this.markCompleted.emit(booking);
-  }
-
-  protected cancelBookingFromMobile(booking: CallBooking): void {
-    this.closeBookingModal();
-    this.cancelBooking.emit(booking);
-  }
-
-  protected confirmDeleteBookingFromMobile(booking: CallBooking): void {
-    this.closeBookingModal();
-    this.confirmDelete.emit(booking);
-  }
-
   protected onJoinCall(booking: CallBooking): void {
-    this.joinCall.emit(booking);
-  }
-
-  protected joinCallFromMobile(booking: CallBooking): void {
-    this.closeBookingModal();
     this.joinCall.emit(booking);
   }
 }

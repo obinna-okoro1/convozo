@@ -412,7 +412,7 @@ Deno.serve(async (req) => {
 
         // Use Stripe-authoritative amount, not metadata (prevents manipulation)
         const amountInCents = session.amount_total || 0;
-        const validMessageType = ['message', 'call', 'follow_back', 'support'].includes(message_type) ? message_type : 'message';
+        const validMessageType = ['message', 'call', 'support'].includes(message_type) ? message_type : 'message';
 
         // Create the message only after payment succeeds
         const { data: message, error: messageError } = await supabase

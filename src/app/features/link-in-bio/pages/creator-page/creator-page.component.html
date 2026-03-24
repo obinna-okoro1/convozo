@@ -105,27 +105,6 @@
               </span>
             </a>
           }
-          @if (settings.follow_back_enabled && settings.follow_back_price) {
-            <a
-              [routerLink]="['/', creator()!.slug, 'message']"
-              [queryParams]="{ tab: 'follow_back' }"
-              class="group flex items-center gap-3 w-full px-6 py-4 rounded-2xl border bg-white transition-all duration-200 active:scale-[0.98] hover:shadow-md"
-              [style.border-color]="themeColor() + '40'"
-            >
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                [style.background]="themeColor() + '20'">
-                <svg class="w-5 h-5" [style.color]="themeColor()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </div>
-              <span class="flex-1 text-content font-semibold text-base">Request Connection</span>
-              <span class="text-xs font-medium px-3 py-1 rounded-full"
-                [style.background]="themeColor() + '20'"
-                [style.color]="themeColor()">
-                {{ '$' + (settings.follow_back_price / 100).toFixed(2) }}
-              </span>
-            </a>
-          }
         </div>
       }
 

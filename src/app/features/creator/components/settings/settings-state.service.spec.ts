@@ -435,8 +435,6 @@ describe('SettingsStateService', () => {
       call_price: 2000,
       call_duration: 10,
       calls_enabled: false,
-      follow_back_price: 2000,
-      follow_back_enabled: false,
       tips_enabled: false,
       shop_enabled: false,
       response_expectation: '',

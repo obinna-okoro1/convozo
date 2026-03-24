@@ -316,10 +316,10 @@ Deno.serve(async (req) => {
     );
 
   } else {
-    // ── Regular message / follow_back / support ─────────────────────────────
+    // ── Regular message / support ──────────────────────────────────────────────────
 
     const { message_content, sender_name, sender_email } = meta;
-    const validTypes = ['message', 'call', 'follow_back', 'support'];
+    const validTypes = ['message', 'call', 'support'];
     const validMessageType = validTypes.includes(message_type) ? message_type : 'message';
 
     // Idempotency: check if message already created for this reference

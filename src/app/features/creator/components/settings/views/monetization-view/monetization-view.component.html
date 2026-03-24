@@ -116,31 +116,6 @@
       }
     </div>
 
-    <!-- ── Follow-Back Requests ── -->
-    <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
-        <div>
-          <h3 class="font-semibold text-content">Connection Requests</h3>
-          <p class="text-sm text-content-muted mt-0.5">Let clients pay for a connection request</p>
-        </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
-          <input type="checkbox" [checked]="state.followBackEnabled()" (change)="state.isPaymentReady() && state.followBackEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
-          <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
-        </label>
-      </div>
-
-      @if (state.followBackEnabled()) {
-        <div class="mt-4 animate-fade-in">
-          <label for="followBackPrice" class="form-label">Connection Request Price <span class="text-red-400">*</span></label>
-          <div class="flex items-center gap-3">
-            <span class="text-xl font-semibold text-content-secondary">$</span>
-            <input type="number" id="followBackPrice" [value]="state.followBackPrice() / 100" (input)="state.followBackPrice.set(state.inputNumber($event) * 100)" min="1" step="1" required class="input flex-1" />
-          </div>
-          <p class="form-hint">Price per connection request in USD</p>
-        </div>
-      }
-    </div>
-
     <!-- ── Tips & Appreciation ── -->
     <div class="border-b border-separator pb-6">
       <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
