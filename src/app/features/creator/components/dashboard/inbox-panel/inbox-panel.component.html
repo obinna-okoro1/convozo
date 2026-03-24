@@ -2,7 +2,7 @@
 <div class="flex items-center justify-between mb-6">
   <div>
     <h2 class="text-xl font-bold text-content mb-0.5">Message Inbox</h2>
-    <p class="text-content-muted text-sm">{{ stats().total }} total messages · {{ stats().unhandled }} unhandled</p>
+    <p class="text-content-muted text-sm">{{ stats().total }} total messages · {{ stats().unhandled }} pending</p>
   </div>
   <app-searchable-select
     [options]="filterOptions()"
@@ -92,7 +92,7 @@
               </svg>
             </div>
             <p class="text-content font-semibold mb-1">No messages yet</p>
-            <p class="text-sm text-content-muted">Share your link to start receiving messages!</p>
+            <p class="text-sm text-content-muted">Share your profile link with clients to start receiving enquiries!</p>
           </div>
         }
       </div>
@@ -108,11 +108,11 @@
             <div class="flex items-center gap-2.5 mb-2">
               <h2 class="text-2xl font-bold text-content">{{ selectedMessage()?.sender_name }}</h2>
               @if (!selectedMessage()?.is_handled) {
-                <span class="badge bg-[#b85c00]/15 text-[#b85c00] font-semibold">Unhandled</span>
+                <span class="badge bg-[#b85c00]/15 text-[#b85c00] font-semibold">Pending</span>
               } @else {
                 <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold flex items-center gap-1">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                  Handled
+                  Replied
                 </span>
               }
             </div>
@@ -175,7 +175,7 @@
           @if (!selectedMessage()?.is_handled) {
             <button (click)="markAsHandled(selectedMessage()!)" class="btn-secondary btn-md flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              Mark Handled
+              Mark as Replied
             </button>
           } @else {
             <button (click)="onConfirmDelete(selectedMessage()!)" class="btn-danger btn-md flex items-center justify-center gap-2">
@@ -214,11 +214,11 @@
         <div class="mb-5">
           <div class="flex items-center gap-2 mb-3">
             @if (!selectedMessage()?.is_handled) {
-              <span class="badge bg-[#b85c00]/15 text-[#b85c00] font-semibold">Unhandled</span>
+              <span class="badge bg-[#b85c00]/15 text-[#b85c00] font-semibold">Pending</span>
             } @else {
               <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold flex items-center gap-1">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                Handled
+                Replied
               </span>
             }
             <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold">${{ (selectedMessage()?.amount_paid ?? 0) / 100 }}</span>
@@ -262,7 +262,7 @@
           @if (!selectedMessage()?.is_handled) {
             <button (click)="markAsHandledFromMobile(selectedMessage()!)" class="btn-secondary btn-md w-full flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              Mark Handled
+              Mark as Replied
             </button>
           } @else {
             <button (click)="confirmDeleteFromMobile(selectedMessage()!)" class="btn-danger btn-md w-full flex items-center justify-center gap-2">

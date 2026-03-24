@@ -4,7 +4,6 @@ import {
   CreatorProfile,
   CreatorLink,
   AvailabilitySlot,
-  MessageType,
   CheckoutSessionPayload,
   ShopCheckoutPayload,
 } from '../../../../core/models';
@@ -38,8 +37,6 @@ export class MessagePageStateService {
   readonly settings = computed(() => this.creatorSettings());
   readonly messagePriceCents = computed(() => this.settings()?.message_price ?? 0);
   readonly messagesEnabled = computed(() => this.settings()?.messages_enabled ?? false);
-  readonly followBackPriceCents = computed(() => this.settings()?.follow_back_price ?? 0);
-  readonly followBackEnabled = computed(() => this.settings()?.follow_back_enabled ?? false);
   readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
   readonly callDuration = computed(() => this.settings()?.call_duration ?? 10);
   readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
@@ -71,19 +68,6 @@ export class MessagePageStateService {
       formData.senderName,
       formData.senderEmail,
       formData.messageContent,
-      'message',
-    );
-  }
-
-  async onFollowBackSubmit(formData: MessageFormData): Promise<void> {
-    if (!this.validateMessageForm(formData)) {
-      return;
-    }
-    await this.processCheckout(
-      formData.senderName,
-      formData.senderEmail,
-      formData.messageContent,
-      'follow_back',
     );
   }
 
@@ -257,7 +241,6 @@ export class MessagePageStateService {
     senderName: string,
     senderEmail: string,
     messageContent: string,
-    messageType: MessageType,
   ): Promise<void> {
     const creatorData = this.creator();
     if (!creatorData) {
@@ -266,15 +249,14 @@ export class MessagePageStateService {
 
     this.submitting.set(true);
     try {
-      const priceCents =
-        messageType === 'follow_back' ? this.followBackPriceCents() : this.messagePriceCents();
+      const priceCents = this.messagePriceCents();
 
       const payload: CheckoutSessionPayload = {
         creator_slug: creatorData.slug,
         message_content: messageContent,
         sender_name: senderName,
         sender_email: senderEmail,
-        message_type: messageType,
+        message_type: 'message',
         price: priceCents,
       };
 

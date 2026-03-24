@@ -29,8 +29,6 @@ export interface CreatorSettings {
   call_price: number | null;
   call_duration: number | null;
   calls_enabled: boolean;
-  follow_back_price: number | null;
-  follow_back_enabled: boolean;
   tips_enabled: boolean;
   shop_enabled: boolean;
   response_expectation: string | null;
@@ -96,7 +94,7 @@ export interface CreatorProfile extends Creator {
   creator_settings: CreatorSettings;
 }
 
-export type MessageType = 'message' | 'call' | 'follow_back' | 'support';
+export type MessageType = 'message' | 'call' | 'support';
 export type FilterStatus = 'all' | 'unhandled' | 'handled';
 export type CallBookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'refunded';
 export type PayoutStatus = 'held' | 'released' | 'refunded';
@@ -343,7 +341,7 @@ export interface CreatorMonthlyAnalytics {
   /** First day of the calendar month, e.g. '2026-03-01' */
   month: string;
 
-  // Messages (paid DMs and follow-back requests — does NOT include support tips)
+  // Messages (paid DMs — does NOT include support tips)
   message_count: number;
   message_gross: number;        // cents
   message_platform_fee: number; // cents

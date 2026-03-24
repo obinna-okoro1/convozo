@@ -24,8 +24,6 @@ interface CreatorProfile {
     message_price: number;
     calls_enabled: boolean;
     call_price: number | null;
-    follow_back_enabled: boolean;
-    follow_back_price: number | null;
   } | null;
 }
 
@@ -86,8 +84,7 @@ export class CreatorPageComponent implements OnInit {
           id, display_name, bio, profile_image_url, slug,
           theme_color, is_active,
           creator_settings (
-            message_price, calls_enabled, call_price,
-            follow_back_enabled, follow_back_price
+            message_price, calls_enabled, call_price
           )
         `,
         )

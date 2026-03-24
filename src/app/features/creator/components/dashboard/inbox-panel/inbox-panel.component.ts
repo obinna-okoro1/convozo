@@ -59,8 +59,8 @@ export class InboxPanelComponent {
     const s = this.stats();
     return [
       { value: 'all', label: `All (${s.total})` },
-      { value: 'unhandled', label: `Unhandled (${s.unhandled})` },
-      { value: 'handled', label: `Handled (${s.handled})` },
+      { value: 'unhandled', label: `Pending (${s.unhandled})` },
+      { value: 'handled', label: `Replied (${s.handled})` },
     ];
   });
 

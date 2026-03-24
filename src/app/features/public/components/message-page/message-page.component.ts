@@ -33,7 +33,6 @@ export class MessagePageComponent implements OnInit {
       const routeMap: Record<string, string> = {
         message: 'message',
         call: 'call',
-        follow_back: 'follow-back',
       };
       const childRoute = routeMap[tab];
       if (childRoute) {

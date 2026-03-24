@@ -126,8 +126,6 @@ export class CreatorService {
     callPrice?: number;
     callDuration?: number;
     callsEnabled: boolean;
-    followBackPrice?: number;
-    followBackEnabled: boolean;
     tipsEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
@@ -141,8 +139,6 @@ export class CreatorService {
         call_price: data.callPrice,
         call_duration: data.callDuration,
         calls_enabled: data.callsEnabled,
-        follow_back_price: data.followBackPrice,
-        follow_back_enabled: data.followBackEnabled,
         tips_enabled: data.tipsEnabled,
         response_expectation: data.responseExpectation,
       })
@@ -159,8 +155,6 @@ export class CreatorService {
     callPrice?: number;
     callDuration?: number;
     callsEnabled: boolean;
-    followBackPrice?: number;
-    followBackEnabled: boolean;
     tipsEnabled: boolean;
     shopEnabled: boolean;
     responseExpectation: string;
@@ -174,8 +168,6 @@ export class CreatorService {
         call_price: data.callPrice,
         call_duration: data.callDuration,
         calls_enabled: data.callsEnabled,
-        follow_back_price: data.followBackPrice,
-        follow_back_enabled: data.followBackEnabled,
         tips_enabled: data.tipsEnabled,
         shop_enabled: data.shopEnabled,
         response_expectation: data.responseExpectation,

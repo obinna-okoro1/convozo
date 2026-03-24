@@ -87,6 +87,28 @@ Deno.serve(async (req) => {
       return jsonError('Creator call pricing not configured', 400, corsHeaders);
     }
 
+    // ── Slot conflict check ──────────────────────────────────────────────────
+    // Prevent double-booking: reject if the requested time slot already has an
+    // active (confirmed or in_progress) booking for this creator.
+    // This is an early-rejection guard — the DB partial unique index in
+    // migration 035 is the hard safety net against concurrent race conditions.
+    const { data: slotConflict, error: slotCheckError } = await supabase
+      .from('call_bookings')
+      .select('id')
+      .eq('creator_id', creator.id)
+      .eq('scheduled_at', payload.scheduled_at)
+      .in('status', ['confirmed', 'in_progress'])
+      .maybeSingle();
+
+    if (slotCheckError) {
+      console.error('[create-call-booking-session] slot conflict check failed:', slotCheckError);
+      return jsonError('Unable to verify slot availability. Please try again.', 500, corsHeaders);
+    }
+
+    if (slotConflict) {
+      return jsonError('This time slot is no longer available. Please choose another time.', 409, corsHeaders);
+    }
+
     // Calculate platform fee (22%) — using server-authoritative price
     const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
     const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));

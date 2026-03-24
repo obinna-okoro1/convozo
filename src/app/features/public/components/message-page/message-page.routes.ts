@@ -18,13 +18,6 @@ export const MESSAGE_PAGE_ROUTES: Routes = [
       import('./views/message-view/message-view.component').then((m) => m.MessageViewComponent),
   },
   {
-    path: 'follow-back',
-    loadComponent: () =>
-      import('./views/follow-back-view/follow-back-view.component').then(
-        (m) => m.FollowBackViewComponent,
-      ),
-  },
-  {
     path: 'call',
     loadComponent: () =>
       import('./views/call-view/call-view.component').then((m) => m.CallViewComponent),

@@ -1,7 +1,7 @@
 /**
  * Message Page Tabs Component
  * Renders the tab navigation bar for the public message page.
- * Conditionally shows follow-back and call tabs based on creator settings.
+ * Conditionally shows call and support tabs based on creator settings.
  */
 
 import {
@@ -71,15 +71,6 @@ export class MessagePageTabsComponent {
         label: 'Session',
         iconPath:
           'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
-      });
-    }
-
-    if (this.state.followBackEnabled()) {
-      tabs.push({
-        path: 'follow-back',
-        label: 'Connect',
-        iconPath:
-          'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
       });
     }
 

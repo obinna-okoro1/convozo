@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     // Get creator info — fetch payment_provider and paystack_subaccounts alongside stripe_accounts.
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, payment_provider, country, stripe_accounts(stripe_account_id), paystack_subaccounts(subaccount_code, is_active), creator_settings(message_price, follow_back_price, follow_back_enabled, tips_enabled)')
+      .select('id, display_name, payment_provider, country, stripe_accounts(stripe_account_id), paystack_subaccounts(subaccount_code, is_active), creator_settings(message_price, tips_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -54,29 +54,19 @@ Deno.serve(async (req) => {
     }
 
     // Get the server-authoritative price from creator_settings (NEVER trust client-sent price)
-    const settings = creator.creator_settings as { message_price: number; follow_back_price: number | null; follow_back_enabled: boolean; tips_enabled: boolean } | null;
+    const settings = creator.creator_settings as { message_price: number; tips_enabled: boolean } | null;
     if (!settings?.message_price || settings.message_price < 100) {
       return jsonError('Creator pricing not configured', 400, corsHeaders);
     }
 
-    // Normalise message_type to match DB constraint ('message' | 'call' | 'follow_back' | 'support')
-    const validTypes = ['message', 'call', 'follow_back', 'support'];
+    // Normalise message_type to match DB constraint ('message' | 'call' | 'support')
+    const validTypes = ['message', 'call', 'support'];
     const validMessageType = validTypes.includes(message_type) ? message_type : 'message';
 
     // Determine the correct price based on type
     let serverPrice = settings.message_price;
     let productName = `Paid DM to ${creator.display_name}`;
     let productDescription = 'Priority direct message';
-
-    if (validMessageType === 'follow_back') {
-      if (!settings.follow_back_enabled || !settings.follow_back_price || settings.follow_back_price < 100) {
-        return jsonError('Follow-back requests are not enabled for this creator', 400, corsHeaders);
-      }
-      serverPrice = settings.follow_back_price;
-      productName = `Follow-Back Request to ${creator.display_name}`;
-      productDescription = 'Request a follow-back on Instagram';
-    }
-
     if (validMessageType === 'support') {
       if (!settings.tips_enabled) {
         return jsonError('Fan support is not enabled for this creator', 400, corsHeaders);

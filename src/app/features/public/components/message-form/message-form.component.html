@@ -1,87 +1,50 @@
 <!-- Apple-style message form -->
 <div class="card-glass overflow-hidden animate-fade-in">
 
-  <!-- ── Service header ── -->
+  <!-- Service header -->
   <div class="px-6 pt-7 pb-5 text-center border-b border-separator">
     <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(236,72,153,0.10) 100%);">
-      @if (isFollowBack()) {
-        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-        </svg>
-      } @else {
-        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-        </svg>
-      }
+      <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
     </div>
-    <h3 class="text-lg font-bold text-content mb-1">{{ productLabel() }}</h3>
+    <h3 class="text-lg font-bold text-content mb-1">Private Consultation</h3>
     <p class="text-content-secondary text-sm mb-3">{{ serviceDescription() }}</p>
     <div class="inline-flex items-baseline gap-1.5 px-4 py-2 rounded-full" style="background: rgba(124,58,237,0.06); border: 1px solid rgba(124,58,237,0.12);">
       <span class="text-2xl font-bold text-content">${{ priceInDollars() }}</span>
-      @if (!isFollowBack() && priceUnit()) {
-        <span class="text-xs text-content-muted">{{ priceUnit() }}</span>
-      }
+      <span class="text-xs text-content-muted">per consultation</span>
     </div>
-    @if (!isFollowBack()) {
-      <div class="flex items-center justify-center gap-1.5 text-content-muted text-xs mt-3">
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-        </svg>
-        Responds within {{ responseExpectation() }}
-      </div>
-    }
+    <div class="flex items-center justify-center gap-1.5 text-content-muted text-xs mt-3">
+      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+      </svg>
+      Responds within {{ responseExpectation() }}
+    </div>
   </div>
 
-  <!-- ── Form fields ── -->
+  <!-- Form fields -->
   <form (ngSubmit)="onSubmit()" class="px-6 pb-6 pt-5 space-y-4">
 
-    <!-- Name + Email row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <label for="senderName" class="form-label">Your Name <span class="text-red-400">*</span></label>
-        <input
-          id="senderName"
-          type="text"
-          [(ngModel)]="senderName"
-          name="senderName"
-          placeholder="Enter your name"
-          class="input"
-          required
-        />
+        <input id="senderName" type="text" [(ngModel)]="senderName" name="senderName" placeholder="Enter your name" class="input" required />
       </div>
       <div>
         <label for="senderEmail" class="form-label">Email <span class="text-red-400">*</span></label>
-        <input
-          id="senderEmail"
-          type="email"
-          [(ngModel)]="senderEmail"
-          name="senderEmail"
-          placeholder="you&#64;example.com"
-          class="input"
-          required
-        />
+        <input id="senderEmail" type="email" [(ngModel)]="senderEmail" name="senderEmail" placeholder="you&#64;example.com" class="input" required />
       </div>
     </div>
 
-    <!-- Message textarea -->
     <div>
-      <label for="messageContent" class="form-label">{{ messageLabel() }} <span class="text-red-400">*</span></label>
-      <textarea
-        id="messageContent"
-        [(ngModel)]="messageContent"
-        name="messageContent"
-        [placeholder]="messagePlaceholder()"
-        rows="5"
-        maxlength="1000"
-        class="input resize-none"
-        required
-      ></textarea>
+      <label for="messageContent" class="form-label">Your Inquiry <span class="text-red-400">*</span></label>
+      <textarea id="messageContent" [(ngModel)]="messageContent" name="messageContent" placeholder="Describe what you need help with or would like to discuss..." rows="5" maxlength="1000" class="input resize-none" required></textarea>
       <div class="flex justify-between items-center mt-1.5">
         <span class="text-xs text-content-muted flex items-center gap-1.5">
           <svg class="w-3 h-3 text-[#1a9e3f]" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
           </svg>
-          {{ inboxNote() }}
+          Delivered privately to {{ creatorName() }}
         </span>
         <span class="text-xs font-medium" [class.text-red-400]="charCount() > 900" [class.text-content-muted]="charCount() <= 900">
           {{ charCount() }}/1000
@@ -89,18 +52,13 @@
       </div>
     </div>
 
-    <!-- Submit CTA -->
-    <button
-      type="submit"
-      [disabled]="submitting()"
-      class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2.5"
-    >
+    <button type="submit" [disabled]="submitting()" class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2.5">
       @if (submitting()) {
         <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <span>Processing payment…</span>
+        <span>Processing payment...</span>
       } @else {
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
