@@ -6,8 +6,8 @@
  * Integration approach:
  *   - A single <iframe #dailyIframe> stays mounted in the DOM at all times so
  *     DailyIframe.wrap() can manage it throughout the call lifecycle.
- *   - State-specific screens (loading, waiting, completed, error) are absolute/
- *     fixed overlays rendered on top of the iframe — they never unmount the iframe.
+ *   - State-specific screens (loading, waiting, completed, error) are delegated
+ *     to dedicated presentational sub-components rendered as fixed overlays.
  *   - Daily.co events (participant-joined, participant-left, error) drive state
  *     transitions directly, replacing the previous Supabase Realtime subscription.
  *   - call.leave() is called before completeCall() to release camera/mic.
@@ -35,313 +35,23 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { VideoCallService } from '../../services/video-call.service';
 import { CompleteCallResponse } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
+import { VideoCallToolbarComponent } from './video-call-toolbar.component';
+import { VideoWaitingOverlayComponent } from './video-waiting-overlay.component';
+import { VideoStatusOverlayComponent } from './video-status-overlay.component';
+import { VideoCompletedOverlayComponent } from './video-completed-overlay.component';
 
 @Component({
   selector: 'app-video-room',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <!-- ─── Daily.co iframe: always mounted so the SDK can manage it ─── -->
-    <!-- The SDK sets the iframe src via call.join() — never bind [src] here. -->
-    <div class="fixed inset-0 bg-black">
-      <iframe
-        #dailyIframe
-        class="w-full h-full border-0"
-        allow="camera; microphone; autoplay; display-capture"
-        allowfullscreen>
-      </iframe>
-    </div>
-
-    <!-- ─── In-call overlays (timer + end button) ─── -->
-    @if (videoCallService.callState() === 'in_progress') {
-      <!-- Top bar: live dot · participant name · timer · end/leave button -->
-      <div class="fixed top-0 left-0 right-0 z-20 flex items-center justify-between
-                  px-4 pt-3 pb-3
-                  bg-gradient-to-b from-black/80 via-black/50 to-transparent pointer-events-none">
-        <!-- Left: live dot + participant name -->
-        <div class="flex items-center gap-2.5">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style="background: #4ade80;"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2" style="background: #4ade80;"></span>
-          </span>
-          <span class="text-white text-sm font-medium tracking-wide">Live</span>
-          <span class="w-px h-3 opacity-30" style="background: white;"></span>
-          <span class="text-sm" style="color: rgba(255,255,255,0.65);">{{ otherParticipantName() }}</span>
-        </div>
-
-        <!-- Right: countdown timer + end/leave button -->
-        <div class="flex items-center gap-3 pointer-events-auto">
-          <!-- Countdown timer -->
-          <div class="flex items-center gap-1.5 tabular-nums transition-colors duration-300"
-               [style.color]="videoCallService.remainingSeconds() < 60 ? '#f87171' : 'rgba(255,255,255,0.85)'">
-            <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span class="font-mono font-bold text-sm">{{ videoCallService.formattedTimeRemaining() }}</span>
-          </div>
-
-          <!-- Divider -->
-          <span class="w-px h-4 opacity-25" style="background: white;"></span>
-
-          <!-- End / Leave button — compact pill in the top bar -->
-          <button
-            (click)="endCall()"
-            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full
-                   font-semibold text-xs text-white transition-all duration-150
-                   shadow-lg min-h-[2rem]"
-            style="background: rgba(239,68,68,0.85); backdrop-filter: blur(0.5rem);"
-            onmouseover="this.style.background='rgba(220,38,38,0.95)';"
-            onmouseout="this.style.background='rgba(239,68,68,0.85)';">
-            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24
-                       1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17
-                       0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-            </svg>
-            {{ isCreator() ? 'End Call' : 'Leave' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Low-time warning pill — sits below the top bar -->
-      @if (videoCallService.remainingSeconds() <= 60 && videoCallService.remainingSeconds() > 0) {
-        <div class="fixed top-16 left-1/2 -translate-x-1/2 z-30 animate-fade-in
-                    flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white"
-             style="background: rgba(239,68,68,0.85); backdrop-filter: blur(0.5rem);">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          Less than 1 minute remaining
-        </div>
-      }
-    }
-
-    <!-- ─── Waiting overlay ─── -->
-    @if (videoCallService.callState() === 'waiting') {
-      <div class="fixed inset-0 z-40 flex items-center justify-center animate-fade-in"
-           style="background: #0a0a0a;">
-        <div class="text-center max-w-xs mx-auto px-6">
-          <!-- Animated avatar ring with brand gradient -->
-          <div class="relative w-[5.5rem] h-[5.5rem] mx-auto mb-8">
-            <div class="absolute inset-0 rounded-full animate-ping"
-                 style="background: rgba(124,58,237,0.12);"></div>
-            <div class="absolute inset-[-0.25rem] rounded-full animate-spin"
-                 style="background: conic-gradient(from 0deg, transparent 60%, #7c3aed 80%, #ec4899 100%);
-                        animation-duration: 3s;"></div>
-            <div class="absolute inset-0 rounded-full flex items-center justify-center"
-                 style="background: #161616; border: 1px solid rgba(124,58,237,0.2);">
-              <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                   style="color: rgba(167,139,250,0.8);">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-              </svg>
-            </div>
-          </div>
-
-          <h2 class="text-2xl font-bold mb-2" style="color: #fff;">
-            Waiting for {{ otherParticipantName() }}
-          </h2>
-          <p class="text-sm mb-1" style="color: rgba(255,255,255,0.45);">
-            {{ videoCallService.currentBooking()?.duration }}-minute call
-          </p>
-          <p class="text-xs mb-10" style="color: rgba(255,255,255,0.28);">
-            The call begins when both participants are connected
-          </p>
-
-          <!-- Animated dots -->
-          <div class="flex items-center justify-center gap-1.5 mb-10">
-            @for (i of [0, 1, 2]; track i) {
-              <div class="w-1.5 h-1.5 rounded-full animate-bounce"
-                   style="background: rgba(124,58,237,0.65);"
-                   [style.animation-delay]="(i * 160) + 'ms'"></div>
-            }
-          </div>
-
-          <button
-            (click)="leaveWaiting()"
-            class="text-sm font-medium transition-all duration-200 px-5 py-2.5 rounded-xl min-h-[2.75rem]"
-            style="color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05);
-                   border: 1px solid rgba(255,255,255,0.09);"
-            onmouseover="this.style.color='rgba(255,255,255,0.7)'; this.style.background='rgba(255,255,255,0.09)';"
-            onmouseout="this.style.color='rgba(255,255,255,0.4)'; this.style.background='rgba(255,255,255,0.05)';">
-            Leave
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- ─── Connecting overlay — brief FaceTime-style transition ─── -->
-    @if (connecting()) {
-      <div class="fixed inset-0 z-40 flex items-center justify-center"
-           style="background: rgba(10,10,10,0.85); backdrop-filter: blur(1rem);
-                  animation: fadeIn 200ms ease-out;">
-        <div class="text-center">
-          <div class="relative w-16 h-16 mx-auto mb-5">
-            <div class="absolute inset-0 rounded-full animate-spin"
-                 style="background: conic-gradient(from 0deg, transparent 0%, #4ade80 60%, #22d3ee 100%);
-                        mask: radial-gradient(farthest-side, transparent 62%, black 63%);
-                        -webkit-mask: radial-gradient(farthest-side, transparent 62%, black 63%);
-                        animation-duration: 0.8s;"></div>
-            <div class="absolute inset-[0.25rem] rounded-full flex items-center justify-center"
-                 style="background: #0a0a0a;">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                   style="color: #4ade80;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-base font-semibold" style="color: #4ade80;">Connected</p>
-          <p class="text-xs mt-1" style="color: rgba(255,255,255,0.4);">Starting call…</p>
-        </div>
-      </div>
-    }
-
-    <!-- ─── Loading overlay ─── -->
-    @if (loading()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center" style="background: #0a0a0a;">
-        <div class="text-center">
-          <!-- Brand gradient spinner ring -->
-          <div class="relative w-16 h-16 mx-auto mb-6">
-            <div class="absolute inset-0 rounded-full animate-spin"
-                 style="background: conic-gradient(from 0deg, transparent 0%, #7c3aed 35%, #ec4899 100%);
-                        mask: radial-gradient(farthest-side, transparent 62%, black 63%);
-                        -webkit-mask: radial-gradient(farthest-side, transparent 62%, black 63%);
-                        animation-duration: 1.1s;"></div>
-            <div class="absolute inset-[0.25rem] rounded-full flex items-center justify-center"
-                 style="background: #0a0a0a;">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                   style="color: rgba(167,139,250,0.7);">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-base font-medium" style="color: rgba(255,255,255,0.65);">
-            Connecting to your call…
-          </p>
-          <p class="text-xs mt-1.5" style="color: rgba(255,255,255,0.3);">
-            This may take a moment
-          </p>
-        </div>
-      </div>
-    }
-
-    <!-- ─── Error overlay ─── -->
-    @if (videoCallService.callState() === 'error') {
-      <div class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
-           style="background: #0a0a0a;">
-        <div class="text-center max-w-sm mx-auto px-6 w-full">
-          <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-               style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.18);">
-            <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                 style="color: #f87171;">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4
-                       c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-          </div>
-          <h2 class="text-xl font-bold mb-2" style="color: #fff;">Connection Failed</h2>
-          <p class="text-sm mb-8 leading-relaxed" style="color: rgba(255,255,255,0.45);">
-            {{ videoCallService.errorMessage() }}
-          </p>
-          <button
-            (click)="goBack()"
-            class="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200"
-            style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">
-            Go Back
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- ─── Ending overlay ─── -->
-    @if (videoCallService.callState() === 'ending') {
-      <div class="fixed inset-0 z-50 flex items-center justify-center"
-           style="background: rgba(10,10,10,0.92); backdrop-filter: blur(0.25rem);">
-        <div class="text-center">
-          <div class="relative w-14 h-14 mx-auto mb-5">
-            <div class="absolute inset-0 rounded-full animate-spin"
-                 style="background: conic-gradient(from 0deg, transparent 0%, #7c3aed 35%, #ec4899 100%);
-                        mask: radial-gradient(farthest-side, transparent 62%, black 63%);
-                        -webkit-mask: radial-gradient(farthest-side, transparent 62%, black 63%);"></div>
-          </div>
-          <p class="font-medium" style="color: rgba(255,255,255,0.6);">Wrapping up…</p>
-        </div>
-      </div>
-    }
-
-    <!-- ─── Completed overlay ─── -->
-    @if (videoCallService.callState() === 'completed') {
-      <div class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
-           style="background: #0a0a0a;">
-        <div class="text-center max-w-sm mx-auto px-6 w-full">
-          <!-- Checkmark circle -->
-          <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-7"
-               style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
-            <svg class="w-11 h-11" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                 style="color: #4ade80;">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-          </div>
-
-          <h2 class="text-2xl font-bold mb-1.5" style="color: #fff;">Call Completed</h2>
-          <p class="text-sm mb-8" style="color: rgba(255,255,255,0.4);">
-            Thanks for the great conversation
-          </p>
-
-          @if (completionResult()) {
-            <div class="rounded-2xl p-5 mb-7 text-left space-y-3.5"
-                 style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);">
-              <div class="flex justify-between items-center text-sm">
-                <span style="color: rgba(255,255,255,0.45);">Duration</span>
-                <span class="font-semibold" style="color: #fff;">
-                  {{ formatDuration(completionResult()!.actual_duration_seconds) }}
-                </span>
-              </div>
-              <div class="h-px" style="background: rgba(255,255,255,0.06);"></div>
-              <div class="flex justify-between items-center text-sm">
-                <span style="color: rgba(255,255,255,0.45);">Booked</span>
-                <span class="font-semibold" style="color: #fff;">
-                  {{ formatDuration(completionResult()!.booked_duration_seconds) }}
-                </span>
-              </div>
-              @if (isCreator()) {
-                <div class="h-px" style="background: rgba(255,255,255,0.06);"></div>
-                <div class="flex justify-between items-center text-sm">
-                  <span style="color: rgba(255,255,255,0.45);">Payout</span>
-                  <span class="font-semibold flex items-center gap-1.5"
-                        [style.color]="completionResult()!.payout_released ? '#4ade80' : '#fbbf24'">
-                    @if (completionResult()!.payout_released) {
-                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                      </svg>
-                      Released
-                    } @else {
-                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                      </svg>
-                      Pending review
-                    }
-                  </span>
-                </div>
-              }
-            </div>
-          }
-
-          <button
-            (click)="goBack()"
-            class="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200"
-            style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">
-            {{ isCreator() ? 'Back to Dashboard' : 'Done' }}
-          </button>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './video-room.component.html',
   styles: `:host { display: block; }`,
+  imports: [
+    VideoCallToolbarComponent,
+    VideoWaitingOverlayComponent,
+    VideoStatusOverlayComponent,
+    VideoCompletedOverlayComponent,
+  ],
 })
 export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('dailyIframe') dailyIframeRef!: ElementRef<HTMLIFrameElement>;
@@ -944,13 +654,6 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.videoCallService.reset();
     this.goBack();
-  }
-
-  formatDuration(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    if (mins === 0) return `${secs}s`;
-    return `${mins}m ${secs}s`;
   }
 
   ngOnDestroy(): void {
