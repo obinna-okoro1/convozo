@@ -75,15 +75,13 @@ export class AvailabilityService {
   public async addAvailabilitySlot(
     slot: Omit<AvailabilitySlot, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<SupabaseResponse<AvailabilitySlot>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client
       .from('availability_slots')
       .insert(slot)
       .select()
       .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as AvailabilitySlot | null, error };
   }
 
   /**
@@ -105,7 +103,6 @@ export class AvailabilityService {
     slotId: string,
     isActive: boolean,
   ): Promise<SupabaseResponse<AvailabilitySlot>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client
       .from('availability_slots')
       .update({ is_active: isActive })
@@ -113,7 +110,6 @@ export class AvailabilityService {
       .select()
       .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as AvailabilitySlot | null, error };
   }
 }

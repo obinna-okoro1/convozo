@@ -61,7 +61,6 @@ export class CreatorService {
     const PAYSTACK_COUNTRIES = new Set(['NG', 'ZA']);
     const paymentProvider = PAYSTACK_COUNTRIES.has(data.country.toUpperCase()) ? 'paystack' : 'stripe';
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
       .insert({
@@ -77,8 +76,7 @@ export class CreatorService {
       })
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data: creator, error };
+    return { data: creator as Creator | null, error };
   }
 
   public async updateCreatorProfile(data: {
@@ -90,7 +88,6 @@ export class CreatorService {
     profileImageUrl?: string;
     bannerImageUrl?: string;
   }): Promise<SupabaseResponse<Creator>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
       .update({
@@ -104,19 +101,16 @@ export class CreatorService {
       .eq('id', data.creatorId)
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data: creator, error };
+    return { data: creator as Creator | null, error };
   }
 
   public async getCreatorSettings(creatorId: string): Promise<SupabaseResponse<CreatorSettings>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client
       .from('creator_settings')
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as CreatorSettings | null, error };
   }
 
   public async createCreatorSettings(data: {
@@ -129,7 +123,6 @@ export class CreatorService {
     tipsEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: settings, error } = await this.supabaseService.client
       .from('creator_settings')
       .insert({
@@ -144,8 +137,7 @@ export class CreatorService {
       })
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data: settings, error };
+    return { data: settings as CreatorSettings | null, error };
   }
 
   public async updateCreatorSettings(data: {
@@ -159,7 +151,6 @@ export class CreatorService {
     shopEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data: settings, error } = await this.supabaseService.client
       .from('creator_settings')
       .update({
@@ -175,8 +166,7 @@ export class CreatorService {
       .eq('id', data.settingsId)
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data: settings, error };
+    return { data: settings as CreatorSettings | null, error };
   }
 
   public async checkSlugAvailability(
@@ -228,14 +218,12 @@ export class CreatorService {
   public async getPaystackSubaccount(
     creatorId: string,
   ): Promise<SupabaseResponse<PaystackSubaccount | null>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client
       .from('paystack_subaccounts')
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as PaystackSubaccount | null, error };
   }
 
   /**
@@ -245,13 +233,11 @@ export class CreatorService {
   public async getPaystackBanks(
     country: string,
   ): Promise<EdgeFunctionResponse<PaystackBank[]>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'get-paystack-banks',
       { body: { country } },
     );
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as PaystackBank[] | undefined, error };
   }
 
   /**
@@ -262,13 +248,11 @@ export class CreatorService {
     accountNumber: string,
     bankCode: string,
   ): Promise<EdgeFunctionResponse<{ account_name: string }>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'get-paystack-banks',
       { body: { resolve: true, account_number: accountNumber, bank_code: bankCode } },
     );
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as { account_name: string } | undefined, error };
   }
 
   /**
@@ -281,7 +265,6 @@ export class CreatorService {
     businessName: string;
     country: string;
   }): Promise<EdgeFunctionResponse<PaystackSubaccount>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'create-paystack-subaccount',
       {
@@ -293,8 +276,7 @@ export class CreatorService {
         },
       },
     );
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as PaystackSubaccount | undefined, error };
   }
 
   /**
@@ -304,12 +286,10 @@ export class CreatorService {
    * subaccount creation, so the creator may need to refresh once Paystack is done.
    */
   public async syncPaystackStatus(): Promise<EdgeFunctionResponse<PaystackSubaccount>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'create-paystack-subaccount',
       { body: { sync_status: true } },
     );
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as PaystackSubaccount | undefined, error };
   }
 }

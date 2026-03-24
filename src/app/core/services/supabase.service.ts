@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User, PostgrestError } from '@supabase/supabase-js';
-import { FunctionsHttpError } from '@supabase/functions-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -8,15 +7,9 @@ import {
   CreatorSettings,
   Message,
   StripeAccount,
-  CheckoutSessionPayload,
-  CallBookingPayload,
+  CreatorMonthlyAnalytics,
   ShopItem,
   ShopOrder,
-  ShopCheckoutPayload,
-  EdgeFunctionResponse,
-  StripeConnectResponse,
-  StripeAccountStatus,
-  CreatorMonthlyAnalytics,
 } from '../models';
 
 interface SupabaseResponse<T> {
@@ -24,37 +17,21 @@ interface SupabaseResponse<T> {
   error: PostgrestError | null;
 }
 
-// Unwrap real server error from Edge Function non-2xx responses.
-// FunctionsHttpError.message is always generic — the actual error is in error.context.json().
-async function invokeFunction<T>(
-  invokeFn: () => Promise<{ data: T | null; error: unknown }>,
-): Promise<EdgeFunctionResponse<T>> {
-  const { data, error } = await invokeFn();
-  if (!error) {
-    return { data: data ?? undefined, error: undefined };
-  }
-
-  // Unwrap FunctionsHttpError: read the real JSON error body from the response
-  if (error instanceof FunctionsHttpError) {
-    try {
-      const body = await error.context.json() as { error?: string };
-      const message = body?.error ?? error.message;
-      return { data: undefined, error: { message } };
-    } catch {
-      return { data: undefined, error: { message: error.message } };
-    }
-  }
-
-  // Fallback for any other error type
-  const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-  return { data: undefined, error: { message } };
-}
-
+/**
+ * Core Supabase Client Provider
+ *
+ * Owns the Supabase client instance and auth state.
+ * Domain-specific queries live in their respective feature services.
+ * Storage operations → StorageService
+ * Edge Function calls → EdgeFunctionService
+ *
+ * This service is intentionally thin: it provides the client and auth state.
+ * Feature services inject it to access `client` directly for their queries.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class SupabaseService {
-  // Expose client for direct access by feature services
   public readonly client: SupabaseClient;
   public readonly currentUser$: Observable<User | null>;
 
@@ -63,8 +40,7 @@ export class SupabaseService {
   private sessionInitPromise: Promise<void> | null = null;
 
   constructor() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    this.client = createClient(environment.supabase.url, environment.supabase.anonKey);
+    this.client = createClient(environment.supabase.url, environment.supabase.anonKey) as SupabaseClient;
 
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
     this.currentUser$ = this.currentUserSubject.asObservable();
@@ -72,14 +48,14 @@ export class SupabaseService {
     this.initializeAuthState();
   }
 
+  // ── Auth ────────────────────────────────────────────────────────────
+
   public async waitForSession(): Promise<User | null> {
     if (!this.sessionInitialized && this.sessionInitPromise) {
       await this.sessionInitPromise;
     }
     return this.currentUserSubject.value;
   }
-
-  // Auth
 
   public async signInWithEmail(email: string): Promise<{ data: unknown; error: Error | null }> {
     const { data, error } = await this.client.auth.signInWithOtp({
@@ -100,108 +76,9 @@ export class SupabaseService {
     return this.currentUserSubject.value;
   }
 
-  // Storage
-
-  public async uploadFile(
-    bucket: string,
-    path: string,
-    file: File,
-  ): Promise<{ data: { path: string; publicUrl: string } | null; error: Error | null }> {
-    try {
-      const { data, error } = await this.client.storage.from(bucket).upload(path, file, {
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      const {
-        data: { publicUrl },
-      } = this.client.storage.from(bucket).getPublicUrl(path);
-
-      return {
-        data: {
-          path: data.path,
-          publicUrl,
-        },
-        error: null,
-      };
-    } catch (error) {
-      return {
-        data: null,
-        error: error instanceof Error ? error : new Error('Upload failed'),
-      };
-    }
-  }
-
-  public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
-    const { error } = await this.client.storage.from(bucket).remove([path]);
-    return { error };
-  }
-
-  /**
-   * Upload a digital file to the private shop-files bucket.
-   * Returns the storage path (never a public URL — access via signed URLs only).
-   * Path format: {creatorId}/{timestamp}_{safeFilename}
-   */
-  public async uploadShopFile(
-    creatorId: string,
-    file: File,
-  ): Promise<{ path: string | null; error: Error | null }> {
-    try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
-      const path = `${creatorId}/${Date.now()}_${safeName}`;
-      const { data, error } = await this.client.storage
-        .from('shop-files')
-        .upload(path, file, { upsert: false });
-      if (error) throw error;
-      return { path: data.path, error: null };
-    } catch (error) {
-      return { path: null, error: error instanceof Error ? error : new Error('Upload failed') };
-    }
-  }
-
-  /**
-   * Upload a thumbnail to the public shop-thumbnails bucket.
-   * Returns both the storage path and the derived public URL.
-   */
-  public async uploadShopThumbnail(
-    creatorId: string,
-    file: File,
-  ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
-    try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
-      const path = `${creatorId}/${Date.now()}_${safeName}`;
-      const { data, error } = await this.client.storage
-        .from('shop-thumbnails')
-        .upload(path, file, { upsert: false });
-      if (error) throw error;
-      const { data: { publicUrl } } = this.client.storage.from('shop-thumbnails').getPublicUrl(data.path);
-      return { path: data.path, publicUrl, error: null };
-    } catch (error) {
-      return { path: null, publicUrl: null, error: error instanceof Error ? error : new Error('Upload failed') };
-    }
-  }
-
-  /**
-   * Fetch a short-lived signed download URL for a purchased shop item.
-   * Calls the get-shop-download edge function with the Stripe session ID.
-   * No auth token needed — the session ID is proof of purchase.
-   */
-  public async getShopDownloadUrl(
-    sessionId: string,
-  ): Promise<EdgeFunctionResponse<{ url: string; filename: string }>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('get-shop-download', { body: { session_id: sessionId } }),
-    );
-  }
-
-  // Creator
+  // ── Creator queries (delegated from feature services) ──────────────
 
   public async getCreatorByUserId(userId: string): Promise<SupabaseResponse<Creator>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('creators')
       .select('*')
@@ -211,7 +88,6 @@ export class SupabaseService {
   }
 
   public async getCreatorBySlug(slug: string): Promise<SupabaseResponse<Creator>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('creators')
       .select('*, creator_settings(*)')
@@ -222,7 +98,6 @@ export class SupabaseService {
   }
 
   public async createCreator(creator: Partial<Creator>): Promise<SupabaseResponse<Creator>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client.from('creators').insert(creator).select().single();
     return { data: data as Creator | null, error };
   }
@@ -231,7 +106,6 @@ export class SupabaseService {
     id: string,
     updates: Partial<Creator>,
   ): Promise<SupabaseResponse<Creator>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('creators')
       .update(updates)
@@ -241,10 +115,9 @@ export class SupabaseService {
     return { data: data as Creator | null, error };
   }
 
-  // Creator settings
+  // ── Creator settings ───────────────────────────────────────────────
 
   public async getCreatorSettings(creatorId: string): Promise<SupabaseResponse<CreatorSettings>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('creator_settings')
       .select('*')
@@ -256,7 +129,6 @@ export class SupabaseService {
   public async createCreatorSettings(
     settings: Partial<CreatorSettings>,
   ): Promise<SupabaseResponse<CreatorSettings>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('creator_settings')
       .insert(settings)
@@ -269,7 +141,6 @@ export class SupabaseService {
     id: string,
     updates: Partial<CreatorSettings>,
   ): Promise<SupabaseResponse<CreatorSettings>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('creator_settings')
       .update(updates)
@@ -279,10 +150,9 @@ export class SupabaseService {
     return { data: data as CreatorSettings | null, error };
   }
 
-  // Stripe account
+  // ── Stripe account ─────────────────────────────────────────────────
 
   public async getStripeAccount(creatorId: string): Promise<SupabaseResponse<StripeAccount>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('stripe_accounts')
       .select('*')
@@ -291,7 +161,7 @@ export class SupabaseService {
     return { data: data as StripeAccount | null, error };
   }
 
-  // Messages
+  // ── Messages ───────────────────────────────────────────────────────
 
   public async getMessages(creatorId: string): Promise<SupabaseResponse<Message[]>> {
     const { data, error } = await this.client
@@ -306,7 +176,6 @@ export class SupabaseService {
     id: string,
     updates: Partial<Message>,
   ): Promise<SupabaseResponse<Message>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('messages')
       .update(updates)
@@ -316,56 +185,7 @@ export class SupabaseService {
     return { data: data as Message | null, error };
   }
 
-  // Edge functions
-
-  public async createCheckoutSession(
-    payload: CheckoutSessionPayload,
-  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('create-checkout-session', { body: payload }),
-    );
-  }
-
-  public async createCallBookingSession(
-    payload: CallBookingPayload,
-  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('create-call-booking-session', { body: payload }),
-    );
-  }
-
-  public async sendReplyEmail(
-    messageId: string,
-    replyContent: string,
-  ): Promise<EdgeFunctionResponse<void>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('send-reply-email', {
-        body: { message_id: messageId, reply_content: replyContent },
-      }),
-    );
-  }
-
-  public async createConnectAccount(
-    creatorId: string,
-    email: string,
-    displayName: string,
-  ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('create-connect-account', {
-        body: { creator_id: creatorId, email, display_name: displayName },
-      }),
-    );
-  }
-
-  public async verifyConnectAccount(
-    accountId: string,
-  ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('verify-connect-account', { body: { account_id: accountId } }),
-    );
-  }
-
-  // Shop
+  // ── Shop ───────────────────────────────────────────────────────────
 
   public async getShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
     const { data, error } = await this.client
@@ -391,7 +211,6 @@ export class SupabaseService {
   public async createShopItem(
     item: Omit<ShopItem, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<{ data: ShopItem | null; error: unknown }> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('shop_items')
       .insert(item)
@@ -404,7 +223,6 @@ export class SupabaseService {
     id: string,
     updates: Partial<Omit<ShopItem, 'id' | 'creator_id' | 'created_at' | 'updated_at'>>,
   ): Promise<{ data: ShopItem | null; error: unknown }> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.client
       .from('shop_items')
       .update(updates)
@@ -431,20 +249,11 @@ export class SupabaseService {
     return { data: data as ShopOrder[] | null, error };
   }
 
-  public async createShopCheckout(
-    payload: ShopCheckoutPayload,
-  ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    return invokeFunction(() =>
-      this.client.functions.invoke('create-shop-checkout', { body: payload }),
-    );
-  }
-
-  // Analytics
+  // ── Analytics ──────────────────────────────────────────────────────
 
   /**
    * Fetch retained monthly analytics for a creator, most-recent month first.
    * These rows are immune to message/booking deletions — only account deletion removes them.
-   * See migration 031 (analytics_retention).
    */
   public async getMonthlyAnalytics(
     creatorId: string,
@@ -456,6 +265,109 @@ export class SupabaseService {
       .order('month', { ascending: false });
     return { data: data as CreatorMonthlyAnalytics[] | null, error };
   }
+
+  // ── Edge Functions (backward-compat — prefer EdgeFunctionService) ──
+  // These methods delegate to EdgeFunctionService internally for consumers
+  // that haven't migrated yet. New code should inject EdgeFunctionService directly.
+
+  /** @deprecated Use EdgeFunctionService.createCheckoutSession() */
+  public async createCheckoutSession(
+    payload: import('../models').CheckoutSessionPayload,
+  ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    // Dynamic import — not ideal but preserves backward compat without circular deps
+    // TODO: migrate all callers to EdgeFunctionService directly
+    return new EdgeFunctionService(this).createCheckoutSession(payload);
+  }
+
+  /** @deprecated Use EdgeFunctionService.createCallBookingSession() */
+  public async createCallBookingSession(
+    payload: import('../models').CallBookingPayload,
+  ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    return new EdgeFunctionService(this).createCallBookingSession(payload);
+  }
+
+  /** @deprecated Use EdgeFunctionService.sendReplyEmail() */
+  public async sendReplyEmail(
+    messageId: string,
+    replyContent: string,
+  ): Promise<import('../models').EdgeFunctionResponse<void>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    return new EdgeFunctionService(this).sendReplyEmail(messageId, replyContent);
+  }
+
+  /** @deprecated Use EdgeFunctionService.createConnectAccount() */
+  public async createConnectAccount(
+    creatorId: string,
+    email: string,
+    displayName: string,
+  ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeConnectResponse>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    return new EdgeFunctionService(this).createConnectAccount(creatorId, email, displayName);
+  }
+
+  /** @deprecated Use EdgeFunctionService.verifyConnectAccount() */
+  public async verifyConnectAccount(
+    accountId: string,
+  ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeAccountStatus>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    return new EdgeFunctionService(this).verifyConnectAccount(accountId);
+  }
+
+  /** @deprecated Use EdgeFunctionService.getShopDownloadUrl() */
+  public async getShopDownloadUrl(
+    sessionId: string,
+  ): Promise<import('../models').EdgeFunctionResponse<{ url: string; filename: string }>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    return new EdgeFunctionService(this).getShopDownloadUrl(sessionId);
+  }
+
+  /** @deprecated Use EdgeFunctionService.createShopCheckout() */
+  public async createShopCheckout(
+    payload: import('../models').ShopCheckoutPayload,
+  ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
+    const { EdgeFunctionService } = await import('./edge-function.service');
+    return new EdgeFunctionService(this).createShopCheckout(payload);
+  }
+
+  // ── Storage (backward-compat — prefer StorageService) ──────────────
+
+  /** @deprecated Use StorageService.uploadPublicFile() */
+  public async uploadFile(
+    bucket: string,
+    path: string,
+    file: File,
+  ): Promise<{ data: { path: string; publicUrl: string } | null; error: Error | null }> {
+    const { StorageService } = await import('./storage.service');
+    return new StorageService(this).uploadPublicFile(bucket, path, file);
+  }
+
+  /** @deprecated Use StorageService.deleteFile() */
+  public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
+    const { StorageService } = await import('./storage.service');
+    return new StorageService(this).deleteFile(bucket, path);
+  }
+
+  /** @deprecated Use StorageService.uploadShopFile() */
+  public async uploadShopFile(
+    creatorId: string,
+    file: File,
+  ): Promise<{ path: string | null; error: Error | null }> {
+    const { StorageService } = await import('./storage.service');
+    return new StorageService(this).uploadShopFile(creatorId, file);
+  }
+
+  /** @deprecated Use StorageService.uploadShopThumbnail() */
+  public async uploadShopThumbnail(
+    creatorId: string,
+    file: File,
+  ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
+    const { StorageService } = await import('./storage.service');
+    return new StorageService(this).uploadShopThumbnail(creatorId, file);
+  }
+
+  // ── Private ────────────────────────────────────────────────────────
 
   private initializeAuthState(): void {
     this.sessionInitPromise = this.client.auth.getSession().then(({ data: { session } }) => {

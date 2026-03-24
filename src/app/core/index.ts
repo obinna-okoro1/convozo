@@ -8,6 +8,8 @@ export * from './guards/auth.guard';
 
 // Services
 export * from './services/supabase.service';
+export * from './services/storage.service';
+export * from './services/edge-function.service';
 export * from './services/push-notification.service';
 export * from './services/analytics.service';
 export * from './services/response-template.service';

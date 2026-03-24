@@ -331,8 +331,9 @@ export class SettingsStateService {
       );
 
       if (error != null || !data?.url) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-        const body = (data as any)?.error ?? (error as any)?.message ?? '';
+        const body = (data as { error?: string } | null)?.error
+          ?? (error as { message?: string } | null)?.message
+          ?? '';
         const msg = typeof body === 'string' && body.length > 0
           ? body
           : 'Failed to create payment account. Please try again.';

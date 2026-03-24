@@ -86,8 +86,7 @@ export class MessageService {
         replyContent,
       );
 
-      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-      if (functionError) {
+      if (functionError != null) {
         console.error('[MessageService] Reply function error:', functionError);
         throw functionError;
       }

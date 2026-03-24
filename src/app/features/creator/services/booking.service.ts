@@ -76,7 +76,6 @@ export class BookingService {
     bookingId: string,
     status: string,
   ): Promise<SupabaseResponse<CallBooking>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data, error } = await this.supabaseService.client
       .from('call_bookings')
       .update({ status })
@@ -84,8 +83,7 @@ export class BookingService {
       .select()
       .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { data, error };
+    return { data: data as CallBooking | null, error };
   }
 
   /**
