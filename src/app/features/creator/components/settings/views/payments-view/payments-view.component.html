@@ -119,12 +119,51 @@
               Loading banks...
             </div>
           } @else {
-            <select class="form-input" [value]="bankCode()" (change)="onBankCodeChange($any($event.target).value)">
-              <option value="">Select your bank</option>
-              @for (bank of state.paystackBanks(); track bank.code) {
-                <option [value]="bank.code">{{ bank.name }}</option>
+            <!-- Searchable bank combobox — Nigeria has 1000+ banks so a plain select is unusable -->
+            <div class="relative">
+              <div class="relative">
+                <input
+                  type="text"
+                  class="form-input pr-8"
+                  autocomplete="off"
+                  placeholder="Search for your bank..."
+                  [value]="bankDropdownOpen() ? bankSearch() : selectedBankName()"
+                  (focus)="openBankDropdown()"
+                  (blur)="closeBankDropdown()"
+                  (input)="bankSearch.set($any($event.target).value)"
+                />
+                <svg
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-content-muted pointer-events-none transition-transform duration-150"
+                  [class.rotate-180]="bankDropdownOpen()"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+
+              @if (bankDropdownOpen()) {
+                <div class="absolute z-50 w-full mt-1 bg-surface border border-border rounded-xl shadow-lg overflow-y-auto max-h-[15rem]">
+                  @if (filteredBanks().length === 0) {
+                    <p class="px-3 py-2.5 text-sm text-content-muted">
+                      No banks match "{{ bankSearch() }}"
+                    </p>
+                  } @else {
+                    @for (bank of filteredBanks(); track bank.code) {
+                      <button
+                        type="button"
+                        (mousedown)="selectBank(bank.code)"
+                        class="w-full text-left px-3 py-2.5 text-sm text-content hover:bg-surface-raised transition-colors"
+                        [class.bg-surface-raised]="bankCode() === bank.code"
+                        [class.font-medium]="bankCode() === bank.code"
+                      >{{ bank.name }}</button>
+                    }
+                    @if (bankSearch().trim() && filteredBanks().length === 60) {
+                      <p class="px-3 py-1.5 text-xs text-content-muted border-t border-border">Keep typing to narrow results</p>
+                    }
+                  }
+                </div>
               }
-            </select>
+            </div>
           }
         </div>
 

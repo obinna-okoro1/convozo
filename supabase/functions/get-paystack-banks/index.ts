@@ -49,8 +49,26 @@ Deno.serve(async (req) => {
         return jsonError('Invalid account number format', 400, corsHeaders);
       }
 
-      const accountName = await resolvePaystackAccountName(account_number, bank_code);
-      return jsonOk({ account_name: accountName }, corsHeaders);
+      // Wrap the resolve call separately so we can return a 422 with a user-friendly
+      // message when Paystack rejects the account (wrong number, unrecognised bank code).
+      // The outer try/catch handles unexpected system errors separately.
+      try {
+        const accountName = await resolvePaystackAccountName(account_number, bank_code);
+        return jsonOk({ account_name: accountName }, corsHeaders);
+      } catch (resolveErr) {
+        const resolveMsg = (resolveErr as Error).message ?? '';
+        console.error('[get-paystack-banks] resolve error:', resolveMsg);
+        // Paystack rejected the account details — surface the reason as a 422 so the
+        // Angular client can distinguish "wrong details" from a system error.
+        if (resolveMsg.includes('Paystack account resolution failed:')) {
+          const paystackReason = resolveMsg.split('Paystack account resolution failed:')[1]?.trim() ?? '';
+          const userMessage = paystackReason
+            ? `Account not found: ${paystackReason}`
+            : 'Account not found. Please verify your account number and bank.';
+          return jsonError(userMessage, 422, corsHeaders);
+        }
+        return jsonError('An internal error occurred', 500, corsHeaders);
+      }
     }
 
     // ── Bank list ───────────────────────────────────────────────────────────

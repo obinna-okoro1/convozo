@@ -259,8 +259,10 @@ const PAYSTACK_COUNTRY_NAMES: Record<string, string> = {
 };
 
 /**
- * Fetch the list of banks available for a given country.
- * Used by the creator settings UI to populate the bank picker.
+ * Fetch the complete list of banks available for a given country.
+ * Uses a high perPage (200) to retrieve all banks in a single request — Nigeria has
+ * ~60-80 commercial banks on Paystack; 200 comfortably covers the full list.
+ * If Paystack returns exactly 200 banks (extremely unlikely), a second page is fetched.
  *
  * @param country ISO country code: 'NG' | 'ZA'
  */
@@ -269,31 +271,49 @@ export async function getPaystackBanks(country: string): Promise<PaystackBank[]>
   if (!countryName) {
     throw new Error(`Unsupported Paystack country: ${country}`);
   }
-  const res = await fetch(
-    `${PAYSTACK_BASE_URL}/bank?country=${encodeURIComponent(countryName)}&use_cursor=false&perPage=100`,
-    {
+
+  const allBanks: PaystackBank[] = [];
+  let page = 1;
+  // Safety cap: never fetch more than 5 pages (500 banks) to avoid runaway loops
+  // if Paystack changes its data set.
+  const MAX_PAGES = 5;
+  const perPage = 200;
+
+  while (page <= MAX_PAGES) {
+    const url =
+      `${PAYSTACK_BASE_URL}/bank?country=${encodeURIComponent(countryName)}&use_cursor=false&perPage=${perPage}&page=${page}`;
+
+    const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
       },
-    },
-  );
+    });
 
-  const json = await res.json() as {
-    status: boolean;
-    message: string;
-    data?: Array<{ name: string; code: string; country: string; currency: string }>;
-  };
+    const json = await res.json() as {
+      status: boolean;
+      message: string;
+      data?: Array<{ name: string; code: string; country: string; currency: string }>;
+    };
 
-  if (!json.status || !json.data) {
-    throw new Error(`Paystack bank list failed: ${json.message}`);
+    if (!json.status || !json.data) {
+      throw new Error(`Paystack bank list failed: ${json.message}`);
+    }
+
+    allBanks.push(
+      ...json.data.map((b) => ({
+        name: b.name,
+        code: b.code,
+        country: b.country,
+        currency: b.currency,
+      })),
+    );
+
+    // Last page has fewer items than perPage — no more pages to fetch.
+    if (json.data.length < perPage) break;
+    page++;
   }
 
-  return json.data.map((b) => ({
-    name: b.name,
-    code: b.code,
-    country: b.country,
-    currency: b.currency,
-  }));
+  return allBanks;
 }
 
 /**
@@ -320,7 +340,7 @@ export async function resolvePaystackAccountName(
   };
 
   if (!json.status || !json.data) {
-    throw new Error(`Account resolution failed: ${json.message}`);
+    throw new Error(`Paystack account resolution failed: ${json.message}`);
   }
 
   return json.data.account_name;
