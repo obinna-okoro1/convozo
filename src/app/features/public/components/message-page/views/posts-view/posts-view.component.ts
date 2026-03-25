@@ -21,6 +21,8 @@ export class PostsViewComponent implements OnInit {
 
   protected readonly posts = signal<CreatorPost[]>([]);
   protected readonly loading = signal(true);
+  /** Tracks which post is expanded — only one can be open at a time (accordion). */
+  protected readonly expandedPostId = signal<string | null>(null);
 
   public ngOnInit(): void {
     const creatorId = this.state.creator()?.id;
@@ -48,6 +50,11 @@ export class PostsViewComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** Toggle a post open/closed. Opening one post closes any previously open post. */
+  protected togglePost(id: string): void {
+    this.expandedPostId.set(this.expandedPostId() === id ? null : id);
   }
 
   protected relativeTime(dateStr: string): string {

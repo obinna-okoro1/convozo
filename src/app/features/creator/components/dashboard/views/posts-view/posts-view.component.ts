@@ -17,7 +17,7 @@ import { ToastService } from '../../../../../../shared/services/toast.service';
 import { CreatorPost } from '../../../../../../core/models';
 
 /** Hard word cap matching the public-facing limit */
-const MAX_WORDS = 100;
+const MAX_WORDS = 500;
 
 @Component({
   selector: 'app-posts-view',
@@ -34,6 +34,8 @@ export class PostsViewComponent {
   protected readonly submitting = signal(false);
   /** ID of the post currently being deleted, null when idle */
   protected readonly deletingId = signal<string | null>(null);
+  /** Tracks which post is expanded — only one can be open at a time (accordion). */
+  protected readonly expandedPostId = signal<string | null>(null);
   protected readonly draftTitle = signal('');
   protected readonly draft = signal('');
 
@@ -77,6 +79,11 @@ export class PostsViewComponent {
 
   protected onDraftInput(event: Event): void {
     this.draft.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  /** Toggle a post open/closed. Opening one post closes any previously open post. */
+  protected togglePost(id: string): void {
+    this.expandedPostId.set(this.expandedPostId() === id ? null : id);
   }
 
   protected async onPublish(): Promise<void> {
