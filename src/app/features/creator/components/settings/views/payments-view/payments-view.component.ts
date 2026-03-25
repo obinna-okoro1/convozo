@@ -29,9 +29,16 @@ export class PaymentsViewComponent implements OnInit {
     const returningFromStripe =
       params.get('connected') === 'true' || params.get('refresh') === 'true';
     const account = this.state.paymentAccount();
-    const needsRefresh = returningFromStripe || (account != null && !account.onboarding_completed);
-    if (needsRefresh) {
+    const needsStripeRefresh = returningFromStripe || (account != null && !account.onboarding_completed);
+    if (needsStripeRefresh) {
       void this.state.refreshStripeStatus();
+    }
+
+    // For Paystack creators: auto-refresh live status from Paystack on every page
+    // load so the UI always reflects current verification state without requiring
+    // the creator to manually click "Refresh Status".
+    if (this.state.isPaystackCreator() && this.state.paystackSubaccount()) {
+      void this.state.refreshPaystackStatus();
     }
 
     // Pre-fill the business name with the creator's display name

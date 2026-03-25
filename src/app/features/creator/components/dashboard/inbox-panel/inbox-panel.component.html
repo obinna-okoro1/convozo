@@ -99,15 +99,17 @@
     </div>
   </div>
 
-  <!-- Message Detail (desktop) -->
+  <!-- Message Detail + Thread (desktop) -->
   <div class="hidden lg:block lg:col-span-2">
-    @if (selectedMessage()) {
-      <div class="card p-5 sm:p-6 animate-fade-in">
-        <div class="flex items-start justify-between mb-6 pb-6 border-b border-separator">
+    @if (selectedMessage(); as msg) {
+      <div class="card p-5 sm:p-6 animate-fade-in flex flex-col gap-0" style="min-height:31.25rem">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-5 pb-5 border-b border-separator">
           <div class="flex-1">
             <div class="flex items-center gap-2.5 mb-2">
-              <h2 class="text-2xl font-bold text-content">{{ selectedMessage()?.sender_name }}</h2>
-              @if (!selectedMessage()?.is_handled) {
+              <h2 class="text-2xl font-bold text-content">{{ msg.sender_name }}</h2>
+              @if (!msg.is_handled) {
                 <span class="badge bg-[#b85c00]/15 text-[#b85c00] font-semibold">Pending</span>
               } @else {
                 <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold flex items-center gap-1">
@@ -118,72 +120,138 @@
             </div>
             <p class="text-content-secondary flex items-center gap-2 text-sm mb-1">
               <svg class="w-3.5 h-3.5 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              {{ selectedMessage()?.sender_email }}
+              {{ msg.sender_email }}
             </p>
             <p class="text-xs text-content-muted flex items-center gap-1.5 mt-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Received {{ selectedMessage()?.created_at | date:'MMMM d, y \'at\' h:mm a' }}
+              Received {{ msg.created_at | date:"MMMM d, y 'at' h:mm a" }}
             </p>
           </div>
           <div class="flex-shrink-0">
             <div class="p-4 bg-[#1a9e3f]/8 border border-[#1a9e3f]/15 rounded-xl text-right">
               <div class="text-xs text-[#1a9e3f] font-semibold mb-1 uppercase tracking-wider">Earned</div>
-              <div class="text-3xl font-bold text-content mb-1">${{ (selectedMessage()?.amount_paid ?? 0) / 100 }}</div>
-              <span class="badge text-xs">{{ selectedMessage()?.message_type }}</span>
+              <div class="text-3xl font-bold text-content mb-1">${{ (msg.amount_paid ?? 0) / 100 }}</div>
+              <span class="badge text-xs">{{ msg.message_type }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Message Content -->
-        <div class="mb-6">
-          <div class="flex items-center gap-2.5 mb-3">
-            <div class="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-              <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            </div>
-            <span class="font-semibold text-content">Message</span>
-          </div>
-          <div class="p-4 bg-surface-raised rounded-xl text-content-secondary leading-relaxed">
-            {{ selectedMessage()?.message_content }}
-          </div>
-        </div>
+        <!-- ── Conversation Thread ──────────────────────────────────────────── -->
+        <div class="flex flex-col gap-3 mb-4 flex-1 overflow-y-auto max-h-[25rem]">
 
-        <!-- Reply Section -->
-        @if (selectedMessage()?.reply_content) {
-          <div class="mb-6 p-4 bg-[#1a9e3f]/8 border border-[#1a9e3f]/15 rounded-xl">
-            <div class="flex items-center gap-2.5 mb-3">
-              <div class="w-8 h-8 bg-[#1a9e3f]/15 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-[#1a9e3f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+          <!-- Original client message (left bubble) -->
+          <div class="flex gap-2.5">
+            <div class="w-7 h-7 rounded-full bg-surface-overlay border border-separator flex items-center justify-center flex-shrink-0 mt-1">
+              <svg class="w-3.5 h-3.5 text-content-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2 mb-1">
+                <span class="text-xs font-semibold text-content-secondary">{{ msg.sender_name }}</span>
+                <span class="text-xs text-content-muted">{{ msg.created_at | date:'MMM d, h:mm a' }}</span>
               </div>
-              <span class="font-semibold text-[#1a9e3f]">Your Reply</span>
-            </div>
-            <div class="text-content leading-relaxed mb-3">{{ selectedMessage()?.reply_content }}</div>
-            <div class="flex items-center gap-1.5 text-xs text-[#1a9e3f] font-medium">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              Sent {{ selectedMessage()?.replied_at | date:'MMMM d, y \'at\' h:mm a' }}
+              <div class="bg-surface-raised border border-separator rounded-2xl rounded-tl-sm px-4 py-3">
+                <p class="text-content-secondary text-sm whitespace-pre-wrap leading-relaxed">{{ msg.message_content }}</p>
+              </div>
             </div>
           </div>
-        }
 
-        <!-- Actions -->
-        <div class="flex gap-3">
-          @if (!selectedMessage()?.reply_content) {
-            <button (click)="openReplyModal(selectedMessage()!)" class="btn-primary btn-md flex-1 flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-              Reply to Message
-            </button>
+          <!-- Reply bubbles -->
+          @if (loadingReplies()) {
+            <div class="flex justify-center py-3">
+              <svg class="w-5 h-5 animate-spin text-accent/50" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </div>
           }
-          @if (!selectedMessage()?.is_handled) {
-            <button (click)="markAsHandled(selectedMessage()!)" class="btn-secondary btn-md flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              Mark as Replied
-            </button>
-          } @else {
-            <button (click)="onConfirmDelete(selectedMessage()!)" class="btn-danger btn-md flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-              Delete Message
-            </button>
+
+          @for (reply of replies(); track reply.id) {
+            @if (reply.sender_type === 'expert') {
+              <!-- Expert reply — right aligned, accent colour -->
+              <div class="flex gap-2.5 flex-row-reverse">
+                <div class="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
+                  <svg class="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2 mb-1 flex-row-reverse">
+                    <span class="text-xs font-semibold text-accent">You</span>
+                    <span class="text-xs text-content-muted">{{ reply.created_at | date:'MMM d, h:mm a' }}</span>
+                  </div>
+                  <div class="bg-accent/10 border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-3">
+                    <p class="text-content text-sm whitespace-pre-wrap leading-relaxed">{{ reply.content }}</p>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <!-- Client reply — left aligned -->
+              <div class="flex gap-2.5">
+                <div class="w-7 h-7 rounded-full bg-surface-overlay border border-separator flex items-center justify-center flex-shrink-0 mt-1">
+                  <svg class="w-3.5 h-3.5 text-content-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2 mb-1">
+                    <span class="text-xs font-semibold text-content-secondary">{{ msg.sender_name }}</span>
+                    <span class="text-xs text-content-muted">{{ reply.created_at | date:'MMM d, h:mm a' }}</span>
+                  </div>
+                  <div class="bg-surface-raised border border-separator rounded-2xl rounded-tl-sm px-4 py-3">
+                    <p class="text-content-secondary text-sm whitespace-pre-wrap leading-relaxed">{{ reply.content }}</p>
+                  </div>
+                </div>
+              </div>
+            }
           }
+
         </div>
+
+        <!-- ── Reply Box ────────────────────────────────────────────────────── -->
+        <div class="border-t border-separator pt-4">
+          <textarea
+            class="w-full bg-surface-raised border border-separator rounded-xl px-3 py-2.5 text-sm text-content placeholder-content-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/40 transition"
+            rows="3"
+            placeholder="Write your reply… Client will receive an email with a link to continue the conversation."
+            maxlength="5000"
+            [value]="replyText()"
+            (input)="onReplyInput($event)"
+            [disabled]="sendingReply()"
+          ></textarea>
+
+          <div class="flex items-center justify-between mt-2">
+            <span class="text-xs text-content-muted">{{ replyText().length }}/5000</span>
+            <div class="flex gap-2">
+              @if (msg.is_handled) {
+                <button (click)="onConfirmDelete(msg)" class="btn-danger btn-sm flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  Delete
+                </button>
+              } @else {
+                <button (click)="markAsHandled(msg)" class="btn-secondary btn-sm flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                  Mark handled
+                </button>
+              }
+              <button
+                (click)="sendInlineReply()"
+                [disabled]="!replyText().trim() || sendingReply()"
+                class="btn-primary btn-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                @if (sendingReply()) {
+                  <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  Sending…
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                  Send reply
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     } @else {
       <div class="card p-5 flex items-center justify-center min-h-[31.25rem] animate-fade-in">
@@ -192,7 +260,7 @@
             <svg class="w-10 h-10 text-accent/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
           </div>
           <p class="text-lg font-semibold text-content mb-1">No message selected</p>
-          <p class="text-content-muted text-sm">Choose a message from the inbox to view details</p>
+          <p class="text-content-muted text-sm">Choose a message from the inbox to view the conversation</p>
         </div>
       </div>
     }
@@ -200,20 +268,21 @@
 </div>
 
 <!-- Mobile Message Modal -->
-@if (showMessageModal() && selectedMessage()) {
+@if (showMessageModal() && selectedMessage(); as msg) {
   <div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end justify-center z-50 animate-fade-in lg:hidden">
     <div class="bg-surface-raised rounded-t-2xl w-full shadow-2xl animate-slide-up border-t border-separator max-h-[90vh] overflow-y-auto" style="animation-delay: 50ms">
       <div class="flex items-center justify-between p-5 pb-4 border-b border-separator sticky top-0 bg-surface-raised z-10">
-        <h3 class="text-lg font-bold text-content">{{ selectedMessage()?.sender_name }}</h3>
+        <h3 class="text-lg font-bold text-content">{{ msg.sender_name }}</h3>
         <button (click)="closeMessageModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:text-content hover:bg-surface-overlay transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>
 
       <div class="p-5">
-        <div class="mb-5">
-          <div class="flex items-center gap-2 mb-3">
-            @if (!selectedMessage()?.is_handled) {
+        <!-- Meta -->
+        <div class="mb-4">
+          <div class="flex items-center gap-2 mb-2">
+            @if (!msg.is_handled) {
               <span class="badge bg-[#b85c00]/15 text-[#b85c00] font-semibold">Pending</span>
             } @else {
               <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold flex items-center gap-1">
@@ -221,51 +290,67 @@
                 Replied
               </span>
             }
-            <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold">${{ (selectedMessage()?.amount_paid ?? 0) / 100 }}</span>
+            <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold">${{ (msg.amount_paid ?? 0) / 100 }}</span>
           </div>
-          <p class="text-content-secondary text-sm mb-1">{{ selectedMessage()?.sender_email }}</p>
-          <p class="text-xs text-content-muted">{{ selectedMessage()?.created_at | date:'MMMM d, y \'at\' h:mm a' }}</p>
+          <p class="text-content-secondary text-sm mb-1">{{ msg.sender_email }}</p>
+          <p class="text-xs text-content-muted">{{ msg.created_at | date:"MMMM d, y 'at' h:mm a" }}</p>
         </div>
 
-        <div class="mb-5">
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-7 h-7 bg-accent/10 rounded-md flex items-center justify-center">
-              <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            </div>
-            <span class="font-semibold text-content text-sm">Message</span>
+        <!-- Thread (mobile) -->
+        <div class="flex flex-col gap-3 mb-4">
+          <!-- Original message -->
+          <div class="p-3 bg-surface-overlay border border-separator rounded-xl">
+            <p class="text-xs font-semibold text-content-muted mb-1">Original message</p>
+            <p class="text-sm text-content-secondary leading-relaxed whitespace-pre-wrap">{{ msg.message_content }}</p>
           </div>
-          <div class="p-3 bg-surface-overlay rounded-lg text-content-secondary leading-relaxed text-sm">
-            {{ selectedMessage()?.message_content }}
-          </div>
-        </div>
 
-        @if (selectedMessage()?.reply_content) {
-          <div class="mb-5 p-3 bg-[#1a9e3f]/8 border border-[#1a9e3f]/15 rounded-lg">
-            <div class="flex items-center gap-2 mb-2">
-              <div class="w-7 h-7 bg-[#1a9e3f]/15 rounded-md flex items-center justify-center">
-                <svg class="w-3.5 h-3.5 text-[#1a9e3f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+          @for (reply of replies(); track reply.id) {
+            @if (reply.sender_type === 'expert') {
+              <div class="p-3 bg-accent/10 border border-accent/20 rounded-xl">
+                <p class="text-xs font-semibold text-accent mb-1">Your reply · {{ reply.created_at | date:'MMM d, h:mm a' }}</p>
+                <p class="text-sm text-content leading-relaxed whitespace-pre-wrap">{{ reply.content }}</p>
               </div>
-              <span class="font-semibold text-[#1a9e3f] text-sm">Your Reply</span>
-            </div>
-            <div class="text-content leading-relaxed text-sm mb-2">{{ selectedMessage()?.reply_content }}</div>
-            <div class="text-xs text-[#1a9e3f]">Sent {{ selectedMessage()?.replied_at | date:'MMMM d, y \'at\' h:mm a' }}</div>
-          </div>
-        }
+            } @else {
+              <div class="p-3 bg-surface-raised border border-separator rounded-xl">
+                <p class="text-xs font-semibold text-content-muted mb-1">{{ msg.sender_name }} · {{ reply.created_at | date:'MMM d, h:mm a' }}</p>
+                <p class="text-sm text-content-secondary leading-relaxed whitespace-pre-wrap">{{ reply.content }}</p>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Mobile reply box -->
+        <textarea
+          class="w-full bg-surface-overlay border border-separator rounded-xl px-3 py-2.5 text-sm text-content placeholder-content-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 transition mb-3"
+          rows="3"
+          placeholder="Write your reply…"
+          maxlength="5000"
+          [value]="replyText()"
+          (input)="onReplyInput($event)"
+          [disabled]="sendingReply()"
+        ></textarea>
 
         <div class="flex flex-col gap-2.5 pb-4">
-          @if (!selectedMessage()?.reply_content) {
-            <button (click)="openReplyModalFromMobile(selectedMessage()!)" class="btn-primary btn-md w-full flex items-center justify-center gap-2">
+          <button
+            (click)="sendInlineReplyFromMobile()"
+            [disabled]="!replyText().trim() || sendingReply()"
+            class="btn-primary btn-md w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (sendingReply()) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              Sending…
+            } @else {
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-              Reply to Message
-            </button>
-          }
-          @if (!selectedMessage()?.is_handled) {
-            <button (click)="markAsHandledFromMobile(selectedMessage()!)" class="btn-secondary btn-md w-full flex items-center justify-center gap-2">
+              Send reply
+            }
+          </button>
+          @if (!msg.is_handled) {
+            <button (click)="markAsHandledFromMobile(msg)" class="btn-secondary btn-md w-full flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
               Mark as Replied
             </button>
           } @else {
-            <button (click)="confirmDeleteFromMobile(selectedMessage()!)" class="btn-danger btn-md w-full flex items-center justify-center gap-2">
+            <button (click)="confirmDeleteFromMobile(msg)" class="btn-danger btn-md w-full flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               Delete Message
             </button>
@@ -274,14 +359,4 @@
       </div>
     </div>
   </div>
-}
-
-<!-- Reply Modal -->
-@if (showReplyModal()) {
-  <app-reply-modal
-    [message]="selectedMessage()"
-    [sendingReply]="sendingReply()"
-    (replySent)="onReplySent($event)"
-    (closed)="closeReplyModal()"
-  />
 }

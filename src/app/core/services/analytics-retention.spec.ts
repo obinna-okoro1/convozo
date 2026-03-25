@@ -475,4 +475,95 @@ describe('Analytics Retention – Frontend', () => {
       expect(retained.total_gross).toBe(20000);
     });
   });
+
+  // ── 11. Support stream (Migration 032) ───────────────────────────────────
+
+  describe('Support stream – migration 032 separate support analytics', () => {
+    it('CreatorMonthlyAnalytics has all 6 support_* fields', () => {
+      const row = makeMonthlyAnalytics();
+      expect('support_count' in row).toBeTrue();
+      expect('support_gross' in row).toBeTrue();
+      expect('support_platform_fee' in row).toBeTrue();
+      expect('support_net' in row).toBeTrue();
+      expect('support_refund_count' in row).toBeTrue();
+      expect('support_refund_amount' in row).toBeTrue();
+    });
+
+    it('support stream is independent of message stream', () => {
+      const row = makeMonthlyAnalytics({
+        message_count: 3,
+        message_gross: 3000,
+        message_net: 2340,
+        support_count: 2,
+        support_gross: 1000,
+        support_net: 780,
+      });
+      // The two streams are separate buckets — changing one doesn't affect the other
+      expect(row.message_count).toBe(3);
+      expect(row.support_count).toBe(2);
+      expect(row.message_gross).toBe(3000);
+      expect(row.support_gross).toBe(1000);
+    });
+
+    it('total_gross includes support tips (all 4 streams roll up)', () => {
+      const row = makeMonthlyAnalytics({
+        message_gross: 3000,
+        support_gross: 1000,
+        call_gross: 7500,
+        shop_gross: 500,
+        total_gross: 12000,
+      });
+      const computed = row.message_gross + row.support_gross + row.call_gross + row.shop_gross;
+      expect(row.total_gross).toBe(computed);
+    });
+
+    it('support refund does not reduce message_refund_count', () => {
+      const row = makeMonthlyAnalytics({
+        message_refund_count: 1,
+        message_refund_amount: 1000,
+        support_refund_count: 2,
+        support_refund_amount: 500,
+        total_refunds: 1500,
+      });
+      // Each stream tracks refunds independently
+      expect(row.message_refund_count).toBe(1);
+      expect(row.support_refund_count).toBe(2);
+      // total_refunds is sum of all streams' refund amounts
+      const expectedTotalRefunds =
+        row.message_refund_amount + row.support_refund_amount +
+        row.call_refund_amount + row.shop_refund_amount;
+      expect(row.total_refunds).toBe(expectedTotalRefunds);
+    });
+
+    it('support gross and net satisfy the 22% fee formula', () => {
+      const grossCents = 5000; // $50 support tip
+      const feeCents = platformFee(grossCents);
+      const netCents = creatorNet(grossCents);
+      const row = makeMonthlyAnalytics({
+        support_gross: grossCents,
+        support_platform_fee: feeCents,
+        support_net: netCents,
+      });
+      expect(row.support_platform_fee + row.support_net).toBe(row.support_gross);
+    });
+
+    it('a month with only support tips shows zero message_count', () => {
+      // Creator received tips but no paid DMs this month
+      const row = makeMonthlyAnalytics({
+        message_count: 0,
+        message_gross: 0,
+        support_count: 5,
+        support_gross: 2500,
+        total_gross: 2500,
+      });
+      expect(row.message_count).toBe(0);
+      expect(row.support_count).toBe(5);
+      expect(row.total_gross).toBe(row.support_gross);
+    });
+
+    it('centsToDisplay works correctly for support tip amounts', () => {
+      const row = makeMonthlyAnalytics({ support_gross: 2500 }); // $25 in tips
+      expect(centsToDisplay(row.support_gross)).toBeCloseTo(25);
+    });
+  });
 });

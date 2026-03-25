@@ -1,0 +1,353 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-950">
+
+  <!-- ══ Loading ══════════════════════════════════════════════════════════ -->
+  @if (view() === 'loading') {
+    <div class="flex flex-col items-center justify-center min-h-screen gap-4">
+      <svg class="w-8 h-8 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Loading your portal…</p>
+    </div>
+  }
+
+  <!-- ══ Unauthenticated — email form ═════════════════════════════════════ -->
+  @if (view() === 'unauthenticated') {
+    <div class="flex flex-col items-center justify-center min-h-screen px-4 py-12">
+      <div class="w-full max-w-sm">
+        <!-- Logo -->
+        <div class="flex items-center justify-center gap-2 mb-8">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">Convozo</span>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Your Portal</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            Enter the email you used to send a message or book a call. We'll send you a secure sign-in link.
+          </p>
+
+          <div class="space-y-4">
+            <div>
+              <label for="portal-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Email address
+              </label>
+              <input
+                id="portal-email"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                [value]="emailInput()"
+                (input)="onEmailInput($event)"
+                (keydown.enter)="sendMagicLink()"
+                class="w-full px-4 py-3 rounded-xl border text-sm
+                       bg-white dark:bg-gray-800
+                       text-gray-900 dark:text-white
+                       placeholder:text-gray-400 dark:placeholder:text-gray-500
+                       border-gray-300 dark:border-gray-700
+                       focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent
+                       transition"
+              />
+              @if (emailError()) {
+                <p class="mt-1.5 text-xs text-red-500">{{ emailError() }}</p>
+              }
+            </div>
+
+            <button
+              type="button"
+              (click)="sendMagicLink()"
+              [disabled]="isSending()"
+              class="w-full py-3 rounded-xl font-semibold text-sm text-white
+                     bg-gradient-to-r from-violet-600 to-pink-600
+                     hover:opacity-90 active:scale-[0.98]
+                     disabled:opacity-60 disabled:cursor-not-allowed
+                     transition-all"
+            >
+              @if (isSending()) {
+                <span class="flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  Sending…
+                </span>
+              } @else {
+                Send sign-in link
+              }
+            </button>
+
+            @if (sendError()) {
+              <p class="text-xs text-red-500 text-center">{{ sendError() }}</p>
+            }
+          </div>
+        </div>
+
+        <p class="mt-6 text-xs text-gray-400 text-center">
+          Are you an expert?
+          <a routerLink="/auth/login" class="text-violet-600 hover:underline">Sign in to your dashboard →</a>
+        </p>
+      </div>
+    </div>
+  }
+
+  <!-- ══ Link sent ════════════════════════════════════════════════════════ -->
+  @if (view() === 'link-sent') {
+    <div class="flex flex-col items-center justify-center min-h-screen px-4 py-12">
+      <div class="w-full max-w-sm text-center">
+        <div class="w-16 h-16 bg-violet-100 dark:bg-violet-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Check your inbox</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          We sent a sign-in link to <strong class="text-gray-700 dark:text-gray-300">{{ emailInput() }}</strong>.
+          Click the link in the email to access your portal.
+        </p>
+        <p class="mt-4 text-xs text-gray-400">
+          The link expires in 24 hours. Didn't receive it?
+          <button type="button" (click)="view.set('unauthenticated')" class="text-violet-600 hover:underline">
+            Try again
+          </button>
+        </p>
+      </div>
+    </div>
+  }
+
+  <!-- ══ Authenticated ════════════════════════════════════════════════════ -->
+  @if (view() === 'authenticated') {
+    <!-- Header -->
+    <header class="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+      <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </div>
+          <span class="font-bold text-gray-900 dark:text-white text-sm">My Portal</span>
+        </div>
+        <div class="flex items-center gap-3">
+          @if (user()?.email) {
+            <span class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block truncate max-w-[12rem]">
+              {{ user()!.email }}
+            </span>
+          }
+          <button
+            type="button"
+            (click)="signOut()"
+            class="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-6">
+
+      <!-- Load error banner -->
+      @if (loadError()) {
+        <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400">
+          {{ loadError() }}
+        </div>
+      }
+
+      <!-- Tab bar -->
+      <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800/60 p-1 rounded-xl w-fit">
+        <button
+          type="button"
+          (click)="setTab('messages')"
+          [class]="activeTab() === 'messages'
+            ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm transition'
+            : 'px-5 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition'"
+        >
+          Messages
+          @if (messages().length > 0) {
+            <span class="ml-1.5 text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">
+              {{ messages().length }}
+            </span>
+          }
+        </button>
+        <button
+          type="button"
+          (click)="setTab('bookings')"
+          [class]="activeTab() === 'bookings'
+            ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm transition'
+            : 'px-5 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition'"
+        >
+          Call Bookings
+          @if (bookings().length > 0) {
+            <span class="ml-1.5 text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">
+              {{ bookings().length }}
+            </span>
+          }
+        </button>
+      </div>
+
+      <!-- ── Messages tab ──────────────────────────────────────────────── -->
+      @if (activeTab() === 'messages') {
+        @if (messages().length === 0) {
+          <div class="text-center py-16 text-gray-400 dark:text-gray-600">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <p class="text-sm">No messages yet</p>
+          </div>
+        }
+
+        <div class="space-y-3">
+          @for (msg of messages(); track msg.id) {
+            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+              <!-- Expert + meta row -->
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  @if (msg.creator.profile_picture_url) {
+                    <img
+                      [src]="msg.creator.profile_picture_url"
+                      [alt]="msg.creator.display_name"
+                      class="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                    />
+                  } @else {
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-pink-400 flex-shrink-0 flex items-center justify-center">
+                      <span class="text-sm font-bold text-white">{{ msg.creator.display_name.charAt(0) }}</span>
+                    </div>
+                  }
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ msg.creator.display_name }}</p>
+                    <p class="text-xs text-gray-400">{{ formatDate(msg.created_at) }} · {{ formatCurrency(msg.amount_paid) }}</p>
+                  </div>
+                </div>
+
+                <!-- Status badges -->
+                <div class="flex-shrink-0 flex flex-col items-end gap-1">
+                  @if (msg.replied_at) {
+                    <span class="inline-flex items-center gap-1 text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                      Replied
+                    </span>
+                  } @else {
+                    <span class="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
+                      Awaiting reply
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Message preview -->
+              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-3 mb-4">
+                {{ msg.message_content }}
+              </p>
+
+              <!-- Conversation CTA -->
+              @if (msg.conversation_token) {
+                <a
+                  [routerLink]="conversationUrl(msg.conversation_token)"
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition"
+                >
+                  View conversation
+                  @if (expertReplyCount(msg) > 0) {
+                    <span class="bg-violet-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+                      {{ expertReplyCount(msg) }}
+                    </span>
+                  }
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ── Bookings tab ───────────────────────────────────────────────── -->
+      @if (activeTab() === 'bookings') {
+        @if (bookings().length === 0) {
+          <div class="text-center py-16 text-gray-400 dark:text-gray-600">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <p class="text-sm">No call bookings yet</p>
+          </div>
+        }
+
+        <div class="space-y-3">
+          @for (booking of bookings(); track booking.id) {
+            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+              <!-- Expert + meta row -->
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  @if (booking.creator.profile_picture_url) {
+                    <img
+                      [src]="booking.creator.profile_picture_url"
+                      [alt]="booking.creator.display_name"
+                      class="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                    />
+                  } @else {
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-pink-400 flex-shrink-0 flex items-center justify-center">
+                      <span class="text-sm font-bold text-white">{{ booking.creator.display_name.charAt(0) }}</span>
+                    </div>
+                  }
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ booking.creator.display_name }}</p>
+                    <p class="text-xs text-gray-400">
+                      {{ booking.duration }}-min call · {{ formatCurrency(booking.amount_paid) }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Status badge -->
+                <span
+                  [class]="booking.status === 'completed'
+                    ? 'text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full flex-shrink-0'
+                    : booking.status === 'confirmed' || booking.status === 'in_progress'
+                    ? 'text-xs font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 px-2 py-0.5 rounded-full flex-shrink-0'
+                    : 'text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-full flex-shrink-0'"
+                >
+                  {{ bookingStatusLabel(booking.status) }}
+                </span>
+              </div>
+
+              <!-- Scheduled time -->
+              @if (booking.scheduled_at) {
+                <div class="flex items-center gap-2 mb-3 text-xs text-gray-500 dark:text-gray-400">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {{ formatDateTime(booking.scheduled_at, booking.fan_timezone) }}
+                </div>
+              }
+
+              <!-- Notes preview -->
+              @if (booking.call_notes) {
+                <p class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-2 mb-4">
+                  "{{ booking.call_notes }}"
+                </p>
+              }
+
+              <!-- Join button -->
+              @if (isCallJoinable(booking)) {
+                <a
+                  [routerLink]="joinUrl(booking.id, booking.fan_access_token)"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold rounded-xl transition"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Join Call
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+
+    </main>
+  }
+
+</div>

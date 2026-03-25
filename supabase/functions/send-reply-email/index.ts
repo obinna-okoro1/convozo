@@ -2,6 +2,7 @@ import { sendEmail, creatorReplyEmail } from '../_shared/email.ts';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { supabase } from '../_shared/supabase.ts';
 import { jsonOk, jsonError, requireAuth, makeRateLimiter } from '../_shared/http.ts';
+import { generateMagicLink } from '../_shared/magic-link.ts';
 
 /** Maximum allowed reply length (characters). */
 const MAX_REPLY_LENGTH = 5000;
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
     // ── 3. Fetch message & verify ownership ───────────────────────────────
     const { data: message, error: messageError } = await supabase
       .from('messages')
-      .select('id, sender_email, message_content, replied_at, creators(display_name, user_id)')
+      .select('id, sender_email, message_content, replied_at, conversation_token, creators(display_name, user_id)')
       .eq('id', messageId)
       .single();
 
@@ -70,33 +71,49 @@ Deno.serve(async (req) => {
       return jsonError('Forbidden', 403, corsHeaders);
     }
 
-    // Prevent double-replying
-    if (message.replied_at) {
-      return jsonError('This message has already been replied to', 409, corsHeaders);
+    // ── 4. Persist the reply ──────────────────────────────────────────────
+    // Update the parent message: mark handled; set reply_content only on first reply
+    const updatePayload: Record<string, unknown> = { is_handled: true };
+    if (!message.replied_at) {
+      updatePayload.reply_content = replyContent;
+      updatePayload.replied_at = new Date().toISOString();
     }
 
-    // ── 4. Persist the reply ──────────────────────────────────────────────
     const { error: updateError } = await supabase
       .from('messages')
-      .update({
-        reply_content: replyContent,
-        replied_at: new Date().toISOString(),
-        is_handled: true,
-      })
+      .update(updatePayload)
       .eq('id', messageId);
 
     if (updateError) {
       throw updateError;
     }
 
+    // Also record in message_replies for the full thread
+    const { error: replyInsertError } = await supabase
+      .from('message_replies')
+      .insert({ message_id: messageId, sender_type: 'expert', content: replyContent });
+
+    if (replyInsertError) {
+      // Non-fatal: log but don't fail the request — the reply_content is already set
+      console.error('[send-reply-email] Failed to insert into message_replies:', replyInsertError);
+    }
+
     // ── 5. Send notification email (fire-and-forget) ──────────────────────
+    const appUrl = Deno.env.get('APP_URL') ?? 'https://convozo.com';
+    const conversationUrl = `${appUrl}/conversation/${message.conversation_token}`;
+
+    // Generate a fresh magic link so the client can jump straight to their portal
+    const portalUrl = await generateMagicLink(message.sender_email);
+
     const emailPayload = creatorReplyEmail({
       creatorName: message.creators.display_name,
       originalMessage: message.message_content,
       replyContent,
+      conversationUrl,
+      portalUrl: portalUrl ?? undefined,
     });
 
-    const sent = await sendEmail({ to: message.sender_email, ...emailPayload, idempotencyKey: `reply_${messageId}` });
+    const sent = await sendEmail({ to: message.sender_email, ...emailPayload, idempotencyKey: `reply_${messageId}_${Date.now()}` });
     if (!sent) {
       console.error('[send-reply-email] Email delivery failed for message:', messageId);
     }

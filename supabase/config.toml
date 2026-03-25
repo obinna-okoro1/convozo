@@ -415,11 +415,21 @@ verify_jwt = false  # Auth handled internally via getUser(token)
 [functions.paystack-webhook]
 verify_jwt = false  # Paystack authenticates via webhook signature verification
 
+[functions.get-conversation]
+verify_jwt = false  # Public — uses conversation_token for ownership, no JWT needed
+
+[functions.post-client-reply]
+verify_jwt = false  # Public — uses conversation_token for ownership, no JWT needed
+
+[functions.get-client-portal]
+verify_jwt = false  # Auth handled internally via requireAuth (magic-link JWT)
+
 [edge_runtime.secrets]
 STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
 APP_URL = "env(APP_URL)"
 PLATFORM_FEE_PERCENTAGE = "env(PLATFORM_FEE_PERCENTAGE)"
+PAYSTACK_SECRET_KEY = "env(PAYSTACK_SECRET_KEY)"
 
 [analytics]
 enabled = true

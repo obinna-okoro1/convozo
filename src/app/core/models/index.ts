@@ -14,3 +14,4 @@ export * from './link.model';
 export * from './availability.model';
 export * from './analytics.model';
 export * from './common.model';
+export * from './post.model';

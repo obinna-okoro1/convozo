@@ -2,15 +2,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   input,
+  OnDestroy,
   output,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Message, MessageStats, FilterStatus } from '../../../../../core/models';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { Message, MessageReply, MessageStats, FilterStatus } from '../../../../../core/models';
 import { MessageService } from '../../../services/message.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
-import { ReplyModalComponent } from '../reply-modal/reply-modal.component';
 import {
   SearchableSelectComponent,
   SelectOption,
@@ -18,11 +21,11 @@ import {
 
 @Component({
   selector: 'app-inbox-panel',
-  imports: [CommonModule, ReplyModalComponent, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, DatePipe, SearchableSelectComponent],
   templateUrl: './inbox-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InboxPanelComponent {
+export class InboxPanelComponent implements OnDestroy {
   public readonly messages = input.required<Message[]>();
 
   public readonly markHandled = output<Message>();
@@ -31,8 +34,16 @@ export class InboxPanelComponent {
   protected readonly sendingReply = signal<boolean>(false);
   protected readonly selectedMessage = signal<Message | null>(null);
   protected readonly showMessageModal = signal<boolean>(false);
-  protected readonly showReplyModal = signal<boolean>(false);
   protected readonly filterStatus = signal<FilterStatus>('all');
+
+  // ── Thread state ───────────────────────────────────────────────────────────
+  /** Replies for the currently selected message. */
+  protected readonly replies = signal<MessageReply[]>([]);
+  protected readonly loadingReplies = signal<boolean>(false);
+  /** Inline reply textarea bound value. */
+  protected readonly replyText = signal<string>('');
+
+  private repliesChannel: RealtimeChannel | null = null;
 
   protected readonly stats = computed<MessageStats>(() =>
     this.messageService.calculateStats(this.messages()),
@@ -41,17 +52,23 @@ export class InboxPanelComponent {
   constructor(
     private readonly messageService: MessageService,
     private readonly toast: ToastService,
-  ) {}
+  ) {
+    // Reload replies whenever the selected message changes.
+    effect(() => {
+      const msg = this.selectedMessage();
+      void this.loadReplies(msg?.id ?? null);
+    });
+  }
+
+  public ngOnDestroy(): void {
+    this.teardownRepliesSubscription();
+  }
 
   protected readonly filteredMessages = computed<Message[]>(() => {
     const msgs = this.messages();
     const status = this.filterStatus();
-    if (status === 'unhandled') {
-      return msgs.filter((m) => !m.is_handled);
-    }
-    if (status === 'handled') {
-      return msgs.filter((m) => m.is_handled);
-    }
+    if (status === 'unhandled') return msgs.filter((m) => !m.is_handled);
+    if (status === 'handled') return msgs.filter((m) => m.is_handled);
     return msgs;
   });
 
@@ -70,6 +87,7 @@ export class InboxPanelComponent {
 
   protected handleMessageClick(message: Message): void {
     this.selectedMessage.set(message);
+    this.replyText.set('');
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       this.showMessageModal.set(true);
     }
@@ -82,37 +100,38 @@ export class InboxPanelComponent {
     this.showMessageModal.set(false);
   }
 
-  protected openReplyModal(message: Message): void {
-    this.selectedMessage.set(message);
-    this.showReplyModal.set(true);
-  }
+  // ── Inline reply (threaded) ────────────────────────────────────────────────
 
-  protected closeReplyModal(): void {
-    this.showReplyModal.set(false);
-  }
-
-  protected async onReplySent(content: string): Promise<void> {
+  protected async sendInlineReply(): Promise<void> {
     const message = this.selectedMessage();
-    if (!message) {
-      return;
-    }
+    const content = this.replyText().trim();
+    if (!message || !content || this.sendingReply()) return;
 
     this.sendingReply.set(true);
 
-    const result = await this.messageService.replyToMessage(
-      message.id,
-      content,
-      message.sender_email,
-    );
+    const result = await this.messageService.replyToMessage(message.id, content, message.sender_email);
 
     if (result.success) {
+      this.replyText.set('');
       this.toast.success('Reply sent!');
-      this.closeReplyModal();
+      // Optimistically append the expert reply to the local thread
+      const optimistic: MessageReply = {
+        id: crypto.randomUUID(),
+        message_id: message.id,
+        sender_type: 'expert',
+        content,
+        created_at: new Date().toISOString(),
+      };
+      this.replies.update((prev) => [...prev, optimistic]);
     } else {
       this.toast.error(result.error ?? 'Failed to send reply');
     }
 
     this.sendingReply.set(false);
+  }
+
+  protected onReplyInput(event: Event): void {
+    this.replyText.set((event.target as HTMLTextAreaElement).value);
   }
 
   protected markAsHandled(message: Message): void {
@@ -123,11 +142,6 @@ export class InboxPanelComponent {
     this.confirmDelete.emit(message);
   }
 
-  protected openReplyModalFromMobile(message: Message): void {
-    this.closeMessageModal();
-    this.openReplyModal(message);
-  }
-
   protected markAsHandledFromMobile(message: Message): void {
     this.closeMessageModal();
     this.markHandled.emit(message);
@@ -136,5 +150,38 @@ export class InboxPanelComponent {
   protected confirmDeleteFromMobile(message: Message): void {
     this.closeMessageModal();
     this.confirmDelete.emit(message);
+  }
+
+  protected sendInlineReplyFromMobile(): void {
+    this.closeMessageModal();
+    void this.sendInlineReply();
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
+
+  private async loadReplies(messageId: string | null): Promise<void> {
+    this.teardownRepliesSubscription();
+    this.replies.set([]);
+    this.replyText.set('');
+
+    if (!messageId) return;
+
+    this.loadingReplies.set(true);
+    const { data } = await this.messageService.getReplies(messageId);
+    this.loadingReplies.set(false);
+
+    if (data) this.replies.set(data);
+
+    // Subscribe to new replies in real-time
+    this.repliesChannel = this.messageService.subscribeToReplies(messageId, (updated) => {
+      this.replies.set(updated);
+    });
+  }
+
+  private teardownRepliesSubscription(): void {
+    if (this.repliesChannel) {
+      this.messageService.unsubscribeFromReplies(this.repliesChannel);
+      this.repliesChannel = null;
+    }
   }
 }

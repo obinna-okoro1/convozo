@@ -29,6 +29,9 @@ Covered functions:
   ✓ get-paystack-banks (country validation, resolve mode, live bank list for NG/ZA)
   ✓ create-paystack-subaccount (auth guard, body validation, country routing)
   ✓ paystack-webhook (HMAC-SHA512 signature, event routing, Paystack verify)
+  ✓ get-conversation (token validation, 404 on unknown token)
+  ✓ post-client-reply (token/content validation, 404 on unknown, 405 on GET)
+  ✓ get-client-portal (auth guard — 401 without JWT)
 """
 
 import argparse
@@ -1135,6 +1138,117 @@ def test_paystack_webhook_charge_triggers_verify() -> list[TestResult]:
     )]
 
 
+# ── get-conversation ─────────────────────────────────────────────────────────
+
+def test_conversation_missing_token() -> list[TestResult]:
+    """POST with no body / missing token field must return 400."""
+    status, body = _post("get-conversation", {})
+    return [expect_status("get-conversation – missing token returns 400", status, 400, body)]
+
+
+def test_conversation_invalid_token_format() -> list[TestResult]:
+    """A non-UUID token string must be rejected with 400 (not a 5xx)."""
+    status, body = _post("get-conversation", {"token": "not-a-uuid"})
+    return [expect_status("get-conversation – non-UUID token returns 400", status, 400, body)]
+
+
+def test_conversation_unknown_token() -> list[TestResult]:
+    """A syntactically valid UUID that matches no message must return 404."""
+    import uuid
+    unknown = str(uuid.uuid4())
+    status, body = _post("get-conversation", {"token": unknown})
+    return [expect_status("get-conversation – unknown token returns 404", status, 404, body)]
+
+
+def test_conversation_get_not_allowed() -> list[TestResult]:
+    """GET is not allowed — must return 405."""
+    url = f"{BASE_URL}/get-conversation"
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            got = resp.status
+    except urllib.error.HTTPError as exc:
+        got = exc.code
+    passed = got == 405
+    return [TestResult(
+        "get-conversation – GET returns 405",
+        passed,
+        f"status={got}",
+    )]
+
+
+# ── post-client-reply ─────────────────────────────────────────────────────────
+
+def test_client_reply_missing_token() -> list[TestResult]:
+    """POST with no token field must return 400."""
+    status, body = _post("post-client-reply", {"content": "Hello"})
+    return [expect_status("post-client-reply – missing token returns 400", status, 400, body)]
+
+
+def test_client_reply_invalid_token_format() -> list[TestResult]:
+    """A non-UUID token must be rejected with 400."""
+    status, body = _post("post-client-reply", {"token": "bad-token", "content": "Hello"})
+    return [expect_status("post-client-reply – non-UUID token returns 400", status, 400, body)]
+
+
+def test_client_reply_missing_content() -> list[TestResult]:
+    """POST with a valid UUID token but empty content must return 400."""
+    import uuid
+    status, body = _post("post-client-reply", {"token": str(uuid.uuid4()), "content": ""})
+    return [expect_status("post-client-reply – empty content returns 400", status, 400, body)]
+
+
+def test_client_reply_content_too_long() -> list[TestResult]:
+    """Content exceeding 5000 characters must be rejected with 400."""
+    import uuid
+    status, body = _post(
+        "post-client-reply",
+        {"token": str(uuid.uuid4()), "content": "x" * 5001},
+    )
+    return [expect_status("post-client-reply – content > 5000 chars returns 400", status, 400, body)]
+
+
+def test_client_reply_unknown_token() -> list[TestResult]:
+    """Valid UUID token with no matching conversation must return 404."""
+    import uuid
+    status, body = _post(
+        "post-client-reply",
+        {"token": str(uuid.uuid4()), "content": "Hello there!"},
+    )
+    return [expect_status("post-client-reply – unknown token returns 404", status, 404, body)]
+
+
+def test_client_reply_get_not_allowed() -> list[TestResult]:
+    """GET is not allowed — must return 405."""
+    url = f"{BASE_URL}/post-client-reply"
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            got = resp.status
+    except urllib.error.HTTPError as exc:
+        got = exc.code
+    passed = got == 405
+    return [TestResult(
+        "post-client-reply – GET returns 405",
+        passed,
+        f"status={got}",
+    )]
+
+
+# ── get-client-portal ─────────────────────────────────────────────────────────
+
+def test_client_portal_no_auth() -> list[TestResult]:
+    """Request without an Authorization header must return 401."""
+    status, body = _post_no_auth("get-client-portal", {})
+    return [expect_status("get-client-portal – no auth returns 401", status, 401, body)]
+
+
+def test_client_portal_anon_key_rejected() -> list[TestResult]:
+    """The Supabase anon key is not a valid user JWT — must return 401."""
+    status, body = _post("get-client-portal", {})
+    return [expect_status("get-client-portal – anon key returns 401", status, 401, body)]
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 ALL_SUITES = {
@@ -1203,6 +1317,24 @@ ALL_SUITES = {
         test_paystack_webhook_invalid_signature,
         test_paystack_webhook_unhandled_event,
         test_paystack_webhook_charge_triggers_verify,
+    ],
+    "get-conversation": [
+        test_conversation_missing_token,
+        test_conversation_invalid_token_format,
+        test_conversation_unknown_token,
+        test_conversation_get_not_allowed,
+    ],
+    "post-client-reply": [
+        test_client_reply_missing_token,
+        test_client_reply_invalid_token_format,
+        test_client_reply_missing_content,
+        test_client_reply_content_too_long,
+        test_client_reply_unknown_token,
+        test_client_reply_get_not_allowed,
+    ],
+    "get-client-portal": [
+        test_client_portal_no_auth,
+        test_client_portal_anon_key_rejected,
     ],
 }
 

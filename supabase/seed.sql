@@ -563,6 +563,38 @@ INSERT INTO public.shop_orders (
    'cs_test_a1b2c3d4e5f6g7h12', 'idempotency_order_005',
    'completed', null, NOW() - INTERVAL '2 days');
 
+-- Sample Posts for Sarah Johnson
+INSERT INTO public.creator_posts (id, creator_id, title, content, is_published, created_at, updated_at) VALUES
+  ('eeeeeeee-0001-0001-0001-eeeeeeeeeeee',
+   '33333333-3333-3333-3333-333333333333',
+   'How I structure my client consultations',
+   'Every session I do starts with 10 minutes of pure listening. No advice, no frameworks — just understanding what the person actually needs. Most problems reveal their own solutions once you slow down enough to hear them clearly.',
+   true, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
+
+  ('eeeeeeee-0002-0002-0002-eeeeeeeeeeee',
+   '33333333-3333-3333-3333-333333333333',
+   'The one question that changes everything',
+   'Before any client books with me, I ask them: "What would success look like 90 days from now?" Not tomorrow. Not "I want to feel better." Ninety days. That single question separates people who are ready to do the work from people who just want to vent.',
+   true, NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
+
+  ('eeeeeeee-0003-0003-0003-eeeeeeeeeeee',
+   '33333333-3333-3333-3333-333333333333',
+   'On boundaries and energy management',
+   'I used to take calls on Sunday evenings. My availability looked impressive. My burnout wasn''t. Setting hard stop times isn''t selfishness — it''s how you stay sharp for the clients who deserve your best thinking.',
+   true, NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days'),
+
+  ('eeeeeeee-0004-0004-0004-eeeeeeeeeeee',
+   '33333333-3333-3333-3333-333333333333',
+   'Three signs a client is ready to level up',
+   'They stop asking "what should I do" and start asking "here''s what I''m thinking — what am I missing?" That shift from seeking answers to refining thinking is everything. That''s when our sessions go from good to genuinely transformative.',
+   true, NOW() - INTERVAL '10 days', NOW() - INTERVAL '10 days'),
+
+  ('eeeeeeee-0005-0005-0005-eeeeeeeeeeee',
+   '33333333-3333-3333-3333-333333333333',
+   NULL,
+   'Reminder: your first session with any expert should feel slightly uncomfortable. Not because they''re being harsh — because growth lives just outside your current comfort zone. If every conversation feels easy, you''re probably not being challenged enough.',
+   true, NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days');
+
 -- Output summary
 SELECT 'Seed data inserted successfully!' as message;
 SELECT '✅ Created 2 test users (password: sample123)' as info_1;
@@ -575,6 +607,7 @@ SELECT '✅ Created 12 sample links (7 for Sarah, 5 for Mike)' as info_7;
 SELECT '✅ Created 40 sample link clicks' as info_8;
 SELECT '✅ Created 12 sample shop items (9 for Sarah, 3 for Mike)' as info_9;
 SELECT '✅ Created 5 sample shop orders (3 completed, 1 pending, 1 completed)' as info_10;
+SELECT '✅ Created 5 posts for Sarah Johnson' as info_11;
 SELECT '' as separator;
 SELECT 'Test Users:' as users_header;
 SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min, Shop: ENABLED' as user_1;

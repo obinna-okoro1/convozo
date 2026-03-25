@@ -16,6 +16,7 @@ import {
 } from '../../_shared/email.ts';
 import { createRoom, createMeetingToken } from '../../_shared/daily.ts';
 import { getAppUrl } from '../../_shared/http.ts';
+import { generateMagicLink } from '../../_shared/magic-link.ts';
 import { sendPushNotification } from './push-notification.ts';
 
 /** Metadata shape expected on call booking checkout sessions. */
@@ -103,7 +104,8 @@ export async function handleCallBooking(
     const fanJoinUrl = `${appUrl}/call/${booking.id}?role=fan&token=${fanToken}`;
     const creatorJoinUrl = `${appUrl}/call/${booking.id}?role=creator`;
 
-    // 1. Booker confirmation
+    // 1. Booker confirmation — includes magic-link to client portal
+    const portalUrl = await generateMagicLink(booker_email);
     const bookerPayload = callBookingConfirmationEmail({
       bookerName: booker_name,
       creatorName: creator.display_name,
@@ -112,6 +114,7 @@ export async function handleCallBooking(
       callJoinUrl: fanJoinUrl,
       scheduledAt: scheduled_at || undefined,
       fanTimezone: fan_timezone || undefined,
+      portalUrl: portalUrl ?? undefined,
     });
     await sendEmail({ to: booker_email, ...bookerPayload, idempotencyKey: `${session.id}_call_booker` });
 

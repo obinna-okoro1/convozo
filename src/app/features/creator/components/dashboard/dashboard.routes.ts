@@ -35,6 +35,11 @@ export const DASHBOARD_ROUTES: Routes = [
       ),
   },
   {
+    path: 'posts',
+    loadComponent: () =>
+      import('./views/posts-view/posts-view.component').then((m) => m.PostsViewComponent),
+  },
+  {
     path: '',
     redirectTo: 'links',
     pathMatch: 'full',

@@ -728,43 +728,65 @@ def test_platform_fee_is_22_percent_integer_cents() -> list[TestResult]:
 def test_account_deletion_cascades_analytics() -> list[TestResult]:
     """
     When a creator's account (auth.users row) is deleted, all their analytics
-    rows must be cascade-deleted via the creators → creator_monthly_analytics FK.
+    rows must be cascade-deleted via the chain:
+      auth.users → public.creators (ON DELETE CASCADE)
+                 → public.creator_monthly_analytics (ON DELETE CASCADE)
 
-    We create a temporary creator, insert an analytics row, delete the creator
-    record from public.creators (simulating auth deletion), and verify the
-    analytics row is gone.
+    We create a temporary auth.users row (required by the FK on creators.user_id),
+    insert the creator, insert an analytics row, then delete the auth.users row
+    and verify the analytics row is gone via the double cascade.
     """
     creator_id = str(uuid.uuid4())
     user_id = str(uuid.uuid4())
+    test_email = f"del-test-{user_id[:8]}@example.com"
 
-    # Insert a minimal creator (no auth.users FK here since we only manage public schema)
-    # Insert directly into public.creators — bypasses auth requirement in test context
+    # ── 1. Insert a minimal auth.users row to satisfy creators.user_id FK ────
+    # We use the postgres superuser (docker exec psql -U postgres) which can
+    # write directly to the auth schema.
     try:
         sql_exec(
-            f"INSERT INTO public.creators (id, user_id, email, display_name, slug) "
-            f"VALUES ('{creator_id}', '{user_id}', 'del-test@example.com', "
-            f"        'Delete Test Creator', 'delete-test-{creator_id[:8]}');"
+            f"INSERT INTO auth.users "
+            f"  (id, aud, role, email, encrypted_password, email_confirmed_at, "
+            f"   created_at, updated_at, raw_app_meta_data, raw_user_meta_data, "
+            f"   is_super_admin, is_sso_user, is_anonymous) "
+            f"VALUES "
+            f"  ('{user_id}', 'authenticated', 'authenticated', '{test_email}', "
+            f"   '', NOW(), NOW(), NOW(), '{{}}', '{{}}', false, false, false);"
         )
     except RuntimeError as e:
         return [fail(
             "account deletion cascade – analytics deleted with creator",
-            f"Could not insert test creator (FK to auth.users): {e}"
+            f"Could not insert auth.users row: {e}"
         )]
 
-    # Insert an analytics row for this creator
+    # ── 2. Insert the creator (now satisfies FK) ──────────────────────────────
+    try:
+        sql_exec(
+            f"INSERT INTO public.creators (id, user_id, email, display_name, slug) "
+            f"VALUES ('{creator_id}', '{user_id}', '{test_email}', "
+            f"        'Delete Test Creator', 'delete-test-{creator_id[:8]}');"
+        )
+    except RuntimeError as e:
+        # Clean up auth user before failing
+        sql_exec(f"DELETE FROM auth.users WHERE id = '{user_id}';")
+        return [fail(
+            "account deletion cascade – analytics deleted with creator",
+            f"Could not insert test creator: {e}"
+        )]
+
+    # ── 3. Insert an analytics row for this creator ───────────────────────────
     sql_exec(
         f"INSERT INTO public.creator_monthly_analytics (creator_id, month) "
         f"VALUES ('{creator_id}', '2026-01-01');"
     )
 
-    # Confirm it exists
     count_before = sql_scalar(
         f"SELECT COUNT(*) FROM public.creator_monthly_analytics "
         f"WHERE creator_id = '{creator_id}';"
     )
 
-    # Delete the creator record (cascade should remove analytics)
-    sql_exec(f"DELETE FROM public.creators WHERE id = '{creator_id}';")
+    # ── 4. Delete auth.users → cascades to creators → cascades to analytics ──
+    sql_exec(f"DELETE FROM auth.users WHERE id = '{user_id}';")
 
     count_after = sql_scalar(
         f"SELECT COUNT(*) FROM public.creator_monthly_analytics "

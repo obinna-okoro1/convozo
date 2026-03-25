@@ -3,6 +3,7 @@ import { ERROR_MESSAGES } from '../../../../core/constants';
 import {
   CreatorProfile,
   CreatorLink,
+  CreatorPost,
   AvailabilitySlot,
   CheckoutSessionPayload,
   ShopCheckoutPayload,
@@ -28,6 +29,9 @@ export class MessagePageStateService {
 
   // ── Links data ──
   readonly creatorLinks = signal<CreatorLink[]>([]);
+
+  // ── Posts feed (5 most recent, for public profile preview) ──
+  readonly creatorPosts = signal<CreatorPost[]>([]);
 
   // ── UI state ──
   readonly submitting = signal<boolean>(false);
@@ -163,8 +167,12 @@ export class MessagePageStateService {
         this.creatorSettings.set(settings);
       }
 
-      await this.loadAvailabilitySlots((data as CreatorProfile).id);
-      await this.loadCreatorLinks((data as CreatorProfile).id);
+      const creatorId = (data as CreatorProfile).id;
+      await Promise.all([
+        this.loadAvailabilitySlots(creatorId),
+        this.loadCreatorLinks(creatorId),
+        this.loadCreatorPosts(creatorId),
+      ]);
     } catch {
       this.error.set('Failed to load creator');
     } finally {
@@ -198,6 +206,24 @@ export class MessagePageStateService {
       }
     } catch (err) {
       console.error('Failed to load creator links:', err);
+    }
+  }
+
+  private async loadCreatorPosts(creatorId: string): Promise<void> {
+    try {
+      const { data, error } = await this.supabaseService.client
+        .from('creator_posts')
+        .select('id, title, content, created_at, updated_at')
+        .eq('creator_id', creatorId)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error == null && data != null) {
+        this.creatorPosts.set(data as CreatorPost[]);
+      }
+    } catch (err) {
+      console.error('Failed to load creator posts:', err);
     }
   }
 
