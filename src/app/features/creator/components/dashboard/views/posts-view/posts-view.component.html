@@ -35,7 +35,7 @@
         [value]="draft()"
         (input)="onDraftInput($event)"
         [disabled]="submitting()"
-        maxlength="800"
+        maxlength="4000"
         aria-label="Compose a post"
       ></textarea>
 
@@ -125,9 +125,18 @@
             @if (post.title) {
               <p class="text-sm font-semibold text-content mb-1 leading-snug">{{ post.title }}</p>
             }
-            <p class="text-sm text-content leading-relaxed whitespace-pre-wrap break-words">
+            <!-- Collapsed: show one line with "See more"; expanded: full text with "See less" -->
+            <p class="text-sm text-content leading-relaxed break-words"
+               [class.line-clamp-1]="expandedPostId() !== post.id">
               {{ post.content }}
             </p>
+            <button
+              type="button"
+              (click)="togglePost(post.id)"
+              class="text-xs text-accent hover:text-accent/80 font-semibold mt-0.5 transition-colors"
+            >
+              {{ expandedPostId() === post.id ? 'See less' : 'See more' }}
+            </button>
           </div>
 
           <!-- Delete -->
