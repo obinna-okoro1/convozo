@@ -402,7 +402,7 @@ describe('SettingsStateService', () => {
       );
       const result = await service.resolvePaystackAccount('0000000000', '044');
       expect(result.accountName).toBeNull();
-      expect(result.error).toBe('Could not verify account. Please check the details.');
+      expect(result.error).toBe('Could not verify account. Please check your account number and bank.');
     });
 
     it('returns generic error message when an exception is thrown', async () => {
