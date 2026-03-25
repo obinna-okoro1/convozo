@@ -48,7 +48,7 @@ const TYPE_LABEL: Record<string, string> = {
 })
 export class ShopViewComponent implements OnInit {
   protected readonly state = inject(MessagePageStateService);
-  private readonly shopService = inject(ShopService);
+  protected readonly shopService = inject(ShopService);
 
   protected readonly items = signal<ShopItem[]>([]);
   protected readonly loadingItems = signal(true);

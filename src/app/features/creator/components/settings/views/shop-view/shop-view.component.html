@@ -281,9 +281,14 @@
       <div class="space-y-2">
         @for (item of items(); track item.id) {
           <div [class]="'flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ' + (item.is_active ? 'bg-surface-raised border-separator hover:border-content-muted/20' : 'bg-surface border-separator/50 opacity-50')">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg" [class]="item.is_active ? 'bg-accent/10' : 'bg-surface-overlay'">
-              {{ getTypeMeta(item.item_type).emoji }}
-            </div>
+            @if (shopService.getItemThumbnailUrl(item)) {
+              <img [src]="shopService.getItemThumbnailUrl(item)!" [alt]="item.title"
+                class="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-separator" />
+            } @else {
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg" [class]="item.is_active ? 'bg-accent/10' : 'bg-surface-overlay'">
+                {{ getTypeMeta(item.item_type).emoji }}
+              </div>
+            }
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <p class="font-semibold text-content text-sm truncate">{{ item.title }}</p>

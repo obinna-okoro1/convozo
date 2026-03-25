@@ -4,7 +4,7 @@
  * on the public message page home tab.
  */
 
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MessagePageStateService } from '../../message-page-state.service';
 import { CreatorLink } from '../../../../../../core/models';
@@ -21,6 +21,14 @@ import {
 })
 export class LinksViewComponent {
   protected readonly state = inject(MessagePageStateService);
+
+  /** Tracks which post is expanded — only one open at a time. */
+  protected readonly expandedPostId = signal<string | null>(null);
+
+  /** Toggle a post open/closed. Opening one collapses any previously open post. */
+  protected togglePost(id: string): void {
+    this.expandedPostId.set(this.expandedPostId() === id ? null : id);
+  }
 
   protected onLinkClicked(link: CreatorLink): void {
     this.state.onLinkClicked(link);
