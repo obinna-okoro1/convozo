@@ -23,6 +23,7 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     is_handled: false,
     reply_content: null,
     replied_at: null,
+    conversation_token: 'test-token-1',
     created_at: now,
     updated_at: now,
     ...overrides,

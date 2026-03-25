@@ -28,6 +28,7 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     is_handled: false,
     reply_content: null,
     replied_at: null,
+    conversation_token: 'test-token-1',
     created_at: now,
     updated_at: now,
     ...overrides,
@@ -284,6 +285,111 @@ describe('MessageService', () => {
       const result = await service.deleteMessage('msg-1');
 
       expect(result.error).not.toBeNull();
+    });
+  });
+
+  // ── getReplies ────────────────────────────────────────────────────────────
+
+  describe('getReplies()', () => {
+    it('fetches replies for a message from supabase on success', async () => {
+      const replies = [
+        { id: 'r-1', message_id: 'msg-1', sender_type: 'expert' as const, content: 'Hi back', created_at: new Date().toISOString() },
+      ];
+      const chain = makeQueryChain({ data: replies, error: null });
+      mockClient.from.and.returnValue(chain);
+
+      const result = await service.getReplies('msg-1');
+
+      expect(mockClient.from).toHaveBeenCalledWith('message_replies');
+      expect(result.data).toEqual(replies);
+      expect(result.error).toBeNull();
+    });
+
+    it('returns error when supabase call fails', async () => {
+      const dbError = { message: 'DB error', code: '500', details: '', hint: '' };
+      const chain = makeQueryChain({ data: null, error: dbError });
+      mockClient.from.and.returnValue(chain);
+
+      const result = await service.getReplies('msg-1');
+
+      expect(result.data).toBeNull();
+      expect(result.error).not.toBeNull();
+    });
+
+    it('filters by message_id', async () => {
+      const chain = makeQueryChain({ data: [], error: null });
+      mockClient.from.and.returnValue(chain);
+
+      await service.getReplies('msg-abc');
+
+      expect(chain.eq).toHaveBeenCalledWith('message_id', 'msg-abc');
+    });
+
+    it('orders replies ascending (chronological)', async () => {
+      const chain = makeQueryChain({ data: [], error: null });
+      mockClient.from.and.returnValue(chain);
+
+      await service.getReplies('msg-1');
+
+      expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: true });
+    });
+  });
+
+  // ── subscribeToReplies ────────────────────────────────────────────────────
+
+  describe('subscribeToReplies()', () => {
+    it('creates a channel named replies:<messageId>', () => {
+      const mockChannel = {
+        on: jasmine.createSpy('on').and.returnValue(null as any),
+        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+      };
+      mockChannel.on.and.returnValue(mockChannel);
+      mockClient.channel.and.returnValue(mockChannel);
+
+      service.subscribeToReplies('msg-1', jasmine.createSpy());
+
+      expect(mockClient.channel).toHaveBeenCalledWith('replies:msg-1');
+    });
+
+    it('subscribes to INSERT events on message_replies', () => {
+      const mockChannel = {
+        on: jasmine.createSpy('on').and.returnValue(null as any),
+        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+      };
+      mockChannel.on.and.returnValue(mockChannel);
+      mockClient.channel.and.returnValue(mockChannel);
+
+      service.subscribeToReplies('msg-1', jasmine.createSpy());
+
+      const callArgs = mockChannel.on.calls.first().args as [string, object, ...unknown[]];
+      const filterArg = callArgs[1] as { event: string; table: string; filter: string };
+      expect(callArgs[0]).toBe('postgres_changes');
+      expect(filterArg.event).toBe('INSERT');
+      expect(filterArg.table).toBe('message_replies');
+      expect(filterArg.filter).toBe('message_id=eq.msg-1');
+    });
+
+    it('calls subscribe() on the channel', () => {
+      const mockChannel = {
+        on: jasmine.createSpy('on').and.returnValue(null as any),
+        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+      };
+      mockChannel.on.and.returnValue(mockChannel);
+      mockClient.channel.and.returnValue(mockChannel);
+
+      service.subscribeToReplies('msg-1', jasmine.createSpy());
+
+      expect(mockChannel.subscribe).toHaveBeenCalled();
+    });
+  });
+
+  // ── unsubscribeFromReplies ────────────────────────────────────────────────
+
+  describe('unsubscribeFromReplies()', () => {
+    it('calls removeChannel with the provided channel', () => {
+      const mockChannel = {} as any;
+      service.unsubscribeFromReplies(mockChannel);
+      expect(mockClient.removeChannel).toHaveBeenCalledWith(mockChannel);
     });
   });
 
