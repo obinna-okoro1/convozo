@@ -480,7 +480,19 @@ export class SettingsStateService {
         bankCode,
       );
       if (error) {
-        return { accountName: null, error: 'Could not verify account. Please check the details.' };
+        // The edge function returns a 422 with a user-facing message in the JSON body
+        // when Paystack rejects the account details. Try to extract it.
+        let userMessage = 'Could not verify account. Please check your account number and bank.';
+        try {
+          const context = (error as { context?: Response }).context;
+          if (context instanceof Response) {
+            const body = await context.json() as { error?: string };
+            if (body?.error) userMessage = body.error;
+          }
+        } catch {
+          // Ignore body-parse failure — use the default message.
+        }
+        return { accountName: null, error: userMessage };
       }
       const name = (data as unknown as { account_name?: string })?.account_name ?? null;
       return { accountName: name, error: null };
