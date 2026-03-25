@@ -15,6 +15,7 @@ import {
   messageConfirmationEmail,
   newMessageNotificationEmail,
 } from '../../_shared/email.ts';
+import { generateMagicLink } from '../../_shared/magic-link.ts';
 import { sendPushNotification } from './push-notification.ts';
 
 /** Metadata shape expected on message checkout sessions. */
@@ -101,12 +102,14 @@ export async function handleMessagePayment(
     .single();
 
   if (creator) {
-    // 1. Sender confirmation
+    // 1. Sender confirmation — includes magic-link to client portal
+    const portalUrl = await generateMagicLink(sender_email);
     const senderPayload = messageConfirmationEmail({
       senderName: sender_name,
       creatorName: creator.display_name,
       messageContent: message_content,
       amountCents: amountInCents,
+      portalUrl: portalUrl ?? undefined,
     });
     await sendEmail({ to: sender_email, ...senderPayload, idempotencyKey: `${session.id}_msg_sender` });
 

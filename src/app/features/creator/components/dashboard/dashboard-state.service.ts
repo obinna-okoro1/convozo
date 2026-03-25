@@ -59,11 +59,14 @@ export class DashboardStateService {
    * Provider-agnostic payment readiness.
    * True when the creator can accept payments — regardless of whether they use
    * Stripe or Paystack. Used to show/hide Inbox, Bookings, and Analytics tabs.
+   *
+   * For Paystack: is_active alone is sufficient — subaccounts can receive split
+   * payments as soon as they are active. is_verified is Paystack's async internal
+   * review (can take days) and does not block transactions.
    */
   readonly isPaymentReady = computed(() => {
     if (this.creator()?.payment_provider === 'paystack') {
-      const sub = this.paystackSubaccount();
-      return !!(sub?.is_active && sub?.is_verified);
+      return !!(this.paystackSubaccount()?.is_active);
     }
     return this.isStripeConnected();
   });

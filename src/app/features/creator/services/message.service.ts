@@ -11,7 +11,7 @@
 
 import { Injectable } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Message, MessageStats, SupabaseResponse } from '../../../core/models';
+import { Message, MessageReply, MessageStats, SupabaseResponse } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
 @Injectable({
@@ -120,6 +120,55 @@ export class MessageService {
       .eq('id', messageId);
 
     return { data: undefined, error };
+  }
+
+  // ── Threaded conversation replies ───────────────────────────────────
+
+  /**
+   * Fetch all replies for a message, ordered chronologically.
+   */
+  public async getReplies(messageId: string): Promise<SupabaseResponse<MessageReply[]>> {
+    const { data, error } = await this.supabaseService.client
+      .from('message_replies')
+      .select('id, message_id, sender_type, content, created_at')
+      .eq('message_id', messageId)
+      .order('created_at', { ascending: true });
+
+    return { data: data as MessageReply[] | null, error };
+  }
+
+  /**
+   * Subscribe to real-time reply changes for a single message.
+   * Calls `onChange` with the full refreshed reply list on any insert.
+   * Unsubscribe by passing the returned channel to `unsubscribeFromReplies`.
+   */
+  public subscribeToReplies(
+    messageId: string,
+    onChange: (replies: MessageReply[]) => void,
+  ): RealtimeChannel {
+    return this.supabaseService.client
+      .channel(`replies:${messageId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'message_replies',
+          filter: `message_id=eq.${messageId}`,
+        },
+        () => {
+          void (async () => {
+            const { data } = await this.getReplies(messageId);
+            if (data) onChange(data);
+          })();
+        },
+      )
+      .subscribe();
+  }
+
+  /** Remove a real-time reply subscription. */
+  public unsubscribeFromReplies(channel: RealtimeChannel): void {
+    void this.supabaseService.client.removeChannel(channel);
   }
 
   /**

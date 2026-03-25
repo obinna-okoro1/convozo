@@ -53,6 +53,20 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'conversation/:token',
+    loadComponent: () =>
+      import('./features/public/components/conversation/conversation.component').then(
+        (m) => m.ConversationComponent,
+      ),
+  },
+  {
+    path: 'portal',
+    loadComponent: () =>
+      import('./features/public/components/portal/portal.component').then(
+        (m) => m.PortalComponent,
+      ),
+  },
+  {
     path: ':slug',
     loadComponent: () =>
       import('./features/public/components/message-page/message-page.component').then(

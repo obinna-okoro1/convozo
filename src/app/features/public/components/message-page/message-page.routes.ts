@@ -32,4 +32,9 @@ export const MESSAGE_PAGE_ROUTES: Routes = [
     loadComponent: () =>
       import('./views/shop-view/shop-view.component').then((m) => m.ShopViewComponent),
   },
+  {
+    path: 'posts',
+    loadComponent: () =>
+      import('./views/posts-view/posts-view.component').then((m) => m.PostsViewComponent),
+  },
 ];

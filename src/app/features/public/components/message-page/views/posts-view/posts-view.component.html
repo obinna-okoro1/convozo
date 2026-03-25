@@ -1,0 +1,81 @@
+<!-- Back to profile -->
+<a routerLink=".." class="inline-flex items-center gap-1.5 text-content-secondary hover:text-content text-sm font-medium mb-6 transition-colors duration-200 group">
+  <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+  </svg>
+  Back to profile
+</a>
+
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h2 class="text-lg font-bold text-content">All posts</h2>
+    @if (state.creator()?.display_name) {
+      <p class="text-xs text-content-tertiary mt-0.5">by {{ state.creator()!.display_name }}</p>
+    }
+  </div>
+  @if (!loading()) {
+    <span class="text-xs text-content-tertiary">{{ posts().length }} post{{ posts().length !== 1 ? 's' : '' }}</span>
+  }
+</div>
+
+@if (loading()) {
+  <div class="flex justify-center py-16">
+    <svg class="animate-spin h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+    </svg>
+  </div>
+
+} @else if (posts().length === 0) {
+  <div class="card p-10 text-center">
+    <div class="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-6 h-6 text-accent/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+      </svg>
+    </div>
+    <p class="text-content-secondary text-sm">No posts yet</p>
+  </div>
+
+} @else {
+  <div class="space-y-px">
+    @for (post of posts(); track post.id; let last = $last) {
+      <div class="card-glass !rounded-none !border-x-0 py-4 px-1"
+           [class.!rounded-t-2xl]="$first"
+           [class.!rounded-b-2xl]="last"
+           [class.border-t-0]="!$first">
+        <div class="flex gap-3">
+          <!-- Avatar -->
+          <div class="w-9 h-9 rounded-full bg-accent flex-shrink-0 flex items-center justify-center mt-0.5 overflow-hidden">
+            @if (state.creator()?.profile_image_url) {
+              <img
+                [src]="state.creator()!.profile_image_url!"
+                [alt]="state.creator()!.display_name"
+                class="w-9 h-9 object-cover"
+              />
+            } @else {
+              <span class="text-white font-bold text-sm">
+                {{ state.creator()?.display_name?.charAt(0) ?? '?' }}
+              </span>
+            }
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline gap-1.5 mb-1.5 flex-wrap">
+              <span class="text-sm font-bold text-content leading-none">
+                {{ state.creator()?.display_name }}
+              </span>
+              <span class="text-xs text-content-tertiary">· {{ relativeTime(post.created_at) }}</span>
+            </div>
+            @if (post.title) {
+              <p class="text-sm font-semibold text-content mb-1 leading-snug">{{ post.title }}</p>
+            }
+            <p class="text-sm text-content leading-relaxed whitespace-pre-wrap break-words">
+              {{ post.content }}
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

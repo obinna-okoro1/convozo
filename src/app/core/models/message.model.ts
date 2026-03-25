@@ -17,8 +17,23 @@ export interface Message {
   is_handled: boolean;
   reply_content: string | null;
   replied_at: string | null;
+  /** UUID token used to identify the conversation without auth (client-facing URL). */
+  conversation_token: string;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * A single message in a threaded conversation.
+ * Populated from the `message_replies` table.
+ */
+export interface MessageReply {
+  id: string;
+  message_id: string;
+  /** 'expert' = the creator replied; 'client' = the paying client replied back. */
+  sender_type: 'expert' | 'client';
+  content: string;
+  created_at: string;
 }
 
 export interface MessageStats {

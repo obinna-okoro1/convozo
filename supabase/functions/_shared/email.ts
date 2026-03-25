@@ -145,11 +145,24 @@ export function messageConfirmationEmail(opts: {
   creatorName: string;
   messageContent: string;
   amountCents: number;
+  /** Magic-link URL for the client portal — absent if generation failed */
+  portalUrl?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(opts.senderName);
   const creator = escapeHtml(opts.creatorName);
   const msg = escapeHtml(opts.messageContent);
   const amount = formatUsd(opts.amountCents);
+
+  const portalBlock = opts.portalUrl
+    ? `<div style="text-align:center;margin:24px 0;">
+        <a href="${escapeHtml(opts.portalUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 32px;border-radius:12px;">
+          View your Convozo portal →
+        </a>
+      </div>
+      <p style="color:#6b7280;font-size:13px;text-align:center;">
+        Track all your consultations and conversations in one place. Link expires in 24 hours.
+      </p>`
+    : '';
 
   return {
     subject: `Payment confirmed – message sent to ${creator}`,
@@ -163,6 +176,7 @@ export function messageConfirmationEmail(opts: {
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">Your message:</p>
         <p style="margin:0;color:#4b5563;white-space:pre-wrap;">${msg}</p>
       </div>
+      ${portalBlock}
     `),
   };
 }
@@ -178,6 +192,8 @@ export function callBookingConfirmationEmail(opts: {
   scheduledAt?: string;
   /** IANA timezone string the fan chose at booking (e.g. 'America/New_York') */
   fanTimezone?: string;
+  /** Magic-link URL for the client portal — absent if generation failed */
+  portalUrl?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(opts.bookerName);
   const creator = escapeHtml(opts.creatorName);
@@ -203,6 +219,17 @@ export function callBookingConfirmationEmail(opts: {
         All your booking details are in this email. We'll send you a secure join link before your call — keep an eye on your inbox!
       </p>`;
 
+  const portalBlock = opts.portalUrl
+    ? `<div style="text-align:center;margin:24px 0;">
+        <a href="${escapeHtml(opts.portalUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 32px;border-radius:12px;">
+          View your Convozo portal →
+        </a>
+      </div>
+      <p style="color:#6b7280;font-size:13px;text-align:center;">
+        Track all your consultations and bookings in one place. Link expires in 24 hours.
+      </p>`
+    : '';
+
   return {
     subject: `Booking confirmed – ${opts.durationMinutes} min call with ${creator}`,
     html: brandedWrapper(`
@@ -222,6 +249,7 @@ export function callBookingConfirmationEmail(opts: {
           <li>If ${creator} doesn't show up, you'll be refunded automatically</li>
         </ul>
       </div>
+      ${portalBlock}
     `),
   };
 }
@@ -327,28 +355,58 @@ export function newCallBookingNotificationEmail(opts: {
   };
 }
 
-/** Email sent to the fan when the creator replies. */
+/** Email sent to the client when the expert replies. */
 export function creatorReplyEmail(opts: {
   creatorName: string;
   originalMessage: string;
   replyContent: string;
+  /**
+   * Full URL to the client-facing conversation page, e.g.
+   * `https://convozo.com/conversation/<token>`. When provided, a
+   * "Continue the conversation" CTA button is rendered in the email.
+   */
+  conversationUrl?: string;
+  /**
+   * Magic-link URL for the client portal — when provided, a secondary
+   * "View all your consultations" link is shown below the conversation CTA.
+   */
+  portalUrl?: string;
 }): { subject: string; html: string } {
   const creator = escapeHtml(opts.creatorName);
   const original = escapeHtml(opts.originalMessage);
   const reply = escapeHtml(opts.replyContent);
+
+  const portalLink = opts.portalUrl
+    ? `<p style="color:#6b7280;font-size:13px;text-align:center;margin-top:12px;">
+        Or <a href="${escapeHtml(opts.portalUrl)}" style="color:#7c3aed;text-decoration:underline;">view all your consultations</a> in your Convozo portal.
+      </p>`
+    : '';
+
+  const ctaBlock = opts.conversationUrl
+    ? `<div style="text-align:center;margin:28px 0;">
+        <a href="${escapeHtml(opts.conversationUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:10px;">
+          Continue the conversation →
+        </a>
+      </div>
+      <p style="color:#6b7280;font-size:13px;text-align:center;line-height:1.6;">
+        You can reply directly from the conversation page — no account needed.
+      </p>
+      ${portalLink}`
+    : portalLink;
 
   return {
     subject: `${creator} replied to your message`,
     html: brandedWrapper(`
       <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">You got a reply from ${creator}!</h2>
       <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
-        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Your message:</p>
+        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Your original message:</p>
         <p style="margin:0;color:#4b5563;white-space:pre-wrap;">${original}</p>
       </div>
-      <div style="background:#ede9fe;padding:16px;border-radius:8px;margin:20px 0;">
-        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Reply from ${creator}:</p>
+      <div style="background:#ede9fe;border-left:4px solid #7c3aed;padding:16px;border-radius:8px;margin:20px 0;">
+        <p style="margin:0 0 4px;font-weight:600;color:#5b21b6;">Reply from ${creator}:</p>
         <p style="margin:0;color:#4b5563;white-space:pre-wrap;">${reply}</p>
       </div>
+      ${ctaBlock}
     `),
   };
 }

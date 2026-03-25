@@ -32,6 +32,13 @@ export class DashboardTabsComponent {
         icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
         badgeColor: '',
       },
+      {
+        path: 'posts',
+        label: 'Posts',
+        mobileLabel: 'Posts',
+        icon: 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z',
+        badgeColor: '',
+      },
       ...(connected
         ? [
             {

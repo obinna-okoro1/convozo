@@ -134,12 +134,13 @@ export class SettingsStateService {
   );
 
   /**
-   * True when the Paystack subaccount is set up, active, AND verified by Paystack.
-   * Requires both is_active and is_verified so we don't accept payments before
-   * Paystack has confirmed the bank account is legitimate.
+   * True when the Paystack subaccount is set up and active.
+   * We do NOT require is_verified here — Paystack verifies asynchronously (can take
+   * several business days). The subaccount can receive split payments as soon as it
+   * is active. is_verified is shown as an informational badge in the UI only.
    */
   readonly isPaystackConnected = computed(
-    () => !!(this.paystackSubaccount()?.is_active && this.paystackSubaccount()?.is_verified),
+    () => !!(this.paystackSubaccount()?.is_active),
   );
 
   /**

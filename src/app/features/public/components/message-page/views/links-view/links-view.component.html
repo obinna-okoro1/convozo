@@ -1,4 +1,4 @@
-<!-- Service cards — the primary calls-to-action; links are secondary content below -->
+<!-- ── Service cards (primary CTAs) ──────────────────────────────────── -->
 @if (state.messagesEnabled() || state.callsEnabled() || state.shopEnabled() || state.tipsEnabled()) {
   <div class="grid grid-cols-2 gap-2.5 mb-6">
     @if (state.messagesEnabled()) {
@@ -56,17 +56,100 @@
   </div>
 }
 
+<!-- ── Posts feed (up to 5 most recent, Twitter-style) ───────────────── -->
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-xs font-bold text-content-tertiary uppercase tracking-widest">Posts</h3>
+    @if (state.creatorPosts().length > 0) {
+      <a routerLink="../posts"
+         class="text-xs text-accent hover:text-accent/80 font-semibold transition-colors">
+        See all →
+      </a>
+    }
+  </div>
+
+  @if (state.creatorPosts().length > 0) {
+    <div class="space-y-px">
+      @for (post of state.creatorPosts(); track post.id; let last = $last) {
+        <div class="card-glass !rounded-none !border-x-0 py-3.5 px-1"
+             [class.!rounded-t-2xl]="$first"
+             [class.!rounded-b-2xl]="last"
+             [class.border-t-0]="!$first">
+          <div class="flex gap-2.5">
+            <!-- Avatar -->
+            <div class="w-8 h-8 rounded-full bg-accent flex-shrink-0 flex items-center justify-center mt-0.5 overflow-hidden">
+              @if (state.creator()?.profile_image_url) {
+                <img
+                  [src]="state.creator()!.profile_image_url!"
+                  [alt]="state.creator()!.display_name"
+                  class="w-8 h-8 object-cover"
+                />
+              } @else {
+                <span class="text-white font-bold text-xs">
+                  {{ state.creator()?.display_name?.charAt(0) ?? '?' }}
+                </span>
+              }
+            </div>
+
+            <!-- Post text + timestamp -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-1.5 mb-1 flex-wrap">
+                <span class="text-xs font-bold text-content leading-none">
+                  {{ state.creator()?.display_name }}
+                </span>
+                <span class="text-[0.7rem] text-content-tertiary">· {{ relativeTime(post.created_at) }}</span>
+              </div>
+              @if (post.title) {
+                <p class="text-xs font-semibold text-content mb-0.5 leading-snug">{{ post.title }}</p>
+              }
+              <p class="text-sm text-content leading-relaxed break-words">{{ post.content }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Empty state — no posts yet -->
+    <div class="card-glass rounded-2xl px-4 py-6 text-center">
+      <div class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-2.5">
+        <svg class="w-4 h-4 text-accent/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+      </div>
+      <p class="text-xs font-semibold text-content-secondary">No posts yet</p>
+      <p class="text-[0.7rem] text-content-tertiary mt-0.5">Check back soon.</p>
+    </div>
+  }
+</div>
+
+<!-- ── Links (compact pills) ─────────────────────────────────────────── -->
 @if (state.creatorLinks().length > 0) {
-  <app-link-list
-    [links]="state.creatorLinks()"
-    [themeColor]="null"
-    (linkClicked)="onLinkClicked($event)"
-  />
-} @else {
-  <div class="card p-8 text-center">
-    <svg class="w-10 h-10 text-content-tertiary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-    </svg>
-    <p class="text-content-tertiary text-sm">No links yet</p>
+  <div>
+    <h3 class="text-xs font-bold text-content-tertiary uppercase tracking-widest mb-3">Links</h3>
+    <div class="flex flex-wrap gap-2">
+      @for (link of state.creatorLinks(); track link.id) {
+        <a
+          [href]="link.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          (click)="$event.preventDefault(); onLinkClicked(link)"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-raised border border-surface-border text-xs font-semibold text-content hover:bg-white/10 active:scale-95 transition-all duration-150 whitespace-nowrap"
+        >
+          @if (getBrand(link); as brand) {
+            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" [style.fill]="brand.color">
+              <path [attr.d]="brand.svgPath" />
+            </svg>
+          } @else {
+            <svg class="w-3 h-3 text-content-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          }
+          {{ link.title }}
+        </a>
+      }
+    </div>
   </div>
 }
+
