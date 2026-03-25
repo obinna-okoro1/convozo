@@ -106,6 +106,21 @@ export class ShopService {
   }
 
   /**
+   * Derive the public thumbnail URL for a shop item.
+   * Prefers the Supabase Storage path (thumbnail_storage_path), falls back to the legacy
+   * thumbnail_url field, and returns null when neither is present.
+   */
+  public getItemThumbnailUrl(item: ShopItem): string | null {
+    if (item.thumbnail_storage_path) {
+      const { data } = this.supabaseService.client.storage
+        .from('shop-thumbnails')
+        .getPublicUrl(item.thumbnail_storage_path);
+      return data.publicUrl ?? null;
+    }
+    return item.thumbnail_url ?? null;
+  }
+
+  /**
    * Fetch a signed download URL for a verified purchaser.
    * Calls the get-shop-download edge function — no auth required (session_id proves purchase).
    */

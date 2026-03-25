@@ -217,7 +217,7 @@ export class MessagePageStateService {
         .eq('creator_id', creatorId)
         .eq('is_published', true)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(3);
 
       if (error == null && data != null) {
         this.creatorPosts.set(data as CreatorPost[]);

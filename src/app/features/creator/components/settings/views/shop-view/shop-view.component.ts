@@ -105,7 +105,7 @@ const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024; // 10 MB
 })
 export class ShopViewComponent implements OnInit {
   protected readonly state = inject(SettingsStateService);
-  private readonly shopService = inject(ShopService);
+  protected readonly shopService = inject(ShopService);
 
   protected readonly items = signal<ShopItem[]>([]);
   protected readonly loadingItems = signal(true);
@@ -274,7 +274,10 @@ export class ShopViewComponent implements OnInit {
         ? item.file_storage_path.split('/').pop()?.replace(/^\d+_/, '') ?? 'Uploaded file'
         : null,
       thumbnailStoragePath: item.thumbnail_storage_path ?? null,
-      thumbnailPublicUrl: null, // will be loaded lazily
+      // Derive the public URL immediately so the preview shows in edit mode
+      thumbnailPublicUrl: item.thumbnail_storage_path
+        ? this.shopService.getItemThumbnailUrl(item)
+        : (item.thumbnail_url ?? null),
       previewText: item.preview_text ?? '',
       deliveryNote: item.delivery_note ?? '',
       isRequestBased: item.is_request_based,

@@ -56,16 +56,10 @@
   </div>
 }
 
-<!-- ── Posts feed (up to 5 most recent, Twitter-style) ───────────────── -->
+<!-- ── Posts feed (3 most recent) ────────────────────────────────── -->
 <div class="mb-6">
-  <div class="flex items-center justify-between mb-3">
+  <div class="mb-3">
     <h3 class="text-xs font-bold text-content-tertiary uppercase tracking-widest">Posts</h3>
-    @if (state.creatorPosts().length > 0) {
-      <a routerLink="../posts"
-         class="text-xs text-accent hover:text-accent/80 font-semibold transition-colors">
-        See all →
-      </a>
-    }
   </div>
 
   @if (state.creatorPosts().length > 0) {
@@ -102,12 +96,28 @@
               @if (post.title) {
                 <p class="text-xs font-semibold text-content mb-0.5 leading-snug">{{ post.title }}</p>
               }
-              <p class="text-sm text-content leading-relaxed break-words line-clamp-1">{{ post.content }}</p>
+              <p class="text-sm text-content leading-relaxed break-words"
+                 [class.line-clamp-1]="expandedPostId() !== post.id">
+                {{ post.content }}
+              </p>
+              <button
+                type="button"
+                (click)="togglePost(post.id)"
+                class="text-xs text-accent hover:text-accent/80 font-semibold mt-0.5 transition-colors"
+              >
+                {{ expandedPostId() === post.id ? 'See less' : 'See more' }}
+              </button>
             </div>
           </div>
         </div>
       }
     </div>
+
+    <!-- See all — bottom -->
+    <a routerLink="../posts"
+       class="mt-2 flex items-center justify-center gap-1 text-xs text-accent hover:text-accent/80 font-semibold transition-colors py-2">
+      See all posts →
+    </a>
   } @else {
     <!-- Empty state — no posts yet -->
     <div class="card-glass rounded-2xl px-4 py-6 text-center">
