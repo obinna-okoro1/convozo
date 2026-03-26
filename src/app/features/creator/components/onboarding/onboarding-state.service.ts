@@ -26,6 +26,13 @@ import {
 } from './phone-country-codes.data';
 import type { SelectOption } from '../../../../shared/components/ui/searchable-select/searchable-select.component';
 import { errorMessage } from '../../../../shared/utils/error.utils';
+import {
+  EXPERT_CATEGORIES,
+  getCategoryById,
+  type ExpertSubcategory,
+  type Qualification,
+  type Certification,
+} from '../../../../core/models';
 
 @Injectable()
 export class OnboardingStateService implements OnDestroy {
@@ -33,7 +40,7 @@ export class OnboardingStateService implements OnDestroy {
   readonly currentStep = signal<number>(1);
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
-  readonly TOTAL_STEPS = 4;
+  readonly TOTAL_STEPS = 5;
 
   // ── Profile fields ─────────────────────────────────────────────────
   readonly displayName = signal<string>('');
@@ -42,6 +49,20 @@ export class OnboardingStateService implements OnDestroy {
   readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   readonly slugManuallyEdited = signal<boolean>(false);
   readonly profileImageUrl = signal<string>('');
+
+  // ── Expertise fields (step 2) ─────────────────────────────────────
+  readonly expertCategory = signal<string>('');
+  readonly expertSubcategory = signal<string>('');
+  readonly professionTitle = signal<string>('');
+  readonly yearsOfExperience = signal<number | null>(null);
+  readonly linkedinUrl = signal<string>('');
+
+  // ── Credentials (step 3) ──────────────────────────────────────────
+  readonly qualifications = signal<Qualification[]>([]);
+  readonly certifications = signal<Certification[]>([]);
+
+  // ── Category data (exposed for template) ──────────────────────────
+  readonly categories = EXPERT_CATEGORIES;
 
   // ── Phone number ───────────────────────────────────────────────────
   readonly countryCodes = COUNTRY_CODES;
@@ -76,6 +97,17 @@ export class OnboardingStateService implements OnDestroy {
       this.slugStatus() !== 'checking' &&
       this.slugStatus() !== 'taken' &&
       this.slugStatus() !== 'invalid',
+  );
+
+  // Category must be selected to leave step 2. Subcategory and title are optional.
+  readonly canProceedStep2 = computed(() => !!this.expertCategory());
+
+  // Step 3 (credentials) is entirely optional — always allow proceed.
+  readonly canProceedStep3 = computed(() => true);
+
+  // Subcategories for the currently selected expert category.
+  readonly filteredSubcategories = computed<ExpertSubcategory[]>(
+    () => getCategoryById(this.expertCategory())?.subcategories ?? [],
   );
 
   // Tracks a creator row already written to the DB during this session.
@@ -225,6 +257,94 @@ export class OnboardingStateService implements OnDestroy {
     };
   }
 
+  // ── Expertise helpers ──────────────────────────────────────────────
+
+  /** Toggle category — deselects if already active, and clears subcategory. */
+  selectCategory(id: string): void {
+    if (this.expertCategory() === id) {
+      this.expertCategory.set('');
+      this.expertSubcategory.set('');
+    } else {
+      this.expertCategory.set(id);
+      this.expertSubcategory.set('');
+    }
+  }
+
+  /** Toggle subcategory within the selected category. */
+  selectSubcategory(id: string): void {
+    this.expertSubcategory.set(this.expertSubcategory() === id ? '' : id);
+  }
+
+  /** Parse and clamp years of experience from an input string value. */
+  setYearsOfExperience(value: string): void {
+    const n = parseInt(value, 10);
+    this.yearsOfExperience.set(isNaN(n) ? null : Math.min(80, Math.max(0, n)));
+  }
+
+  // ── Qualification helpers ──────────────────────────────────────────
+
+  addQualification(): void {
+    this.qualifications.update(list => [
+      ...list,
+      { institution: '', degree: '', graduation_year: null },
+    ]);
+  }
+
+  removeQualification(index: number): void {
+    this.qualifications.update(list => list.filter((_, i) => i !== index));
+  }
+
+  updateQualification(
+    index: number,
+    field: 'institution' | 'degree',
+    value: string,
+  ): void {
+    this.qualifications.update(list =>
+      list.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
+    );
+  }
+
+  updateQualificationYear(index: number, value: string): void {
+    const n = parseInt(value, 10);
+    this.qualifications.update(list =>
+      list.map((q, i) =>
+        i === index ? { ...q, graduation_year: isNaN(n) ? null : n } : q,
+      ),
+    );
+  }
+
+  // ── Certification helpers ──────────────────────────────────────────
+
+  addCertification(): void {
+    this.certifications.update(list => [
+      ...list,
+      { name: '', issuer: '', year: null },
+    ]);
+  }
+
+  removeCertification(index: number): void {
+    this.certifications.update(list => list.filter((_, i) => i !== index));
+  }
+
+  updateCertification(
+    index: number,
+    field: 'name' | 'issuer',
+    value: string,
+  ): void {
+    this.certifications.update(list =>
+      list.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
+    );
+  }
+
+  updateCertificationYear(index: number, value: string): void {
+    const n = parseInt(value, 10);
+    this.certifications.update(list =>
+      list.map((c, i) =>
+        i === index ? { ...c, year: isNaN(n) ? null : n } : c,
+      ),
+    );
+  }
+
   // ── Actions ────────────────────────────────────────────────────────
 
   /**
@@ -244,6 +364,13 @@ export class OnboardingStateService implements OnDestroy {
         const { error } = await this.creatorService.updateCreatorProfile({
           creatorId: savedId,
           ...this.profileFormFields(),
+          category: this.expertCategory() || undefined,
+          subcategory: this.expertSubcategory() || undefined,
+          professionTitle: this.professionTitle() || undefined,
+          yearsOfExperience: this.yearsOfExperience() ?? undefined,
+          linkedinUrl: this.linkedinUrl() || undefined,
+          qualifications: this.qualifications(),
+          certifications: this.certifications(),
         });
         if (error) throw error;
       } else {
@@ -253,6 +380,13 @@ export class OnboardingStateService implements OnDestroy {
           // The ISO code of the selected phone prefix — determines payment_provider in the DB.
           country: COUNTRY_CODES[this.selectedCountryIndex()].iso,
           ...this.profileFormFields(),
+          category: this.expertCategory() || undefined,
+          subcategory: this.expertSubcategory() || undefined,
+          professionTitle: this.professionTitle() || undefined,
+          yearsOfExperience: this.yearsOfExperience() ?? undefined,
+          linkedinUrl: this.linkedinUrl() || undefined,
+          qualifications: this.qualifications(),
+          certifications: this.certifications(),
         });
         if (error || !creator) {
           const msg = (error as { message?: string } | null)?.message ?? '';

@@ -3,6 +3,22 @@
  * Represents expert profiles and their settings on the platform.
  */
 
+/** One academic qualification — stored as a JSONB array on the creator row. */
+export interface Qualification {
+  institution: string;
+  degree: string;
+  /** Year of graduation — null when the expert left it blank. */
+  graduation_year: number | null;
+}
+
+/** One professional certification or licence — stored as a JSONB array on the creator row. */
+export interface Certification {
+  name: string;
+  issuer: string;
+  /** Year awarded — null when left blank. */
+  year: number | null;
+}
+
 export interface Creator {
   id: string;
   user_id: string;
@@ -18,6 +34,23 @@ export interface Creator {
   /** Payment provider assigned at signup based on country. NG/ZA → 'paystack'; all others → 'stripe'. */
   payment_provider: 'stripe' | 'paystack';
   is_active: boolean;
+
+  // ── Professional taxonomy (migration 041) ─────────────────────────────────
+  /** Top-level category ID, e.g. 'legal', 'medicine', 'technology'. */
+  category: string | null;
+  /** Subcategory ID within the chosen category, e.g. 'family_law', 'cardiology'. */
+  subcategory: string | null;
+  /** Free-text professional title the expert writes themselves, e.g. 'Senior Family Lawyer'. */
+  profession_title: string | null;
+  /** Whole number of years in the profession. */
+  years_of_experience: number | null;
+  /** LinkedIn profile URL — used to verify professional credibility. */
+  linkedin_url: string | null;
+  /** Academic qualifications — defaults to [] on the DB. */
+  qualifications: Qualification[];
+  /** Professional certifications / licences — defaults to [] on the DB. */
+  certifications: Certification[];
+
   created_at: string;
   updated_at: string;
 }

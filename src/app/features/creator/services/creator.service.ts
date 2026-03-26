@@ -55,6 +55,14 @@ export class CreatorService {
      * Determines payment_provider: NG/ZA → 'paystack'; all others → 'stripe'.
      */
     country: string;
+    // ── Expertise (optional — collected in onboarding step 2) ──────────────
+    category?: string;
+    subcategory?: string;
+    professionTitle?: string;
+    yearsOfExperience?: number | null;
+    linkedinUrl?: string;
+    qualifications?: import('../../../core/models').Qualification[];
+    certifications?: import('../../../core/models').Certification[];
   }): Promise<SupabaseResponse<Creator>> {
     // Determine the payment provider based on country.
     // NG and ZA creators use Paystack; all others use Stripe.
@@ -73,6 +81,13 @@ export class CreatorService {
         profile_image_url: data.profileImageUrl ?? null,
         country: data.country.toUpperCase(),
         payment_provider: paymentProvider,
+        category: data.category ?? null,
+        subcategory: data.subcategory ?? null,
+        profession_title: data.professionTitle ?? null,
+        years_of_experience: data.yearsOfExperience ?? null,
+        linkedin_url: data.linkedinUrl ?? null,
+        qualifications: data.qualifications ?? [],
+        certifications: data.certifications ?? [],
       })
       .select()
       .single();
@@ -87,6 +102,14 @@ export class CreatorService {
     phoneNumber: string;
     profileImageUrl?: string;
     bannerImageUrl?: string;
+    // ── Expertise ──────────────────────────────────────────────────────────
+    category?: string | null;
+    subcategory?: string | null;
+    professionTitle?: string | null;
+    yearsOfExperience?: number | null;
+    linkedinUrl?: string | null;
+    qualifications?: import('../../../core/models').Qualification[];
+    certifications?: import('../../../core/models').Certification[];
   }): Promise<SupabaseResponse<Creator>> {
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -97,6 +120,13 @@ export class CreatorService {
         phone_number: data.phoneNumber,
         profile_image_url: data.profileImageUrl,
         banner_image_url: data.bannerImageUrl,
+        category: data.category,
+        subcategory: data.subcategory,
+        profession_title: data.professionTitle,
+        years_of_experience: data.yearsOfExperience,
+        linkedin_url: data.linkedinUrl,
+        qualifications: data.qualifications,
+        certifications: data.certifications,
       })
       .eq('id', data.creatorId)
       .select()

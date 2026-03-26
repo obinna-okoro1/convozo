@@ -15,3 +15,4 @@ export * from './availability.model';
 export * from './analytics.model';
 export * from './common.model';
 export * from './post.model';
+export * from './expert-categories.data';
