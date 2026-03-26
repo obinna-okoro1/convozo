@@ -595,36 +595,241 @@ INSERT INTO public.creator_posts (id, creator_id, title, content, is_published, 
    'Reminder: your first session with any expert should feel slightly uncomfortable. Not because they''re being harsh — because growth lives just outside your current comfort zone. If every conversation feels easy, you''re probably not being challenged enough.',
    true, NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days');
 
+-- ============================================================================
+-- STRIPE ACCOUNT (unlocks Inbox / Analytics / Bookings / Availability tabs)
+-- ============================================================================
+
+-- Fake Stripe Connect account for Sarah Johnson so the dashboard shows all tabs.
+-- In production this is created via the create-connect-account Edge Function.
+INSERT INTO public.stripe_accounts (
+  creator_id, stripe_account_id,
+  charges_enabled, payouts_enabled, details_submitted, onboarding_completed
+) VALUES (
+  '33333333-3333-3333-3333-333333333333',
+  'acct_test_sarahjohnson_dev',
+  true,  -- charges_enabled → unlocks Inbox, Analytics, Bookings, Availability tabs
+  true,
+  true,
+  true
+) ON CONFLICT (creator_id) DO NOTHING;
+
+-- ============================================================================
+-- EXPERT CREDENTIALS (migration 041 fields)
+-- ============================================================================
+
+-- Sarah Johnson — Family Law Attorney
+UPDATE public.creators SET
+  category            = 'legal',
+  subcategory         = 'family_law',
+  profession_title    = 'Senior Family Law Attorney',
+  years_of_experience = 12,
+  linkedin_url        = 'https://linkedin.com/in/sarah-johnson-esq',
+  qualifications      = '[
+    {"institution": "Yale Law School", "degree": "Juris Doctor (J.D.)", "graduation_year": 2012},
+    {"institution": "Cornell University", "degree": "B.A. Political Science", "graduation_year": 2009}
+  ]'::jsonb,
+  certifications      = '[
+    {"name": "Board Certified Family Law Specialist", "issuer": "State Bar Association", "year": 2016},
+    {"name": "Collaborative Practice Certification", "issuer": "IACP", "year": 2018}
+  ]'::jsonb
+WHERE id = '33333333-3333-3333-3333-333333333333';
+
+-- Mike Chen — Life & Performance Coach
+UPDATE public.creators SET
+  category            = 'mental_health',
+  subcategory         = 'life_coach',
+  profession_title    = 'ICF-Certified Life & Performance Coach',
+  years_of_experience = 8,
+  linkedin_url        = 'https://linkedin.com/in/mike-chen-coach',
+  qualifications      = '[
+    {"institution": "Georgetown University", "degree": "M.S. Leadership Coaching", "graduation_year": 2017}
+  ]'::jsonb,
+  certifications      = '[
+    {"name": "Associate Certified Coach (ACC)", "issuer": "ICF", "year": 2018},
+    {"name": "NLP Practitioner", "issuer": "ABNLP", "year": 2019}
+  ]'::jsonb
+WHERE id = '44444444-4444-4444-4444-444444444444';
+
+-- ============================================================================
+-- HISTORICAL MESSAGES + PAYMENTS (last 6 months)
+-- The payments trigger (migration 031) auto-populates creator_monthly_analytics.
+-- Growing trend: 5 → 8 → 11 → 14 → 18 → 22 paid messages per month.
+-- Each month also gets 2 support tips and (from month 4 back) 1 completed call.
+-- All monetary values are integer cents. No floating point.
+-- ============================================================================
+
+DO $$
+DECLARE
+  v_msg_id    UUID;
+  v_month     DATE;
+  v_offset    INT;
+  v_msg_count INT;
+BEGIN
+  -- v_offset 5 = 5 months ago, 0 = current month
+  FOR v_offset IN REVERSE 5..0 LOOP
+    v_month := DATE_TRUNC('month', NOW() - (v_offset * INTERVAL '1 month'))::DATE;
+
+    v_msg_count := CASE v_offset
+      WHEN 5 THEN 5
+      WHEN 4 THEN 8
+      WHEN 3 THEN 11
+      WHEN 2 THEN 14
+      WHEN 1 THEN 18
+      WHEN 0 THEN 22
+      ELSE 5
+    END;
+
+    -- ── Paid consultation messages ──────────────────────────────────────────
+    FOR i IN 1..v_msg_count LOOP
+      v_msg_id := gen_random_uuid();
+
+      INSERT INTO public.messages (
+        id, creator_id, sender_name, sender_email, message_content,
+        amount_paid, message_type, is_handled, created_at
+      ) VALUES (
+        v_msg_id,
+        '33333333-3333-3333-3333-333333333333',
+        'Client ' || i,
+        'hist_' || i || '_mo' || v_offset || '@example.com',
+        'I need legal guidance on my situation. Here are the details of my case — please let me know if you can help.',
+        1000,   -- $10.00 in cents
+        'message',
+        (i < v_msg_count),  -- keep last message of each month unhandled for inbox testing
+        v_month + ((i - 1) * INTERVAL '18 hours' + INTERVAL '9 hours')
+      );
+
+      -- Payment insert fires trg_analytics_on_payment → updates creator_monthly_analytics
+      INSERT INTO public.payments (
+        message_id, creator_id,
+        stripe_session_id, stripe_payment_intent_id,
+        amount, platform_fee, creator_amount, status, sender_email, created_at
+      ) VALUES (
+        v_msg_id,
+        '33333333-3333-3333-3333-333333333333',
+        'cs_hist_' || v_msg_id::text,
+        'pi_hist_' || replace(v_msg_id::text, '-', ''),
+        1000,   -- gross cents
+        220,    -- 22% platform fee (integer, no floating point)
+        780,    -- 78% creator net
+        'completed',
+        'hist_' || i || '_mo' || v_offset || '@example.com',
+        v_month + ((i - 1) * INTERVAL '18 hours' + INTERVAL '9 hours')
+      );
+    END LOOP;
+
+    -- ── Support tips (2 per month) ──────────────────────────────────────────
+    FOR i IN 1..2 LOOP
+      v_msg_id := gen_random_uuid();
+
+      INSERT INTO public.messages (
+        id, creator_id, sender_name, sender_email, message_content,
+        amount_paid, message_type, is_handled, created_at
+      ) VALUES (
+        v_msg_id,
+        '33333333-3333-3333-3333-333333333333',
+        'Grateful Client ' || i,
+        'tip_' || i || '_mo' || v_offset || '@example.com',
+        'Thank you so much for your advice — it made a real difference to my case!',
+        500,    -- $5.00 tip in cents
+        'support',
+        true,
+        v_month + INTERVAL '15 days' + (i * INTERVAL '3 hours')
+      );
+
+      INSERT INTO public.payments (
+        message_id, creator_id,
+        stripe_session_id, stripe_payment_intent_id,
+        amount, platform_fee, creator_amount, status, sender_email, created_at
+      ) VALUES (
+        v_msg_id,
+        '33333333-3333-3333-3333-333333333333',
+        'cs_tip_' || v_msg_id::text,
+        'pi_tip_' || replace(v_msg_id::text, '-', ''),
+        500,    -- $5.00 cents
+        110,    -- 22% of 500
+        390,    -- 78% of 500
+        'completed',
+        'tip_' || i || '_mo' || v_offset || '@example.com',
+        v_month + INTERVAL '15 days' + (i * INTERVAL '3 hours')
+      );
+    END LOOP;
+
+    -- ── Completed call bookings (1 per month, starting 4 months ago) ────────
+    -- payout_status = 'released' fires the call booking analytics trigger
+    IF v_offset <= 4 THEN
+      v_msg_id := gen_random_uuid();  -- reused as booking id
+
+      INSERT INTO public.call_bookings (
+        id, creator_id, booker_name, booker_email,
+        scheduled_at, duration, amount_paid, status,
+        stripe_session_id, stripe_payment_intent_id,
+        payout_status, created_at
+      ) VALUES (
+        v_msg_id,
+        '33333333-3333-3333-3333-333333333333',
+        'Call Client ' || (6 - v_offset),
+        'call_' || (6 - v_offset) || '@example.com',
+        v_month + INTERVAL '12 days' + INTERVAL '14 hours',
+        30,     -- 30-minute call
+        5000,   -- $50.00 in cents
+        'completed',
+        'cs_call_' || v_msg_id::text,
+        'pi_call_' || replace(v_msg_id::text, '-', ''),
+        'released',   -- triggers call analytics update for this month
+        v_month + INTERVAL '12 days' + INTERVAL '14 hours'
+      );
+    END IF;
+
+  END LOOP;
+END $$;
+
+-- ============================================================================
+-- THREADED INBOX REPLIES (tests message_replies / threaded inbox feature)
+-- ============================================================================
+
+-- Thread on John Doe's collaboration message (55555555...)
+INSERT INTO public.message_replies (message_id, sender_type, content, created_at)
+VALUES
+  ('55555555-5555-5555-5555-555555555555', 'expert',
+   'Hi John! Happy to explore this. What''s the scope and which brand is involved? If you have a brief you can share, I''ll take a look.',
+   NOW() - INTERVAL '22 hours'),
+  ('55555555-5555-5555-5555-555555555555', 'client',
+   'It''s a 6-week content series for a wellness brand launching Q2. Budget is flexible based on deliverables. I''ll send the brief over now.',
+   NOW() - INTERVAL '20 hours'),
+  ('55555555-5555-5555-5555-555555555555', 'expert',
+   'Perfect — send it through and I''ll review within 24 hours. Looking forward to seeing the details.',
+   NOW() - INTERVAL '18 hours');
+
+-- Thread on the Brand Manager partnership message (77777777...)
+INSERT INTO public.message_replies (message_id, sender_type, content, created_at)
+VALUES
+  ('77777777-7777-7777-7777-777777777777', 'expert',
+   'Thanks for reaching out. Happy to discuss this. What product category, and what kind of deliverables are you envisioning?',
+   NOW() - INTERVAL '2 hours'),
+  ('77777777-7777-7777-7777-777777777777', 'client',
+   'We''re a premium fitness supplements brand. Ideally 2 posts and a reel per month for a 3-month campaign.',
+   NOW() - INTERVAL '1 hour');
+
 -- Output summary
 SELECT 'Seed data inserted successfully!' as message;
 SELECT '✅ Created 2 test users (password: sample123)' as info_1;
-SELECT '✅ Created 2 creators with settings' as info_2;
-SELECT '✅ Created 5 sample messages' as info_3;
-SELECT '✅ Created 5 sample payments' as info_4;
-SELECT '✅ Created availability slots for Sarah' as info_5;
-SELECT '✅ Created 1 sample call booking' as info_6;
-SELECT '✅ Created 12 sample links (7 for Sarah, 5 for Mike)' as info_7;
-SELECT '✅ Created 40 sample link clicks' as info_8;
-SELECT '✅ Created 12 sample shop items (9 for Sarah, 3 for Mike)' as info_9;
-SELECT '✅ Created 5 sample shop orders (3 completed, 1 pending, 1 completed)' as info_10;
-SELECT '✅ Created 5 posts for Sarah Johnson' as info_11;
+SELECT '✅ Created 2 creators with settings and expert credentials' as info_2;
+SELECT '✅ Created stripe_account for Sarah (dashboard tabs unlocked)' as info_3;
+SELECT '✅ Created 5 base messages + 5 payments' as info_4;
+SELECT '✅ Created ~78 historical messages + payments (6 months)' as info_5;
+SELECT '✅ Created 10 support tips across 6 months' as info_6;
+SELECT '✅ Created 5 historical call bookings (payout_status=released)' as info_7;
+SELECT '✅ Created 5 message_replies (2 threads in inbox)' as info_8;
+SELECT '✅ Created availability slots for Sarah' as info_9;
+SELECT '✅ Created 1 upcoming call booking (confirmed)' as info_10;
+SELECT '✅ Created 12 sample links + 40 link clicks' as info_11;
+SELECT '✅ Created 12 shop items + 5 shop orders' as info_12;
+SELECT '✅ Created 5 posts for Sarah Johnson' as info_13;
+SELECT '✅ creator_monthly_analytics auto-populated via triggers' as info_14;
 SELECT '' as separator;
 SELECT 'Test Users:' as users_header;
-SELECT '- creator@example.com (Sarah Johnson) - Messages: $10, Calls: $50/30min, Shop: ENABLED' as user_1;
-SELECT '- creator2@example.com (Mike Chen) - Messages: $5, Calls: disabled, Shop: ENABLED' as user_2;
-SELECT '' as separator;
-SELECT 'Shop Products Available:' as shop_header;
-SELECT '  Sarah''s Shop (9 items):' as sarah_shop;
-SELECT '    - 2 Videos (workout, reel templates)' as sarah_1;
-SELECT '    - 2 Audio (meditation, podcast guide)' as sarah_2;
-SELECT '    - 2 PDFs (social media guide, email templates)' as sarah_3;
-SELECT '    - 1 Image pack (100 stock photos)' as sarah_4;
-SELECT '    - 1 Shoutout request (personalized video)' as sarah_5;
-SELECT '    - 1 Draft video (coming soon)' as sarah_6;
-SELECT '  Mike''s Shop (3 items):' as mike_shop;
-SELECT '    - 1 Audio (sample pack)' as mike_1;
-SELECT '    - 1 PDF (YouTube SEO checklist)' as mike_2;
-SELECT '    - 1 Audio (beat tape)' as mike_3;
-SELECT '' as separator;
-SELECT '2. Connect Stripe via Settings → Payments to enable checkout' as step_2;
-SELECT '3. Update the environment variables with your Stripe keys' as step_3;
+SELECT '  creator@example.com  / sample123  →  Sarah Johnson (Family Law Attorney)' as user_1;
+SELECT '  creator2@example.com / sample123  →  Mike Chen (Life Coach)' as user_2;
+SELECT '' as separator2;
+SELECT 'Sarah''s dashboard: all tabs visible (Inbox / Analytics / Bookings / Availability / Links)' as tabs_note;
+SELECT 'Analytics: ~6 months of growing revenue data — check the Analytics tab' as analytics_note;

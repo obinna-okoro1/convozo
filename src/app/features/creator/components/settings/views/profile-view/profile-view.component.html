@@ -96,45 +96,28 @@
       <p class="text-sm text-content-muted mb-4">Help clients understand your field and trust your authority</p>
 
       <!-- Category picker -->
-      <div class="mb-5">
-        <p class="form-label mb-3">Field of expertise</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          @for (cat of categories; track cat.id) {
-            <button
-              type="button"
-              (click)="state.selectCategory(cat.id)"
-              class="flex items-start gap-2 p-2.5 rounded-xl border text-left transition-all duration-200 focus:outline-none"
-              [class.border-accent]="state.expertCategory() === cat.id"
-              [class.bg-accent\/5]="state.expertCategory() === cat.id"
-              [class.border-separator]="state.expertCategory() !== cat.id"
-            >
-              <span class="text-lg leading-none mt-0.5 flex-shrink-0">{{ cat.emoji }}</span>
-              <span class="text-xs font-semibold text-content leading-snug">{{ cat.label }}</span>
-            </button>
-          }
-        </div>
+      <div class="mb-4">
+        <p class="form-label mb-2">Field of expertise</p>
+        <app-searchable-select
+          [options]="state.categoryOptions()"
+          [value]="state.expertCategory()"
+          (valueChange)="state.onCategoryChange($event)"
+          placeholder="Select your field of expertise"
+          [searchable]="true"
+        />
       </div>
 
-      <!-- Subcategory (shown when category selected) -->
-      @if (state.expertCategory() && state.filteredSubcategories().length) {
-        <div class="mb-5">
-          <p class="form-label mb-3">Specialisation <span class="text-content-muted font-normal">(optional)</span></p>
-          <div class="flex flex-wrap gap-2">
-            @for (sub of state.filteredSubcategories(); track sub.id) {
-              <button
-                type="button"
-                (click)="state.selectSubcategory(sub.id)"
-                class="px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-200 focus:outline-none"
-                [class.bg-accent]="state.expertSubcategory() === sub.id"
-                [class.border-accent]="state.expertSubcategory() === sub.id"
-                [class.text-white]="state.expertSubcategory() === sub.id"
-                [class.border-separator]="state.expertSubcategory() !== sub.id"
-                [class.text-content]="state.expertSubcategory() !== sub.id"
-              >
-                {{ sub.label }}
-              </button>
-            }
-          </div>
+      <!-- Subcategory (shown when a category is selected) -->
+      @if (state.expertCategory() && state.subcategoryOptions().length) {
+        <div class="mb-4">
+          <p class="form-label mb-2">Specialisation <span class="text-content-muted font-normal">(optional)</span></p>
+          <app-searchable-select
+            [options]="state.subcategoryOptions()"
+            [value]="state.expertSubcategory()"
+            (valueChange)="state.onSubcategoryChange($event)"
+            placeholder="Select a specialisation"
+            [searchable]="true"
+          />
         </div>
       }
 

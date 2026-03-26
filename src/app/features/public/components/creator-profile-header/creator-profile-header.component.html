@@ -44,11 +44,75 @@
             </div>
           }
         </div>
-        <h1 class="text-2xl sm:text-3xl font-black text-content tracking-tight mb-2">{{ creator().display_name }}</h1>
-        @if (creator().bio) {
-          <p class="text-content-secondary text-sm leading-relaxed mb-4 max-w-xs mx-auto">{{ creator().bio }}</p>
+        <h1 class="text-2xl sm:text-3xl font-black text-content tracking-tight mb-1">{{ creator().display_name }}</h1>
+        @if (creator().profession_title) {
+          <p class="text-sm font-semibold text-accent mb-2">{{ creator().profession_title }}</p>
         }
-        <div class="flex items-center justify-center gap-2 flex-wrap">
+        @if (creator().bio) {
+          <p class="text-content-secondary text-sm leading-relaxed mb-3 max-w-xs mx-auto">{{ creator().bio }}</p>
+        }
+
+        <!-- Credential meta chips -->
+        @if (hasCredentials()) {
+          <div class="flex items-center justify-center gap-1.5 flex-wrap mb-3">
+            @if (categoryInfo(); as cat) {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-[0.68rem] font-semibold text-accent">
+                {{ cat.emoji }}&nbsp;{{ cat.label }}
+              </span>
+            }
+            @if (subcategoryLabel(); as sub) {
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[0.68rem] font-medium text-content-secondary">
+                {{ sub }}
+              </span>
+            }
+            @if (creator().years_of_experience) {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[0.68rem] font-medium text-content-secondary">
+                <svg class="w-2.5 h-2.5 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ creator().years_of_experience }} yrs exp
+              </span>
+            }
+            @if (creator().linkedin_url) {
+              <a
+                [href]="creator().linkedin_url!"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.68rem] font-semibold transition-opacity hover:opacity-80"
+                style="background:rgba(10,102,194,0.15);color:#4a9fd4;"
+              >
+                <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            }
+          </div>
+        }
+
+        <!-- Quals & certs (compact, inside header) -->
+        @if (creator().qualifications?.length || creator().certifications?.length) {
+          <div class="mt-3 pt-3 border-t border-white/10 text-left space-y-1.5 max-w-xs mx-auto">
+            @for (q of creator().qualifications; track q.institution + q.degree) {
+              <div class="flex items-start gap-1.5">
+                <svg class="w-3 h-3 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
+                <p class="text-[0.7rem] text-content-secondary leading-tight">
+                  <span class="font-semibold text-content">{{ q.degree }}</span>
+                  &nbsp;·&nbsp;{{ q.institution }}{{ q.graduation_year ? ', ' + q.graduation_year : '' }}
+                </p>
+              </div>
+            }
+            @for (c of creator().certifications; track c.name + c.issuer) {
+              <div class="flex items-start gap-1.5">
+                <svg class="w-3 h-3 text-[#1a9e3f] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-[0.7rem] text-content-secondary leading-tight">
+                  <span class="font-semibold text-content">{{ c.name }}</span>
+                  &nbsp;·&nbsp;{{ c.issuer }}{{ c.year ? ', ' + c.year : '' }}
+                </p>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="flex items-center justify-center gap-2 flex-wrap mt-4">
           <span class="badge badge-neutral flex items-center gap-1.5">
             <span class="relative flex h-1.5 w-1.5">
               <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#1a9e3f]"></span>
@@ -104,10 +168,74 @@
             </div>
           }
         </div>
-        <h1 class="text-3xl sm:text-4xl font-black text-content tracking-tight mb-2">{{ creator().display_name }}</h1>
-        @if (creator().bio) {
-          <p class="text-content-secondary text-base max-w-xs sm:max-w-sm leading-relaxed mb-5">{{ creator().bio }}</p>
+        <h1 class="text-3xl sm:text-4xl font-black text-content tracking-tight mb-1">{{ creator().display_name }}</h1>
+        @if (creator().profession_title) {
+          <p class="text-sm font-semibold text-accent mb-3">{{ creator().profession_title }}</p>
         }
+        @if (creator().bio) {
+          <p class="text-content-secondary text-base max-w-xs sm:max-w-sm leading-relaxed mb-4">{{ creator().bio }}</p>
+        }
+
+        <!-- Credential meta chips -->
+        @if (hasCredentials()) {
+          <div class="flex items-center justify-center gap-1.5 flex-wrap mb-4">
+            @if (categoryInfo(); as cat) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 text-[0.7rem] font-semibold text-accent">
+                {{ cat.emoji }}&nbsp;{{ cat.label }}
+              </span>
+            }
+            @if (subcategoryLabel(); as sub) {
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-raised border border-surface-border text-[0.7rem] font-medium text-content-secondary">
+                {{ sub }}
+              </span>
+            }
+            @if (creator().years_of_experience) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-raised border border-surface-border text-[0.7rem] font-medium text-content-secondary">
+                <svg class="w-3 h-3 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ creator().years_of_experience }} yrs exp
+              </span>
+            }
+            @if (creator().linkedin_url) {
+              <a
+                [href]="creator().linkedin_url!"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.7rem] font-semibold transition-opacity hover:opacity-80"
+                style="background:rgba(10,102,194,0.1);color:#0a66c2;"
+              >
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            }
+          </div>
+        }
+
+        <!-- Quals & certs (compact, inside header) -->
+        @if (creator().qualifications?.length || creator().certifications?.length) {
+          <div class="mb-5 text-left space-y-2 max-w-xs sm:max-w-sm mx-auto border-t border-surface-border pt-4">
+            @for (q of creator().qualifications; track q.institution + q.degree) {
+              <div class="flex items-start gap-2">
+                <svg class="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
+                <p class="text-[0.75rem] text-content-secondary leading-snug">
+                  <span class="font-semibold text-content">{{ q.degree }}</span>
+                  &nbsp;·&nbsp;{{ q.institution }}{{ q.graduation_year ? ', ' + q.graduation_year : '' }}
+                </p>
+              </div>
+            }
+            @for (c of creator().certifications; track c.name + c.issuer) {
+              <div class="flex items-start gap-2">
+                <svg class="w-3.5 h-3.5 text-[#1a9e3f] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-[0.75rem] text-content-secondary leading-snug">
+                  <span class="font-semibold text-content">{{ c.name }}</span>
+                  &nbsp;·&nbsp;{{ c.issuer }}{{ c.year ? ', ' + c.year : '' }}
+                </p>
+              </div>
+            }
+          </div>
+        }
+
         <div class="flex items-center justify-center gap-2 flex-wrap">
           <span class="badge badge-neutral flex items-center gap-1.5">
             <span class="relative flex h-1.5 w-1.5">

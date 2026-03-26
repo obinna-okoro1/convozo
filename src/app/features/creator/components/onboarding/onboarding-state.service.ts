@@ -110,6 +110,15 @@ export class OnboardingStateService implements OnDestroy {
     () => getCategoryById(this.expertCategory())?.subcategories ?? [],
   );
 
+  // Dropdown-ready option lists — fed directly to <app-searchable-select>
+  readonly categoryOptions = computed<SelectOption[]>(() =>
+    EXPERT_CATEGORIES.map(c => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
+  );
+
+  readonly subcategoryOptions = computed<SelectOption[]>(() =>
+    this.filteredSubcategories().map(s => ({ value: s.id, label: s.label })),
+  );
+
   // Tracks a creator row already written to the DB during this session.
   // Set by completeOnboarding() so an update path is used on re-submit.
   private readonly _savedCreatorId = signal<string | null>(null);
@@ -259,20 +268,17 @@ export class OnboardingStateService implements OnDestroy {
 
   // ── Expertise helpers ──────────────────────────────────────────────
 
-  /** Toggle category — deselects if already active, and clears subcategory. */
-  selectCategory(id: string): void {
-    if (this.expertCategory() === id) {
-      this.expertCategory.set('');
-      this.expertSubcategory.set('');
-    } else {
-      this.expertCategory.set(id);
+  /** Called when the category dropdown value changes. Clears subcategory on category switch. */
+  onCategoryChange(value: string): void {
+    if (this.expertCategory() !== value) {
       this.expertSubcategory.set('');
     }
+    this.expertCategory.set(value);
   }
 
-  /** Toggle subcategory within the selected category. */
-  selectSubcategory(id: string): void {
-    this.expertSubcategory.set(this.expertSubcategory() === id ? '' : id);
+  /** Called when the subcategory dropdown value changes. */
+  onSubcategoryChange(value: string): void {
+    this.expertSubcategory.set(value);
   }
 
   /** Parse and clamp years of experience from an input string value. */
