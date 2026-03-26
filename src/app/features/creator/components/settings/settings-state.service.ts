@@ -12,6 +12,7 @@ import {
   StripeAccount,
   PaystackSubaccount,
   PaystackBank,
+  EXPERT_CATEGORIES,
   getCategoryById,
   type ExpertSubcategory,
   type Qualification,
@@ -21,6 +22,7 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
 import { CreatorService } from '../../services/creator.service';
 import { errorMessage } from '../../../../shared/utils/error.utils';
+import type { SelectOption } from '../../../../shared/components/ui/searchable-select/searchable-select.component';
 
 @Injectable()
 export class SettingsStateService {
@@ -154,6 +156,15 @@ export class SettingsStateService {
   /** Subcategories for the currently selected expert category. */
   readonly filteredSubcategories = computed<ExpertSubcategory[]>(
     () => getCategoryById(this.expertCategory())?.subcategories ?? [],
+  );
+
+  /** Dropdown-ready option lists — fed directly to <app-searchable-select> */
+  readonly categoryOptions = computed<SelectOption[]>(() =>
+    EXPERT_CATEGORIES.map(c => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
+  );
+
+  readonly subcategoryOptions = computed<SelectOption[]>(() =>
+    this.filteredSubcategories().map(s => ({ value: s.id, label: s.label })),
   );
 
   /** True only when Stripe account is fully connected and onboarding is complete */
@@ -431,20 +442,17 @@ export class SettingsStateService {
 
   // ── Expertise helpers ──────────────────────────────────────────────
 
-  /** Toggle category — deselects if already active, clears subcategory. */
-  selectCategory(id: string): void {
-    if (this.expertCategory() === id) {
-      this.expertCategory.set('');
-      this.expertSubcategory.set('');
-    } else {
-      this.expertCategory.set(id);
+  /** Called when the category dropdown value changes. Clears subcategory on category switch. */
+  onCategoryChange(value: string): void {
+    if (this.expertCategory() !== value) {
       this.expertSubcategory.set('');
     }
+    this.expertCategory.set(value);
   }
 
-  /** Toggle subcategory within the selected category. */
-  selectSubcategory(id: string): void {
-    this.expertSubcategory.set(this.expertSubcategory() === id ? '' : id);
+  /** Called when the subcategory dropdown value changes. */
+  onSubcategoryChange(value: string): void {
+    this.expertSubcategory.set(value);
   }
 
   /** Parse and clamp years of experience from an input string value. */
