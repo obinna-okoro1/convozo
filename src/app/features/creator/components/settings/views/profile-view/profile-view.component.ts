@@ -5,6 +5,7 @@ import {
   ImageChangeEvent,
 } from '../../../../../../shared/components/ui/image-upload/image-upload.component';
 import { SettingsStateService } from '../../settings-state.service';
+import { EXPERT_CATEGORIES } from '../../../../../../core/models';
 
 /** Preset banner images bundled with the app (served from /assets/banners/). */
 interface BannerPreset { label: string; value: string; }
@@ -16,6 +17,7 @@ interface BannerPreset { label: string; value: string; }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileViewComponent {
+  protected readonly categories = EXPERT_CATEGORIES;
   protected readonly bannerPresets: BannerPreset[] = [
     { label: 'Mountains', value: '/assets/banners/banner-1.jpg' },
     { label: 'City Lights', value: '/assets/banners/banner-2.jpg' },

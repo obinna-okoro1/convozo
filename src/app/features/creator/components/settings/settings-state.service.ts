@@ -12,6 +12,10 @@ import {
   StripeAccount,
   PaystackSubaccount,
   PaystackBank,
+  getCategoryById,
+  type ExpertSubcategory,
+  type Qualification,
+  type Certification,
 } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { FormValidators } from '../../../../core/validators/form-validators';
@@ -49,6 +53,17 @@ export class SettingsStateService {
   readonly bannerImageUrl = signal('');
   readonly phoneNumber = signal('');
 
+  // ── Expertise fields ──────────────────────────────────────────────────
+  readonly expertCategory = signal<string>('');
+  readonly expertSubcategory = signal<string>('');
+  readonly professionTitle = signal<string>('');
+  readonly yearsOfExperience = signal<number | null>(null);
+  readonly linkedinUrl = signal<string>('');
+
+  // ── Credentials ──────────────────────────────────────────────────────────
+  readonly qualifications = signal<Qualification[]>([]);
+  readonly certifications = signal<Certification[]>([]);
+
   private originalSlug = '';
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -70,6 +85,13 @@ export class SettingsStateService {
     profileImageUrl: '',
     bannerImageUrl: '',
     phoneNumber: '',
+    expertCategory: '',
+    expertSubcategory: '',
+    professionTitle: '',
+    yearsOfExperience: null as number | null,
+    linkedinUrl: '',
+    qualifications: [] as Qualification[],
+    certifications: [] as Certification[],
   });
   readonly originalMonetization = signal({
     messagePrice: 500,
@@ -91,7 +113,14 @@ export class SettingsStateService {
       this.bio() !== o.bio ||
       this.profileImageUrl() !== o.profileImageUrl ||
       this.bannerImageUrl() !== o.bannerImageUrl ||
-      this.phoneNumber() !== o.phoneNumber
+      this.phoneNumber() !== o.phoneNumber ||
+      this.expertCategory() !== o.expertCategory ||
+      this.expertSubcategory() !== o.expertSubcategory ||
+      this.professionTitle() !== o.professionTitle ||
+      this.yearsOfExperience() !== o.yearsOfExperience ||
+      this.linkedinUrl() !== o.linkedinUrl ||
+      JSON.stringify(this.qualifications()) !== JSON.stringify(o.qualifications) ||
+      JSON.stringify(this.certifications()) !== JSON.stringify(o.certifications)
     );
   });
 
@@ -121,6 +150,11 @@ export class SettingsStateService {
   });
 
   readonly canSaveMonetization = computed(() => this.monetizationDirty());
+
+  /** Subcategories for the currently selected expert category. */
+  readonly filteredSubcategories = computed<ExpertSubcategory[]>(
+    () => getCategoryById(this.expertCategory())?.subcategories ?? [],
+  );
 
   /** True only when Stripe account is fully connected and onboarding is complete */
   readonly isStripeConnected = computed(() => {
@@ -237,6 +271,13 @@ export class SettingsStateService {
       phoneNumber: this.phoneNumber(),
       profileImageUrl: this.profileImageUrl() || undefined,
       bannerImageUrl: this.bannerImageUrl() || undefined,
+      category: this.expertCategory() || null,
+      subcategory: this.expertSubcategory() || null,
+      professionTitle: this.professionTitle() || null,
+      yearsOfExperience: this.yearsOfExperience(),
+      linkedinUrl: this.linkedinUrl() || null,
+      qualifications: this.qualifications(),
+      certifications: this.certifications(),
     });
 
     this.saving.set(false);
@@ -250,6 +291,13 @@ export class SettingsStateService {
         profileImageUrl: this.profileImageUrl(),
         bannerImageUrl: this.bannerImageUrl(),
         phoneNumber: this.phoneNumber(),
+        expertCategory: this.expertCategory(),
+        expertSubcategory: this.expertSubcategory(),
+        professionTitle: this.professionTitle(),
+        yearsOfExperience: this.yearsOfExperience(),
+        linkedinUrl: this.linkedinUrl(),
+        qualifications: this.qualifications(),
+        certifications: this.certifications(),
       });
       this.slugStatus.set('idle');
       this.success.set(true);
@@ -381,6 +429,94 @@ export class SettingsStateService {
     }
   }
 
+  // ── Expertise helpers ──────────────────────────────────────────────
+
+  /** Toggle category — deselects if already active, clears subcategory. */
+  selectCategory(id: string): void {
+    if (this.expertCategory() === id) {
+      this.expertCategory.set('');
+      this.expertSubcategory.set('');
+    } else {
+      this.expertCategory.set(id);
+      this.expertSubcategory.set('');
+    }
+  }
+
+  /** Toggle subcategory within the selected category. */
+  selectSubcategory(id: string): void {
+    this.expertSubcategory.set(this.expertSubcategory() === id ? '' : id);
+  }
+
+  /** Parse and clamp years of experience from an input string value. */
+  setYearsOfExperience(value: string): void {
+    const n = parseInt(value, 10);
+    this.yearsOfExperience.set(isNaN(n) ? null : Math.min(80, Math.max(0, n)));
+  }
+
+  // ── Qualification helpers ──────────────────────────────────────────
+
+  addQualification(): void {
+    this.qualifications.update(list => [
+      ...list,
+      { institution: '', degree: '', graduation_year: null },
+    ]);
+  }
+
+  removeQualification(index: number): void {
+    this.qualifications.update(list => list.filter((_, i) => i !== index));
+  }
+
+  updateQualification(
+    index: number,
+    field: 'institution' | 'degree',
+    value: string,
+  ): void {
+    this.qualifications.update(list =>
+      list.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
+    );
+  }
+
+  updateQualificationYear(index: number, value: string): void {
+    const n = parseInt(value, 10);
+    this.qualifications.update(list =>
+      list.map((q, i) =>
+        i === index ? { ...q, graduation_year: isNaN(n) ? null : n } : q,
+      ),
+    );
+  }
+
+  // ── Certification helpers ──────────────────────────────────────────
+
+  addCertification(): void {
+    this.certifications.update(list => [
+      ...list,
+      { name: '', issuer: '', year: null },
+    ]);
+  }
+
+  removeCertification(index: number): void {
+    this.certifications.update(list => list.filter((_, i) => i !== index));
+  }
+
+  updateCertification(
+    index: number,
+    field: 'name' | 'issuer',
+    value: string,
+  ): void {
+    this.certifications.update(list =>
+      list.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
+    );
+  }
+
+  updateCertificationYear(index: number, value: string): void {
+    const n = parseInt(value, 10);
+    this.certifications.update(list =>
+      list.map((c, i) =>
+        i === index ? { ...c, year: isNaN(n) ? null : n } : c,
+      ),
+    );
+  }
+
   // ── Navigation ─────────────────────────────────────────────────────
 
   goToDashboard(): void {
@@ -402,6 +538,13 @@ export class SettingsStateService {
       this.profileImageUrl.set(creatorData.profile_image_url || '');
       this.bannerImageUrl.set(creatorData.banner_image_url || '');
       this.phoneNumber.set(creatorData.phone_number || '');
+      this.expertCategory.set(creatorData.category || '');
+      this.expertSubcategory.set(creatorData.subcategory || '');
+      this.professionTitle.set(creatorData.profession_title || '');
+      this.yearsOfExperience.set(creatorData.years_of_experience ?? null);
+      this.linkedinUrl.set(creatorData.linkedin_url || '');
+      this.qualifications.set(creatorData.qualifications ?? []);
+      this.certifications.set(creatorData.certifications ?? []);
       this.originalProfile.set({
         displayName: creatorData.display_name,
         slug: creatorData.slug,
@@ -409,6 +552,13 @@ export class SettingsStateService {
         profileImageUrl: creatorData.profile_image_url || '',
         bannerImageUrl: creatorData.banner_image_url || '',
         phoneNumber: creatorData.phone_number || '',
+        expertCategory: creatorData.category || '',
+        expertSubcategory: creatorData.subcategory || '',
+        professionTitle: creatorData.profession_title || '',
+        yearsOfExperience: creatorData.years_of_experience ?? null,
+        linkedinUrl: creatorData.linkedin_url || '',
+        qualifications: creatorData.qualifications ?? [],
+        certifications: creatorData.certifications ?? [],
       });
 
       const settingsData = await this.creatorService.getCreatorSettings(creatorData.id);
