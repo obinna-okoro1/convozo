@@ -1,6 +1,13 @@
 <!-- ── Service cards (primary CTAs) ──────────────────────────────────── -->
-@if (state.messagesEnabled() || state.callsEnabled() || state.shopEnabled() || state.tipsEnabled()) {
+<!--
+  Visitors: only configured (enabled) cards appear.
+  Owner: all 4 slots always visible — unconfigured ones show greyed-out
+  with a "Set up" hint that navigates to the relevant settings page.
+-->
+@if (state.messagesEnabled() || state.callsEnabled() || state.shopEnabled() || state.tipsEnabled() || ownerState.isOwner()) {
   <div class="grid grid-cols-2 gap-2.5 mb-6">
+
+    <!-- ── Consultation (message) ── -->
     @if (state.messagesEnabled()) {
       <a routerLink="message"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
@@ -13,7 +20,26 @@
         <p class="text-xs font-bold text-content">Consultation</p>
         <p class="text-sm font-black text-accent mt-0.5">${{ state.messagePriceCents() / 100 }}</p>
       </a>
+    } @else if (ownerState.isOwner()) {
+      <a [routerLink]="['/creator/settings/monetization']"
+         class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.08) 100%);">
+          <svg class="w-4 h-4 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Consultation</p>
+        <p class="text-[0.65rem] text-content-tertiary mt-0.5 flex items-center justify-center gap-0.5">
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Set up
+        </p>
+      </a>
     }
+
+    <!-- ── Session (call) ── -->
     @if (state.callsEnabled()) {
       <a routerLink="call"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
@@ -26,7 +52,26 @@
         <p class="text-xs font-bold text-content">Session</p>
         <p class="text-sm font-black text-accent mt-0.5">${{ state.callPriceCents() / 100 }}<span class="text-[0.6rem] text-content-muted font-normal"> / {{ state.callDuration() }}min</span></p>
       </a>
+    } @else if (ownerState.isOwner()) {
+      <a [routerLink]="['/creator/settings/monetization']"
+         class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.08) 100%);">
+          <svg class="w-4 h-4 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Session</p>
+        <p class="text-[0.65rem] text-content-tertiary mt-0.5 flex items-center justify-center gap-0.5">
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Set up
+        </p>
+      </a>
     }
+
+    <!-- ── Products (shop) ── -->
     @if (state.shopEnabled()) {
       <a routerLink="shop"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
@@ -39,7 +84,26 @@
         <p class="text-xs font-bold text-content">Products</p>
         <p class="text-[0.65rem] text-content-muted mt-0.5">Digital resources</p>
       </a>
+    } @else if (ownerState.isOwner()) {
+      <a [routerLink]="['/creator/settings/shop']"
+         class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.08) 100%);">
+          <svg class="w-4 h-4 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Products</p>
+        <p class="text-[0.65rem] text-content-tertiary mt-0.5 flex items-center justify-center gap-0.5">
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Set up
+        </p>
+      </a>
     }
+
+    <!-- ── Support (tips) ── -->
     @if (state.tipsEnabled()) {
       <a routerLink="support"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
@@ -52,7 +116,25 @@
         <p class="text-xs font-bold text-content">Support</p>
         <p class="text-[0.65rem] text-content-muted mt-0.5">Show appreciation</p>
       </a>
+    } @else if (ownerState.isOwner()) {
+      <a [routerLink]="['/creator/settings/monetization']"
+         class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
+        <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(239,68,68,0.08) 100%);">
+          <svg class="w-4 h-4 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-content">Support</p>
+        <p class="text-[0.65rem] text-content-tertiary mt-0.5 flex items-center justify-center gap-0.5">
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Set up
+        </p>
+      </a>
     }
+
   </div>
 }
 
