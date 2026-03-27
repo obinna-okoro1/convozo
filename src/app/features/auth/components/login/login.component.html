@@ -95,7 +95,12 @@
 
             @if (usePassword()) {
               <div>
-                <label for="password" class="form-label">Password</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label for="password" class="form-label !mb-0">Password</label>
+                  <a routerLink="/auth/forgot-password" class="text-xs text-accent-400 hover:text-accent-400/80 transition-colors">
+                    Forgot password?
+                  </a>
+                </div>
                 <input
                   type="password"
                   id="password"

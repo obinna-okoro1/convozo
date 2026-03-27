@@ -28,6 +28,8 @@ export const ROUTES = {
   AUTH: {
     LOGIN: '/auth/login',
     CALLBACK: '/auth/callback',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   CREATOR: {
     ONBOARDING: '/creator/onboarding',

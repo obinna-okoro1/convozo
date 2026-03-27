@@ -147,7 +147,7 @@ enabled = true
 # in emails.
 site_url = "https://convozo.com"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:4200/auth/callback", "https://convozo.com/auth/callback"]
+additional_redirect_urls = ["http://localhost:4200/auth/callback", "http://localhost:4200/auth/reset-password", "https://convozo.com/auth/callback", "https://convozo.com/auth/reset-password"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to the local API URL (http://127.0.0.1:<port>/auth/v1).
@@ -210,8 +210,9 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# NOTE: For production, configure SMTP via the Supabase Dashboard (Authentication > SMTP Settings).
-# Use Resend: host=smtp.resend.com, port=465, user=resend, pass=<RESEND_API_KEY>
+# NOTE: Production SMTP is configured via the Supabase Management API (not this file).
+# Settings: host=smtp.resend.com, port=465, user=resend, pass=RESEND_API_KEY, from=noreply@convozo.com
+# To update: PATCH https://api.supabase.com/v1/projects/pfmscnpmpwxpdlrbeokb/config/auth
 # Locally, auth emails are caught by Mailpit at http://127.0.0.1:54324
 
 # Custom email templates (apply both locally via Mailpit and in production)
