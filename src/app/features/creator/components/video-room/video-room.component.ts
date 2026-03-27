@@ -632,7 +632,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
   goBack(): void {
     if (this.isCreator()) {
-      void this.router.navigate(['/creator/dashboard']);
+      void this.router.navigate(['/creator/settings']);
     } else {
       void this.router.navigate(['/']);
     }

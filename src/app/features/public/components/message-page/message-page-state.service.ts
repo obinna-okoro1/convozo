@@ -162,6 +162,13 @@ export class MessagePageStateService {
     window.open(link.url, '_blank', 'noopener,noreferrer');
   }
 
+  // ── Public helpers ────────────────────────────────────────────────
+
+  /** Re-fetches the creator's active links (called after the owner adds a new link). */
+  async reloadLinks(creatorId: string): Promise<void> {
+    await this.loadCreatorLinks(creatorId);
+  }
+
   // ── Private helpers ──
 
   private async loadCreator(slug: string): Promise<void> {

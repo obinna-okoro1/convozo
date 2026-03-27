@@ -5,6 +5,7 @@
 
 import { Routes } from '@angular/router';
 import { MessagePageStateService } from './features/public/components/message-page/message-page-state.service';
+import { ProfileOwnerService } from './features/public/components/message-page/services/profile-owner.service';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -72,7 +73,7 @@ export const routes: Routes = [
       import('./features/public/components/message-page/message-page.component').then(
         (m) => m.MessagePageComponent,
       ),
-    providers: [MessagePageStateService],
+    providers: [MessagePageStateService, ProfileOwnerService],
     loadChildren: () =>
       import('./features/public/components/message-page/message-page.routes').then(
         (m) => m.MESSAGE_PAGE_ROUTES,

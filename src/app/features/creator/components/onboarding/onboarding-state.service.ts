@@ -174,7 +174,7 @@ export class OnboardingStateService implements OnDestroy {
     }
     const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
     if (creator) {
-      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+      await this.router.navigate(['/' + creator.slug]);
     }
   }
 
@@ -430,7 +430,8 @@ export class OnboardingStateService implements OnDestroy {
         throw new Error('Failed to verify creator settings were saved. Please try again.');
       }
 
-      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+      // Land on the expert's own public profile page (owner toolbar will be visible)
+      await this.router.navigate(['/' + this.slug()]);
     } catch (err) {
       const msg = errorMessage(err, '');
       if (

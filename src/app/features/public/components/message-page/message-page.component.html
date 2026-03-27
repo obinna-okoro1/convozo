@@ -1,4 +1,7 @@
-<div class="min-h-screen bg-surface relative overflow-hidden">
+<!-- Owner management bar — only visible to the logged-in profile owner -->
+<app-owner-toolbar />
+
+<div class="min-h-screen bg-surface relative overflow-hidden" [class.pt-11]="ownerState.isOwner()">
 
   <!-- Ambient blobs — brand colour wash that makes backdrop-filter visible on glass tabs, cards & buttons regardless of banner -->
   <div class="absolute inset-0 pointer-events-none" aria-hidden="true">

@@ -6,16 +6,19 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MessagePageStateService } from './message-page-state.service';
 import { CreatorProfileHeaderComponent } from '../creator-profile-header/creator-profile-header.component';
+import { OwnerToolbarComponent } from './owner-toolbar/owner-toolbar.component';
+import { ProfileOwnerService } from './services/profile-owner.service';
 
 @Component({
   selector: 'app-message-page',
-  imports: [RouterLink, RouterOutlet, CreatorProfileHeaderComponent],
+  imports: [RouterLink, RouterOutlet, CreatorProfileHeaderComponent, OwnerToolbarComponent],
   templateUrl: './message-page.component.html',
   styleUrls: ['./message-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessagePageComponent implements OnInit {
   protected readonly state = inject(MessagePageStateService);
+  protected readonly ownerState = inject(ProfileOwnerService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -44,6 +47,11 @@ export class MessagePageComponent implements OnInit {
       }
     }
 
-    void this.state.initialize(slug);
+    void this.state.initialize(slug).then(() => {
+      const creator = this.state.creator();
+      if (creator) {
+        void this.ownerState.initialize(creator);
+      }
+    });
   }
 }

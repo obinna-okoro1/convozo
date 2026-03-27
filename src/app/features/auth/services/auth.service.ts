@@ -54,7 +54,8 @@ export class AuthService {
         const { data: creator } = await this.supabaseService.getCreatorByUserId(data.user.id);
 
         if (creator) {
-          await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+          // Land the expert on their own public profile (owner toolbar appears automatically)
+          await this.router.navigate(['/' + creator.slug]);
         } else {
           await this.router.navigate([ROUTES.CREATOR.ONBOARDING]);
         }
@@ -196,9 +197,9 @@ export class AuthService {
     const { data: creator } = await this.supabaseService.getCreatorByUserId(user.id);
 
     if (creator) {
-      // Existing creator, go to dashboard
+      // Existing creator — land on their own public profile (owner toolbar appears automatically)
       sessionStorage.removeItem('oauth_user_data');
-      await this.router.navigate([ROUTES.CREATOR.DASHBOARD]);
+      await this.router.navigate(['/' + creator.slug]);
     } else {
       // New creator, go to onboarding with pre-filled data
       await this.router.navigate([ROUTES.CREATOR.ONBOARDING]);
