@@ -46,7 +46,14 @@ export class MessagePageComponent implements OnInit {
   /** The active public panel slug ('message', 'call', etc.) or null when on the home tab. */
   protected readonly activePanelRoute = computed((): PublicPanel | null => {
     const url = this.currentUrl();
-    const seg = url.split('?')[0].split('#')[0].split('/').filter(Boolean).pop() ?? '';
+    const segments = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
+    const seg = segments[segments.length - 1] ?? '';
+    // Don't treat a /settings/<tab> sub-route as a public panel — those are
+    // owner settings tabs handled by OwnerToolbarComponent, not public drawers.
+    const parent = segments[segments.length - 2] ?? '';
+    if (parent === 'settings') {
+      return null;
+    }
     return PUBLIC_PANELS.includes(seg as PublicPanel) ? (seg as PublicPanel) : null;
   });
 

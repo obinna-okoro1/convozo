@@ -298,7 +298,7 @@ export class AnalyticsService {
         count: bookings.length,
         revenue: bookings.reduce((sum, b) => sum + b.amount_paid, 0) / 100,
       };
-      typeMap.set('call booking', bookingData);
+      typeMap.set('session', bookingData);
     }
 
     return Array.from(typeMap.entries()).map(([type, data]) => ({ type, ...data }));

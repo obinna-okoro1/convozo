@@ -26,7 +26,7 @@ export class SuccessComponent implements OnInit {
 
   protected readonly callSteps = [
     { n: 1, text: "Check your email — a booking confirmation with all the details has been sent to you." },
-    { n: 2, text: "You'll receive a secure join link by email before your call. No action needed until then." },
+    { n: 2, text: "You'll receive a secure join link by email before your session. No action needed until then." },
     { n: 3, text: "Click the join link at the scheduled time — your call starts automatically. Enjoy!" },
   ];
 
@@ -111,7 +111,7 @@ export class SuccessComponent implements OnInit {
       action: 'TEMPLATE',
       text: `Convozo Consultation with ${expert}`,
       dates: `${fmt(start)}/${fmt(end)}`,
-      details: 'Your video consultation booked via Convozo. Check your email for the join link.',
+      details: 'Your session booked via Convozo. Check your email for the join link.',
     });
 
     return `https://calendar.google.com/calendar/render?${params.toString()}`;

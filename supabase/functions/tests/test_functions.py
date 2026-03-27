@@ -1495,6 +1495,21 @@ def test_auth_update_password_too_short() -> list[TestResult]:
         {"password": "short7!"},
         headers_override={"Authorization": f"Bearer {access_token}"},
     )
+
+    # IMPORTANT: if Supabase accepted the update (200), the password is now
+    # "short7!" which would corrupt the seed account for future test runs.
+    # Restore the original "sample123" password immediately.
+    if status == 200:
+        _auth_request(
+            "PUT",
+            "user",
+            {"password": "sample123"},
+            headers_override={"Authorization": f"Bearer {access_token}"},
+        )
+        # Bust the cached JWT — the session may be invalidated after password change
+        global _CREATOR_JWT
+        _CREATOR_JWT = None
+
     # Supabase accepts 7 chars (> its own 6-char min) → 200
     # Our Angular component rejects < 8 chars before this call is reached.
     # Either way, the password update request was authenticated — test passes.
