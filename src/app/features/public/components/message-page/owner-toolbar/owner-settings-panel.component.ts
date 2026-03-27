@@ -13,6 +13,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { SettingsStateService } from '../../../../creator/components/settings/settings-state.service';
 import { MonetizationViewComponent } from '../../../../creator/components/settings/views/monetization-view/monetization-view.component';
 import { PaymentsViewComponent } from '../../../../creator/components/settings/views/payments-view/payments-view.component';
@@ -45,6 +46,7 @@ interface SettingsTabDef {
 })
 export class OwnerSettingsPanelComponent implements OnInit {
   protected readonly state = inject(SettingsStateService);
+  private readonly router = inject(Router);
   protected readonly currentTab = signal<SettingsTab>('profile');
 
   protected readonly tabs: SettingsTabDef[] = [
@@ -82,9 +84,24 @@ export class OwnerSettingsPanelComponent implements OnInit {
 
   public ngOnInit(): void {
     void this.state.loadCreatorData();
+    // Sync the initial tab from the URL segment after settings/
+    // e.g. /:slug/settings/monetization → opens on the Monetization tab.
+    const match = /\/settings\/([^/?#]+)/.exec(this.router.url);
+    const tabFromUrl = match?.[1] as SettingsTab | undefined;
+    if (tabFromUrl && this.tabs.some((t) => t.id === tabFromUrl)) {
+      this.currentTab.set(tabFromUrl);
+    }
   }
 
   protected setTab(tab: SettingsTab): void {
     this.currentTab.set(tab);
+    // Keep the address bar in sync so the URL reflects the active tab
+    // (e.g. /:slug/settings/monetization). replaceUrl avoids polluting
+    // the browser history — back button should close the drawer, not step
+    // through each tab the user clicked.
+    const slug = this.router.url.split('/')[1];
+    if (slug) {
+      void this.router.navigate([`/${slug}/settings/${tab}`], { replaceUrl: true });
+    }
   }
 }

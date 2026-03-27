@@ -21,7 +21,7 @@
         <p class="text-sm font-black text-accent mt-0.5">${{ state.messagePriceCents() / 100 }}</p>
       </a>
     } @else if (ownerState.isOwner()) {
-      <a [routerLink]="['/creator/settings/monetization']"
+      <a [routerLink]="['/', ownerState.creatorSlug(), 'settings', 'monetization']"
          class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.08) 100%);">
@@ -53,7 +53,7 @@
         <p class="text-sm font-black text-accent mt-0.5">${{ state.callPriceCents() / 100 }}<span class="text-[0.6rem] text-content-muted font-normal"> / {{ state.callDuration() }}min</span></p>
       </a>
     } @else if (ownerState.isOwner()) {
-      <a [routerLink]="['/creator/settings/monetization']"
+      <a [routerLink]="['/', ownerState.creatorSlug(), 'settings', 'monetization']"
          class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.08) 100%);">
@@ -85,7 +85,7 @@
         <p class="text-[0.65rem] text-content-muted mt-0.5">Digital resources</p>
       </a>
     } @else if (ownerState.isOwner()) {
-      <a [routerLink]="['/creator/settings/shop']"
+      <a [routerLink]="['/', ownerState.creatorSlug(), 'settings', 'shop']"
          class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.08) 100%);">
@@ -117,7 +117,7 @@
         <p class="text-[0.65rem] text-content-muted mt-0.5">Show appreciation</p>
       </a>
     } @else if (ownerState.isOwner()) {
-      <a [routerLink]="['/creator/settings/monetization']"
+      <a [routerLink]="['/', ownerState.creatorSlug(), 'settings', 'monetization']"
          class="card-glass !p-3.5 text-center opacity-40 hover:opacity-70 transition-all duration-200 cursor-pointer border-dashed">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(239,68,68,0.08) 100%);">
