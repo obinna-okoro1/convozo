@@ -28,7 +28,7 @@
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Your Portal</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Enter the email you used to send a message or book a call. We'll send you a secure sign-in link.
+            Enter the email you used to send a message or book a session. We'll send you a secure sign-in link.
           </p>
 
           <div class="space-y-4">
@@ -180,7 +180,7 @@
             ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm transition'
             : 'px-5 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition'"
         >
-          Call Bookings
+          Sessions
           @if (bookings().length > 0) {
             <span class="ml-1.5 text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">
               {{ bookings().length }}
@@ -272,7 +272,7 @@
             <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <p class="text-sm">No call bookings yet</p>
+            <p class="text-sm">No sessions yet</p>
           </div>
         }
 
@@ -296,7 +296,7 @@
                   <div class="min-w-0">
                     <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ booking.creator.display_name }}</p>
                     <p class="text-xs text-gray-400">
-                      {{ booking.duration }}-min call · {{ formatCurrency(booking.amount_paid) }}
+                      {{ booking.duration }}-min session · {{ formatCurrency(booking.amount_paid) }}
                     </p>
                   </div>
                 </div>
@@ -339,7 +339,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  Join Call
+                  Join Session
                 </a>
               }
             </div>

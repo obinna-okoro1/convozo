@@ -17,8 +17,8 @@
         <h1 class="text-3xl font-black text-content mb-3 tracking-tight">Purchase Complete!</h1>
         <p class="text-content-secondary leading-relaxed max-w-xs mx-auto">Your payment is confirmed. Your file is ready to download right now.</p>
       } @else if (isCallBooking()) {
-        <h1 class="text-3xl font-black text-content mb-3 tracking-tight">Consultation Booked!</h1>
-        <p class="text-content-secondary leading-relaxed max-w-xs mx-auto">Your payment is confirmed. Check your email for the video call link and details.</p>
+        <h1 class="text-3xl font-black text-content mb-3 tracking-tight">Session Booked!</h1>
+        <p class="text-content-secondary leading-relaxed max-w-xs mx-auto">Your payment is confirmed. Check your email for the session link and details.</p>
       } @else if (isSupportTip()) {
         <h1 class="text-3xl font-black text-content mb-3 tracking-tight">Thank You!</h1>
         <p class="text-content-secondary leading-relaxed max-w-xs mx-auto">Your support has been sent@if (creatorName()) { to {{ creatorName() }}}. They’ll appreciate it!</p>

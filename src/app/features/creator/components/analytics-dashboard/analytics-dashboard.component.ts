@@ -119,7 +119,7 @@ export class AnalyticsDashboardComponent implements OnInit {
       amount: this.refundRows().reduce((s, r) => s + r.support_refund_amount, 0) / 100,
     },
     {
-      label: 'Calls',
+      label: 'Sessions',
       count: this.refundRows().reduce((s, r) => s + r.call_refund_count, 0),
       amount: this.refundRows().reduce((s, r) => s + r.call_refund_amount, 0) / 100,
     },
@@ -175,7 +175,7 @@ export class AnalyticsDashboardComponent implements OnInit {
       revenue: rows.reduce((s, r) => s + r.support_gross, 0) / 100,
     };
     const calls = {
-      type: 'Calls',
+      type: 'Sessions',
       count: rows.reduce((s, r) => s + r.call_count, 0),
       revenue: rows.reduce((s, r) => s + r.call_gross, 0) / 100,
     };

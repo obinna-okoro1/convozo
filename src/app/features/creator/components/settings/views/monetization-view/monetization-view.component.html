@@ -69,8 +69,8 @@
     <div class="border-b border-separator pb-6">
       <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
         <div>
-          <h3 class="font-semibold text-content">Video Call Bookings</h3>
-          <p class="text-sm text-content-muted mt-0.5">Allow clients to book video calls with you</p>
+          <h3 class="font-semibold text-content">Video Sessions</h3>
+          <p class="text-sm text-content-muted mt-0.5">Allow clients to book video sessions with you</p>
         </div>
         <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
           <input type="checkbox" [checked]="state.callsEnabled()" (change)="state.isPaymentReady() && state.callsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
@@ -82,20 +82,20 @@
         <div class="mt-4 space-y-4 animate-fade-in">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="callPrice" class="form-label">Call Price <span class="text-red-400">*</span></label>
+              <label for="callPrice" class="form-label">Session Price <span class="text-red-400">*</span></label>
               <div class="flex items-center gap-3">
                 <span class="text-xl font-semibold text-content-secondary">$</span>
                 <input type="number" id="callPrice" [value]="state.callPrice() / 100" (input)="state.callPrice.set(state.inputNumber($event) * 100)" min="1" step="1" required class="input flex-1" />
               </div>
-              <p class="form-hint">Price per call in USD</p>
+              <p class="form-hint">Price per session in USD</p>
             </div>
             <div>
-              <label for="callDuration" class="form-label">Call Duration <span class="text-red-400">*</span></label>
+              <label for="callDuration" class="form-label">Session Duration <span class="text-red-400">*</span></label>
               <div class="flex items-center gap-3">
                 <input type="number" id="callDuration" [value]="state.callDuration()" (input)="state.callDuration.set(state.inputNumber($event))" min="15" max="120" step="15" required class="input flex-1" />
                 <span class="text-content-muted text-sm font-medium">minutes</span>
               </div>
-              <p class="form-hint">Duration of each call (15-120 min)</p>
+              <p class="form-hint">Duration of each session (15-120 min)</p>
             </div>
           </div>
 
@@ -107,7 +107,7 @@
               </svg>
               <p class="font-semibold text-content text-sm">Weekly Schedule</p>
             </div>
-            <p class="text-content-secondary text-xs">Set which days and times you're available for call bookings.</p>
+            <p class="text-content-secondary text-xs">Set which days and times you're available for session bookings.</p>
             @if (state.creator()?.id) {
               <app-availability-manager [creatorId]="state.creator()!.id" />
             }
