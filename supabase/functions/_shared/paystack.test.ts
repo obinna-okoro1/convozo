@@ -608,12 +608,14 @@ Deno.test('getPaystackBanks - returns mapped bank list for NG', async () => {
   }
 });
 
-Deno.test('getPaystackBanks - lowercases the country code in the query param', async () => {
+Deno.test('getPaystackBanks - sends lowercase full country name in the query param', async () => {
   const mock = mockFetch({ status: true, message: 'Banks retrieved', data: [] });
   try {
     await getPaystackBanks('ZA');
-    // The API requires lowercase country codes
-    assertEquals(mock.calls[0].url.includes('country=za'), true);
+    // Paystack's bank list API requires the full country name in lowercase,
+    // not the ISO code — e.g. 'south%20africa' not 'za'.
+    const calledUrl = mock.calls[0].url;
+    assertEquals(calledUrl.includes('south%20africa'), true);
   } finally {
     mock.restore();
   }
@@ -629,13 +631,25 @@ Deno.test('getPaystackBanks - returns empty array for country with no banks', as
   }
 });
 
-Deno.test('getPaystackBanks - throws when Paystack returns error', async () => {
-  const mock = mockFetch({ status: false, message: 'Unsupported country', data: null });
+Deno.test('getPaystackBanks - throws for unrecognised ISO code (before fetch)', async () => {
+  // 'XX' is not in PAYSTACK_COUNTRY_NAMES so the function throws immediately
+  // without ever calling fetch — no mock needed.
+  await assertRejects(
+    () => getPaystackBanks('XX'),
+    Error,
+    'Unsupported Paystack country',
+  );
+});
+
+Deno.test('getPaystackBanks - throws when Paystack API returns error status', async () => {
+  // Use a valid country ('NG') so we get past the guard and hit the API.
+  // The mocked response has status=false, which must trigger a throw.
+  const mock = mockFetch({ status: false, message: 'Service unavailable', data: null });
   try {
     await assertRejects(
-      () => getPaystackBanks('XX'),
+      () => getPaystackBanks('NG'),
       Error,
-      'Unsupported country',
+      'Paystack bank list failed',
     );
   } finally {
     mock.restore();

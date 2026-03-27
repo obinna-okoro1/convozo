@@ -1,0 +1,39 @@
+<!-- Signal-based settings tabs (no RouterOutlet needed inside the drawer) -->
+<nav class="flex gap-1 p-1.5 glass-panel rounded-2xl mb-5 overflow-x-auto scrollbar-hide">
+  @for (tab of tabs; track tab.id) {
+    <button
+      type="button"
+      (click)="setTab(tab.id)"
+      [class]="'flex-1 py-2 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 relative overflow-hidden whitespace-nowrap flex items-center justify-center gap-1.5 ' + (currentTab() === tab.id ? 'text-white shadow-lg' : 'text-content-secondary hover:text-content hover:bg-white/20')"
+      [style]="currentTab() === tab.id
+        ? 'background:linear-gradient(135deg,rgba(124,58,237,0.85),rgba(147,51,234,0.85),rgba(236,72,153,0.85));backdrop-filter:saturate(200%) blur(1rem);-webkit-backdrop-filter:saturate(200%) blur(1rem);border:1px solid rgba(255,255,255,0.28);box-shadow:0 0.25rem 1rem rgba(124,58,237,0.32),inset 0 1px 0 rgba(255,255,255,0.22)'
+        : ''"
+    >
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="tab.iconPath"/>
+      </svg>
+      <span class="hidden sm:inline">{{ tab.label }}</span>
+      <span class="sm:hidden">{{ tab.mobileLabel }}</span>
+    </button>
+  }
+</nav>
+
+<!-- View -->
+@if (state.loading()) {
+  <div class="flex items-center justify-center py-16">
+    <svg class="animate-spin h-7 w-7 text-accent" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </div>
+} @else {
+  @if (currentTab() === 'profile') {
+    <app-profile-view />
+  } @else if (currentTab() === 'monetization') {
+    <app-monetization-view [drawerMode]="true" (goToPayments)="setTab('payments')" />
+  } @else if (currentTab() === 'payments') {
+    <app-payments-view />
+  } @else if (currentTab() === 'shop') {
+    <app-shop-view [drawerMode]="true" (goToPayments)="setTab('payments')" />
+  }
+}

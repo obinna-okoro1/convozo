@@ -17,6 +17,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  EventEmitter,
+  Input,
+  Output,
   computed,
   inject,
   OnInit,
@@ -60,7 +63,10 @@ const EMPTY_FORM: ItemFormState = {
   isRequestBased: false,
 };
 
-const TYPE_META: Record<ShopItemType, { emoji: string; label: string; hint: string; accept: string }> = {
+const TYPE_META: Record<
+  ShopItemType,
+  { emoji: string; label: string; hint: string; accept: string }
+> = {
   video: {
     emoji: '🎬',
     label: 'Video',
@@ -104,6 +110,11 @@ const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024; // 10 MB
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShopViewComponent implements OnInit {
+  /** True when rendered inside the owner toolbar drawer — disables routerLinks and emits events instead. */
+  @Input() public drawerMode = false;
+  /** Emitted when the user clicks "Go to Payments" inside the drawer. */
+  @Output() public readonly goToPayments = new EventEmitter<void>();
+
   protected readonly state = inject(SettingsStateService);
   protected readonly shopService = inject(ShopService);
 
@@ -174,7 +185,9 @@ export class ShopViewComponent implements OnInit {
   protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (file.size > MAX_FILE_SIZE) {
       this.fileUploadError.set('File is too large. Maximum size is 500 MB.');
@@ -183,7 +196,9 @@ export class ShopViewComponent implements OnInit {
     }
 
     const creator = this.state.creator();
-    if (!creator) return;
+    if (!creator) {
+      return;
+    }
 
     this.fileUploadError.set(null);
     this.uploadingFile.set(true);
@@ -209,7 +224,9 @@ export class ShopViewComponent implements OnInit {
   protected async onThumbnailSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (file.size > MAX_THUMBNAIL_SIZE) {
       this.thumbnailUploadError.set('Image is too large. Maximum size is 10 MB.');
@@ -218,7 +235,9 @@ export class ShopViewComponent implements OnInit {
     }
 
     const creator = this.state.creator();
-    if (!creator) return;
+    if (!creator) {
+      return;
+    }
 
     this.thumbnailUploadError.set(null);
     this.uploadingThumbnail.set(true);
@@ -271,7 +290,7 @@ export class ShopViewComponent implements OnInit {
       itemType: item.item_type,
       fileStoragePath: item.file_storage_path ?? null,
       fileDisplayName: item.file_storage_path
-        ? item.file_storage_path.split('/').pop()?.replace(/^\d+_/, '') ?? 'Uploaded file'
+        ? (item.file_storage_path.split('/').pop()?.replace(/^\d+_/, '') ?? 'Uploaded file')
         : null,
       thumbnailStoragePath: item.thumbnail_storage_path ?? null,
       // Derive the public URL immediately so the preview shows in edit mode
@@ -310,9 +329,13 @@ export class ShopViewComponent implements OnInit {
   }
 
   protected async saveItem(): Promise<void> {
-    if (!this.canSaveItem()) return;
+    if (!this.canSaveItem()) {
+      return;
+    }
     const creator = this.state.creator();
-    if (!creator) return;
+    if (!creator) {
+      return;
+    }
 
     const f = this.form();
     // Money is always integer cents — Math.round prevents float drift
@@ -365,7 +388,9 @@ export class ShopViewComponent implements OnInit {
 
   protected async toggleItemActive(item: ShopItem): Promise<void> {
     const result = await this.shopService.updateShopItem(item.id, { is_active: !item.is_active });
-    if (result.error || !result.data) return;
+    if (result.error || !result.data) {
+      return;
+    }
     this.items.update((list) => list.map((i) => (i.id === item.id ? result.data! : i)));
   }
 
@@ -394,13 +419,20 @@ export class ShopViewComponent implements OnInit {
     return '$' + (cents / 100).toFixed(2);
   }
 
-  protected getTypeMeta(type: ShopItemType): { emoji: string; label: string; hint: string; accept: string } {
+  protected getTypeMeta(type: ShopItemType): {
+    emoji: string;
+    label: string;
+    hint: string;
+    accept: string;
+  } {
     return TYPE_META[type];
   }
 
   private async loadItems(): Promise<void> {
     const creator = this.state.creator();
-    if (!creator) return;
+    if (!creator) {
+      return;
+    }
 
     this.loadingItems.set(true);
     const result = await this.shopService.getShopItems(creator.id);
@@ -415,7 +447,8 @@ export class ShopViewComponent implements OnInit {
 
   private flashSuccess(msg: string): void {
     this.shopSuccess.set(msg);
-    setTimeout(() => this.shopSuccess.set(null), 3500);
+    setTimeout(() => {
+      this.shopSuccess.set(null);
+    }, 3500);
   }
 }
-

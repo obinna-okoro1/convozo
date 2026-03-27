@@ -5,18 +5,10 @@
  */
 
 import { Routes } from '@angular/router';
-import { authGuard } from '../../core/guards/auth.guard';
 import { SettingsStateService } from './components/settings/settings-state.service';
+import { authGuard } from '../../core/guards/auth.guard';
 
 export const CREATOR_ROUTES: Routes = [
-  {
-    path: 'links',
-    loadComponent: () =>
-      import('../link-in-bio/pages/edit-links/edit-links.component').then(
-        (m) => m.EditLinksComponent,
-      ),
-    canActivate: [authGuard],
-  },
   {
     path: 'settings',
     loadComponent: () =>

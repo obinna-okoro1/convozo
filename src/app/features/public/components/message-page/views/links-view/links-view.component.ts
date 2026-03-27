@@ -19,6 +19,7 @@ import {
   BrandInfo,
 } from '../../../../../../features/link-in-bio/utils/brand-detection';
 import { LinkFormModalComponent } from '../../../../../../features/link-in-bio/components/link-form-modal/link-form-modal.component';
+import { LinkService } from '../../../../../../features/link-in-bio/services/link.service';
 
 /** Max words per post — must match the dashboard posts view */
 const MAX_POST_WORDS = 500;
@@ -34,12 +35,19 @@ export class LinksViewComponent {
   protected readonly ownerState = inject(ProfileOwnerService);
   private readonly supabase = inject(SupabaseService);
   private readonly toast = inject(ToastService);
+  private readonly linkService = inject(LinkService);
 
   /** Tracks which post is expanded — only one open at a time. */
   protected readonly expandedPostId = signal<string | null>(null);
 
   // ── Link modal ────────────────────────────────────────────────────
   protected readonly showLinkModal = signal(false);
+  /** The link being edited; null means add mode. */
+  protected readonly editingLink = signal<CreatorLink | null>(null);
+  /** The link ID awaiting delete confirmation. */
+  protected readonly deletePendingId = signal<string | null>(null);
+  /** The link ID whose ⋮ context menu is currently open. */
+  protected readonly activeLinkMenuId = signal<string | null>(null);
 
   // ── Post compose modal ────────────────────────────────────────────
   protected readonly showPostModal = signal(false);
@@ -92,18 +100,70 @@ export class LinksViewComponent {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  // ── Link context menu (⋮ button — works on mobile and desktop) ───────
+
+  protected toggleLinkMenu(id: string, event: Event): void {
+    event.stopPropagation();
+    this.activeLinkMenuId.set(this.activeLinkMenuId() === id ? null : id);
+    this.deletePendingId.set(null);
+  }
+
+  protected closeLinkMenu(): void {
+    this.activeLinkMenuId.set(null);
+    this.deletePendingId.set(null);
+  }
+
   // ── Link modal actions ────────────────────────────────────────────
 
   protected openLinkModal(): void {
+    this.editingLink.set(null);
+    this.showLinkModal.set(true);
+  }
+
+  protected openEditLinkModal(link: CreatorLink): void {
+    this.activeLinkMenuId.set(null);
+    this.editingLink.set(link);
     this.showLinkModal.set(true);
   }
 
   protected onLinkSaved(): void {
     this.showLinkModal.set(false);
-    // Reload the public links list so the new link appears immediately
+    this.editingLink.set(null);
+    // Reload the public links list so changes appear immediately
     const creatorId = this.ownerState.creatorId();
     if (creatorId) {
       void this.state.reloadLinks(creatorId);
+    }
+  }
+
+  protected closeLinkModal(): void {
+    this.showLinkModal.set(false);
+    this.editingLink.set(null);
+  }
+
+  // ── Link delete actions ───────────────────────────────────────────
+
+  protected requestDelete(link: CreatorLink): void {
+    this.deletePendingId.set(link.id);
+  }
+
+  protected cancelDelete(): void {
+    this.deletePendingId.set(null);
+  }
+
+  protected async executeDelete(link: CreatorLink): Promise<void> {
+    this.deletePendingId.set(null);
+    const { error } = await this.linkService.deleteLink(link.id);
+    if (error) {
+      this.toast.error('Failed to delete link');
+    } else {
+      this.toast.success('Link deleted');
+      // Remove from local list immediately, then sync from DB
+      this.state.creatorLinks.update((list) => list.filter((l) => l.id !== link.id));
+      const creatorId = this.ownerState.creatorId();
+      if (creatorId) {
+        void this.state.reloadLinks(creatorId);
+      }
     }
   }
 

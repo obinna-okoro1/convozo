@@ -4,7 +4,7 @@
  * Handles URL validation, brand detection, form submission, and cancellation.
  */
 
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CreatorLink } from '../../../../core/models';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -46,7 +46,17 @@ export class LinkFormModalComponent {
   constructor(
     private readonly linkService: LinkService,
     private readonly toast: ToastService,
-  ) {}
+  ) {
+    // Pre-fill form fields when the modal opens in edit mode
+    effect(() => {
+      const link = this.editingLink();
+      if (link) {
+        this.formUrl = link.url;
+        this.formTitle = link.title;
+        this.onUrlChange(link.url); // trigger brand icon detection
+      }
+    });
+  }
 
   /**
    * Detects the brand from the URL and updates the form UI
@@ -76,11 +86,13 @@ export class LinkFormModalComponent {
   protected async saveLink(): Promise<void> {
     if (this.saving()) return;
 
-    const url = this.formUrl.trim();
-    if (!url || !this.formTitle.trim()) {
+    const rawUrl = this.formUrl.trim();
+    if (!rawUrl || !this.formTitle.trim()) {
       this.toast.error('Please fill in all fields');
       return;
     }
+    // Ensure the URL has a protocol so it opens as an external link, not a relative route.
+    const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
 
     this.saving.set(true);
     try {

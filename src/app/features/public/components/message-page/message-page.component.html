@@ -74,5 +74,52 @@
         </div>
       </div>
     </div>
+
+    <!-- ── Public panel drawer ───────────────────────────────────────── -->
+    @if (activePanelRoute() !== null) {
+      <!-- Backdrop -->
+      <div
+        class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        (click)="closePanelRoute()"
+        role="presentation"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Sheet (slides up from bottom, max 90 vh) -->
+      <div
+        class="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-surface rounded-t-2xl border-t border-surface-border overflow-hidden"
+        style="max-height: 90dvh;"
+      >
+        <!-- Sheet header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border flex-shrink-0">
+          <h2 class="text-base font-bold text-content">{{ panelTitle() }}</h2>
+          <button
+            type="button"
+            (click)="closePanelRoute()"
+            class="w-8 h-8 rounded-full bg-surface-raised hover:bg-surface-border flex items-center justify-center transition-colors"
+            aria-label="Close panel"
+          >
+            <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Scrollable content -->
+        <div class="flex-1 overflow-y-auto overscroll-contain">
+          @if (activePanelRoute() === 'message') {
+            <app-message-view />
+          } @else if (activePanelRoute() === 'call') {
+            <app-call-view />
+          } @else if (activePanelRoute() === 'shop') {
+            <app-shop-view />
+          } @else if (activePanelRoute() === 'support') {
+            <app-support-view />
+          } @else if (activePanelRoute() === 'posts') {
+            <app-posts-view />
+          }
+        </div>
+      </div>
+    }
   }
 </div>

@@ -11,9 +11,7 @@
         <button
           type="button"
           (click)="openPanel('inbox')"
-          class="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 text-content-secondary hover:bg-accent/10 hover:text-content"
-          [class.bg-accent\/10]="activePanel() === 'inbox'"
-          [class.text-accent]="activePanel() === 'inbox'"
+          [class]="tabClass('inbox', true)"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -32,9 +30,7 @@
           <button
             type="button"
             (click)="openPanel('bookings')"
-            class="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 text-content-secondary hover:bg-accent/10 hover:text-content"
-            [class.bg-accent\/10]="activePanel() === 'bookings'"
-            [class.text-accent]="activePanel() === 'bookings'"
+            [class]="tabClass('bookings', true)"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -54,9 +50,7 @@
           <button
             type="button"
             (click)="openPanel('analytics')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 text-content-secondary hover:bg-accent/10 hover:text-content"
-            [class.bg-accent\/10]="activePanel() === 'analytics'"
-            [class.text-accent]="activePanel() === 'analytics'"
+            [class]="tabClass('analytics')"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -91,9 +85,10 @@
 
       <!-- Right: Settings + Sign Out (desktop) -->
       <div class="hidden sm:flex items-center gap-0.5">
-        <a
-          routerLink="/creator/settings"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-content-secondary hover:bg-accent/10 hover:text-content transition-colors duration-150"
+        <button
+          type="button"
+          (click)="openPanel('settings')"
+          [class]="tabClass('settings')"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -101,7 +96,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
           Settings
-        </a>
+        </button>
         <button
           type="button"
           (click)="signOut()"
@@ -116,10 +111,10 @@
       </div>
 
       <!-- Mobile right: Settings icon only -->
-      <a
-        routerLink="/creator/settings"
-        (click)="closeMobileMenu()"
-        class="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded-lg text-content-secondary hover:bg-accent/10 hover:text-content transition-colors duration-150"
+      <button
+        type="button"
+        (click)="openPanel('settings')"
+        [class]="settingsIconClass()"
         title="Settings"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +122,7 @@
                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-      </a>
+      </button>
     </div>
 
     <!-- Mobile dropdown menu -->
@@ -184,6 +179,19 @@
           </button>
         }
 
+        <button
+          type="button"
+          (click)="openPanel('settings')"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-content hover:bg-accent/10 transition-colors text-left"
+        >
+          <svg class="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Settings
+        </button>
+
         <div class="border-t border-surface-border !my-1.5"></div>
 
         <button
@@ -222,6 +230,7 @@
           @if (activePanel() === 'inbox') { Inbox }
           @else if (activePanel() === 'bookings') { Call Bookings }
           @else if (activePanel() === 'analytics') { Analytics }
+          @else if (activePanel() === 'settings') { Settings }
         </h2>
         <button
           type="button"
@@ -268,6 +277,10 @@
               [monthlyAnalytics]="ownerState.monthlyAnalytics()"
             />
           </div>
+        }
+
+        @else if (activePanel() === 'settings') {
+          <app-owner-settings-panel />
         }
 
       </div>

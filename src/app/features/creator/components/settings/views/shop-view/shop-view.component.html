@@ -24,11 +24,11 @@
             @if (state.isPaystackCreator()) {
               <p class="font-semibold text-content text-sm">Bank account verification pending</p>
               <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Paystack has verified your bank account.</p>
-              <a routerLink="../payments" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Go to Payments <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+              <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Go to Payments <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
             } @else {
               <p class="font-semibold text-content text-sm">Connect Stripe to enable your shop</p>
               <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Stripe is connected.</p>
-              <a routerLink="../payments" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Connect with Stripe <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+              <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Connect with Stripe <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
             }
           </div>
         </div>

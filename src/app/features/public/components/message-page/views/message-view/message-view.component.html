@@ -1,11 +1,3 @@
-<!-- Back to profile -->
-<a routerLink=".." class="inline-flex items-center gap-1.5 text-content-secondary hover:text-content text-sm font-medium mb-5 transition-colors duration-200 group">
-  <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-  </svg>
-  Back to profile
-</a>
-
 <app-message-form
   [priceCents]="state.messagePriceCents()"
   [creatorName]="state.creator()?.display_name ?? ''"
