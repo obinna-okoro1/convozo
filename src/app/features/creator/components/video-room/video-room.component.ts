@@ -59,6 +59,8 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly loading = signal(true);
   readonly connecting = signal(false);
   readonly completionResult = signal<CompleteCallResponse | null>(null);
+  /** Populated during initializeCall() — used to navigate back to /:slug/settings after a call. */
+  readonly creatorSlug = signal<string | null>(null);
 
   private bookingId = '';
   private role: 'creator' | 'fan' = 'fan';
@@ -328,6 +330,18 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
         this.videoCallService.errorMessage.set('Booking not found');
         this.loading.set(false);
         return;
+      }
+      // Fetch creator slug so goBack() can navigate to /:slug/settings
+      const creatorId = this.videoCallService.currentBooking()?.creator_id;
+      if (creatorId) {
+        const { data: creatorData } = await this.supabaseService.client
+          .from('creators')
+          .select('slug')
+          .eq('id', creatorId)
+          .single();
+        if (creatorData) {
+          this.creatorSlug.set((creatorData as { slug: string }).slug);
+        }
       }
     }
 
@@ -632,7 +646,8 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
   goBack(): void {
     if (this.isCreator()) {
-      void this.router.navigate(['/creator/settings']);
+      const slug = this.creatorSlug();
+      void this.router.navigate(slug ? [`/${slug}/settings`] : ['/home']);
     } else {
       void this.router.navigate(['/']);
     }

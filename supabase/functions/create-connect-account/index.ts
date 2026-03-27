@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     // Verify the caller owns this creator profile
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id')
+      .select('id, slug')
       .eq('id', creator_id)
       .eq('user_id', user.id)
       .single();
@@ -30,6 +30,9 @@ Deno.serve(async (req) => {
     if (creatorError || !creator) {
       return jsonError('Unauthorized: you do not own this creator profile', 403, corsHeaders);
     }
+
+    // Use the creator's slug for Stripe redirect URLs so /creator/settings is not needed.
+    const creatorSlug = (creator as { id: string; slug: string }).slug;
 
     // Check if creator already has a Stripe account
     const { data: existingAccount } = await supabase
@@ -79,8 +82,8 @@ Deno.serve(async (req) => {
     try {
       accountLink = await stripe.accountLinks.create({
         account: accountId,
-        refresh_url: `${appUrl}/creator/settings/payments?refresh=true`,
-        return_url: `${appUrl}/creator/settings/payments?connected=true`,
+        refresh_url: `${appUrl}/${creatorSlug}/settings/payments?refresh=true`,
+        return_url: `${appUrl}/${creatorSlug}/settings/payments?connected=true`,
         type: 'account_onboarding',
       });
     } catch (linkErr: unknown) {
@@ -118,8 +121,8 @@ Deno.serve(async (req) => {
 
       accountLink = await stripe.accountLinks.create({
         account: accountId,
-        refresh_url: `${appUrl}/creator/settings/payments?refresh=true`,
-        return_url: `${appUrl}/creator/settings/payments?connected=true`,
+        refresh_url: `${appUrl}/${creatorSlug}/settings/payments?refresh=true`,
+        return_url: `${appUrl}/${creatorSlug}/settings/payments?connected=true`,
         type: 'account_onboarding',
       });
     }

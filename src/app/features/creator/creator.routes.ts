@@ -1,23 +1,16 @@
 /**
  * Creator Feature Routes
- * Handles creator-specific routes (dashboard, onboarding)
- * All routes are protected with authGuard
+ * Handles creator-specific routes (onboarding).
+ * All routes are protected with authGuard.
+ *
+ * NOTE: Settings are no longer at /creator/settings — they live at /:slug/settings
+ * as a ghost route that opens the owner settings drawer panel.
  */
 
 import { Routes } from '@angular/router';
-import { SettingsStateService } from './components/settings/settings-state.service';
 import { authGuard } from '../../core/guards/auth.guard';
 
 export const CREATOR_ROUTES: Routes = [
-  {
-    path: 'settings',
-    loadComponent: () =>
-      import('./components/settings/settings.component').then((m) => m.SettingsComponent),
-    canActivate: [authGuard],
-    providers: [SettingsStateService],
-    loadChildren: () =>
-      import('./components/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
-  },
   {
     path: 'onboarding',
     loadComponent: () =>
@@ -26,7 +19,7 @@ export const CREATOR_ROUTES: Routes = [
   },
   {
     path: '',
-    redirectTo: 'settings',
+    redirectTo: 'onboarding',
     pathMatch: 'full',
   },
 ];

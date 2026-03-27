@@ -36,5 +36,18 @@ export const MESSAGE_PAGE_ROUTES: Routes = [
   { path: 'inbox', component: OwnerPanelPlaceholderComponent },
   { path: 'bookings', component: OwnerPanelPlaceholderComponent },
   { path: 'analytics', component: OwnerPanelPlaceholderComponent },
-  { path: 'settings', component: OwnerPanelPlaceholderComponent },
+  // Settings: a componentless parent route so all sub-tab URLs are nested correctly.
+  // e.g. /:slug/settings → empty child; /:slug/settings/shop → 'shop' child.
+  // This avoids the prefix-match ambiguity that a flat 'settings' + flat 'settings/shop'
+  // sibling pair causes (Angular may consume 'settings' as prefix and not backtrack).
+  {
+    path: 'settings',
+    children: [
+      { path: '', component: OwnerPanelPlaceholderComponent, pathMatch: 'full' },
+      { path: 'profile', component: OwnerPanelPlaceholderComponent },
+      { path: 'monetization', component: OwnerPanelPlaceholderComponent },
+      { path: 'payments', component: OwnerPanelPlaceholderComponent },
+      { path: 'shop', component: OwnerPanelPlaceholderComponent },
+    ],
+  },
 ];
