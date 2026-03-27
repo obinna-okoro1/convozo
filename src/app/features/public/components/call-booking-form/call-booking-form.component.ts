@@ -19,7 +19,6 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import { FormsModule } from '@angular/forms';
 import { APP_CONSTANTS } from '../../../../core/constants';
 import { AvailabilitySlot, DayOfWeek } from '../../../../core/models';
-import { TrustIndicatorsComponent } from '../../../../shared/components/trust-indicators/trust-indicators.component';
 
 export interface CallBookingFormData {
   senderName: string;
@@ -39,7 +38,7 @@ interface SlotGroup {
 @Component({
   selector: 'app-call-booking-form',
   standalone: true,
-  imports: [FormsModule, TrustIndicatorsComponent],
+  imports: [FormsModule],
   templateUrl: './call-booking-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

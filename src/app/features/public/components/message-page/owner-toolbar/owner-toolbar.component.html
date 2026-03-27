@@ -1,0 +1,301 @@
+@if (ownerState.isOwner()) {
+
+  <!-- ── Sticky owner top bar ──────────────────────────────────────────── -->
+  <div class="fixed top-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-md border-b border-surface-border">
+    <div class="max-w-xl mx-auto px-3 h-11 flex items-center gap-1">
+
+      <!-- Desktop tabs (hidden below sm breakpoint) -->
+      <div class="hidden sm:flex items-center gap-0.5 flex-1">
+
+        <!-- Inbox -->
+        <button
+          type="button"
+          (click)="openPanel('inbox')"
+          [class]="tabClass('inbox', true)"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+          </svg>
+          Inbox
+          @if (ownerState.unreadCount() > 0) {
+            <span class="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 rounded-full bg-yellow-500 text-black text-[0.6rem] font-black flex items-center justify-center leading-none">
+              {{ ownerState.unreadCount() }}
+            </span>
+          }
+        </button>
+
+        <!-- Bookings -->
+        @if (ownerState.callsEnabled() && ownerState.isPaymentReady()) {
+          <button
+            type="button"
+            (click)="openPanel('bookings')"
+            [class]="tabClass('bookings', true)"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+            Bookings
+            @if (ownerState.confirmedBookingCount() > 0) {
+              <span class="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 rounded-full bg-accent text-white text-[0.6rem] font-black flex items-center justify-center leading-none">
+                {{ ownerState.confirmedBookingCount() }}
+              </span>
+            }
+          </button>
+        }
+
+        <!-- Analytics -->
+        @if (ownerState.isPaymentReady()) {
+          <button
+            type="button"
+            (click)="openPanel('analytics')"
+            [class]="tabClass('analytics')"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Analytics
+          </button>
+        }
+      </div>
+
+      <!-- Mobile "Manage" button (visible below sm) -->
+      <button
+        type="button"
+        (click)="toggleMobileMenu()"
+        class="sm:hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-content-secondary hover:bg-accent/10 hover:text-content transition-colors duration-150"
+        [class.bg-accent\/10]="mobileMenuOpen()"
+        [class.text-accent]="mobileMenuOpen()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        Manage
+        @if (ownerState.unreadCount() > 0) {
+          <span class="w-4 h-4 rounded-full bg-yellow-500 text-black text-[0.6rem] font-black flex items-center justify-center leading-none">
+            {{ ownerState.unreadCount() }}
+          </span>
+        }
+      </button>
+
+      <!-- Spacer -->
+      <div class="flex-1 sm:flex-none"></div>
+
+      <!-- Right: Settings + Sign Out (desktop) -->
+      <div class="hidden sm:flex items-center gap-0.5">
+        <button
+          type="button"
+          (click)="openPanel('settings')"
+          [class]="tabClass('settings')"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Settings
+        </button>
+        <button
+          type="button"
+          (click)="signOut()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-content-tertiary hover:bg-surface-raised hover:text-content transition-colors duration-150"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+
+      <!-- Mobile right: Settings icon only -->
+      <button
+        type="button"
+        (click)="openPanel('settings')"
+        [class]="settingsIconClass()"
+        title="Settings"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile dropdown menu -->
+    @if (mobileMenuOpen()) {
+      <div class="sm:hidden border-t border-surface-border bg-surface/98 px-3 py-2 space-y-0.5">
+
+        <button
+          type="button"
+          (click)="openPanel('inbox')"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-content hover:bg-accent/10 transition-colors text-left"
+        >
+          <svg class="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+          </svg>
+          Inbox
+          @if (ownerState.unreadCount() > 0) {
+            <span class="ml-auto px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">
+              {{ ownerState.unreadCount() }} unread
+            </span>
+          }
+        </button>
+
+        @if (ownerState.callsEnabled() && ownerState.isPaymentReady()) {
+          <button
+            type="button"
+            (click)="openPanel('bookings')"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-content hover:bg-accent/10 transition-colors text-left"
+          >
+            <svg class="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+            Bookings
+            @if (ownerState.confirmedBookingCount() > 0) {
+              <span class="ml-auto px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-bold">
+                {{ ownerState.confirmedBookingCount() }} confirmed
+              </span>
+            }
+          </button>
+        }
+
+        @if (ownerState.isPaymentReady()) {
+          <button
+            type="button"
+            (click)="openPanel('analytics')"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-content hover:bg-accent/10 transition-colors text-left"
+          >
+            <svg class="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Analytics
+          </button>
+        }
+
+        <button
+          type="button"
+          (click)="openPanel('settings')"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-content hover:bg-accent/10 transition-colors text-left"
+        >
+          <svg class="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Settings
+        </button>
+
+        <div class="border-t border-surface-border !my-1.5"></div>
+
+        <button
+          type="button"
+          (click)="signOut()"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-content-tertiary hover:bg-surface-raised transition-colors text-left"
+        >
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ── Panel drawer ───────────────────────────────────────────────── -->
+  @if (activePanel() !== null) {
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+      (click)="closePanel()"
+      role="presentation"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Sheet (slides up from bottom, max 90 vh) -->
+    <div
+      class="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-surface rounded-t-2xl border-t border-surface-border overflow-hidden"
+      style="max-height: 90dvh;"
+    >
+      <!-- Sheet header -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border flex-shrink-0">
+        <h2 class="text-base font-bold text-content">
+          @if (activePanel() === 'inbox') { Inbox }
+          @else if (activePanel() === 'bookings') { Call Bookings }
+          @else if (activePanel() === 'analytics') { Analytics }
+          @else if (activePanel() === 'settings') { Settings }
+        </h2>
+        <button
+          type="button"
+          (click)="closePanel()"
+          class="w-8 h-8 rounded-full bg-surface-raised hover:bg-surface-border flex items-center justify-center transition-colors"
+          aria-label="Close panel"
+        >
+          <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Scrollable content -->
+      <div class="flex-1 overflow-y-auto overscroll-contain">
+
+        @if (activePanel() === 'inbox') {
+          <div class="p-4">
+            <app-inbox-panel
+              [messages]="ownerState.messages()"
+              (markHandled)="ownerState.markAsHandled($event)"
+              (confirmDelete)="ownerState.confirmDelete($event)"
+            />
+          </div>
+        }
+
+        @else if (activePanel() === 'bookings') {
+          <div class="p-4">
+            <app-bookings-panel
+              [bookings]="ownerState.callBookings()"
+              (markCompleted)="ownerState.markBookingCompleted($event)"
+              (cancelBooking)="ownerState.cancelBooking($event)"
+              (confirmDelete)="ownerState.confirmDelete($event)"
+              (joinCall)="ownerState.joinVideoCall($event)"
+            />
+          </div>
+        }
+
+        @else if (activePanel() === 'analytics') {
+          <div class="p-4">
+            <app-analytics-dashboard
+              [messages]="ownerState.messages()"
+              [callBookings]="ownerState.callBookings()"
+              [monthlyAnalytics]="ownerState.monthlyAnalytics()"
+            />
+          </div>
+        }
+
+        @else if (activePanel() === 'settings') {
+          <app-owner-settings-panel />
+        }
+
+      </div>
+    </div>
+  }
+
+  <!-- ── Delete confirm (shared by inbox + bookings panels) ─────────── -->
+  @if (ownerState.showDeleteConfirm() && ownerState.messageToDelete()) {
+    <app-delete-confirm-modal
+      [isMessage]="'message_content' in ownerState.messageToDelete()!"
+      [itemName]="ownerState.itemToDeleteName()"
+      [deleting]="ownerState.deleting()"
+      (confirmed)="ownerState.deleteItem()"
+      (cancelled)="ownerState.cancelDelete()"
+    />
+  }
+
+}

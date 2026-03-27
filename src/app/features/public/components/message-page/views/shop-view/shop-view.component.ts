@@ -18,8 +18,6 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { TrustIndicatorsComponent } from '../../../../../../shared/components/trust-indicators/trust-indicators.component';
 import { ShopItem } from '../../../../../../core/models';
 import { ShopService } from '../../../../../creator/services/shop.service';
 import { MessagePageStateService } from '../../message-page-state.service';
@@ -42,7 +40,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 @Component({
   selector: 'app-shop-view',
-  imports: [RouterLink, FormsModule, TrustIndicatorsComponent],
+  imports: [FormsModule],
   templateUrl: './shop-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

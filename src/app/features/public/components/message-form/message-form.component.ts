@@ -7,7 +7,6 @@
 import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { APP_CONSTANTS } from '../../../../core/constants';
-import { TrustIndicatorsComponent } from '../../../../shared/components/trust-indicators/trust-indicators.component';
 
 export interface MessageFormData {
   senderName: string;
@@ -18,7 +17,7 @@ export interface MessageFormData {
 @Component({
   selector: 'app-message-form',
   standalone: true,
-  imports: [FormsModule, TrustIndicatorsComponent],
+  imports: [FormsModule],
   templateUrl: './message-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

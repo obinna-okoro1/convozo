@@ -527,8 +527,9 @@ export class SettingsStateService {
 
   // ── Navigation ─────────────────────────────────────────────────────
 
-  goToDashboard(): void {
-    void this.router.navigate(['/creator/dashboard']);
+  goToProfile(): void {
+    const slug = this.creator()?.slug;
+    void this.router.navigate(slug ? [`/${slug}`] : ['/home']);
   }
 
   // ── Initialization ─────────────────────────────────────────────────

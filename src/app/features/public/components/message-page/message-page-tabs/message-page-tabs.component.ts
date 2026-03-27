@@ -21,6 +21,8 @@ interface Tab {
   readonly path: string;
   readonly label: string;
   readonly iconPath: string;
+  /** When true, the tab is only active on an exact route match (used for the root links tab). */
+  readonly exact?: boolean;
 }
 
 @Component({
@@ -91,10 +93,11 @@ export class MessagePageTabsComponent {
       });
     }
 
-    // Links always available, placed after services
+    // Links is the root profile page — always visible, exact match only
     tabs.push({
-      path: 'links',
+      path: '.',
       label: 'Links',
+      exact: true,
       iconPath:
         'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
     });

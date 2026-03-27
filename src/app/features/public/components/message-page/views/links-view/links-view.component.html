@@ -2,7 +2,7 @@
 @if (state.messagesEnabled() || state.callsEnabled() || state.shopEnabled() || state.tipsEnabled()) {
   <div class="grid grid-cols-2 gap-2.5 mb-6">
     @if (state.messagesEnabled()) {
-      <a routerLink="../message"
+      <a routerLink="message"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
@@ -15,7 +15,7 @@
       </a>
     }
     @if (state.callsEnabled()) {
-      <a routerLink="../call"
+      <a routerLink="call"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
@@ -28,7 +28,7 @@
       </a>
     }
     @if (state.shopEnabled()) {
-      <a routerLink="../shop"
+      <a routerLink="shop"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
@@ -41,7 +41,7 @@
       </a>
     }
     @if (state.tipsEnabled()) {
-      <a routerLink="../support"
+      <a routerLink="support"
          class="card-glass !p-3.5 text-center group hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
         <div class="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center"
              style="background: linear-gradient(135deg, rgba(236,72,153,0.12) 0%, rgba(239,68,68,0.12) 100%);">
@@ -58,14 +58,26 @@
 
 <!-- ── Posts feed (3 most recent) ────────────────────────────────── -->
 <div class="mb-6">
-  <div class="mb-3">
+  <div class="mb-3 flex items-center justify-between">
     <h3 class="text-xs font-bold text-content-tertiary uppercase tracking-widest">Posts</h3>
+    @if (ownerState.isOwner()) {
+      <button
+        type="button"
+        (click)="openPostModal()"
+        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[0.7rem] font-semibold text-accent hover:bg-accent/20 transition-colors duration-150"
+      >
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        New post
+      </button>
+    }
   </div>
 
   @if (state.creatorPosts().length > 0) {
     <div class="space-y-px">
       @for (post of state.creatorPosts(); track post.id; let last = $last) {
-        <div class="card-glass !rounded-none !border-x-0 py-3.5 px-1"
+        <div class="card-glass !rounded-none !border-x-0 py-3.5 px-4"
              [class.!rounded-t-2xl]="$first"
              [class.!rounded-b-2xl]="last"
              [class.border-t-0]="!$first">
@@ -114,7 +126,7 @@
     </div>
 
     <!-- See all — bottom -->
-    <a routerLink="../posts"
+    <a [routerLink]="['/', state.creator()?.slug, 'posts']"
        class="mt-2 flex items-center justify-center gap-1 text-xs text-accent hover:text-accent/80 font-semibold transition-colors py-2">
       See all posts →
     </a>
@@ -134,32 +146,219 @@
 </div>
 
 <!-- ── Links (compact pills) ─────────────────────────────────────────── -->
-@if (state.creatorLinks().length > 0) {
+@if (state.creatorLinks().length > 0 || ownerState.isOwner()) {
+  <!-- Dismiss open ⋮ menu when tapping the backdrop -->
+  @if (activeLinkMenuId() !== null) {
+    <div
+      class="fixed inset-0 z-40"
+      (click)="closeLinkMenu()"
+      aria-hidden="true"
+    ></div>
+  }
+
   <div>
-    <h3 class="text-xs font-bold text-content-tertiary uppercase tracking-widest mb-3">Links</h3>
+    @if (state.creatorLinks().length > 0) {
+      <h3 class="text-xs font-bold text-content-tertiary uppercase tracking-widest mb-3">Links</h3>
+    }
     <div class="flex flex-wrap gap-2">
       @for (link of state.creatorLinks(); track link.id) {
-        <a
-          [href]="link.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          (click)="$event.preventDefault(); onLinkClicked(link)"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-raised border border-surface-border text-xs font-semibold text-content hover:bg-white/10 active:scale-95 transition-all duration-150 whitespace-nowrap"
+
+        @if (ownerState.isOwner()) {
+          <!-- Owner pill: link + ⋮ menu button -->
+          <div
+            class="relative inline-flex"
+            [class.z-50]="activeLinkMenuId() === link.id"
+            [class.z-0]="activeLinkMenuId() !== link.id"
+          >
+            <!-- The link itself -->
+            <a
+              [href]="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              (click)="$event.preventDefault(); onLinkClicked(link)"
+              class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-l-full bg-surface-raised border border-r-0 border-surface-border text-xs font-semibold text-content hover:bg-white/10 active:scale-95 transition-all duration-150 whitespace-nowrap"
+            >
+              @if (getBrand(link); as brand) {
+                <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" [style.fill]="brand.color">
+                  <path [attr.d]="brand.svgPath" />
+                </svg>
+              } @else {
+                <svg class="w-3 h-3 text-content-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+              }
+              {{ link.title }}
+            </a>
+            <!-- ⋮ button -->
+            <button
+              type="button"
+              (click)="toggleLinkMenu(link.id, $event)"
+              class="inline-flex items-center justify-center px-1.5 py-1.5 rounded-r-full bg-surface-raised border border-surface-border text-content-tertiary hover:text-content hover:bg-white/10 transition-colors"
+              aria-label="Link options"
+            >
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+              </svg>
+            </button>
+
+            <!-- Context menu dropdown -->
+            @if (activeLinkMenuId() === link.id) {
+              <div class="absolute top-full mt-1 left-0 min-w-[7rem] bg-surface border border-surface-border rounded-xl shadow-xl overflow-hidden">
+                @if (deletePendingId() === link.id) {
+                  <!-- Delete confirm row -->
+                  <div class="flex items-center gap-1 px-2 py-1.5">
+                    <button
+                      type="button"
+                      (click)="cancelDelete()"
+                      class="flex-1 text-[0.65rem] font-semibold text-content-tertiary hover:text-content px-2 py-1 rounded-lg hover:bg-surface-raised transition-colors"
+                    >Cancel</button>
+                    <button
+                      type="button"
+                      (click)="executeDelete(link)"
+                      class="flex-1 text-[0.65rem] font-bold text-system-red hover:bg-system-red/10 px-2 py-1 rounded-lg transition-colors"
+                    >Delete?</button>
+                  </div>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="openEditLinkModal(link)"
+                    class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-content hover:bg-surface-raised transition-colors text-left"
+                  >
+                    <svg class="w-3.5 h-3.5 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    (click)="requestDelete(link)"
+                    class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-system-red hover:bg-system-red/10 transition-colors text-left"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Public visitor pill -->
+          <a
+            [href]="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            (click)="$event.preventDefault(); onLinkClicked(link)"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-raised border border-surface-border text-xs font-semibold text-content hover:bg-white/10 active:scale-95 transition-all duration-150 whitespace-nowrap"
+          >
+            @if (getBrand(link); as brand) {
+              <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" [style.fill]="brand.color">
+                <path [attr.d]="brand.svgPath" />
+              </svg>
+            } @else {
+              <svg class="w-3 h-3 text-content-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            }
+            {{ link.title }}
+          </a>
+        }
+      }
+
+      <!-- Owner: Add new link pill -->
+      @if (ownerState.isOwner()) {
+        <button
+          type="button"
+          (click)="openLinkModal()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-accent/40 text-xs font-semibold text-accent hover:bg-accent/10 transition-colors duration-150 whitespace-nowrap"
         >
-          @if (getBrand(link); as brand) {
-            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" [style.fill]="brand.color">
-              <path [attr.d]="brand.svgPath" />
-            </svg>
-          } @else {
-            <svg class="w-3 h-3 text-content-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-            </svg>
-          }
-          {{ link.title }}
-        </a>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add new link
+        </button>
       }
     </div>
   </div>
 }
 
+<!-- ── Link form modal (owner only) ──────────────────────────────────── -->
+@if (showLinkModal() && ownerState.creatorId()) {
+  <app-link-form-modal
+    [creatorId]="ownerState.creatorId()!"
+    [editingLink]="editingLink()"
+    [totalLinkCount]="state.creatorLinks().length"
+    (onSaved)="onLinkSaved()"
+    (onClosed)="closeLinkModal()"
+  />
+}
+
+<!-- ── Post compose modal (owner only) ───────────────────────────────── -->
+@if (showPostModal()) {
+  <div
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+    (click)="closePostModal()"
+    role="presentation"
+    aria-hidden="true"
+  ></div>
+
+  <div class="fixed bottom-0 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 left-0 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-lg z-[60] bg-surface rounded-t-2xl sm:rounded-2xl border border-surface-border shadow-2xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-base font-bold text-content">New post</h3>
+      <button
+        type="button"
+        (click)="closePostModal()"
+        class="w-8 h-8 rounded-full bg-surface-raised hover:bg-surface-border flex items-center justify-center transition-colors"
+        aria-label="Close"
+      >
+        <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <input
+      type="text"
+      placeholder="Title (required)"
+      [value]="draftTitle()"
+      (input)="draftTitle.set($any($event.target).value)"
+      maxlength="120"
+      class="w-full mb-3 px-3 py-2.5 rounded-xl bg-surface-raised border border-surface-border text-sm font-semibold text-content placeholder:text-content-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40"
+    />
+
+    <textarea
+      placeholder="Share an update, tip, or insight…"
+      [value]="draft()"
+      (input)="draft.set($any($event.target).value)"
+      rows="5"
+      class="w-full mb-2 px-3 py-2.5 rounded-xl bg-surface-raised border border-surface-border text-sm text-content placeholder:text-content-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+    ></textarea>
+
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-[0.7rem]" [class]="wordCountClass()">
+        {{ wordsRemaining() }} words remaining
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2 justify-end">
+      <button
+        type="button"
+        (click)="closePostModal()"
+        class="px-4 py-2 rounded-xl text-sm font-semibold text-content-secondary hover:bg-surface-raised transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="submitPost()"
+        [disabled]="!canPost()"
+        class="px-4 py-2 rounded-xl text-sm font-semibold bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        @if (postSubmitting()) { Publishing… } @else { Publish }
+      </button>
+    </div>
+  </div>
+}

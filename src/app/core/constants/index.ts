@@ -31,7 +31,6 @@ export const ROUTES = {
   },
   CREATOR: {
     ONBOARDING: '/creator/onboarding',
-    DASHBOARD: '/creator/dashboard',
   },
   SUCCESS: '/success',
 } as const;

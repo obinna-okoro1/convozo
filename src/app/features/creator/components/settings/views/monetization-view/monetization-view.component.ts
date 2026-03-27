@@ -1,8 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  computed,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SettingsStateService } from '../../settings-state.service';
 import { AvailabilityManagerComponent } from '../../../availability-manager/availability-manager.component';
+import { SettingsStateService } from '../../settings-state.service';
 
 @Component({
   selector: 'app-monetization-view',
@@ -11,6 +19,11 @@ import { AvailabilityManagerComponent } from '../../../availability-manager/avai
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MonetizationViewComponent {
+  /** True when rendered inside the owner toolbar drawer — disables routerLinks and emits events instead. */
+  @Input() public drawerMode = false;
+  /** Emitted when the user clicks "Go to Payments" inside the drawer. */
+  @Output() public readonly goToPayments = new EventEmitter<void>();
+
   /** Reference to the embedded availability manager so we can call save() on it */
   private readonly availabilityManager = viewChild(AvailabilityManagerComponent);
 
