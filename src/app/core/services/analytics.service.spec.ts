@@ -212,7 +212,7 @@ describe('AnalyticsService', () => {
     it('adds call bookings as a separate category', () => {
       const bookings = [makeBooking(), makeBooking({ id: 'b-2' })];
       const result = service.calculateAnalytics([], bookings);
-      const callEntry = result.messageTypeBreakdown.find((e) => e.type === 'call booking');
+      const callEntry = result.messageTypeBreakdown.find((e) => e.type === 'session');
       expect(callEntry?.count).toBe(2);
     });
   });
