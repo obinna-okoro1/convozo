@@ -135,6 +135,58 @@ export class AuthService {
   }
 
   /**
+   * Send a password-reset email via Supabase Auth (routed through Resend in production).
+   * The email contains a link to /auth/reset-password?code=XXXX.
+   */
+  public async sendPasswordResetEmail(
+    email: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!FormValidators.isValidEmail(email)) {
+      return { success: false, error: ERROR_MESSAGES.AUTH.INVALID_EMAIL };
+    }
+
+    try {
+      const { error } = await this.supabaseService.client.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send reset email';
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Update the authenticated user's password (called after PKCE code exchange on reset-password page).
+   * Requires an active recovery session — call supabase.auth.exchangeCodeForSession() first.
+   */
+  public async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+    if (newPassword.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters' };
+    }
+
+    try {
+      const { error } = await this.supabaseService.client.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update password';
+      return { success: false, error: message };
+    }
+  }
+
+  /**
    * Sign in with OAuth provider (Google)
    * Note: The app name shown in the Google consent screen is configured in your Google Cloud Console project settings
    * Make sure the Google OAuth app in GCP is named "Convozo" for consistent branding

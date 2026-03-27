@@ -448,59 +448,59 @@ INSERT INTO public.shop_items (
   ('cccccccc-0001-0001-0001-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Complete Fitness Workout Guide', 'Full-body 30-minute workout video with modifications for all levels',
    2999, 'video', 'https://example.com/downloads/workout-30min.mp4',
-   'https://example.com/thumbnails/workout-thumb.jpg', 'HD 1080p, 30 minutes',
+   null, 'HD 1080p, 30 minutes',
    'Digital download link sent immediately', true, false, 1, NOW() - INTERVAL '60 days'),
   
   ('cccccccc-0002-0002-0002-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Instagram Reel Templates (20)', 'Ready-to-use Adobe Premiere Pro templates for creating viral reels',
    1999, 'video', 'https://example.com/downloads/reels-templates-20.zip',
-   'https://example.com/thumbnails/reels-thumb.jpg', 'Premiere Pro format, fully editable',
+   null, 'Premiere Pro format, fully editable',
    'ZIP download sent to email immediately', true, false, 2, NOW() - INTERVAL '50 days'),
   
   -- Audio products
   ('cccccccc-0003-0003-0003-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Meditation Session (45 min)', 'Guided meditation for stress relief and deep relaxation',
    1499, 'audio', 'https://example.com/downloads/meditation-45min.m4a',
-   'https://example.com/thumbnails/meditation-thumb.jpg', '45 minutes, high quality',
+   null, '45 minutes, high quality',
    'Audio file download sent immediately', true, false, 3, NOW() - INTERVAL '45 days'),
   
   ('cccccccc-0004-0004-0004-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Podcast Production Masterclass', 'Audio guide on recording, editing, and distributing podcasts',
    2499, 'audio', 'https://example.com/downloads/podcast-masterclass.zip',
-   'https://example.com/thumbnails/podcast-thumb.jpg', 'Multi-part guide, MP3 + PDF',
+   null, 'Multi-part guide, MP3 + PDF',
    'Compressed ZIP sent to email', true, false, 4, NOW() - INTERVAL '40 days'),
   
   -- PDF products
   ('cccccccc-0005-0005-0005-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Social Media Growth Strategy (2024)', '50-page guide to growing followers and engagement on Instagram, TikTok & YouTube',
    999, 'pdf', 'https://example.com/downloads/sm-growth-2024.pdf',
-   'https://example.com/thumbnails/smgrowth-thumb.jpg', '50 pages, actionable tactics',
+   null, '50 pages, actionable tactics',
    'PDF link sent immediately', true, false, 5, NOW() - INTERVAL '35 days'),
   
   ('cccccccc-0006-0006-0006-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Email Marketing Templates', 'Canva templates for professional email campaigns and newsletters',
    799, 'pdf', 'https://example.com/downloads/email-templates.pdf',
-   'https://example.com/thumbnails/email-thumb.jpg', '15 customizable templates',
+   null, '15 customizable templates',
    'PDF download sent to email', true, false, 6, NOW() - INTERVAL '30 days'),
   
   -- Image products
   ('cccccccc-0007-0007-0007-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Stock Photo Collection (100)', 'High-resolution lifestyle and portrait photos for content creators',
    1499, 'image', 'https://example.com/downloads/stock-photos-100.zip',
-   'https://example.com/thumbnails/stock-thumb.jpg', 'High-res JPG, commercial license',
+   null, 'High-res JPG, commercial license',
    'ZIP archive sent to email', true, false, 7, NOW() - INTERVAL '25 days'),
   
   -- Request-based product (shoutout)
   ('cccccccc-0008-0008-0008-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Personalized Shoutout Video', 'Custom 30-second video shoutout recorded just for you',
-   5000, 'shoutout_request', null, 'https://example.com/thumbnails/shoutout-thumb.jpg',
+   5000, 'shoutout_request', null, null,
    'Custom video, 30 seconds max', 'Delivered within 3-5 business days',
    true, true, 8, NOW() - INTERVAL '20 days'),
   
   -- Another video product (inactive draft)
   ('cccccccc-0009-0009-0009-cccccccccccc', '33333333-3333-3333-3333-333333333333',
    'Advanced Video Editing Course (Coming Soon)', 'Professional techniques for cinematic video production',
-   3999, 'video', null, 'https://example.com/thumbnails/editing-course-thumb.jpg',
+   3999, 'video', null, null,
    'Full course with exercises', 'Coming soon - pre-order available',
    false, false, 9, NOW() - INTERVAL '5 days');
 
@@ -512,19 +512,19 @@ INSERT INTO public.shop_items (
   ('cccccccc-1001-1001-1001-cccccccccccc', '44444444-4444-4444-4444-444444444444',
    'Music Production Samples Pack', 'Royalty-free drum kits, synths, and loops for EDM production',
    1299, 'audio', 'https://example.com/downloads/edm-samples.zip',
-   'https://example.com/thumbnails/samples-thumb.jpg', '2GB of samples, WAV format',
+   null, '2GB of samples, WAV format',
    'ZIP download sent immediately', true, false, 1, NOW() - INTERVAL '40 days'),
   
   ('cccccccc-1002-1002-1002-cccccccccccc', '44444444-4444-4444-4444-444444444444',
    'YouTube SEO Checklist', '25-point checklist for optimizing videos and channel for discovery',
    599, 'pdf', 'https://example.com/downloads/youtube-seo.pdf',
-   'https://example.com/thumbnails/youtube-seo-thumb.jpg', 'Printable PDF checklist',
+   null, 'Printable PDF checklist',
    'PDF sent immediately', true, false, 2, NOW() - INTERVAL '25 days'),
   
   ('cccccccc-1003-1003-1003-cccccccccccc', '44444444-4444-4444-4444-444444444444',
    'Beat Tape (10 Exclusive Beats)', 'Original hip-hop and R&B instrumental beats exclusive on this store',
    2499, 'audio', 'https://example.com/downloads/beat-tape-10.zip',
-   'https://example.com/thumbnails/beats-thumb.jpg', 'MP3 + WAV, commercial license included',
+   null, 'MP3 + WAV, commercial license included',
    'Compressed ZIP sent to email', true, false, 3, NOW() - INTERVAL '15 days');
 
 -- Sample Shop Orders (purchases for testing)
