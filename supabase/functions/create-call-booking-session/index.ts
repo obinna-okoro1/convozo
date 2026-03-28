@@ -232,6 +232,20 @@ Deno.serve(async (req) => {
         statusCode: stripeErr.statusCode,
         message: stripeErr.message,
       });
+
+      // Stripe invalid-request errors are configuration problems (wrong account,
+      // capability not enabled, mode mismatch, etc.) — return 400 so the client
+      // can surface a meaningful message instead of a generic 500.
+      if (
+        stripeErr.type === 'StripeInvalidRequestError' ||
+        stripeErr.type === 'StripePermissionError'
+      ) {
+        return jsonError(
+          'Call bookings are temporarily unavailable for this creator. Please try again later.',
+          400,
+          corsHeaders,
+        );
+      }
     } else {
       console.error('[create-call-booking-session] Unhandled error:', err);
     }

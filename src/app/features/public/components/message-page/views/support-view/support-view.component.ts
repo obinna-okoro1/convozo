@@ -37,7 +37,9 @@ export class SupportViewComponent {
 
   protected onSubmit(): void {
     const amountCents = Math.round(this.amountDollars * 100);
-    if (amountCents < 100) return;
+    if (amountCents < 100) {
+      return;
+    }
 
     void this.state.onSupportSubmit({
       senderName: this.senderName,
