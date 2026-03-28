@@ -3,7 +3,13 @@
  *
  * Called when the video call ends (either by time expiry or manual leave).
  * Computes actual duration, verifies the 30% completion threshold,
- * marks the booking as completed, and releases the creator payout.
+ * marks the booking as completed, and captures or cancels the payment.
+ *
+ * Architecture: Manual Capture Escrow
+ *   - At checkout, payments are authorized only (capture_method: 'manual').
+ *   - No money moves until this function explicitly captures the PaymentIntent.
+ *   - If the call fails the threshold, the authorization is cancelled — no refund needed.
+ *   - The platform NEVER pays from its own funds.
  *
  * Expects:
  *   POST { booking_id: string, ended_by: 'creator' | 'fan' | 'system', fan_access_token?: string }
@@ -24,9 +30,9 @@
  *   403 — unauthorized (bad JWT or wrong/missing fan_access_token)
  *   409 — already completed/cancelled/refunded
  *
- * Payout / refund policy:
- *   > 30% of booked duration → creator payout released, no refund to fan
- *   ≤ 30% of booked duration → fan refunded in full, payout kept held
+ * Payout / capture policy:
+ *   ≥ 30% of booked duration → capture full payment, payout held for 3-day review period
+ *   < 30% of booked duration → capture 50% of payment as short-session fee, hold for 3-day review
  */
 
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
@@ -36,8 +42,14 @@ import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
 import { deleteRoom } from '../_shared/daily.ts';
 
 /** Completion threshold: if the call ran for at least 30% of the booked duration,
- *  the creator keeps the payment. Below 30%, the fan is refunded in full. */
+ *  the creator keeps the full payment. Below 30%, only 50% is captured. */
 const COMPLETION_THRESHOLD = 0.30;
+
+/** Charge percentage when call is below the completion threshold (< 30% of booked time). */
+const SHORT_CALL_CHARGE_PERCENT = 50;
+
+/** Number of days to hold captured payment before releasing to expert. */
+const PAYOUT_HOLD_DAYS = 3;
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -124,32 +136,76 @@ Deno.serve(async (req) => {
 
     let payoutReleased = false;
     let refunded = false;
+    let captured = false;
 
-    if (meetsThreshold && booking.payout_status === 'held') {
-      // Call ran for > 30% of booked time — release payout to creator.
-      // The payment was already captured with application_fee_amount during checkout;
-      // the transfer to the connected account happens automatically via transfer_data.
-      updatePayload.payout_status = 'released';
-      updatePayload.payout_released_at = now.toISOString();
-      payoutReleased = true;
-      console.log(`[complete-call] Payout released for booking ${booking_id} (${actualDurationSeconds}s / ${bookedDurationSeconds}s)`);
-    } else if (!meetsThreshold) {
-      // Call was too short (≤ 30% of booked duration) — refund the fan in full.
-      const paymentIntentId = booking.stripe_payment_intent_id as string | null;
-      if (paymentIntentId && booking.payout_status === 'held') {
-        try {
-          await stripe.refunds.create({
-            payment_intent: paymentIntentId,
-            reason: 'requested_by_customer',
-          });
-          updatePayload.payout_status = 'refunded';
-          updatePayload.refunded_at = now.toISOString();
-          refunded = true;
-          console.log(`[complete-call] Fan refunded — call too short (${actualDurationSeconds}s / ${bookedDurationSeconds}s, threshold 30%)`);
-        } catch (refundErr) {
-          // Refund failure is logged; payout remains held for manual review
-          console.error('[complete-call] Refund error (payout held for review):', (refundErr as Error).message);
+    const paymentIntentId = booking.stripe_payment_intent_id as string | null;
+
+    if (meetsThreshold && paymentIntentId) {
+      // Call ran for ≥ 30% of booked time — capture the payment.
+      // The transfer_data + application_fee_amount set at checkout will execute automatically
+      // on capture. Payout is held for a 3-day review period before release.
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (pi.status === 'requires_capture') {
+          // Manual capture flow (new bookings): capture the authorized payment
+          await stripe.paymentIntents.capture(paymentIntentId);
+          captured = true;
+          console.log(`[complete-call] Payment captured for booking ${booking_id} (${actualDurationSeconds}s / ${bookedDurationSeconds}s)`);
+        } else if (pi.status === 'succeeded') {
+          // Legacy flow (old bookings created before manual capture migration):
+          // payment was auto-captured at checkout. Nothing to capture.
+          captured = true;
+          console.log(`[complete-call] Payment already captured (legacy) for booking ${booking_id}`);
         }
+      } catch (captureErr) {
+        console.error('[complete-call] Capture error:', (captureErr as Error).message);
+      }
+
+      // Payout held for 3-day review period — a separate cron job releases it
+      const payoutReleaseAt = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+      updatePayload.payout_status = 'pending_release';
+      updatePayload.payout_release_at = payoutReleaseAt.toISOString();
+      console.log(`[complete-call] Payout pending release at ${payoutReleaseAt.toISOString()} for booking ${booking_id}`);
+    } else if (!meetsThreshold && paymentIntentId) {
+      // Call was too short (< 30% of booked duration) — charge 50% short-session fee
+      const totalAmount = booking.amount_paid as number;
+      const shortSessionFee = Math.round(totalAmount * SHORT_CALL_CHARGE_PERCENT / 100);
+
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (pi.status === 'requires_capture') {
+          // Manual capture flow: capture only 50% as short-session fee
+          await stripe.paymentIntents.capture(paymentIntentId, {
+            amount_to_capture: shortSessionFee,
+          });
+          captured = true;
+          console.log(`[complete-call] Short session: captured ${shortSessionFee} of ${totalAmount} cents (${SHORT_CALL_CHARGE_PERCENT}%) for booking ${booking_id} (${actualDurationSeconds}s / ${bookedDurationSeconds}s, threshold 30%)`);
+        } else if (pi.status === 'succeeded') {
+          // Legacy flow: payment was already captured in full. Refund 50% with reverse_transfer.
+          // Platform NEVER pays from its own funds.
+          const refundAmount = totalAmount - shortSessionFee;
+          if (refundAmount > 0) {
+            await stripe.refunds.create({
+              payment_intent: paymentIntentId,
+              amount: refundAmount,
+              reverse_transfer: true,
+              reason: 'requested_by_customer',
+            });
+          }
+          captured = true;
+          console.log(`[complete-call] Legacy short session: refunded ${refundAmount} of ${totalAmount} cents, kept ${shortSessionFee} (${SHORT_CALL_CHARGE_PERCENT}%) for booking ${booking_id}`);
+        }
+
+        // Hold captured fee for 3-day review period before releasing to expert
+        const payoutReleaseAt = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+        updatePayload.payout_status = 'pending_release';
+        updatePayload.payout_release_at = payoutReleaseAt.toISOString();
+        console.log(`[complete-call] Short session payout pending release at ${payoutReleaseAt.toISOString()} for booking ${booking_id}`);
+      } catch (captureErr) {
+        // Capture/refund failure is logged; payout remains held for manual review
+        console.error('[complete-call] Short session capture error (payout held for review):', (captureErr as Error).message);
       }
     }
 
@@ -175,17 +231,18 @@ Deno.serve(async (req) => {
         threshold_percent: COMPLETION_THRESHOLD * 100,
         actual_seconds: actualDurationSeconds,
         booked_seconds: bookedDurationSeconds,
+        captured,
         payout_released: payoutReleased,
         refunded,
       },
     });
 
-    if (payoutReleased) {
+    if (captured && !payoutReleased) {
       await supabase.from('call_events').insert({
         booking_id,
-        event_type: 'payout_released',
+        event_type: 'payout_pending_release',
         actor: 'system',
-        metadata: { released_at: now.toISOString() },
+        metadata: { hold_days: PAYOUT_HOLD_DAYS, release_at: updatePayload.payout_release_at },
       });
     }
 
@@ -208,6 +265,7 @@ Deno.serve(async (req) => {
       actual_duration_seconds: actualDurationSeconds,
       booked_duration_seconds: bookedDurationSeconds,
       meets_threshold: meetsThreshold,
+      captured,
       payout_released: payoutReleased,
       refunded,
     }, corsHeaders);

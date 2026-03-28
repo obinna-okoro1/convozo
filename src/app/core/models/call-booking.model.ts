@@ -42,7 +42,11 @@ export interface CallBooking {
   // Escrow payout tracking
   payout_status: PayoutStatus;
   payout_released_at: string | null;
+  /** When the 3-day hold expires and payout can be released to expert */
+  payout_release_at: string | null;
   refunded_at: string | null;
+  /** Whether payment was authorized only ('manual') or captured at checkout ('automatic') */
+  capture_method: 'manual' | 'automatic';
   /** Fan timezone captured at booking time (IANA, e.g. "America/New_York") */
   fan_timezone: string;
   created_at: string;

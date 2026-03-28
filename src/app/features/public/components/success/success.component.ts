@@ -26,8 +26,8 @@ export class SuccessComponent implements OnInit {
 
   protected readonly callSteps = [
     { n: 1, text: "Check your email — a booking confirmation with all the details has been sent to you." },
-    { n: 2, text: "You'll receive a secure join link by email before your session. No action needed until then." },
-    { n: 3, text: "Click the join link at the scheduled time — your call starts automatically. Enjoy!" },
+    { n: 2, text: "Your card has been authorized — full charge applies after a successful session (at least 30% of the booked time). If the session is shorter, a 50% fee applies." },
+    { n: 3, text: "Click the join link at the scheduled time — your session starts automatically. Enjoy!" },
   ];
 
   protected readonly messageSteps = [

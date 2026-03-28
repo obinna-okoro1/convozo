@@ -1,9 +1,9 @@
 {
   "lock": false,
   "tasks": {
-    "test": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts",
-    "test:watch": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env --watch _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts",
-    "test:coverage": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env --coverage=coverage _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts && deno coverage coverage"
+    "test": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts _shared/stripe-payment-flows.test.ts",
+    "test:watch": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env --watch _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts _shared/stripe-payment-flows.test.ts",
+    "test:coverage": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env --coverage=coverage _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts _shared/stripe-payment-flows.test.ts && deno coverage coverage"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.0"

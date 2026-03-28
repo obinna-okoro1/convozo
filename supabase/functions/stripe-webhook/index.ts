@@ -47,8 +47,15 @@ Deno.serve(async (req) => {
 
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Rule: never process a session that has not been fully paid.
-    if (session.payment_status !== 'paid') {
+    // Determine if this is a call booking with manual capture.
+    // Manual capture sessions have payment_status 'unpaid' at checkout completion
+    // because funds are only authorized, not yet captured.
+    const isCallBooking = session.metadata?.type === 'call_booking';
+    const isManualCapture = session.payment_status === 'unpaid' && isCallBooking;
+
+    // Rule: never process a session that has not been paid or authorized.
+    // Allow 'unpaid' status only for call bookings (manual capture = authorized).
+    if (session.payment_status !== 'paid' && !isManualCapture) {
       console.log('[webhook] Skipping unpaid session:', session.id, session.payment_status);
       return jsonResponse({ received: true, skipped: true });
     }

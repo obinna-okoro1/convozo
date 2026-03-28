@@ -1,6 +1,6 @@
 <div class="card-glass overflow-hidden animate-fade-in">
   <!-- Header -->
-  <div class="flex items-center gap-3 px-6 pt-6 pb-5 border-b border-separator">
+  <div class="flex items-center gap-3 px-6 lg:px-10 pt-6 pb-5 border-b border-separator">
     <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
          style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
       <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,7 +14,7 @@
     </div>
   </div>
 
-  <form (ngSubmit)="onSubmit()" class="space-y-5 px-6 pb-6 pt-5">
+  <form (ngSubmit)="onSubmit()" class="space-y-5 px-6 lg:px-10 pb-6 pt-5">
 
     <!-- Pricing row -->
     <div class="flex items-center justify-between py-4 px-5 rounded-2xl"
@@ -76,6 +76,23 @@
       </div>
     </div>
 
+    <!-- Cancellation & No-Show Policy -->
+    <div class="rounded-xl px-4 py-3.5 space-y-2"
+         style="background: rgba(215,0,21,0.04); border: 1px solid rgba(215,0,21,0.10);">
+      <p class="font-semibold text-content text-sm flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-[#d70015]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        Session Policy
+      </p>
+      <div class="space-y-1.5 text-content-secondary text-xs leading-relaxed">
+        <p>• Your card is <strong class="text-content">authorized but not charged</strong> until the session is validated.</p>
+        <p>• If the session lasts <strong class="text-content">less than 30%</strong> of the booked time, <strong class="text-content">50% of the session fee</strong> will be charged.</p>
+        <p>• If you <strong class="text-content">don't show up</strong>, a <strong class="text-content">30% no-show fee</strong> will be charged.</p>
+        <p>• Expert payouts are held for <strong class="text-content">3 business days</strong> after the session for review.</p>
+      </div>
+    </div>
+
     <!-- Contact Fields -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
@@ -90,12 +107,15 @@
       </div>
     </div>
 
-      <!-- Step 1: Pick a day (next 5 available days) -->
+    <!-- Calendar + Time: stacked on mobile, side-by-side on md+ -->
+    <div class="grid grid-cols-1 md:grid-cols-2 md:gap-x-5 gap-y-5 items-start">
+
+    <!-- Left col: Calendar date picker -->
     <div>
-      <div class="flex items-center justify-between">
-        <label for="cbf-day" class="form-label">
+      <div class="flex items-center justify-between mb-3">
+        <p class="form-label mb-0">
           Select a Day <span class="text-red-400">*</span>
-        </label>
+        </p>
         <span class="flex items-center gap-1.5 text-[0.65rem] text-content-muted">
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -104,7 +124,7 @@
         </span>
       </div>
 
-      @if (availableDays().length === 0) {
+      @if (!hasAvailableDays()) {
         <div class="flex items-center gap-3 p-4 rounded-xl"
              style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.12);">
           <svg class="w-4 h-4 text-content-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,42 +134,149 @@
           <p class="text-sm text-content-secondary">No available slots right now. Please check back soon.</p>
         </div>
       } @else {
-        <select
-          id="cbf-day"
-          [ngModel]="selectedDate()"
-          (ngModelChange)="onDayChange($event)"
-          name="selectedDate"
-          class="input"
-          required
-        >
-          <option value="" disabled>Choose a day&hellip;</option>
-          @for (group of availableDays(); track group.date) {
-            <option [value]="group.date">{{ group.date }}</option>
-          }
-        </select>
+        <!-- Calendar card -->
+        <div class="rounded-2xl overflow-hidden"
+             style="border: 1px solid rgba(124,58,237,0.15); background: var(--surface-raised, rgba(255,255,255,0.04));">
+
+          <!-- Month navigation header -->
+          <div class="flex items-center justify-between px-4 py-3"
+               style="border-bottom: 1px solid rgba(124,58,237,0.10); background: rgba(124,58,237,0.04);">
+            <button type="button"
+                    (click)="prevMonth()"
+                    [disabled]="!canGoPrev()"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150"
+                    [class.opacity-30]="!canGoPrev()"
+                    [class.cursor-not-allowed]="!canGoPrev()"
+                    [class.hover:bg-accent/10]="canGoPrev()"
+                    aria-label="Previous month">
+              <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+
+            <span class="text-sm font-bold text-content">{{ calendarMonthLabel() }}</span>
+
+            <button type="button"
+                    (click)="nextMonth()"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-accent/10 transition-all duration-150"
+                    aria-label="Next month">
+              <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Day-of-week headers -->
+          <div class="grid grid-cols-7 px-2 pt-2 pb-1">
+            @for (dow of ['Su','Mo','Tu','We','Th','Fr','Sa']; track dow) {
+              <div class="text-center text-[0.6rem] font-bold uppercase tracking-widest text-content-muted py-1">
+                {{ dow }}
+              </div>
+            }
+          </div>
+
+          <!-- Calendar day cells -->
+          <div class="grid grid-cols-7 gap-0.5 px-2 pb-3">
+            @for (cell of calendarGrid(); track (cell.key ?? $index)) {
+              @if (cell.day === null) {
+                <!-- Empty leading/trailing cell -->
+                <div></div>
+              } @else if (cell.past || !cell.available) {
+                <!-- Unavailable day -->
+                <div class="flex items-center justify-center h-9 w-full rounded-xl text-sm font-medium"
+                     [class.text-content-muted]="cell.past"
+                     [class.opacity-40]="cell.past"
+                     [class.text-content-secondary]="!cell.past && !cell.available"
+                     [class.opacity-60]="!cell.past && !cell.available"
+                     [class.ring-1]="cell.today"
+                     [class.ring-accent/40]="cell.today">
+                  {{ cell.day }}
+                </div>
+              } @else {
+                <!-- Available day — clickable -->
+                <button
+                  type="button"
+                  (click)="selectDay(cell)"
+                  class="flex items-center justify-center h-9 w-full rounded-xl text-sm font-bold transition-all duration-150 relative"
+                  [class.ring-2]="cell.today && selectedDate() !== cell.key"
+                  [class.ring-accent/50]="cell.today && selectedDate() !== cell.key"
+                  [class.text-accent]="selectedDate() !== cell.key"
+                  [class.bg-accent/8]="selectedDate() !== cell.key"
+                  [class.hover:bg-accent/15]="selectedDate() !== cell.key"
+                  [class.bg-accent]="selectedDate() === cell.key"
+                  [class.text-white]="selectedDate() === cell.key"
+                  [class.shadow-lg]="selectedDate() === cell.key"
+                  [attr.aria-pressed]="selectedDate() === cell.key"
+                  [attr.aria-label]="'Select day ' + cell.day">
+                  {{ cell.day }}
+                  <!-- Small dot indicator for available days -->
+                  @if (selectedDate() !== cell.key) {
+                    <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent/60"></span>
+                  }
+                </button>
+              }
+            }
+          </div>
+
+          <!-- Legend -->
+          <div class="flex items-center gap-4 px-4 pb-3 text-[0.6rem] text-content-muted">
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-accent/60 inline-block"></span>
+              Available
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-surface-raised border border-separator inline-block"></span>
+              Unavailable
+            </span>
+          </div>
+        </div>
       }
     </div>
 
-    <!-- Step 2: Pick a time (slots for selected day) -->
-    @if (selectedDate() && timesForSelectedDay().length > 0) {
-      <div class="animate-fade-in">
-        <label for="cbf-time" class="form-label">
-          Select a Time <span class="text-red-400">*</span>
-        </label>
-        <select
-          id="cbf-time"
-          [(ngModel)]="selectedIso"
-          name="selectedIso"
-          class="input"
-          required
-        >
-          <option value="" disabled>Choose a time&hellip;</option>
-          @for (slot of timesForSelectedDay(); track slot.iso) {
-            <option [value]="slot.iso">{{ slot.label }}</option>
-          }
-        </select>
-      </div>
-    }
+    <!-- Right col: Time slot picker -->
+    <div>
+      @if (selectedDate() && timesForSelectedDay().length > 0) {
+        <div class="animate-fade-in">
+          <p class="form-label" id="cbf-time-label">
+            Select a Time <span class="text-red-400">*</span>
+          </p>
+          <div class="flex flex-wrap gap-2" role="group" aria-labelledby="cbf-time-label">
+            @for (slot of timesForSelectedDay(); track slot.iso) {
+              <button
+                type="button"
+                (click)="selectedIso = slot.iso"
+                class="px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all duration-150 leading-none"
+                [class.border-accent]="selectedIso === slot.iso"
+                [class.bg-accent]="selectedIso === slot.iso"
+                [class.text-white]="selectedIso === slot.iso"
+                [class.shadow-md]="selectedIso === slot.iso"
+                [class.border-separator]="selectedIso !== slot.iso"
+                [class.text-content-secondary]="selectedIso !== slot.iso"
+                [class.hover:border-accent/50]="selectedIso !== slot.iso"
+                [class.hover:text-accent]="selectedIso !== slot.iso"
+                [class.hover:bg-accent/5]="selectedIso !== slot.iso"
+                [attr.aria-pressed]="selectedIso === slot.iso"
+              >
+                {{ slot.label }}
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <!-- Desktop placeholder: only shown on md+ before a day is picked -->
+        <div class="hidden md:flex flex-col items-center justify-center rounded-2xl min-h-[15rem]"
+             style="border: 1px dashed rgba(124,58,237,0.20); background: rgba(124,58,237,0.02);">
+          <svg class="w-10 h-10 text-content-muted mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-sm font-semibold text-content-muted">Pick a day first</p>
+          <p class="text-xs text-content-muted mt-1 opacity-60">Available times will appear here</p>
+        </div>
+      }
+    </div>
+
+    </div>
 
     <!-- Confirmation chip -->
     @if (selectedSlotLabel()) {

@@ -12,11 +12,20 @@
  *   - If booking_id provided: checks that specific booking
  *   - If omitted: scans all 'confirmed' bookings past the grace period
  *
+ * Architecture: Manual Capture Escrow
+ *   - Payments are authorized only (capture_method: 'manual') at checkout.
+ *   - No money moves until explicitly captured here.
+ *   - Platform NEVER pays refunds from its own funds — only cancels authorizations
+ *     or refunds with reverse_transfer for legacy auto-captured payments.
+ *
  * No-show rules:
- *   - Grace period: 10 minutes after scheduled time (or booking creation + 24h if no scheduled time)
- *   - Creator no-show: fan joined but creator absent → refund fan
- *   - Fan no-show: creator joined but fan absent → release payout to creator (industry standard)
- *   - Both no-show: neither joined → refund fan
+ *   - Grace period: 10 minutes after scheduled time
+ *   - Creator no-show: fan joined but creator absent → cancel authorization (full refund)
+ *   - Fan no-show: creator joined but fan absent → capture 30% as no-show fee, cancel rest
+ *   - Both no-show: neither joined → cancel authorization (full refund)
+ *
+ * Payout hold:
+ *   - Captured payments enter a 3-day hold period before release to expert.
  *
  * Returns:
  *   { processed: number, results: [...] }
@@ -33,6 +42,18 @@ const GRACE_PERIOD_MINUTES = 10;
 
 /** Fallback: if no scheduled_at, check bookings older than 24 hours */
 const FALLBACK_HOURS = 24;
+
+/** Fan no-show fee: charge 30% of booking amount as cancellation penalty */
+const FAN_NO_SHOW_FEE_PERCENT = 30;
+
+/** Completion threshold for stuck in-progress calls */
+const COMPLETION_THRESHOLD = 0.30;
+
+/** Charge percentage when call is below the completion threshold (< 30% of booked time) */
+const SHORT_CALL_CHARGE_PERCENT = 50;
+
+/** Number of days to hold captured payment before releasing to expert */
+const PAYOUT_HOLD_DAYS = 3;
 
 interface NoShowResult {
   booking_id: string;
@@ -114,11 +135,10 @@ Deno.serve(async (req) => {
         }
 
         // Auto-complete the stuck call.
-        // Policy: if the call ran for > 30% of booked duration, creator keeps the payment.
-        // Below 30% → fan is refunded in full.
+        // Policy: if the call ran for ≥ 30% of booked duration, capture full payment.
+        // Below 30% → capture 50% as short-session fee (or partial refund for legacy).
         const actualDurationSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
         const bookedDurationSeconds = (booking.duration || 30) * 60;
-        const COMPLETION_THRESHOLD = 0.30;
         const meetsThreshold = actualDurationSeconds >= bookedDurationSeconds * COMPLETION_THRESHOLD;
 
         const updatePayload: Record<string, unknown> = {
@@ -129,22 +149,53 @@ Deno.serve(async (req) => {
 
         let payoutReleased = false;
         let autoRefunded = false;
-        if (meetsThreshold) {
-          updatePayload.payout_status = 'released';
-          updatePayload.payout_released_at = now.toISOString();
-          payoutReleased = true;
-        } else if (booking.stripe_payment_intent_id && booking.payout_status === 'held') {
-          // Call was too short — refund the fan
+        if (meetsThreshold && booking.stripe_payment_intent_id) {
+          // Threshold met — capture payment, hold for 3-day review
           try {
-            await stripe.refunds.create({
-              payment_intent: booking.stripe_payment_intent_id,
-              reason: 'requested_by_customer',
-            });
-            updatePayload.payout_status = 'refunded';
-            updatePayload.refunded_at = now.toISOString();
-            autoRefunded = true;
-          } catch (refundErr) {
-            console.error(`[check-no-show] Auto-refund failed for booking ${booking.id}:`, (refundErr as Error).message);
+            const pi = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);
+            if (pi.status === 'requires_capture') {
+              await stripe.paymentIntents.capture(booking.stripe_payment_intent_id);
+            }
+            // Payment captured (or was already captured in legacy flow)
+            const payoutReleaseAt = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+            updatePayload.payout_status = 'pending_release';
+            updatePayload.payout_release_at = payoutReleaseAt.toISOString();
+          } catch (captureErr) {
+            console.error(`[check-no-show] Capture failed for booking ${booking.id}:`, (captureErr as Error).message);
+          }
+        } else if (!meetsThreshold && booking.stripe_payment_intent_id && booking.payout_status === 'held') {
+          // Call was too short — capture 50% as short-session fee
+          const totalAmount = booking.amount_paid as number;
+          const shortSessionFee = Math.round(totalAmount * SHORT_CALL_CHARGE_PERCENT / 100);
+
+          try {
+            const pi = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);
+            if (pi.status === 'requires_capture') {
+              // Manual capture: capture only 50% as short-session fee
+              await stripe.paymentIntents.capture(booking.stripe_payment_intent_id, {
+                amount_to_capture: shortSessionFee,
+              });
+              console.log(`[check-no-show] Short session: captured ${shortSessionFee} of ${totalAmount} cents (${SHORT_CALL_CHARGE_PERCENT}%) for booking ${booking.id}`);
+            } else if (pi.status === 'succeeded') {
+              // Legacy: refund 50% with reverse_transfer, keeping 50% as short-session fee
+              const refundAmount = totalAmount - shortSessionFee;
+              if (refundAmount > 0) {
+                await stripe.refunds.create({
+                  payment_intent: booking.stripe_payment_intent_id,
+                  amount: refundAmount,
+                  reverse_transfer: true,
+                  reason: 'requested_by_customer',
+                });
+              }
+              console.log(`[check-no-show] Short session (legacy): refunded ${refundAmount} of ${totalAmount} cents for booking ${booking.id}`);
+            }
+
+            // Hold captured fee for 3-day review before releasing to expert
+            const payoutReleaseAt = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+            updatePayload.payout_status = 'pending_release';
+            updatePayload.payout_release_at = payoutReleaseAt.toISOString();
+          } catch (captureErr) {
+            console.error(`[check-no-show] Short session capture failed for booking ${booking.id}:`, (captureErr as Error).message);
           }
         }
 
@@ -178,7 +229,7 @@ Deno.serve(async (req) => {
           action: 'skipped', // Re-using type; logged as auto-completed in events
           refunded: autoRefunded,
           payout_released: payoutReleased,
-          reason: `Auto-completed stuck in_progress call (${actualDurationSeconds}s / ${bookedDurationSeconds}s, threshold 30%, refunded: ${autoRefunded})`,
+          reason: `Auto-completed stuck in_progress call (${actualDurationSeconds}s / ${bookedDurationSeconds}s, threshold 30%, short_session_fee: ${!meetsThreshold})`,  
         });
         continue;
       }
@@ -216,17 +267,24 @@ Deno.serve(async (req) => {
       const updatePayload: Record<string, unknown> = {};
 
       if (!creatorJoined && fanJoined) {
-        // Creator no-show → refund fan
+        // Creator no-show → cancel authorization (fan not charged)
         action = 'creator_no_show';
         updatePayload.status = 'no_show';
 
-        // Refund via Stripe
         if (booking.stripe_payment_intent_id) {
           try {
-            await stripe.refunds.create({
-              payment_intent: booking.stripe_payment_intent_id,
-              reason: 'requested_by_customer',
-            });
+            const pi = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);
+            if (pi.status === 'requires_capture') {
+              // Manual capture: simply cancel the hold
+              await stripe.paymentIntents.cancel(booking.stripe_payment_intent_id);
+            } else if (pi.status === 'succeeded') {
+              // Legacy: refund with reverse_transfer — platform NEVER pays from own funds
+              await stripe.refunds.create({
+                payment_intent: booking.stripe_payment_intent_id,
+                reverse_transfer: true,
+                reason: 'requested_by_customer',
+              });
+            }
             updatePayload.payout_status = 'refunded';
             updatePayload.refunded_at = now.toISOString();
             refunded = true;
@@ -235,23 +293,68 @@ Deno.serve(async (req) => {
           }
         }
       } else if (creatorJoined && !fanJoined) {
-        // Fan no-show → release payout to creator (industry standard: creator protected)
+        // Fan no-show → charge 30% no-show fee, cancel the remaining 70%
         action = 'fan_no_show';
         updatePayload.status = 'no_show';
-        updatePayload.payout_status = 'released';
-        updatePayload.payout_released_at = now.toISOString();
-        payoutReleased = true;
+
+        if (booking.stripe_payment_intent_id) {
+          try {
+            const pi = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);
+            const totalAmount = booking.amount_paid as number;
+            const noShowFee = Math.round(totalAmount * FAN_NO_SHOW_FEE_PERCENT / 100);
+
+            if (pi.status === 'requires_capture') {
+              // Manual capture: capture only 30% as no-show fee
+              await stripe.paymentIntents.capture(booking.stripe_payment_intent_id, {
+                amount_to_capture: noShowFee,
+              });
+              console.log(`[check-no-show] Fan no-show: captured ${noShowFee} of ${totalAmount} cents (${FAN_NO_SHOW_FEE_PERCENT}%) for booking ${booking.id}`);
+            } else if (pi.status === 'succeeded') {
+              // Legacy: refund 70% with reverse_transfer, keeping 30% as no-show fee
+              const refundAmount = totalAmount - noShowFee;
+              if (refundAmount > 0) {
+                await stripe.refunds.create({
+                  payment_intent: booking.stripe_payment_intent_id,
+                  amount: refundAmount,
+                  reverse_transfer: true,
+                  reason: 'requested_by_customer',
+                });
+              }
+              console.log(`[check-no-show] Fan no-show (legacy): refunded ${refundAmount} of ${totalAmount} cents for booking ${booking.id}`);
+            }
+
+            // Hold captured fee for 3-day review before releasing to expert
+            const payoutReleaseAt = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+            updatePayload.payout_status = 'pending_release';
+            updatePayload.payout_release_at = payoutReleaseAt.toISOString();
+            payoutReleased = false; // Not released yet — held for 3 days
+          } catch (captureErr) {
+            console.error(`[check-no-show] Fan no-show fee capture failed for booking ${booking.id}:`, (captureErr as Error).message);
+          }
+        } else {
+          // No Stripe payment (e.g. Paystack) — release payout directly
+          updatePayload.payout_status = 'released';
+          updatePayload.payout_released_at = now.toISOString();
+          payoutReleased = true;
+        }
       } else if (!creatorJoined && !fanJoined) {
-        // Both no-show → refund fan
+        // Both no-show → cancel authorization (fan not charged)
         action = 'both_no_show';
         updatePayload.status = 'no_show';
 
         if (booking.stripe_payment_intent_id) {
           try {
-            await stripe.refunds.create({
-              payment_intent: booking.stripe_payment_intent_id,
-              reason: 'requested_by_customer',
-            });
+            const pi = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);
+            if (pi.status === 'requires_capture') {
+              await stripe.paymentIntents.cancel(booking.stripe_payment_intent_id);
+            } else if (pi.status === 'succeeded') {
+              // Legacy: refund with reverse_transfer
+              await stripe.refunds.create({
+                payment_intent: booking.stripe_payment_intent_id,
+                reverse_transfer: true,
+                reason: 'requested_by_customer',
+              });
+            }
             updatePayload.payout_status = 'refunded';
             updatePayload.refunded_at = now.toISOString();
             refunded = true;

@@ -236,6 +236,30 @@
               }
             </div>
 
+            <!-- Payout status indicator for completed bookings -->
+            @if (booking.status === 'completed' && booking.payout_status === 'pending_release') {
+              <div class="flex items-center gap-1.5 mt-1">
+                <svg class="w-3 h-3 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-[0.65rem] text-[#b85c00] font-semibold">Payout held — releases in 3 days</span>
+              </div>
+            } @else if (booking.status === 'completed' && booking.payout_status === 'released') {
+              <div class="flex items-center gap-1.5 mt-1">
+                <svg class="w-3 h-3 text-[#1a9e3f]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-[0.65rem] text-[#1a9e3f] font-semibold">Payout released</span>
+              </div>
+            } @else if (booking.status === 'no_show' && booking.payout_status === 'pending_release') {
+              <div class="flex items-center gap-1.5 mt-1">
+                <svg class="w-3 h-3 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-[0.65rem] text-[#b85c00] font-semibold">No-show fee — releases in 3 days</span>
+              </div>
+            }
+
             @if (booking.call_notes) {
               <p class="text-sm text-content-muted line-clamp-1 mb-2 italic">"{{ booking.call_notes }}"</p>
             }
