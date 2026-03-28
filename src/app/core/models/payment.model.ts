@@ -3,7 +3,7 @@
  * Stripe Connect accounts, Paystack subaccounts, and payment-related types.
  */
 
-export type PayoutStatus = 'held' | 'released' | 'refunded';
+export type PayoutStatus = 'held' | 'pending_release' | 'released' | 'refunded';
 
 export interface StripeAccount {
   id: string;

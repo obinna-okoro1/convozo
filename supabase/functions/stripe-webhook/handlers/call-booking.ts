@@ -47,6 +47,11 @@ export async function handleCallBooking(
   const dailyRoom = await provisionDailyRoom(session.id, durationMinutes, creator_id, booker_name);
 
   // ── Insert booking ────────────────────────────────────────────────
+  // Determine capture method from the PaymentIntent status.
+  // Manual capture: PI status is 'requires_capture' (authorized only).
+  // Automatic capture (legacy): PI status is 'succeeded' (already captured).
+  const captureMethod = session.payment_status === 'unpaid' ? 'manual' : 'automatic';
+
   const { data: booking, error: bookingError } = await supabase
     .from('call_bookings')
     .insert({
@@ -66,6 +71,7 @@ export async function handleCallBooking(
       creator_meeting_token: dailyRoom.creatorToken,
       fan_meeting_token: dailyRoom.fanToken,
       payout_status: 'held',
+      capture_method: captureMethod,
     })
     .select()
     .single();

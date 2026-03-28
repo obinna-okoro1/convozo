@@ -195,6 +195,10 @@ Deno.serve(async (req) => {
         fan_timezone: payload.fan_timezone || 'UTC',
       },
       payment_intent_data: {
+        // Manual capture: authorize the card now, capture only after call validation.
+        // This prevents the transfer from executing until we explicitly capture,
+        // eliminating refund-based negative balance risk on the platform.
+        capture_method: 'manual',
         application_fee_amount: platformFee,
         transfer_data: {
           destination: stripeAccount.stripe_account_id,
