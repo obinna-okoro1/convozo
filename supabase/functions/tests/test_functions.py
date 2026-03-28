@@ -31,7 +31,7 @@ Covered functions:
   ✓ paystack-webhook (HMAC-SHA512 signature, event routing, Paystack verify)
   ✓ get-conversation (token validation, 404 on unknown token)
   ✓ post-client-reply (token/content validation, 404 on unknown, 405 on GET)
-  ✓ get-client-portal (auth guard — 401 without JWT)
+  ✓ get-client-portal (auth guard — 401 without JWT, data isolation, RLS verification)
 """
 
 import argparse
@@ -56,6 +56,33 @@ ANON_KEY = (
     ".eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9"
     ".CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
 )
+
+# Local Supabase service-role key — read dynamically from `supabase status`
+# so it works regardless of which JWT secret this Supabase instance was
+# initialised with. This key is never a secret in local dev.
+def _read_service_role_key() -> str:
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["supabase", "status", "--output", "json"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0:
+            import json as _json
+            data = _json.loads(result.stdout)
+            key = data.get("SERVICE_ROLE_KEY", "")
+            if key:
+                return key
+    except Exception:
+        pass
+    # Fallback — standard default key; may not match if JWT secret was changed.
+    return (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        ".eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0"
+        ".EGIM96RAZx35lJzdJsyH-qQwv8Hj04zWl196z2-SBc0"
+    )
+
+SERVICE_ROLE_KEY = _read_service_role_key()
 
 # Creator from seed.sql — used across test cases
 SEED_CREATOR_SLUG = "sarahjohnson"
@@ -1249,6 +1276,353 @@ def test_client_portal_anon_key_rejected() -> list[TestResult]:
     return [expect_status("get-client-portal – anon key returns 401", status, 401, body)]
 
 
+# ── Client portal helpers ────────────────────────────────────────────────────────
+
+# Seed client credentials — these emails match messages in seed.sql.
+# The users are created via the Admin API in _ensure_client_users() on first use.
+CLIENT_A_EMAIL = "john@example.com"       # has messages to sarahjohnson
+CLIENT_A_PASSWORD = "clienttest123"
+CLIENT_B_EMAIL = "fan@example.com"        # has messages to mikec
+CLIENT_B_PASSWORD = "clienttest456"
+
+_CLIENT_A_JWT: Optional[str] = None
+_CLIENT_B_JWT: Optional[str] = None
+_CLIENTS_CREATED: bool = False
+
+
+def _admin_create_user(email: str, password: str) -> bool:
+    """
+    Create a user via the Supabase Auth Admin API (service-role key required).
+    email_confirm=True so the user is immediately active without needing a
+    magic-link click. Returns True if created (201) or already exists (422).
+    """
+    url = f"{SUPABASE_URL}/auth/v1/admin/users"
+    data = json.dumps({
+        "email": email,
+        "password": password,
+        "email_confirm": True,
+    }).encode()
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "apikey": SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {SERVICE_ROLE_KEY}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return resp.status in (200, 201)
+    except urllib.error.HTTPError as e:
+        # 422 = user already exists — that's fine
+        return e.code == 422
+
+
+def _sign_in_client(email: str, password: str) -> Optional[str]:
+    """Sign in a client user with email/password and return the access token."""
+    url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
+    data = json.dumps({"email": email, "password": password}).encode()
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json", "apikey": ANON_KEY},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+            return body.get("access_token")
+    except Exception:
+        return None
+
+
+def _ensure_client_users() -> bool:
+    """
+    Both test client users (john@example.com, fan@example.com) are seeded
+    directly in seed.sql — no Admin API call needed. Just confirm they can
+    sign in. Returns True if the sign-in endpoint is reachable.
+    """
+    global _CLIENTS_CREATED
+    if _CLIENTS_CREATED:
+        return True
+    # Quick health-check: can we reach the auth endpoint at all?
+    try:
+        url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
+        req = urllib.request.Request(
+            url,
+            data=b'{"email":"nobody","password":"x"}',
+            headers={"Content-Type": "application/json", "apikey": ANON_KEY},
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as _:
+            pass
+    except urllib.error.HTTPError:
+        pass  # 400 is expected — endpoint is up
+    except Exception:
+        return False  # auth endpoint unreachable
+    _CLIENTS_CREATED = True
+    return True
+
+
+def _get_client_a_jwt() -> Optional[str]:
+    global _CLIENT_A_JWT
+    if _CLIENT_A_JWT:
+        return _CLIENT_A_JWT
+    if not _ensure_client_users():
+        return None
+    _CLIENT_A_JWT = _sign_in_client(CLIENT_A_EMAIL, CLIENT_A_PASSWORD)
+    return _CLIENT_A_JWT
+
+
+def _get_client_b_jwt() -> Optional[str]:
+    global _CLIENT_B_JWT
+    if _CLIENT_B_JWT:
+        return _CLIENT_B_JWT
+    if not _ensure_client_users():
+        return None
+    _CLIENT_B_JWT = _sign_in_client(CLIENT_B_EMAIL, CLIENT_B_PASSWORD)
+    return _CLIENT_B_JWT
+
+
+def _portal_request(jwt: str) -> tuple[int, dict]:
+    """Call get-client-portal with the given user JWT."""
+    url = f"{BASE_URL}/get-client-portal"
+    data = json.dumps({}).encode()
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {jwt}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return resp.status, json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read().decode())
+        except Exception:
+            return e.code, {"error": "unreadable"}
+
+
+def test_client_portal_authenticated_returns_data() -> list[TestResult]:
+    """
+    A valid user JWT must return 200 with messages[] and bookings[] arrays.
+    Client A (john@example.com) has messages in seed.sql sent to sarahjohnson.
+    """
+    jwt = _get_client_a_jwt()
+    if not jwt:
+        return [fail(
+            "get-client-portal – authenticated user returns 200",
+            "Could not obtain client JWT — is `supabase start` + `supabase functions serve` running?",
+        )]
+
+    status, body = _portal_request(jwt)
+    results = [
+        expect_status("get-client-portal – authenticated user returns 200", status, 200, body),
+    ]
+    if status == 200:
+        results.append(TestResult(
+            "get-client-portal – response has messages array",
+            isinstance(body.get("messages"), list),
+            f"messages type={type(body.get('messages')).__name__}",
+        ))
+        results.append(TestResult(
+            "get-client-portal – response has bookings array",
+            isinstance(body.get("bookings"), list),
+            f"bookings type={type(body.get('bookings')).__name__}",
+        ))
+    return results
+
+
+def test_client_portal_only_own_messages() -> list[TestResult]:
+    """
+    Client A (john@example.com) must only see messages where sender_email
+    matches. Seed data has john and jane both sending messages to the same
+    creator — john must NOT see jane's messages.
+    """
+    jwt = _get_client_a_jwt()
+    if not jwt:
+        return [fail(
+            "get-client-portal – client only sees own messages",
+            "Could not obtain client A JWT",
+        )]
+
+    status, body = _portal_request(jwt)
+    if status != 200:
+        return [fail(
+            "get-client-portal – client only sees own messages",
+            f"Expected 200, got {status}: {body}",
+        )]
+
+    messages = body.get("messages", [])
+    results = []
+
+    # Every message must belong to client A
+    leaking = [m for m in messages if m.get("sender_name", "") == "Jane Smith"]
+    results.append(TestResult(
+        "get-client-portal – client A cannot see client B (jane) messages",
+        len(leaking) == 0,
+        f"leaked {len(leaking)} jane messages: {leaking[:1]}",
+    ))
+
+    # Client A's own message must be present (seed: john sent msg 55555555...)
+    own = [m for m in messages if m.get("sender_name", "") == "John Doe"]
+    results.append(TestResult(
+        "get-client-portal – client A sees own messages (John Doe in seed)",
+        len(own) > 0,
+        f"found {len(own)} messages for John Doe",
+    ))
+
+    return results
+
+
+def test_client_portal_data_isolation_between_users() -> list[TestResult]:
+    """
+    RLS isolation test: client A and client B must see completely different
+    message sets. Neither should see the other's messages.
+
+    Seed data:
+      john@example.com  → messages to sarahjohnson (sender_name = 'John Doe')
+      fan@example.com   → messages to mikec        (sender_name = 'Gaming Fan')
+    """
+    jwt_a = _get_client_a_jwt()
+    jwt_b = _get_client_b_jwt()
+
+    if not jwt_a or not jwt_b:
+        return [fail(
+            "get-client-portal – data isolation between two users",
+            "Could not obtain one or both client JWTs",
+        )]
+
+    _, body_a = _portal_request(jwt_a)
+    _, body_b = _portal_request(jwt_b)
+
+    msgs_a = body_a.get("messages", [])
+    msgs_b = body_b.get("messages", [])
+
+    results = []
+
+    # Client B's messages must not appear in client A's response
+    b_ids = {m.get("id") for m in msgs_b}
+    a_ids = {m.get("id") for m in msgs_a}
+    cross_ab = a_ids & b_ids
+    results.append(TestResult(
+        "get-client-portal – client A and B have no overlapping message IDs",
+        len(cross_ab) == 0,
+        f"overlapping IDs: {cross_ab}",
+    ))
+
+    # Sanity: each client should have at least one message (from seed data)
+    results.append(TestResult(
+        "get-client-portal – client A has at least 1 message",
+        len(msgs_a) >= 1,
+        f"client A message count: {len(msgs_a)}",
+    ))
+    results.append(TestResult(
+        "get-client-portal – client B has at least 1 message",
+        len(msgs_b) >= 1,
+        f"client B message count: {len(msgs_b)}",
+    ))
+
+    return results
+
+
+def test_client_portal_message_shape() -> list[TestResult]:
+    """
+    Validate the shape of each message object returned from get-client-portal.
+    Required fields: id, message_content, amount_paid, message_type, is_handled,
+    created_at, conversation_token, sender_name, creator (with display_name, slug).
+    """
+    jwt = _get_client_a_jwt()
+    if not jwt:
+        return [fail(
+            "get-client-portal – message shape validation",
+            "Could not obtain client JWT",
+        )]
+
+    status, body = _portal_request(jwt)
+    if status != 200:
+        return [fail("get-client-portal – message shape validation", f"status={status}")]
+
+    messages = body.get("messages", [])
+    if not messages:
+        return [fail(
+            "get-client-portal – message shape validation",
+            "No messages returned — check seed.sql has john@example.com messages",
+        )]
+
+    msg = messages[0]
+    required_top = ("id", "message_content", "amount_paid", "message_type",
+                    "is_handled", "created_at", "conversation_token", "sender_name",
+                    "creator", "replies")
+    required_creator = ("display_name", "slug")
+
+    results = []
+    missing_top = [f for f in required_top if f not in msg]
+    results.append(TestResult(
+        "get-client-portal – message has all required top-level fields",
+        len(missing_top) == 0,
+        f"missing: {missing_top}" if missing_top else "all fields present",
+    ))
+
+    creator = msg.get("creator") or {}
+    missing_creator = [f for f in required_creator if f not in creator]
+    results.append(TestResult(
+        "get-client-portal – message.creator has display_name and slug",
+        len(missing_creator) == 0,
+        f"missing creator fields: {missing_creator}" if missing_creator else "creator shape OK",
+    ))
+
+    results.append(TestResult(
+        "get-client-portal – amount_paid is an integer (cents, never float)",
+        isinstance(msg.get("amount_paid"), int),
+        f"amount_paid={msg.get('amount_paid')!r} type={type(msg.get('amount_paid')).__name__}",
+    ))
+
+    results.append(TestResult(
+        "get-client-portal – replies is a list",
+        isinstance(msg.get("replies"), list),
+        f"replies type={type(msg.get('replies')).__name__}",
+    ))
+
+    return results
+
+
+def test_client_portal_conversation_token_not_null() -> list[TestResult]:
+    """
+    conversation_token must be a non-null UUID for every message returned.
+    This token is how clients navigate to /conversation/:token.
+    A null token means the client can't open the conversation thread.
+    """
+    jwt = _get_client_a_jwt()
+    if not jwt:
+        return [fail(
+            "get-client-portal – conversation_token is non-null",
+            "Could not obtain client JWT",
+        )]
+
+    status, body = _portal_request(jwt)
+    if status != 200:
+        return [fail("get-client-portal – conversation_token is non-null", f"status={status}")]
+
+    messages = body.get("messages", [])
+    UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    import re
+    bad = [m["id"] for m in messages
+           if not m.get("conversation_token")
+           or not re.match(UUID_PATTERN, m["conversation_token"], re.I)]
+    return [TestResult(
+        "get-client-portal – every message has a valid conversation_token UUID",
+        len(bad) == 0,
+        f"{len(bad)} messages with missing/invalid token: {bad[:3]}",
+    )]
+
+
 # ── auth-password-reset ───────────────────────────────────────────────────────
 #
 # These tests hit Supabase Auth REST endpoints directly (not edge functions):
@@ -1616,6 +1990,11 @@ ALL_SUITES = {
     "get-client-portal": [
         test_client_portal_no_auth,
         test_client_portal_anon_key_rejected,
+        test_client_portal_authenticated_returns_data,
+        test_client_portal_only_own_messages,
+        test_client_portal_data_isolation_between_users,
+        test_client_portal_message_shape,
+        test_client_portal_conversation_token_not_null,
     ],
     "auth-password-reset": [
         test_auth_recover_valid_email,

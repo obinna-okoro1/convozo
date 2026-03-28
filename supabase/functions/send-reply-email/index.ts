@@ -1,7 +1,7 @@
 import { sendEmail, creatorReplyEmail } from '../_shared/email.ts';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, requireAuth, makeRateLimiter } from '../_shared/http.ts';
+import { jsonOk, jsonError, requireAuth, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
 import { generateMagicLink } from '../_shared/magic-link.ts';
 
 /** Maximum allowed reply length (characters). */
@@ -99,7 +99,8 @@ Deno.serve(async (req) => {
     }
 
     // ── 5. Send notification email (fire-and-forget) ──────────────────────
-    const appUrl = Deno.env.get('APP_URL') ?? 'https://convozo.com';
+    // getAppUrl() guards against localhost leaking into production emails
+    const appUrl = getAppUrl();
     const conversationUrl = `${appUrl}/conversation/${message.conversation_token}`;
 
     // Generate a fresh magic link so the client can jump straight to their portal

@@ -14,7 +14,7 @@
 
 import { supabase } from '../_shared/supabase.ts';
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
-import { jsonOk, jsonError, makeRateLimiter } from '../_shared/http.ts';
+import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
 import { sendEmail } from '../_shared/email.ts';
 import { escapeHtml } from '../_shared/email.ts';
 
@@ -114,7 +114,8 @@ Deno.serve(async (req) => {
     }
 
     // ── 4. Notify expert by email (fire-and-forget) ──────────────────────────
-    const appUrl = Deno.env.get('APP_URL') ?? 'https://convozo.com';
+    // getAppUrl() guards against localhost leaking into production emails
+    const appUrl = getAppUrl();
     const dashboardUrl = `${appUrl}/creator/dashboard`;
 
     const emailPayload = clientReplyNotificationEmail({
