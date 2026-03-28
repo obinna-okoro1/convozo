@@ -65,8 +65,6 @@ function makeCreator(overrides: Partial<Creator> = {}): Creator {
     profession_title: null,
     years_of_experience: null,
     linkedin_url: null,
-    qualifications: [],
-    certifications: [],
     created_at: NOW,
     updated_at: NOW,
     ...overrides,

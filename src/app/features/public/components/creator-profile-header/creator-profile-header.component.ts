@@ -74,12 +74,7 @@ export class CreatorProfileHeaderComponent {
   /** True when the expert has at least one credential worth surfacing. */
   protected readonly hasCredentials = computed(() => {
     const c = this.creator();
-    return !!(
-      c?.profession_title ??
-      c?.category ??
-      c?.qualifications?.length ??
-      c?.certifications?.length
-    );
+    return !!(c?.profession_title ?? c?.category);
   });
 
   /**

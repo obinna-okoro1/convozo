@@ -195,9 +195,12 @@ Deno.serve(async (req) => {
         fan_timezone: payload.fan_timezone || 'UTC',
       },
       payment_intent_data: {
-        // Manual capture: authorize the card now, capture only after call validation.
-        // This prevents the transfer from executing until we explicitly capture,
-        // eliminating refund-based negative balance risk on the platform.
+        // Manual capture (authorization hold): authorize the card at checkout but
+        // do NOT capture funds yet. Money only moves when complete-call explicitly
+        // captures the PaymentIntent after validating the call completed.
+        // If the creator is a no-show, check-no-show cancels the authorization —
+        // no refund needed because funds were never taken from the client.
+        // This eliminates negative-balance risk on the platform from failed calls.
         capture_method: 'manual',
         application_fee_amount: platformFee,
         transfer_data: {
@@ -220,7 +223,18 @@ Deno.serve(async (req) => {
 
     return jsonOk({ sessionId: session.id, url: session.url }, corsHeaders);
   } catch (err) {
-    console.error('Error creating call booking session:', err);
+    // Log specific Stripe error details (never exposed to client)
+    if (err && typeof err === 'object' && 'type' in err) {
+      const stripeErr = err as { type: string; code?: string; message?: string; statusCode?: number };
+      console.error('[create-call-booking-session] Stripe error:', {
+        type: stripeErr.type,
+        code: stripeErr.code,
+        statusCode: stripeErr.statusCode,
+        message: stripeErr.message,
+      });
+    } else {
+      console.error('[create-call-booking-session] Unhandled error:', err);
+    }
     return jsonError('An internal error occurred. Please try again later.', 500, corsHeaders);
   }
 });

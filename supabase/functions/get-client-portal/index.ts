@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
         creators (
           display_name,
           slug,
-          profile_picture_url
+          profile_image_url
         )
       `)
       .eq('sender_email', clientEmail)
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         creators (
           display_name,
           slug,
-          profile_picture_url
+          profile_image_url
         )
       `)
       .eq('booker_email', clientEmail)

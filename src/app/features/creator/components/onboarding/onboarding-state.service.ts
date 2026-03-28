@@ -30,8 +30,6 @@ import {
   EXPERT_CATEGORIES,
   getCategoryById,
   type ExpertSubcategory,
-  type Qualification,
-  type Certification,
 } from '../../../../core/models';
 
 @Injectable()
@@ -40,7 +38,7 @@ export class OnboardingStateService implements OnDestroy {
   readonly currentStep = signal<number>(1);
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
-  readonly TOTAL_STEPS = 5;
+  readonly TOTAL_STEPS = 4;
 
   // ── Profile fields ─────────────────────────────────────────────────
   readonly displayName = signal<string>('');
@@ -57,9 +55,6 @@ export class OnboardingStateService implements OnDestroy {
   readonly yearsOfExperience = signal<number | null>(null);
   readonly linkedinUrl = signal<string>('');
 
-  // ── Credentials (step 3) ──────────────────────────────────────────
-  readonly qualifications = signal<Qualification[]>([]);
-  readonly certifications = signal<Certification[]>([]);
 
   // ── Category data (exposed for template) ──────────────────────────
   readonly categories = EXPERT_CATEGORIES;
@@ -101,9 +96,6 @@ export class OnboardingStateService implements OnDestroy {
 
   // Category must be selected to leave step 2. Subcategory and title are optional.
   readonly canProceedStep2 = computed(() => !!this.expertCategory());
-
-  // Step 3 (credentials) is entirely optional — always allow proceed.
-  readonly canProceedStep3 = computed(() => true);
 
   // Subcategories for the currently selected expert category.
   readonly filteredSubcategories = computed<ExpertSubcategory[]>(
@@ -287,70 +279,6 @@ export class OnboardingStateService implements OnDestroy {
     this.yearsOfExperience.set(isNaN(n) ? null : Math.min(80, Math.max(0, n)));
   }
 
-  // ── Qualification helpers ──────────────────────────────────────────
-
-  addQualification(): void {
-    this.qualifications.update(list => [
-      ...list,
-      { institution: '', degree: '', graduation_year: null },
-    ]);
-  }
-
-  removeQualification(index: number): void {
-    this.qualifications.update(list => list.filter((_, i) => i !== index));
-  }
-
-  updateQualification(
-    index: number,
-    field: 'institution' | 'degree',
-    value: string,
-  ): void {
-    this.qualifications.update(list =>
-      list.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
-    );
-  }
-
-  updateQualificationYear(index: number, value: string): void {
-    const n = parseInt(value, 10);
-    this.qualifications.update(list =>
-      list.map((q, i) =>
-        i === index ? { ...q, graduation_year: isNaN(n) ? null : n } : q,
-      ),
-    );
-  }
-
-  // ── Certification helpers ──────────────────────────────────────────
-
-  addCertification(): void {
-    this.certifications.update(list => [
-      ...list,
-      { name: '', issuer: '', year: null },
-    ]);
-  }
-
-  removeCertification(index: number): void {
-    this.certifications.update(list => list.filter((_, i) => i !== index));
-  }
-
-  updateCertification(
-    index: number,
-    field: 'name' | 'issuer',
-    value: string,
-  ): void {
-    this.certifications.update(list =>
-      list.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
-    );
-  }
-
-  updateCertificationYear(index: number, value: string): void {
-    const n = parseInt(value, 10);
-    this.certifications.update(list =>
-      list.map((c, i) =>
-        i === index ? { ...c, year: isNaN(n) ? null : n } : c,
-      ),
-    );
-  }
-
   // ── Actions ────────────────────────────────────────────────────────
 
   /**
@@ -375,8 +303,6 @@ export class OnboardingStateService implements OnDestroy {
           professionTitle: this.professionTitle() || undefined,
           yearsOfExperience: this.yearsOfExperience() ?? undefined,
           linkedinUrl: this.linkedinUrl() || undefined,
-          qualifications: this.qualifications(),
-          certifications: this.certifications(),
         });
         if (error) throw error;
       } else {
@@ -391,8 +317,6 @@ export class OnboardingStateService implements OnDestroy {
           professionTitle: this.professionTitle() || undefined,
           yearsOfExperience: this.yearsOfExperience() ?? undefined,
           linkedinUrl: this.linkedinUrl() || undefined,
-          qualifications: this.qualifications(),
-          certifications: this.certifications(),
         });
         if (error || !creator) {
           const msg = (error as { message?: string } | null)?.message ?? '';
