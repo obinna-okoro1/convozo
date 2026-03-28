@@ -56,11 +56,9 @@ export class MessagePageStateService {
   readonly expertCategory      = computed(() => this.creator()?.category ?? null);
   readonly expertSubcategory   = computed(() => this.creator()?.subcategory ?? null);
   readonly linkedinUrl         = computed(() => this.creator()?.linkedin_url ?? null);
-  readonly qualifications      = computed(() => this.creator()?.qualifications ?? []);
-  readonly certifications      = computed(() => this.creator()?.certifications ?? []);
   /** True when the expert has filled in enough credentials to show a trust card. */
   readonly hasCredentials      = computed(() =>
-    !!(this.professionTitle() ?? this.expertCategory() ?? this.qualifications().length ?? this.certifications().length)
+    !!(this.professionTitle() ?? this.expertCategory())
   );
 
   constructor(

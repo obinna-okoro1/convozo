@@ -677,15 +677,7 @@ UPDATE public.creators SET
   subcategory         = 'family_law',
   profession_title    = 'Senior Family Law Attorney',
   years_of_experience = 12,
-  linkedin_url        = 'https://linkedin.com/in/sarah-johnson-esq',
-  qualifications      = '[
-    {"institution": "Yale Law School", "degree": "Juris Doctor (J.D.)", "graduation_year": 2012},
-    {"institution": "Cornell University", "degree": "B.A. Political Science", "graduation_year": 2009}
-  ]'::jsonb,
-  certifications      = '[
-    {"name": "Board Certified Family Law Specialist", "issuer": "State Bar Association", "year": 2016},
-    {"name": "Collaborative Practice Certification", "issuer": "IACP", "year": 2018}
-  ]'::jsonb
+  linkedin_url        = 'https://linkedin.com/in/sarah-johnson-esq'
 WHERE id = '33333333-3333-3333-3333-333333333333';
 
 -- Mike Chen — Life & Performance Coach
@@ -694,14 +686,7 @@ UPDATE public.creators SET
   subcategory         = 'life_coach',
   profession_title    = 'ICF-Certified Life & Performance Coach',
   years_of_experience = 8,
-  linkedin_url        = 'https://linkedin.com/in/mike-chen-coach',
-  qualifications      = '[
-    {"institution": "Georgetown University", "degree": "M.S. Leadership Coaching", "graduation_year": 2017}
-  ]'::jsonb,
-  certifications      = '[
-    {"name": "Associate Certified Coach (ACC)", "issuer": "ICF", "year": 2018},
-    {"name": "NLP Practitioner", "issuer": "ABNLP", "year": 2019}
-  ]'::jsonb
+  linkedin_url        = 'https://linkedin.com/in/mike-chen-coach'
 WHERE id = '44444444-4444-4444-4444-444444444444';
 
 -- ============================================================================

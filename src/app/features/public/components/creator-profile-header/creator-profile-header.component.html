@@ -161,29 +161,7 @@
           </div>
         }
 
-        <!-- Quals & certs (compact, inside header) -->
-        @if (creator().qualifications.length || creator().certifications.length) {
-          <div class="mt-3 pt-3 border-t border-white/10 text-left space-y-1.5 max-w-xs mx-auto">
-            @for (q of creator().qualifications; track q.institution + q.degree) {
-              <div class="flex items-start gap-1.5">
-                <svg class="w-3 h-3 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
-                <p class="text-[0.7rem] text-content-secondary leading-tight">
-                  <span class="font-semibold text-content">{{ q.degree }}</span>
-                  &nbsp;·&nbsp;{{ q.institution }}{{ q.graduation_year ? ', ' + q.graduation_year : '' }}
-                </p>
-              </div>
-            }
-            @for (c of creator().certifications; track c.name + c.issuer) {
-              <div class="flex items-start gap-1.5">
-                <svg class="w-3 h-3 text-[#1a9e3f] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-[0.7rem] text-content-secondary leading-tight">
-                  <span class="font-semibold text-content">{{ c.name }}</span>
-                  &nbsp;·&nbsp;{{ c.issuer }}{{ c.year ? ', ' + c.year : '' }}
-                </p>
-              </div>
-            }
-          </div>
-        }
+        <!-- Quals & certs (compact, inside header) removed -->
 
         <div class="flex items-center justify-center gap-2 flex-wrap mt-4">
           <span class="badge badge-neutral flex items-center gap-1.5">
@@ -286,29 +264,7 @@
           </div>
         }
 
-        <!-- Quals & certs (compact, inside header) -->
-        @if (creator().qualifications.length || creator().certifications.length) {
-          <div class="mb-5 text-left space-y-2 max-w-xs sm:max-w-sm mx-auto border-t border-surface-border pt-4">
-            @for (q of creator().qualifications; track q.institution + q.degree) {
-              <div class="flex items-start gap-2">
-                <svg class="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
-                <p class="text-[0.75rem] text-content-secondary leading-snug">
-                  <span class="font-semibold text-content">{{ q.degree }}</span>
-                  &nbsp;·&nbsp;{{ q.institution }}{{ q.graduation_year ? ', ' + q.graduation_year : '' }}
-                </p>
-              </div>
-            }
-            @for (c of creator().certifications; track c.name + c.issuer) {
-              <div class="flex items-start gap-2">
-                <svg class="w-3.5 h-3.5 text-[#1a9e3f] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-[0.75rem] text-content-secondary leading-snug">
-                  <span class="font-semibold text-content">{{ c.name }}</span>
-                  &nbsp;·&nbsp;{{ c.issuer }}{{ c.year ? ', ' + c.year : '' }}
-                </p>
-              </div>
-            }
-          </div>
-        }
+        <!-- Quals & certs (compact, inside header) removed -->
 
         <div class="flex items-center justify-center gap-2 flex-wrap">
           <span class="badge badge-neutral flex items-center gap-1.5">

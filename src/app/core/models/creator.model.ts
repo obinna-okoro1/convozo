@@ -3,22 +3,6 @@
  * Represents expert profiles and their settings on the platform.
  */
 
-/** One academic qualification — stored as a JSONB array on the creator row. */
-export interface Qualification {
-  institution: string;
-  degree: string;
-  /** Year of graduation — null when the expert left it blank. */
-  graduation_year: number | null;
-}
-
-/** One professional certification or licence — stored as a JSONB array on the creator row. */
-export interface Certification {
-  name: string;
-  issuer: string;
-  /** Year awarded — null when left blank. */
-  year: number | null;
-}
-
 export interface Creator {
   id: string;
   user_id: string;
@@ -46,10 +30,6 @@ export interface Creator {
   years_of_experience: number | null;
   /** LinkedIn profile URL — used to verify professional credibility. */
   linkedin_url: string | null;
-  /** Academic qualifications — defaults to [] on the DB. */
-  qualifications: Qualification[];
-  /** Professional certifications / licences — defaults to [] on the DB. */
-  certifications: Certification[];
 
   created_at: string;
   updated_at: string;
