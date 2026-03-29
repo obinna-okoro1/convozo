@@ -19,6 +19,13 @@ Deno.serve(async (req) => {
       return jsonError('Missing required fields', 400, corsHeaders);
     }
 
+    // Validate email format before passing to Stripe — a Stripe API error for a
+    // malformed email would expose internal messaging to the client.
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!EMAIL_RE.test(String(email))) {
+      return jsonError('Invalid email address', 400, corsHeaders);
+    }
+
     // Verify the caller owns this creator profile
     const { data: creator, error: creatorError } = await supabase
       .from('creators')

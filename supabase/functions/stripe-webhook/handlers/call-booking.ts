@@ -41,7 +41,7 @@ export async function handleCallBooking(
   } = meta;
 
   const amountInCents = session.amount_total || 0;
-  const durationMinutes = parseInt(duration);
+  const durationMinutes = parseInt(duration, 10);
 
   // ── Provision Daily.co room + tokens ──────────────────────────────
   const dailyRoom = await provisionDailyRoom(session.id, durationMinutes, creator_id, booker_name);

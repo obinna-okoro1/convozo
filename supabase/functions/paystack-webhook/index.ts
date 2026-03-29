@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
 
   if (meta.type === 'call_booking') {
     const { booker_name, booker_email, message_content, duration, scheduled_at, fan_timezone } = meta;
-    const durationMinutes = parseInt(duration || '30');
+    const durationMinutes = parseInt(duration || '30', 10);
 
     // Idempotency: check if booking already created for this reference
     const { data: existingBooking } = await supabase

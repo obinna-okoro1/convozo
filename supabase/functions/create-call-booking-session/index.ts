@@ -1,7 +1,7 @@
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
+import { jsonOk, jsonError, makeRateLimiter, getAppUrl, getPlatformFeePercentage } from '../_shared/http.ts';
 import { isPaystackCountry, initializePaystackTransaction } from '../_shared/paystack.ts';
 
 // Rate limit: 10 call booking requests per hour per booker email
@@ -35,6 +35,13 @@ Deno.serve(async (req) => {
       return jsonError('Missing required fields', 400, corsHeaders);
     }
 
+    // Validate slug format before hitting the DB — rejects injection attempts and
+    // malformed values that could cause unexpected query behaviour.
+    const SLUG_RE = /^[a-z0-9][a-z0-9_-]{2,29}$/;
+    if (!SLUG_RE.test(payload.creator_slug)) {
+      return jsonError('Creator not found', 404, corsHeaders);
+    }
+
     // Validate email format
     if (!EMAIL_RE.test(payload.booker_email)) {
       return jsonError('Invalid email address', 400, corsHeaders);
@@ -50,7 +57,10 @@ Deno.serve(async (req) => {
       return jsonError('Selected time slot is in the past', 400, corsHeaders);
     }
 
-    // Validate message content length
+    // Validate field lengths
+    if (typeof payload.booker_name !== 'string' || payload.booker_name.trim().length === 0 || payload.booker_name.length > 200) {
+      return jsonError('Booker name must be between 1 and 200 characters', 400, corsHeaders);
+    }
     if (payload.message_content && payload.message_content.length > 2000) {
       return jsonError('Message too long (max 2000 characters)', 400, corsHeaders);
     }
@@ -109,8 +119,8 @@ Deno.serve(async (req) => {
       return jsonError('This time slot is no longer available. Please choose another time.', 409, corsHeaders);
     }
 
-    // Calculate platform fee (22%) — using server-authoritative price
-    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
+    // Calculate platform fee — use validated helper to prevent misconfiguration (0%, NaN, negative)
+    const platformFeePercentage = getPlatformFeePercentage();
     const platformFee = Math.round(serverPrice * (platformFeePercentage / 100));
     // SECURITY: redirect URL is always server-controlled — never accept from client payload.
     const appUrl = getAppUrl();

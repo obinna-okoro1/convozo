@@ -87,6 +87,15 @@ export async function requireAuth(
  * @returns         A `check(key)` function — returns `true` if within limit,
  *                  `false` if the limit has been exceeded.
  *
+ * ⚠️ LIMITATION: This rate limiter is per-process. In serverless environments
+ * each cold start resets all counters, and concurrent function instances each
+ * have their own independent stores. It is effective against casual abuse but
+ * not against a determined attacker who can force cold starts or hit multiple
+ * instances. For financial endpoints (create-checkout-session) this is a
+ * defence-in-depth layer — Stripe's own fraud detection is the hard backstop.
+ * A production-grade solution would use a distributed store (e.g. Redis or
+ * a Supabase table with TTL) shared across all instances.
+ *
  * Usage:
  *   const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
  *   if (!checkRateLimit(userEmail)) return jsonError('Rate limit exceeded', 429, corsHeaders);
@@ -102,6 +111,26 @@ export function makeRateLimiter(max: number, windowMs: number): (key: string) =>
     store.set(key, recent);
     return true;
   };
+}
+
+// ── Platform fee helper ──────────────────────────────────────────────────────
+
+/**
+ * Returns the validated platform fee percentage (integer, 1–99).
+ * Falls back to 22 if the env var is missing, NaN, or out of safe range.
+ * NEVER use parseFloat(env) directly — a misconfigured 0 or negative value
+ * would result in zero or negative platform fees (direct financial loss).
+ */
+export function getPlatformFeePercentage(): number {
+  const raw = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') ?? '');
+  if (!isFinite(raw) || raw < 1 || raw > 99) {
+    console.error(
+      `[CRITICAL] PLATFORM_FEE_PERCENTAGE is invalid ("${Deno.env.get('PLATFORM_FEE_PERCENTAGE')}"). ` +
+      `Defaulting to 22%. Fix with: supabase secrets set PLATFORM_FEE_PERCENTAGE=22`,
+    );
+    return 22;
+  }
+  return raw;
 }
 
 // ── APP_URL helper ───────────────────────────────────────────────────────────

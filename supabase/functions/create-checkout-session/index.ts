@@ -1,7 +1,7 @@
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
+import { jsonOk, jsonError, makeRateLimiter, getAppUrl, getPlatformFeePercentage } from '../_shared/http.ts';
 import { isPaystackCountry, initializePaystackTransaction } from '../_shared/paystack.ts';
 
 // Rate limit: 10 checkout requests per hour per sender email
@@ -22,6 +22,13 @@ Deno.serve(async (req) => {
       return jsonError('Missing required fields', 400, corsHeaders);
     }
 
+    // Validate slug format before hitting the DB — rejects injection attempts and
+    // malformed values that could cause unexpected query behaviour.
+    const SLUG_RE = /^[a-z0-9][a-z0-9_-]{2,29}$/;
+    if (!SLUG_RE.test(creator_slug)) {
+      return jsonError('Creator not found', 404, corsHeaders);
+    }
+
     // Check rate limit
     if (!checkRateLimit(sender_email)) {
       return jsonError('Rate limit exceeded. Please try again later.', 429, {
@@ -30,7 +37,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate message content length
+    // Validate field lengths
+    if (typeof sender_name !== 'string' || sender_name.trim().length === 0 || sender_name.length > 200) {
+      return jsonError('Sender name must be between 1 and 200 characters', 400, corsHeaders);
+    }
     if (message_content.length > 1000) {
       return jsonError('Message too long (max 1000 characters)', 400, corsHeaders);
     }
@@ -81,7 +91,7 @@ Deno.serve(async (req) => {
       productDescription = 'Fan support / tip';
     }
 
-    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
+    const platformFeePercentage = getPlatformFeePercentage();
     // Math.round for symmetric rounding — never Math.floor (undercounts) or Math.ceil (overcounts creator)
     const platformFee = Math.round(serverPrice * platformFeePercentage / 100);
     // SECURITY: redirect URL is always server-controlled — never accept from client payload.

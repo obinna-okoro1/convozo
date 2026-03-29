@@ -32,6 +32,15 @@ interface SupabaseResponse<T> {
   providedIn: 'root',
 })
 export class SupabaseService {
+  /**
+   * The raw Supabase client.
+   *
+   * ⚠️ SECURITY: Do NOT inject this into components or call it from templates.
+   * All database access must go through typed feature services (SettingsStateService,
+   * DashboardService, etc.) to preserve type safety and audit-ability.
+   * This is `public` only because Angular's DI doesn't have package-scoped access
+   * modifiers — treat it as internal-to-services.
+   */
   public readonly client: SupabaseClient;
   public readonly currentUser$: Observable<User | null>;
 

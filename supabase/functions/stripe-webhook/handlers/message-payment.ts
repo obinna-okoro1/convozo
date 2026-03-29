@@ -17,6 +17,7 @@ import {
 } from '../../_shared/email.ts';
 import { generateMagicLink } from '../../_shared/magic-link.ts';
 import { sendPushNotification } from './push-notification.ts';
+import { getPlatformFeePercentage } from '../../_shared/http.ts';
 
 /** Metadata shape expected on message checkout sessions. */
 interface MessageMetadata {
@@ -69,7 +70,7 @@ export async function handleMessagePayment(
 
   // ── Insert payment record ─────────────────────────────────────────
   // Platform fee is exactly 22% — computed with integer arithmetic, no floats.
-  const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
+  const platformFeePercentage = getPlatformFeePercentage();
   const platformFee = Math.round(amountInCents * platformFeePercentage / 100);
   const creatorAmount = amountInCents - platformFee;
 
