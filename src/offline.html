@@ -48,9 +48,11 @@
       line-height: 1.6;
       margin-bottom: 1.5rem;
     }
-    button {
+    a[role="button"] {
+      display: inline-block;
       background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
       color: white;
+      text-decoration: none;
       border: none;
       padding: 0.875rem 1.75rem;
       border-radius: 0.75rem;
@@ -59,11 +61,11 @@
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    button:hover {
+    a[role="button"]:hover {
       transform: translateY(-0.125rem);
       box-shadow: 0 0.625rem 1.5625rem -0.3125rem rgba(124, 58, 237, 0.4);
     }
-    button:active {
+    a[role="button"]:active {
       transform: translateY(0);
     }
   </style>
@@ -78,7 +80,7 @@
     </div>
     <h1>You're offline</h1>
     <p>It looks like you've lost your internet connection. Please check your connection and try again.</p>
-    <button onclick="window.location.reload()">Try Again</button>
+    <a href="." role="button">Try Again</a>
   </div>
 </body>
 </html>
