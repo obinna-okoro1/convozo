@@ -20,7 +20,7 @@ import {
   MessageReply,
 } from '../models';
 import { SupabaseService } from './supabase.service';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 
 // ── Conversation types (public, token-based access) ────────────────────────
 

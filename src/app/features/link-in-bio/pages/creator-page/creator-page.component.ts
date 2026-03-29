@@ -6,8 +6,8 @@
 
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CreatorLink } from '../../../../core/models';
-import { SupabaseService } from '../../../../core/services/supabase.service';
+import { CreatorLink } from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
 import { CreatorHeaderComponent } from '../../components/creator-header/creator-header.component';
 import { LinkListComponent } from '../../components/link-list/link-list.component';
 import { LinkService } from '../../services/link.service';

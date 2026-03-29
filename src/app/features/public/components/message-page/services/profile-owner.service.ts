@@ -22,14 +22,14 @@ import {
   CreatorMonthlyAnalytics,
   StripeAccount,
   PaystackSubaccount,
-} from '../../../../../core/models';
-import { SupabaseService } from '../../../../../core/services/supabase.service';
-import { AuthService } from '../../../../auth/services/auth.service';
-import { CreatorService } from '../../../../creator/services/creator.service';
-import { MessageService } from '../../../../creator/services/message.service';
-import { BookingService } from '../../../../creator/services/booking.service';
-import { ToastService } from '../../../../../shared/services/toast.service';
-import { errorMessage } from '../../../../../shared/utils/error.utils';
+} from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
+import { AuthService } from '@features/auth/services/auth.service';
+import { CreatorService } from '@features/creator/services/creator.service';
+import { MessageService } from '@features/creator/services/message.service';
+import { BookingService } from '@features/creator/services/booking.service';
+import { ToastService } from '@shared/services/toast.service';
+import { errorMessage } from '@shared/utils/error.utils';
 
 @Injectable()
 export class ProfileOwnerService {

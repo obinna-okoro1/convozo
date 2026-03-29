@@ -6,12 +6,12 @@
 
 import { ChangeDetectionStrategy, Component, input, computed, signal, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { CreatorProfile } from '../../../../core/models';
+import { CreatorProfile } from '@core/models';
 import {
   getCategoryById,
   getSubcategoryLabel,
   type ExpertCategory,
-} from '../../../../core/models/expert-categories.data';
+} from '@core/models/expert-categories.data';
 
 @Component({
   selector: 'app-creator-profile-header',

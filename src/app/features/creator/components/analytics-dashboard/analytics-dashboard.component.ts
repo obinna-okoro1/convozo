@@ -5,8 +5,8 @@
 
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, OnInit, signal } from '@angular/core';
-import { Message, CallBooking, CreatorMonthlyAnalytics } from '../../../../core/models';
-import { AnalyticsService, AnalyticsData } from '../../../../core/services/analytics.service';
+import { Message, CallBooking, CreatorMonthlyAnalytics } from '@core/models';
+import { AnalyticsService, AnalyticsData } from '@core/services/analytics.service';
 
 @Component({
   selector: 'app-analytics-dashboard',

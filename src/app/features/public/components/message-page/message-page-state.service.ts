@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { ERROR_MESSAGES } from '../../../../core/constants';
+import { ERROR_MESSAGES } from '@core/constants';
 import {
   CreatorProfile,
   CreatorLink,
@@ -7,12 +7,12 @@ import {
   AvailabilitySlot,
   CheckoutSessionPayload,
   ShopCheckoutPayload,
-} from '../../../../core/models';
-import { SupabaseService } from '../../../../core/services/supabase.service';
-import { FormValidators } from '../../../../core/validators/form-validators';
-import { ToastService } from '../../../../shared/services/toast.service';
-import { errorMessage } from '../../../../shared/utils/error.utils';
-import { LinkService } from '../../../link-in-bio/services/link.service';
+} from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
+import { FormValidators } from '@core/validators/form-validators';
+import { ToastService } from '@shared/services/toast.service';
+import { errorMessage } from '@shared/utils/error.utils';
+import { LinkService } from '@features/link-in-bio/services/link.service';
 import { MessageFormData } from '../message-form/message-form.component';
 import { CallBookingFormData } from '../call-booking-form/call-booking-form.component';
 import { SupportFormData } from './views/support-view/support-view.component';

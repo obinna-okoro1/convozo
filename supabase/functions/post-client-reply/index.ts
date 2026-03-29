@@ -113,6 +113,19 @@ Deno.serve(async (req) => {
       return jsonError('Failed to save reply', 500, corsHeaders);
     }
 
+    // ── 3b. Mark the parent message as unread so the expert sees the new reply
+    // Reset is_handled → false so the message surfaces as "New" in the inbox
+    // and the unread badge count increments in the owner toolbar.
+    const { error: unreadError } = await supabase
+      .from('messages')
+      .update({ is_handled: false })
+      .eq('id', message.id);
+
+    if (unreadError) {
+      // Non-fatal: the reply is saved — just log and continue.
+      console.error('[post-client-reply] failed to reset is_handled:', unreadError);
+    }
+
     // ── 4. Notify expert by email (fire-and-forget) ──────────────────────────
     // getAppUrl() guards against localhost leaking into production emails
     const appUrl = getAppUrl();

@@ -6,7 +6,7 @@
 
 import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { APP_CONSTANTS } from '../../../../core/constants';
+import { APP_CONSTANTS } from '@core/constants';
 
 export interface MessageFormData {
   senderName: string;

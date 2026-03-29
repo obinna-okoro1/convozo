@@ -70,6 +70,24 @@ export class MessagePageComponent implements OnInit {
     return panel ? titles[panel] : '';
   });
 
+  /** Short description shown beneath the title in the drawer header. */
+  protected readonly panelSubtitle = computed((): string => {
+    const panel = this.activePanelRoute();
+    if (panel === 'call') {
+      const mins = this.state.callDuration();
+      const name = this.state.creator()?.display_name ?? '';
+      return `${String(mins)}-minute private session with ${name}`;
+    }
+    const subtitles: Record<PublicPanel, string> = {
+      message: 'Fill in the form below to send your consultation',
+      call: '',
+      shop: 'Digital products & professional resources',
+      support: 'Select an amount to show your support',
+      posts: 'Latest updates and insights',
+    };
+    return panel ? subtitles[panel] : '';
+  });
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 

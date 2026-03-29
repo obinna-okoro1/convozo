@@ -2,17 +2,6 @@
 
   <!-- ── Header card ── -->
   <div class="card p-5">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-      </div>
-      <div>
-        <h2 class="text-lg font-semibold text-content">Digital Shop</h2>
-        <p class="text-sm text-content-muted">Upload and sell videos, audio, PDFs, images & personalised shoutouts</p>
-      </div>
-    </div>
 
     @if (!state.isPaymentReady()) {
       <div class="alert-warning mb-6">

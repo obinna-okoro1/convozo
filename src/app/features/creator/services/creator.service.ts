@@ -17,8 +17,8 @@ import {
   EdgeFunctionResponse,
   StripeConnectResponse,
   StripeAccountStatus,
-} from '../../../core/models';
-import { SupabaseService } from '../../../core/services/supabase.service';
+} from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',

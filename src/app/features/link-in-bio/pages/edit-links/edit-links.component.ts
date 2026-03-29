@@ -6,8 +6,8 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, input, signal } from '@angular/core';
-import { CreatorLink } from '../../../../core/models';
-import { ToastService } from '../../../../shared/services/toast.service';
+import { CreatorLink } from '@core/models';
+import { ToastService } from '@shared/services/toast.service';
 import { LinkService } from '../../services/link.service';
 import { LinkFormModalComponent } from '../../components/link-form-modal/link-form-modal.component';
 import { getBrandByKey, BrandInfo } from '../../utils/brand-detection';

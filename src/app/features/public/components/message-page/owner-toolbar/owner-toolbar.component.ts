@@ -17,10 +17,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import { OwnerSettingsPanelComponent } from './owner-settings-panel.component';
-import { AnalyticsDashboardComponent } from '../../../../creator/components/analytics-dashboard/analytics-dashboard.component';
-import { BookingsPanelComponent } from '../../../../creator/components/dashboard/bookings-panel/bookings-panel.component';
-import { DeleteConfirmModalComponent } from '../../../../creator/components/dashboard/delete-confirm-modal/delete-confirm-modal.component';
-import { InboxPanelComponent } from '../../../../creator/components/dashboard/inbox-panel/inbox-panel.component';
+import { AnalyticsDashboardComponent } from '@features/creator/components/analytics-dashboard/analytics-dashboard.component';
+import { BookingsPanelComponent } from '@features/creator/components/dashboard/bookings-panel/bookings-panel.component';
+import { DeleteConfirmModalComponent } from '@features/creator/components/dashboard/delete-confirm-modal/delete-confirm-modal.component';
+import { InboxPanelComponent } from '@features/creator/components/dashboard/inbox-panel/inbox-panel.component';
 import { ProfileOwnerService } from '../services/profile-owner.service';
 
 type ActivePanel = 'inbox' | 'bookings' | 'analytics' | 'settings' | null;

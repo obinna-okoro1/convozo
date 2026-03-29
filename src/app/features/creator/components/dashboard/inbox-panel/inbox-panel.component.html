@@ -1,9 +1,6 @@
-<!-- Header with filter -->
+<!-- Stats + filter -->
 <div class="flex items-center justify-between mb-6">
-  <div>
-    <h2 class="text-xl font-bold text-content mb-0.5">Message Inbox</h2>
-    <p class="text-content-muted text-sm">{{ stats().total }} total messages · {{ stats().unhandled }} pending</p>
-  </div>
+  <p class="text-content-muted text-sm">{{ stats().total }} total · {{ stats().unhandled }} pending</p>
   <app-searchable-select
     [options]="filterOptions()"
     [value]="filterStatus()"

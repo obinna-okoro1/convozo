@@ -10,8 +10,8 @@
 
 import { Injectable } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { CallBooking, SupabaseResponse } from '../../../core/models';
-import { SupabaseService } from '../../../core/services/supabase.service';
+import { CallBooking, SupabaseResponse } from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',

@@ -21,13 +21,13 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { SupabaseService } from '../../../../core/services/supabase.service';
+import { SupabaseService } from '@core/services/supabase.service';
 import {
   ClientPortalData,
   EdgeFunctionService,
   PortalBooking,
   PortalMessage,
-} from '../../../../core/services/edge-function.service';
+} from '@core/services/edge-function.service';
 import { User } from '@supabase/supabase-js';
 
 type PortalView = 'loading' | 'unauthenticated' | 'link-sent' | 'authenticated';

@@ -8,7 +8,7 @@ import { MessagePageStateService } from '../../message-page-state.service';
 import {
   CallBookingFormComponent,
   CallBookingFormData,
-} from '../../../call-booking-form/call-booking-form.component';
+} from '@features/public/components/call-booking-form/call-booking-form.component';
 
 @Component({
   selector: 'app-call-view',

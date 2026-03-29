@@ -11,19 +11,6 @@
 } @else {
   <div class="space-y-4 animate-fade-in px-4 lg:px-10 py-4">
 
-    <!-- Shop header -->
-    <div class="card-glass p-6 text-center">
-      <div class="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-content">
-        {{ state.creator()?.display_name }}'s Products
-      </h2>
-      <p class="text-content-tertiary text-sm mt-1">Digital products &amp; professional resources</p>
-    </div>
-
     <!-- Loading skeleton -->
     @if (loadingItems()) {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">

@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import {
   ImageUploadComponent,
   ImageChangeEvent,
-} from '../../../../../../shared/components/ui/image-upload/image-upload.component';
-import { SearchableSelectComponent } from '../../../../../../shared/components/ui/searchable-select/searchable-select.component';
+} from '@shared/components/ui/image-upload/image-upload.component';
+import { SearchableSelectComponent } from '@shared/components/ui/searchable-select/searchable-select.component';
 import { SettingsStateService } from '../../settings-state.service';
 
 /** Preset banner images bundled with the app (served from /assets/banners/). */

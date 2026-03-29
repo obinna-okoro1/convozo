@@ -18,7 +18,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CallBooking } from '../../../../../core/models';
+import { CallBooking } from '@core/models';
 
 interface FilterTab {
   readonly value: string;

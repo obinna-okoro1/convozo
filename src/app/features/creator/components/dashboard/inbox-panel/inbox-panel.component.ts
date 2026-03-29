@@ -11,13 +11,13 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Message, MessageReply, MessageStats, FilterStatus } from '../../../../../core/models';
-import { MessageService } from '../../../services/message.service';
-import { ToastService } from '../../../../../shared/services/toast.service';
+import { Message, MessageReply, MessageStats, FilterStatus } from '@core/models';
+import { MessageService } from '@features/creator/services/message.service';
+import { ToastService } from '@shared/services/toast.service';
 import {
   SearchableSelectComponent,
   SelectOption,
-} from '../../../../../shared/components/ui/searchable-select/searchable-select.component';
+} from '@shared/components/ui/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-inbox-panel',

@@ -4,8 +4,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { CreatorLink, SupabaseResponse } from '../../../core/models';
-import { SupabaseService } from '../../../core/services/supabase.service';
+import { CreatorLink, SupabaseResponse } from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
