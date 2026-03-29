@@ -28,7 +28,15 @@ if [[ $? -ne 0 ]]; then
 fi
 echo "✅ All tests passed."
 
-echo "📦 Pulling latest develop..."
+echo "� Verifying production build..."
+npx ng build --configuration=production
+if [[ $? -ne 0 ]]; then
+  echo "❌ Production build failed. Merge to develop aborted."
+  exit 1
+fi
+echo "✅ Production build succeeded."
+
+echo "�📦 Pulling latest develop..."
 git checkout develop
 git pull origin develop
 
