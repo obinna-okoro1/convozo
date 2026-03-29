@@ -26,7 +26,7 @@
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, makeRateLimiter, getAppUrl } from '../_shared/http.ts';
+import { jsonOk, jsonError, makeRateLimiter, getAppUrl, getPlatformFeePercentage } from '../_shared/http.ts';
 
 // Rate limit: 10 shop checkout requests per hour per buyer email
 const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
@@ -52,6 +52,9 @@ function isValidBody(body: unknown): body is ShopCheckoutBody {
   );
 }
 
+/** Validates that a slug matches the canonical format — rejects injection attempts before any DB call. */
+const SLUG_RE = /^[a-z0-9][a-z0-9_-]{2,29}$/;
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -68,6 +71,11 @@ Deno.serve(async (req) => {
     }
 
     const { creator_slug, item_id, buyer_name, buyer_email, request_details } = rawBody;
+
+    // Validate slug format before hitting the DB — rejects injection attempts.
+    if (!SLUG_RE.test(creator_slug)) {
+      return jsonError('Creator not found', 404, corsHeaders);
+    }
 
     // ── Input sanitisation ────────────────────────────────────────────────────
 
@@ -144,7 +152,7 @@ Deno.serve(async (req) => {
       return jsonError('Item price is not configured correctly', 400, corsHeaders);
     }
 
-    const platformFeePercentage = parseFloat(Deno.env.get('PLATFORM_FEE_PERCENTAGE') || '22');
+    const platformFeePercentage = getPlatformFeePercentage();
     // Integer arithmetic — never float division on money
     const platformFee = Math.round(serverPrice * platformFeePercentage / 100);
 

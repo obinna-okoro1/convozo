@@ -55,8 +55,12 @@ function isValidBody(v: unknown): v is RequestBody {
 
 Deno.serve(async (req: Request) => {
   // ── Validate internal secret to prevent unauthorised triggering ──────────
+  // SECURITY: fail-closed — if INTERNAL_SECRET is not set, reject ALL requests.
+  // This prevents unauthenticated callers from spamming push notifications when
+  // the secret is accidentally unset. Mirrors the check-no-show pattern.
   const internalSecret = Deno.env.get('INTERNAL_SECRET') ?? '';
-  if (internalSecret && req.headers.get('x-internal-secret') !== internalSecret) {
+  const providedSecret = req.headers.get('x-internal-secret') ?? '';
+  if (!internalSecret || providedSecret !== internalSecret) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -352,9 +356,12 @@ async function sendWebPush(
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
-  // Validate internal secret (if configured) to prevent unauthorised triggering
+  // SECURITY: fail-closed — reject ALL requests when INTERNAL_SECRET is unset.
+  // Using `if (secret && ...)` is a security hole because an unset secret allows
+  // all callers through. The correct pattern always fails closed.
   const internalSecret = Deno.env.get('INTERNAL_SECRET') ?? '';
-  if (internalSecret && req.headers.get('x-internal-secret') !== internalSecret) {
+  const providedSecret = req.headers.get('x-internal-secret') ?? '';
+  if (!internalSecret || providedSecret !== internalSecret) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

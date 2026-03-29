@@ -18,6 +18,17 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   # XSS auditor hint for legacy browsers (modern browsers ignore it but it doesn't hurt)
   X-XSS-Protection: 1; mode=block
+  # Content Security Policy
+  # - default-src 'self': only load resources from our own origin by default
+  # - script-src 'self': no inline scripts, no eval (Angular uses external chunks)
+  # - style-src 'self' 'unsafe-inline': Tailwind injects inline styles at runtime
+  # - img-src 'self' data: blob: https:: profile images, avatars, data URIs
+  # - connect-src: Supabase (both prod+staging), Stripe, Paystack, Daily.co, Resend, push endpoints
+  # - frame-src 'none': Daily.co video is embedded via daily.co JS SDK (not iframes)
+  # - object-src 'none': block Flash and legacy plugins
+  # - base-uri 'self': prevent base-tag hijacking
+  # - form-action 'self': prevent forms being submitted to external origins
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.paystack.co https://*.daily.co wss://*.supabase.co; frame-src https://checkout.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
@@ -39,3 +50,24 @@
 # Manifest and other root files — short cache so PWA metadata stays fresh.
 /manifest.json
   Cache-Control: public, max-age=3600
+
+# ── Private pages — tell search crawlers not to index these ────────────────────
+# /portal: client-specific conversation portal (accessed via magic link — not meant for public)
+# /conversation/*: creator-only conversation view
+# /dashboard/*: creator dashboard — never public
+# /settings/*: creator settings — never public
+# /onboarding: creator onboarding — never public
+/portal
+  X-Robots-Tag: noindex, nofollow
+
+/conversation/*
+  X-Robots-Tag: noindex, nofollow
+
+/dashboard/*
+  X-Robots-Tag: noindex, nofollow
+
+/settings/*
+  X-Robots-Tag: noindex, nofollow
+
+/onboarding
+  X-Robots-Tag: noindex, nofollow

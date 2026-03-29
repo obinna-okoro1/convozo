@@ -44,7 +44,6 @@ Deno.serve(async (req) => {
         id,
         sender_name,
         message_content,
-        amount_paid,
         message_type,
         created_at,
         creators!inner (
@@ -78,7 +77,8 @@ Deno.serve(async (req) => {
           id: message.id,
           sender_name: message.sender_name,
           message_content: message.message_content,
-          amount_paid: message.amount_paid,
+          // amount_paid intentionally omitted — financial data should not be
+          // exposed to anyone who has the conversation token (e.g. forwarded email).
           message_type: message.message_type,
           created_at: message.created_at,
         },
