@@ -1,8 +1,3 @@
-/**
- * Link Service
- * Handles CRUD for creator links and click tracking
- */
-
 import { Injectable } from '@angular/core';
 import { CreatorLink, SupabaseResponse } from '@core/models';
 import { SupabaseService } from '@core/services/supabase.service';
@@ -15,9 +10,6 @@ export class LinkService {
 
   // ── Public reads (no auth needed) ────────────────────────────────
 
-  /**
-   * Get active links for a creator (public facing)
-   */
   public async getActiveLinks(creatorId: string): Promise<SupabaseResponse<CreatorLink[]>> {
     const { data, error } = await this.supabaseService.client
       .from('creator_links')
@@ -29,9 +21,6 @@ export class LinkService {
     return { data: data as CreatorLink[] | null, error };
   }
 
-  /**
-   * Record a click and return the target URL
-   */
   public async trackClick(
     linkId: string,
     creatorId: string,
@@ -55,9 +44,6 @@ export class LinkService {
 
   // ── Creator-authenticated CRUD ───────────────────────────────────
 
-  /**
-   * Get all links for the current creator (including inactive)
-   */
   public async getCreatorLinks(creatorId: string): Promise<SupabaseResponse<CreatorLink[]>> {
     const { data, error } = await this.supabaseService.client
       .from('creator_links')
@@ -68,9 +54,6 @@ export class LinkService {
     return { data: data as CreatorLink[] | null, error };
   }
 
-  /**
-   * Create a new link
-   */
   public async createLink(
     creatorId: string,
     link: { title: string; url: string; icon: string | null; position: number },
@@ -90,9 +73,6 @@ export class LinkService {
     return response;
   }
 
-  /**
-   * Update a link
-   */
   public async updateLink(
     linkId: string,
     updates: Partial<Pick<CreatorLink, 'title' | 'url' | 'icon' | 'position' | 'is_active'>>,
@@ -107,9 +87,6 @@ export class LinkService {
     return response;
   }
 
-  /**
-   * Delete a link
-   */
   public async deleteLink(linkId: string): Promise<{ error: Error | null }> {
     const { error } = await this.supabaseService.client
       .from('creator_links')
@@ -119,9 +96,6 @@ export class LinkService {
     return { error };
   }
 
-  /**
-   * Batch-update positions (for drag-and-drop reorder)
-   */
   public async reorderLinks(
     links: { id: string; position: number }[],
   ): Promise<{ error: Error | null }> {
@@ -139,9 +113,6 @@ export class LinkService {
     return { error: null };
   }
 
-  /**
-   * Get click analytics for a creator's links
-   */
   public async getClickStats(
     creatorId: string,
     days = 30,

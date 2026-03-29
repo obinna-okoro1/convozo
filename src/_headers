@@ -20,15 +20,19 @@
   X-XSS-Protection: 1; mode=block
   # Content Security Policy
   # - default-src 'self': only load resources from our own origin by default
-  # - script-src 'self': no inline scripts, no eval (Angular uses external chunks)
+  # - script-src 'self' https://js.stripe.com: Angular chunks + Stripe.js CDN (no 'unsafe-inline'
+  #   needed — the SW registration script is an external file, not inline)
   # - style-src 'self' 'unsafe-inline': Tailwind injects inline styles at runtime
+  # - font-src https://fonts.gstatic.com: Google Fonts static font files
   # - img-src 'self' data: blob: https:: profile images, avatars, data URIs
-  # - connect-src: Supabase (both prod+staging), Stripe, Paystack, Daily.co, Resend, push endpoints
-  # - frame-src 'none': Daily.co video is embedded via daily.co JS SDK (not iframes)
+  # - connect-src: Supabase (both prod+staging), Stripe, Paystack, Daily.co, push endpoints,
+  #   Google Fonts CSS API (fonts.googleapis.com resolves font requests)
+  # - frame-src https://checkout.stripe.com: Stripe may open in a frame on some flows
   # - object-src 'none': block Flash and legacy plugins
+  # - worker-src 'self': allow service worker registration from our own origin
   # - base-uri 'self': prevent base-tag hijacking
   # - form-action 'self': prevent forms being submitted to external origins
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.paystack.co https://*.daily.co wss://*.supabase.co; frame-src https://checkout.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.paystack.co https://*.daily.co wss://*.supabase.co https://fonts.googleapis.com; frame-src https://checkout.stripe.com; object-src 'none'; worker-src 'self'; base-uri 'self'; form-action 'self'
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate

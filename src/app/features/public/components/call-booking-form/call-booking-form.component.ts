@@ -1,20 +1,3 @@
-/**
- * Call Booking Form Component
- * Public-facing form for clients to book a video consultation with an expert.
- *
- * Slot generation:
- *   - Reads expert's weekly availability_slots (day_of_week, start_time, end_time)
- *   - Reads the expert's call_duration setting (minutes)
- *   - Generates concrete bookable slots for the next 5 available days at
- *     call_duration-minute intervals within each availability window
- *
- * UX: two-step selection — interactive calendar grid to pick a day, then time pills.
- *
- * Form output:
- *   scheduledAt — ISO 8601 UTC string of the selected slot
- *   timezone    — client's browser IANA timezone (e.g. "America/New_York")
- */
-
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { APP_CONSTANTS } from '@core/constants';
@@ -24,33 +7,22 @@ export interface CallBookingFormData {
   senderName: string;
   senderEmail: string;
   messageContent: string;
-  /** ISO 8601 UTC datetime of the client's selected call slot */
   scheduledAt: string;
-  /** IANA timezone string captured from client's browser (e.g. "America/New_York") */
   timezone: string;
 }
 
 interface SlotGroup {
-  /** Canonical date key: "YYYY-MM-DD" */
   date: string;
-  /** Human-readable label shown in the confirmation chip */
   label: string;
   times: { iso: string; label: string }[];
 }
 
-/** One cell in the calendar grid */
 interface CalendarCell {
-  /** Date object for this cell, or null for empty leading cells */
   date: Date | null;
-  /** "YYYY-MM-DD" key, or null for empty cells */
   key: string | null;
-  /** Day number to display */
   day: number | null;
-  /** Whether this day has bookable slots */
   available: boolean;
-  /** Whether this day is in the past (unselectable) */
   past: boolean;
-  /** Whether this is today */
   today: boolean;
 }
 
@@ -74,23 +46,14 @@ export class CallBookingFormComponent {
   protected senderEmail = '';
   protected messageContent = '';
 
-  /** Selected day key "YYYY-MM-DD" — drives the time options list. */
   protected readonly selectedDate = signal<string>('');
-
-  /** ISO datetime of the chosen time slot — resets whenever the day changes. */
   protected selectedIso = '';
-
-  /** Client's local timezone, captured once from the browser. */
   protected readonly timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  /** Reference to today — used for calendar past/present checks. Must be declared before computed signals. */
+  // declared before computed signals that reference it
   private readonly _today = new Date();
-
-  /** Calendar navigation: which month/year the calendar is showing */
   protected readonly calendarYear = signal<number>(this._today.getFullYear());
   protected readonly calendarMonth = signal<number>(this._today.getMonth()); // 0-indexed
 
-  /** Human-readable timezone label (e.g. "America/New_York — EDT") */
   protected readonly timezoneLabel = (() => {
     const tz = this.timezone;
     try {
@@ -107,7 +70,6 @@ export class CallBookingFormComponent {
     () => this.priceCents() / APP_CONSTANTS.PRICE_MULTIPLIER,
   );
 
-  /** Month label shown in the calendar header ("March 2026") */
   protected readonly calendarMonthLabel = computed<string>(() => {
     const MONTH_NAMES = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -116,7 +78,6 @@ export class CallBookingFormComponent {
     return `${MONTH_NAMES[this.calendarMonth()]} ${String(this.calendarYear())}`;
   });
 
-  /** Whether we can go back (never before current month) */
   protected readonly canGoPrev = computed<boolean>(() => {
     const today = this._today;
     return (
@@ -125,10 +86,6 @@ export class CallBookingFormComponent {
     );
   });
 
-  /**
-   * Generates all concrete bookable slots across the next 60 days,
-   * grouped by "YYYY-MM-DD" key. Returns a Map for O(1) lookup.
-   */
   protected readonly slotMap = computed<Map<string, SlotGroup>>(() => {
     const duration = this.callDuration();
     const availability = this.availabilitySlots();
@@ -185,13 +142,8 @@ export class CallBookingFormComponent {
     return map;
   });
 
-  /** Whether there are any bookable days at all (for the empty state) */
   protected readonly hasAvailableDays = computed<boolean>(() => this.slotMap().size > 0);
 
-  /**
-   * Builds the 6-row × 7-col calendar grid for the currently displayed month.
-   * Each cell is either empty (leading/trailing) or a day with availability metadata.
-   */
   protected readonly calendarGrid = computed<CalendarCell[]>(() => {
     const year = this.calendarYear();
     const month = this.calendarMonth();
@@ -237,14 +189,12 @@ export class CallBookingFormComponent {
     return cells;
   });
 
-  /** Time slots for the currently selected day */
   protected readonly timesForSelectedDay = computed<{ iso: string; label: string }[]>(() => {
     const key = this.selectedDate();
     if (!key) { return []; }
     return this.slotMap().get(key)?.times ?? [];
   });
 
-  /** Confirmation chip text once both day + time are chosen. */
   protected readonly selectedSlotLabel = computed<string | null>(() => {
     const key = this.selectedDate();
     if (!key || !this.selectedIso) { return null; }
@@ -273,7 +223,6 @@ export class CallBookingFormComponent {
     this.calendarYear.set(y);
   }
 
-  /** Select a calendar day — resets time selection. */
   protected selectDay(cell: CalendarCell): void {
     if (!cell.key || cell.past || !cell.available) { return; }
     this.selectedDate.set(cell.key);
@@ -291,7 +240,6 @@ export class CallBookingFormComponent {
     });
   }
 
-  /** Convert total minutes-from-midnight to a 12-hour label ("2:30 PM"). */
   private fmt(totalMins: number): string {
     const h = Math.floor(totalMins / 60) % 24;
     const m = totalMins % 60;

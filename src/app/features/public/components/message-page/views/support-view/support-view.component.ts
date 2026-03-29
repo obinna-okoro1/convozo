@@ -1,9 +1,3 @@
-/**
- * Support View Component
- * Displays the fan support / tipping form on the public message page.
- * Fans pick their own amount and leave a name, email, and a note.
- */
-
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessagePageStateService } from '../../message-page-state.service';

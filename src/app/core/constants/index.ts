@@ -1,19 +1,7 @@
-/**
- * Application-wide feature flags.
- * Flip a flag here to enable/disable a feature without touching business logic.
- * Remove the flag and all @if guards once the feature is fully live.
- */
+// Feature flags — remove a flag and all @if guards once the feature is fully live.
 export const FEATURE_FLAGS = {
-  /**
-   * Controls whether creators can connect a Stripe account in Settings → Payments.
-   * Set to `true` when Stripe Connect is ready for production onboarding.
-   */
-  STRIPE_CONNECT_ENABLED: true,
+  STRIPE_CONNECT_ENABLED: true, // enable Stripe Connect onboarding in Settings → Payments
 } as const;
-
-/**
- * Application-wide constants
- */
 
 export const APP_CONSTANTS = {
   MESSAGE_MAX_LENGTH: 1000,

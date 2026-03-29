@@ -1,7 +1,3 @@
-/**
- * Message page component — public-facing shell that hosts child route views.
- */
-
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -16,7 +12,6 @@ import { PostsViewComponent } from './views/posts-view/posts-view.component';
 import { ShopViewComponent } from './views/shop-view/shop-view.component';
 import { SupportViewComponent } from './views/support-view/support-view.component';
 
-/** Public panel routes that open as a bottom-sheet drawer. */
 const PUBLIC_PANELS = ['message', 'call', 'shop', 'support', 'posts'] as const;
 type PublicPanel = (typeof PUBLIC_PANELS)[number];
 
@@ -43,7 +38,6 @@ export class MessagePageComponent implements OnInit {
 
   // ── Public panel drawer ────────────────────────────────────────────────────
 
-  /** The active public panel slug ('message', 'call', etc.) or null when on the home tab. */
   protected readonly activePanelRoute = computed((): PublicPanel | null => {
     const url = this.currentUrl();
     const segments = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
@@ -57,7 +51,6 @@ export class MessagePageComponent implements OnInit {
     return PUBLIC_PANELS.includes(seg as PublicPanel) ? (seg as PublicPanel) : null;
   });
 
-  /** Human-readable title for the active panel drawer header. */
   protected readonly panelTitle = computed((): string => {
     const titles: Record<PublicPanel, string> = {
       message: 'Send a Consultation',
@@ -70,7 +63,6 @@ export class MessagePageComponent implements OnInit {
     return panel ? titles[panel] : '';
   });
 
-  /** Short description shown beneath the title in the drawer header. */
   protected readonly panelSubtitle = computed((): string => {
     const panel = this.activePanelRoute();
     if (panel === 'call') {
@@ -133,7 +125,6 @@ export class MessagePageComponent implements OnInit {
     });
   }
 
-  /** Close the panel drawer by navigating back to the profile home tab. */
   protected closePanelRoute(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
     void this.router.navigate(['/', slug]);
