@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { SettingsStateService } from '../../settings-state.service';
-import { FEATURE_FLAGS } from '../../../../../../core/constants';
+import { FEATURE_FLAGS } from '@core/constants';
 
 @Component({
   selector: 'app-payments-view',

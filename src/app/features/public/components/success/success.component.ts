@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { ShopService } from '../../../creator/services/shop.service';
+import { ShopService } from '@features/creator/services/shop.service';
 
 @Component({
   selector: 'app-success',

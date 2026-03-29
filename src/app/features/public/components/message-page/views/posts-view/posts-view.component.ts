@@ -4,9 +4,9 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
-import { CreatorPost } from '../../../../../../core/models';
-import { SupabaseService } from '../../../../../../core/services/supabase.service';
-import { ToastService } from '../../../../../../shared/services/toast.service';
+import { CreatorPost } from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
+import { ToastService } from '@shared/services/toast.service';
 import { MessagePageStateService } from '../../message-page-state.service';
 import { ProfileOwnerService } from '../../services/profile-owner.service';
 

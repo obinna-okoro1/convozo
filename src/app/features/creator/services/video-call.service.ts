@@ -1,11 +1,11 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { SupabaseService } from '../../../core/services/supabase.service';
+import { SupabaseService } from '@core/services/supabase.service';
 import {
   CallBooking,
   JoinCallResponse,
   CompleteCallResponse,
   SupabaseResponse,
-} from '../../../core/models';
+} from '@core/models';
 export type VideoCallState =
   | 'idle'
   | 'joining'

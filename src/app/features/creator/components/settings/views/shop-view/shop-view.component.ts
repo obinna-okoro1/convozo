@@ -27,8 +27,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ShopItem, ShopItemType } from '../../../../../../core/models';
-import { ShopService } from '../../../../services/shop.service';
+import { ShopItem, ShopItemType } from '@core/models';
+import { ShopService } from '@features/creator/services/shop.service';
 import { SettingsStateService } from '../../settings-state.service';
 
 interface ItemFormState {

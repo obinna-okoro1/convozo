@@ -92,11 +92,40 @@
       >
         <!-- Sheet header -->
         <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border flex-shrink-0">
-          <h2 class="text-base font-bold text-content">{{ panelTitle() }}</h2>
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0"
+                 [style]="activePanelRoute() === 'support' ? 'background:linear-gradient(135deg,rgba(236,72,153,0.12) 0%,rgba(239,68,68,0.12) 100%)' : ''">
+              @if (activePanelRoute() === 'message') {
+                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              } @else if (activePanelRoute() === 'call') {
+                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+              } @else if (activePanelRoute() === 'shop') {
+                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                </svg>
+              } @else if (activePanelRoute() === 'support') {
+                <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              } @else if (activePanelRoute() === 'posts') {
+                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              }
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-bold text-content leading-tight">{{ panelTitle() }}</h2>
+              <p class="text-xs text-content-tertiary truncate">{{ panelSubtitle() }}</p>
+            </div>
+          </div>
           <button
             type="button"
             (click)="closePanelRoute()"
-            class="w-8 h-8 rounded-full bg-surface-raised hover:bg-surface-border flex items-center justify-center transition-colors"
+            class="w-8 h-8 rounded-full bg-surface-raised hover:bg-surface-border flex items-center justify-center transition-colors flex-shrink-0 ml-2"
             aria-label="Close panel"
           >
             <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">

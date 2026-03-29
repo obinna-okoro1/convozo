@@ -24,8 +24,8 @@ import { DatePipe } from '@angular/common';
 import {
   EdgeFunctionService,
   ConversationData,
-} from '../../../../core/services/edge-function.service';
-import { MessageReply } from '../../../../core/models';
+} from '@core/services/edge-function.service';
+import { MessageReply } from '@core/models';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 

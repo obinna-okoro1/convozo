@@ -16,7 +16,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../../../core/services/supabase.service';
+import { SupabaseService } from '@core/services/supabase.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({

@@ -15,9 +15,9 @@
 
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
-import { SupabaseService } from '../../../../core/services/supabase.service';
-import { compressImage } from '../../../utils/image.utils';
-import { errorMessage } from '../../../utils/error.utils';
+import { SupabaseService } from '@core/services/supabase.service';
+import { compressImage } from '@shared/utils/image.utils';
+import { errorMessage } from '@shared/utils/error.utils';
 
 /** Emitted when the image URL changes (new upload or removal). */
 export interface ImageChangeEvent {

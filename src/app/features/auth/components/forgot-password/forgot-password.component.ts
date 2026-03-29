@@ -9,7 +9,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ERROR_MESSAGES } from '../../../../core/constants';
+import { ERROR_MESSAGES } from '@core/constants';
 import { AuthService } from '../../services/auth.service';
 
 @Component({

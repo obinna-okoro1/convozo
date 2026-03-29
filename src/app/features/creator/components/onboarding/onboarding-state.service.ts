@@ -15,22 +15,22 @@
 
 import { computed, Injectable, OnDestroy, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '../../../../core/constants';
-import { FormValidators } from '../../../../core/validators/form-validators';
-import { AuthService } from '../../../auth/services/auth.service';
+import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '@core/constants';
+import { FormValidators } from '@core/validators/form-validators';
+import { AuthService } from '@features/auth/services/auth.service';
 import { CreatorService } from '../../services/creator.service';
-import { SupabaseService } from '../../../../core/services/supabase.service';
+import { SupabaseService } from '@core/services/supabase.service';
 import {
   COUNTRY_CODES,
   detectCountryIndex,
 } from './phone-country-codes.data';
-import type { SelectOption } from '../../../../shared/components/ui/searchable-select/searchable-select.component';
-import { errorMessage } from '../../../../shared/utils/error.utils';
+import type { SelectOption } from '@shared/components/ui/searchable-select/searchable-select.component';
+import { errorMessage } from '@shared/utils/error.utils';
 import {
   EXPERT_CATEGORIES,
   getCategoryById,
   type ExpertSubcategory,
-} from '../../../../core/models';
+} from '@core/models';
 
 @Injectable()
 export class OnboardingStateService implements OnDestroy {

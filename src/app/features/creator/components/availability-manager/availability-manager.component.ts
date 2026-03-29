@@ -7,12 +7,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AvailabilitySlot, DayOfWeek } from '../../../../core/models';
+import { AvailabilitySlot, DayOfWeek } from '@core/models';
 import { AvailabilityService } from '../../services/availability.service';
 import {
   SearchableSelectComponent,
   SelectOption,
-} from '../../../../shared/components/ui/searchable-select/searchable-select.component';
+} from '@shared/components/ui/searchable-select/searchable-select.component';
 
 interface DaySchedule {
   day: DayOfWeek;

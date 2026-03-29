@@ -8,7 +8,7 @@ import { MessagePageStateService } from '../../message-page-state.service';
 import {
   MessageFormComponent,
   MessageFormData,
-} from '../../../message-form/message-form.component';
+} from '@features/public/components/message-form/message-form.component';
 
 @Component({
   selector: 'app-message-view',

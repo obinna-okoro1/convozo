@@ -6,7 +6,7 @@
  */
 
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { CompleteCallResponse } from '../../../../core/models';
+import { CompleteCallResponse } from '@core/models';
 
 @Component({
   selector: 'app-video-completed-overlay',

@@ -17,8 +17,8 @@
 
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { APP_CONSTANTS } from '../../../../core/constants';
-import { AvailabilitySlot, DayOfWeek } from '../../../../core/models';
+import { APP_CONSTANTS } from '@core/constants';
+import { AvailabilitySlot, DayOfWeek } from '@core/models';
 
 export interface CallBookingFormData {
   senderName: string;

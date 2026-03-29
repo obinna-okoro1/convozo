@@ -24,7 +24,6 @@ export const APP_CONSTANTS = {
 } as const;
 
 export const ROUTES = {
-  HOME: '/home',
   AUTH: {
     LOGIN: '/auth/login',
     CALLBACK: '/auth/callback',
@@ -41,7 +40,6 @@ export const ERROR_MESSAGES = {
   AUTH: {
     NOT_AUTHENTICATED: 'Not authenticated',
     EMAIL_REQUIRED: 'Please enter your email',
-    EMAIL_INVALID: 'Please enter a valid email',
     INVALID_EMAIL: 'Please enter a valid email',
     LOGIN_FAILED: 'Failed to send magic link',
   },

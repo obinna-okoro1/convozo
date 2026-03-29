@@ -17,11 +17,11 @@ import {
   ResponseTemplateService,
   ResponseTemplate,
   TemplateCategory,
-} from '../../../../core/services/response-template.service';
+} from '@core/services/response-template.service';
 import {
   SearchableSelectComponent,
   SelectOption,
-} from '../../../../shared/components/ui/searchable-select/searchable-select.component';
+} from '@shared/components/ui/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-template-picker',

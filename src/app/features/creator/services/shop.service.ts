@@ -7,8 +7,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { ShopItem, ShopOrder, ShopCheckoutPayload, EdgeFunctionResponse } from '../../../core/models';
-import { SupabaseService } from '../../../core/services/supabase.service';
+import { ShopItem, ShopOrder, ShopCheckoutPayload, EdgeFunctionResponse } from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',

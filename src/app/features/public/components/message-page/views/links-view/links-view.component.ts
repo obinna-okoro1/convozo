@@ -11,15 +11,15 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { MessagePageStateService } from '../../message-page-state.service';
 import { ProfileOwnerService } from '../../services/profile-owner.service';
-import { SupabaseService } from '../../../../../../core/services/supabase.service';
-import { ToastService } from '../../../../../../shared/services/toast.service';
-import { CreatorLink, CreatorPost } from '../../../../../../core/models';
+import { SupabaseService } from '@core/services/supabase.service';
+import { ToastService } from '@shared/services/toast.service';
+import { CreatorLink, CreatorPost } from '@core/models';
 import {
   getBrandByKey,
   BrandInfo,
-} from '../../../../../../features/link-in-bio/utils/brand-detection';
-import { LinkFormModalComponent } from '../../../../../../features/link-in-bio/components/link-form-modal/link-form-modal.component';
-import { LinkService } from '../../../../../../features/link-in-bio/services/link.service';
+} from '@features/link-in-bio/utils/brand-detection';
+import { LinkFormModalComponent } from '@features/link-in-bio/components/link-form-modal/link-form-modal.component';
+import { LinkService } from '@features/link-in-bio/services/link.service';
 
 /** Max words per post — must match the dashboard posts view */
 const MAX_POST_WORDS = 500;

@@ -8,8 +8,8 @@ import { NgClass } from '@angular/common';
 import {
   ImageUploadComponent,
   ImageChangeEvent,
-} from '../../../../shared/components/ui/image-upload/image-upload.component';
-import { SearchableSelectComponent } from '../../../../shared/components/ui/searchable-select/searchable-select.component';
+} from '@shared/components/ui/image-upload/image-upload.component';
+import { SearchableSelectComponent } from '@shared/components/ui/searchable-select/searchable-select.component';
 import { OnboardingStateService } from './onboarding-state.service';
 
 @Component({

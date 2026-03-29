@@ -14,11 +14,11 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { SettingsStateService } from '../../../../creator/components/settings/settings-state.service';
-import { MonetizationViewComponent } from '../../../../creator/components/settings/views/monetization-view/monetization-view.component';
-import { PaymentsViewComponent } from '../../../../creator/components/settings/views/payments-view/payments-view.component';
-import { ProfileViewComponent } from '../../../../creator/components/settings/views/profile-view/profile-view.component';
-import { ShopViewComponent } from '../../../../creator/components/settings/views/shop-view/shop-view.component';
+import { SettingsStateService } from '@features/creator/components/settings/settings-state.service';
+import { MonetizationViewComponent } from '@features/creator/components/settings/views/monetization-view/monetization-view.component';
+import { PaymentsViewComponent } from '@features/creator/components/settings/views/payments-view/payments-view.component';
+import { ProfileViewComponent } from '@features/creator/components/settings/views/profile-view/profile-view.component';
+import { ShopViewComponent } from '@features/creator/components/settings/views/shop-view/shop-view.component';
 
 type SettingsTab = 'profile' | 'monetization' | 'payments' | 'shop';
 

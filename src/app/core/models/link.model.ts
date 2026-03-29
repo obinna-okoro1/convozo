@@ -16,11 +16,3 @@ export interface CreatorLink {
   updated_at: string;
 }
 
-export interface LinkClick {
-  id: string;
-  link_id: string;
-  creator_id: string;
-  referrer: string | null;
-  user_agent: string | null;
-  created_at: string;
-}

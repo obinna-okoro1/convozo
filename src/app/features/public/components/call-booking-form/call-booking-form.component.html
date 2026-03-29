@@ -1,19 +1,4 @@
 <div class="card-glass overflow-hidden animate-fade-in">
-  <!-- Header -->
-  <div class="flex items-center gap-3 px-6 lg:px-10 pt-6 pb-5 border-b border-separator">
-    <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-         style="background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(236,72,153,0.12) 100%);">
-      <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-      </svg>
-    </div>
-    <div>
-      <h2 class="text-xl font-bold text-content leading-tight">Book a Session</h2>
-      <p class="text-content-muted text-sm mt-0.5">{{ callDuration() }}-minute private session with {{ creatorName() }}</p>
-    </div>
-  </div>
-
   <form (ngSubmit)="onSubmit()" class="space-y-5 px-6 lg:px-10 pb-6 pt-5">
 
     <!-- Pricing row -->

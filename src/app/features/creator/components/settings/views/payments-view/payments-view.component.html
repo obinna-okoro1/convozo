@@ -1,20 +1,4 @@
 <div class="card p-6 animate-fade-in">
-  <!-- Section header -->
-  <div class="flex items-center gap-3 mb-6">
-    <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-      <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.036.598 2.117 1.441h1.885c-.088-1.564-1.223-2.861-2.858-3.186V2h-2.183v1.721c-1.556.37-2.873 1.556-2.873 3.177 0 2.032 1.703 3.015 4.153 3.916 2.235.811 2.687 1.613 2.687 2.549 0 .679-.458 1.531-1.901 1.531-1.509 0-2.354-.733-2.472-1.774H8.292c.113 1.976 1.697 3.025 3.436 3.303V18h2.183v-1.636c1.556-.413 2.873-1.649 2.873-3.347 0-2.718-2.636-3.664-4.808-4.867z"/>
-      </svg>
-    </div>
-    <div>
-      <h2 class="text-lg font-semibold text-content">Payment Settings</h2>
-      <p class="text-sm text-content-muted hidden sm:block">
-        @if (state.isPaystackCreator()) { Manage your bank account for Paystack payouts }
-        @else { Manage your Stripe account and payouts }
-      </p>
-    </div>
-  </div>
-
   @if (state.isPaystackCreator()) {
     <!-- PAYSTACK (NG / ZA creators) -->
     @if (state.isPaystackConnected()) {

@@ -18,8 +18,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ShopItem } from '../../../../../../core/models';
-import { ShopService } from '../../../../../creator/services/shop.service';
+import { ShopItem } from '@core/models';
+import { ShopService } from '@features/creator/services/shop.service';
 import { MessagePageStateService } from '../../message-page-state.service';
 
 const TYPE_EMOJI: Record<string, string> = {

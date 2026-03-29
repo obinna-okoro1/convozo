@@ -15,12 +15,12 @@ import {
   EXPERT_CATEGORIES,
   getCategoryById,
   type ExpertSubcategory,
-} from '../../../../core/models';
-import { SupabaseService } from '../../../../core/services/supabase.service';
-import { FormValidators } from '../../../../core/validators/form-validators';
+} from '@core/models';
+import { SupabaseService } from '@core/services/supabase.service';
+import { FormValidators } from '@core/validators/form-validators';
 import { CreatorService } from '../../services/creator.service';
-import { errorMessage } from '../../../../shared/utils/error.utils';
-import type { SelectOption } from '../../../../shared/components/ui/searchable-select/searchable-select.component';
+import { errorMessage } from '@shared/utils/error.utils';
+import type { SelectOption } from '@shared/components/ui/searchable-select/searchable-select.component';
 
 @Injectable()
 export class SettingsStateService {
