@@ -1,8 +1,3 @@
-/**
- * Public Feature Routes
- * Handles public-facing routes (landing, message pages, success)
- */
-
 import { Routes } from '@angular/router';
 import { MessagePageStateService } from './components/message-page/message-page-state.service';
 
