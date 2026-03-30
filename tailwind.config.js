@@ -152,6 +152,7 @@ module.exports = {
         '5xl': ['3rem', { lineHeight: '1' }],
       },
       spacing: {
+        '4.5': '1.125rem',
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
