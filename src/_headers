@@ -12,8 +12,8 @@
   X-Content-Type-Options: nosniff
   # Don't leak the full Referrer URL to third-party origins
   Referrer-Policy: strict-origin-when-cross-origin
-  # Restrict browser feature access — permit camera/mic (Daily.co calls), deny everything else
-  Permissions-Policy: camera=self, microphone=self, payment=(), geolocation=(), usb=(), serial=(), bluetooth=()
+  # Restrict browser feature access — permit camera/mic for same-origin + Daily.co video iframe, deny everything else
+  Permissions-Policy: camera=(self "https://convozo.daily.co"), microphone=(self "https://convozo.daily.co"), display-capture=(self "https://convozo.daily.co"), payment=(), geolocation=(), usb=(), serial=(), bluetooth=()
   # Force HTTPS for 1 year and include subdomains (requires HTTPS-only deployment — Cloudflare Pages)
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   # XSS auditor hint for legacy browsers (modern browsers ignore it but it doesn't hurt)

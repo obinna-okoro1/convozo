@@ -242,7 +242,7 @@
                 <svg class="w-3 h-3 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-[0.65rem] text-[#b85c00] font-semibold">Payout held — releases in 3 days</span>
+                <span class="text-[0.65rem] text-[#b85c00] font-semibold">Payout held — releases in 7 days</span>
               </div>
             } @else if (booking.status === 'completed' && booking.payout_status === 'released') {
               <div class="flex items-center gap-1.5 mt-1">
@@ -256,7 +256,7 @@
                 <svg class="w-3 h-3 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-[0.65rem] text-[#b85c00] font-semibold">No-show fee — releases in 3 days</span>
+                <span class="text-[0.65rem] text-[#b85c00] font-semibold">No-show fee — releases in 7 days</span>
               </div>
             }
 
@@ -269,16 +269,28 @@
                 <span class="badge text-content-muted">${{ booking.amount_paid / 100 }}</span>
                 <span class="badge text-content-muted">{{ booking.duration }} min</span>
               </div>
-              <button
-                (click)="onConfirmDelete(booking)"
-                class="w-7 h-7 rounded-lg flex items-center justify-center text-content-muted hover:text-[#d70015] hover:bg-[#d70015]/10 transition-all duration-200"
-                title="Delete booking"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-              </button>
+              <div class="flex items-center gap-1.5">
+                <!-- Disputed badge (set automatically by Stripe webhook) -->
+                @if (booking.payout_status === 'disputed') {
+                  <span class="badge bg-[#d70015]/12 text-[#d70015] flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    Disputed
+                  </span>
+                }
+                <button
+                  (click)="onConfirmDelete(booking)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-content-muted hover:text-[#d70015] hover:bg-[#d70015]/10 transition-all duration-200"
+                  title="Delete booking"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
           </div>

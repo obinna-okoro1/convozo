@@ -31,6 +31,7 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     conversation_token: 'test-token-1',
     created_at: now,
     updated_at: now,
+    refunded_at: null,
     ...overrides,
   };
 }

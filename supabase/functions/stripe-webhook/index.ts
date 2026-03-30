@@ -1,19 +1,23 @@
 /**
- * Stripe Webhook — Entry Point (v3)
+ * Stripe Webhook — Entry Point (v4)
  *
- * Thin dispatcher that verifies the Stripe signature, checks idempotency,
- * and routes to the appropriate handler based on session metadata.type.
+ * Thin dispatcher that verifies the Stripe signature and routes to the
+ * appropriate handler based on event type and session metadata.
  *
- * Handlers:
- *   - shop        → handlers/shop-order.ts
- *   - call_booking → handlers/call-booking.ts
- *   - (default)    → handlers/message-payment.ts
+ * Event routing:
+ *   checkout.session.completed
+ *     - metadata.type === 'shop'         → handlers/shop-order.ts
+ *     - metadata.type === 'call_booking' → handlers/call-booking.ts
+ *     - (default)                        → handlers/message-payment.ts
+ *   charge.dispute.created               → handlers/dispute.ts (freeze payout)
+ *   charge.dispute.closed                → handlers/dispute.ts (unfreeze or mark lost)
  */
 import { stripe, Stripe, stripeCryptoProvider } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
 import { handleShopOrder } from './handlers/shop-order.ts';
 import { handleCallBooking } from './handlers/call-booking.ts';
 import { handleMessagePayment } from './handlers/message-payment.ts';
+import { handleDisputeCreated, handleDisputeClosed } from './handlers/dispute.ts';
 
 /** JSON response helper. */
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
@@ -40,6 +44,17 @@ Deno.serve(async (req) => {
       undefined,
       stripeCryptoProvider,
     );
+
+    // ── Route dispute events (highest priority — freeze before any payout) ──
+    if (event.type === 'charge.dispute.created') {
+      const dispute = event.data.object as Stripe.Dispute;
+      return jsonResponse(await handleDisputeCreated(dispute));
+    }
+
+    if (event.type === 'charge.dispute.closed') {
+      const dispute = event.data.object as Stripe.Dispute;
+      return jsonResponse(await handleDisputeClosed(dispute));
+    }
 
     if (event.type !== 'checkout.session.completed') {
       return jsonResponse({ received: true });

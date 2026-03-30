@@ -25,7 +25,7 @@
  *   - Both no-show: neither joined → cancel authorization (full refund)
  *
  * Payout hold:
- *   - Captured payments enter a 3-day hold period before release to expert.
+ *   - Captured payments enter a 7-day hold period before release to expert.
  *
  * Returns:
  *   { processed: number, results: [...] }
@@ -36,24 +36,16 @@ import { supabase } from '../_shared/supabase.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { jsonOk, jsonError } from '../_shared/http.ts';
 import { deleteRoom } from '../_shared/daily.ts';
-
-/** Grace period before marking a no-show: 10 minutes */
-const GRACE_PERIOD_MINUTES = 10;
+import {
+  PAYOUT_HOLD_DAYS,
+  COMPLETION_THRESHOLD,
+  SHORT_CALL_CHARGE_PERCENT,
+  FAN_NO_SHOW_FEE_PERCENT,
+  GRACE_PERIOD_MINUTES,
+} from '../_shared/constants.ts';
 
 /** Fallback: if no scheduled_at, check bookings older than 24 hours */
 const FALLBACK_HOURS = 24;
-
-/** Fan no-show fee: charge 30% of booking amount as cancellation penalty */
-const FAN_NO_SHOW_FEE_PERCENT = 30;
-
-/** Completion threshold for stuck in-progress calls */
-const COMPLETION_THRESHOLD = 0.30;
-
-/** Charge percentage when call is below the completion threshold (< 30% of booked time) */
-const SHORT_CALL_CHARGE_PERCENT = 50;
-
-/** Number of days to hold captured payment before releasing to expert */
-const PAYOUT_HOLD_DAYS = 3;
 
 interface NoShowResult {
   booking_id: string;

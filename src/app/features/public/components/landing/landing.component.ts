@@ -37,7 +37,7 @@ export class LandingComponent {
     {
       num: '03',
       title: 'Get paid instantly',
-      body: 'Clients pay, Stripe processes, you earn. 78% goes directly to your bank. Payouts every 24 hours.',
+      body: 'Clients pay, Stripe processes, you earn. 78% goes directly to your bank. Payouts within 7 days.',
       icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
       grad: 'from-emerald-500 to-teal-600',
     },
@@ -53,7 +53,7 @@ export class LandingComponent {
   protected readonly trustSignals = [
     'Free to join',
     'You keep 78% always',
-    'Paid in 24 hours',
+    'Payouts within 7 days',
     'Stripe-secured',
   ];
 
@@ -66,6 +66,28 @@ export class LandingComponent {
     { emoji: '💜', name: 'Patreon', what: 'Fan support' },
     { emoji: '🛒', name: 'Gumroad', what: 'Digital products' },
     { emoji: '🔗', name: 'Linktree', what: 'Link-in-bio' },
+  ];
+
+  /** "Built for professionals like you" section — scrolling persona marquee */
+  protected readonly professions = [
+    { emoji: '⚖️', label: 'Attorneys' },
+    { emoji: '🩺', label: 'Doctors' },
+    { emoji: '🧠', label: 'Therapists' },
+    { emoji: '💼', label: 'Consultants' },
+    { emoji: '🎯', label: 'Coaches' },
+    { emoji: '📐', label: 'Architects' },
+    { emoji: '💰', label: 'Financial Advisors' },
+    { emoji: '🎓', label: 'Tutors' },
+    { emoji: '💻', label: 'Tech Experts' },
+    { emoji: '🏋️', label: 'Personal Trainers' },
+    { emoji: '📣', label: 'Influencers' },
+    { emoji: '🎨', label: 'Designers' },
+    { emoji: '📊', label: 'Accountants' },
+    { emoji: '🔬', label: 'Scientists' },
+    { emoji: '✍️', label: 'Writers' },
+    { emoji: '🏡', label: 'Real Estate Pros' },
+    { emoji: '🎵', label: 'Musicians' },
+    { emoji: '🌿', label: 'Nutritionists' },
   ];
 
   protected readonly tickerItems = [

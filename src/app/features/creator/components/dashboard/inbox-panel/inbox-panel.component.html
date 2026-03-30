@@ -124,12 +124,21 @@
               Received {{ msg.created_at | date:"MMMM d, y 'at' h:mm a" }}
             </p>
           </div>
-          <div class="flex-shrink-0">
-            <div class="p-4 bg-[#1a9e3f]/8 border border-[#1a9e3f]/15 rounded-xl text-right">
-              <div class="text-xs text-[#1a9e3f] font-semibold mb-1 uppercase tracking-wider">Earned</div>
-              <div class="text-3xl font-bold text-content mb-1">${{ msg.amount_paid / 100 }}</div>
-              <span class="badge text-xs">{{ msg.message_type }}</span>
-            </div>
+          <div class="flex-shrink-0 flex flex-col gap-2">
+            <!-- Earned card — shows refunded state automatically when refunded_at is set -->
+            @if (msg.refunded_at) {
+              <div class="p-4 bg-[#d70015]/8 border border-[#d70015]/15 rounded-xl text-right">
+                <div class="text-xs text-[#d70015] font-semibold mb-1 uppercase tracking-wider">Refunded</div>
+                <div class="text-3xl font-bold text-content mb-1 line-through opacity-50">${{ msg.amount_paid / 100 }}</div>
+                <span class="badge text-xs">{{ msg.message_type }}</span>
+              </div>
+            } @else {
+              <div class="p-4 bg-[#1a9e3f]/8 border border-[#1a9e3f]/15 rounded-xl text-right">
+                <div class="text-xs text-[#1a9e3f] font-semibold mb-1 uppercase tracking-wider">Earned</div>
+                <div class="text-3xl font-bold text-content mb-1">${{ msg.amount_paid / 100 }}</div>
+                <span class="badge text-xs">{{ msg.message_type }}</span>
+              </div>
+            }
           </div>
         </div>
 
@@ -287,8 +296,14 @@
                 Replied
               </span>
             }
-            <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold">${{ msg.amount_paid / 100 }}</span>
+            @if (msg.refunded_at) {
+              <span class="badge bg-[#d70015]/15 text-[#d70015] font-semibold line-through opacity-60">${{ msg.amount_paid / 100 }}</span>
+              <span class="badge bg-[#d70015]/15 text-[#d70015] font-semibold">Refunded</span>
+            } @else {
+              <span class="badge bg-[#1a9e3f]/15 text-[#1a9e3f] font-semibold">${{ msg.amount_paid / 100 }}</span>
+            }
           </div>
+          <!-- Mobile refund button removed — refunds are automatic via Stripe webhooks -->
           <p class="text-content-secondary text-sm mb-1">{{ msg.sender_email }}</p>
           <p class="text-xs text-content-muted">{{ msg.created_at | date:"MMMM d, y 'at' h:mm a" }}</p>
         </div>

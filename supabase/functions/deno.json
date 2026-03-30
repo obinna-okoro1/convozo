@@ -6,6 +6,8 @@
     "test:coverage": "PAYSTACK_SECRET_KEY=test_paystack_key_for_unit_tests deno test --allow-env --coverage=coverage _shared/cors.test.ts _shared/http.test.ts _shared/paystack.test.ts _shared/stripe-payment-flows.test.ts && deno coverage coverage"
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.0"
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "stripe": "https://esm.sh/stripe@14.25.0?target=deno&no-dts",
+    "supabase": "https://esm.sh/@supabase/supabase-js@2.39.3"
   }
 }
