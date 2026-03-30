@@ -50,15 +50,24 @@ export class AnalyticsService {
       return this.getEmptyAnalytics();
     }
 
+    // Exclude refunded items — they are not real revenue.
+    const activeMessages = messages.filter(
+      (m) => m.refunded_at === null || m.refunded_at === undefined,
+    );
+    const activeBookings = bookings.filter(
+      (b) => b.payout_status !== 'refunded' && b.payout_status !== 'disputed',
+    );
+
     // Basic stats — revenue includes both messages and call bookings
-    const messageRevenue = messages.reduce((sum, m) => sum + m.amount_paid, 0) / 100;
-    const bookingRevenue = bookings.reduce((sum, b) => sum + b.amount_paid, 0) / 100;
+    const messageRevenue = activeMessages.reduce((sum, m) => sum + m.amount_paid, 0) / 100;
+    const bookingRevenue = activeBookings.reduce((sum, b) => sum + b.amount_paid, 0) / 100;
     const totalRevenue = messageRevenue + bookingRevenue;
+    // Total counts include all messages (refunded still happened), but avg is against active
     const totalMessages = messages.length;
-    const totalItems = totalMessages + bookings.length;
+    const totalItems = activeMessages.length + activeBookings.length;
     const avgMessageValue = totalItems > 0 ? totalRevenue / totalItems : 0;
 
-    // Response stats
+    // Response stats — all messages, including refunded
     const handledMessages = messages.filter((m) => m.is_handled);
     const responseRate = totalMessages > 0 ? (handledMessages.length / totalMessages) * 100 : 0;
     const avgResponseTime = this.calculateAvgResponseTime(messages);
@@ -66,21 +75,21 @@ export class AnalyticsService {
     // Growth — only meaningful in the rolling "all" view, not when a month is pinned
     const { revenueGrowth, messageGrowth } = viewMonth
       ? { revenueGrowth: 0, messageGrowth: 0 }
-      : this.calculateGrowth(messages, bookings);
+      : this.calculateGrowth(activeMessages, activeBookings);
 
-    // Top senders
-    const topSenders = this.calculateTopSenders(messages);
+    // Top senders — only non-refunded messages
+    const topSenders = this.calculateTopSenders(activeMessages);
 
     // Daily stats: for a specific month use the pre-filtered messages so the
     // chart reflects the correct calendar days; otherwise rolling 30-day window.
     const dailyStats = this.calculateDailyStats(
-      viewMonth ? messages : this.filterLast30Days(messages),
-      viewMonth ? bookings : this.filterLast30Days(bookings),
+      viewMonth ? activeMessages : this.filterLast30Days(activeMessages),
+      viewMonth ? activeBookings : this.filterLast30Days(activeBookings),
       viewMonth,
     );
 
-    // Type breakdown — includes call bookings as a separate category
-    const messageTypeBreakdown = this.calculateMessageTypeBreakdown(messages, bookings);
+    // Type breakdown — excludes refunded items
+    const messageTypeBreakdown = this.calculateMessageTypeBreakdown(activeMessages, activeBookings);
 
     return {
       totalRevenue,
@@ -127,12 +136,21 @@ export class AnalyticsService {
 
     const messageRevenue =
       messages
-        .filter((m) => new Date(m.created_at) >= startOfMonth)
+        .filter(
+          (m) =>
+            new Date(m.created_at) >= startOfMonth &&
+            (m.refunded_at === null || m.refunded_at === undefined),
+        )
         .reduce((sum, m) => sum + m.amount_paid, 0) / 100;
 
     const bookingRevenue =
       bookings
-        .filter((b) => new Date(b.created_at) >= startOfMonth)
+        .filter(
+          (b) =>
+            new Date(b.created_at) >= startOfMonth &&
+            b.payout_status !== 'refunded' &&
+            b.payout_status !== 'disputed',
+        )
         .reduce((sum, b) => sum + b.amount_paid, 0) / 100;
 
     const monthRevenue = messageRevenue + bookingRevenue;

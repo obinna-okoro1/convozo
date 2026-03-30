@@ -16,8 +16,9 @@
  *   Authorization: Bearer <creator JWT>  — OR —  fan_access_token in body
  *
  * Auth:
+ *   - Fan: provides fan_access_token in the body (checked FIRST — the Supabase
+ *     JS SDK always sends an Authorization header, even for anon users)
  *   - Creator: must provide a valid JWT that matches the booking's creator
- *   - Fan: must provide the fan_access_token issued at booking time
  *   Either path triggers full call completion. If both parties race to call this
  *   simultaneously, the second caller receives 409 (already completed) — harmless.
  *
@@ -31,8 +32,8 @@
  *   409 — already completed/cancelled/refunded
  *
  * Payout / capture policy:
- *   ≥ 30% of booked duration → capture full payment, payout held for 3-day review period
- *   < 30% of booked duration → capture 50% of payment as short-session fee, hold for 3-day review
+ *   ≥ 30% of booked duration → capture full payment, payout held for 7-day review period
+ *   < 30% of booked duration → capture 50% of payment as short-session fee, hold for 7-day review
  */
 
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
@@ -40,16 +41,7 @@ import { supabase } from '../_shared/supabase.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
 import { deleteRoom } from '../_shared/daily.ts';
-
-/** Completion threshold: if the call ran for at least 30% of the booked duration,
- *  the creator keeps the full payment. Below 30%, only 50% is captured. */
-const COMPLETION_THRESHOLD = 0.30;
-
-/** Charge percentage when call is below the completion threshold (< 30% of booked time). */
-const SHORT_CALL_CHARGE_PERCENT = 50;
-
-/** Number of days to hold captured payment before releasing to expert. */
-const PAYOUT_HOLD_DAYS = 3;
+import { PAYOUT_HOLD_DAYS, COMPLETION_THRESHOLD, SHORT_CALL_CHARGE_PERCENT } from '../_shared/constants.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -85,9 +77,18 @@ Deno.serve(async (req) => {
       return jsonError('Booking not found', 404, corsHeaders);
     }
 
-    // ── Auth: creator JWT OR fan access token ─────────────────────────
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    // ── Auth: fan access token OR creator JWT ──────────────────────────
+    // Check fan_access_token FIRST because the Supabase JS SDK always sends
+    // an Authorization header (with the anon key) even for unauthenticated
+    // users. If we checked the header first, fans would always hit the
+    // creator JWT path and fail with 401.
+    if (fan_access_token) {
+      // Fan path: validate the secret token issued at booking time
+      const storedToken = booking.fan_access_token as string | null;
+      if (!storedToken || fan_access_token !== storedToken) {
+        return jsonError('Invalid access token', 403, corsHeaders);
+      }
+    } else {
       // Creator path: validate JWT and ownership
       const authResult = await requireAuth(req, supabase, corsHeaders);
       if (authResult instanceof Response) return authResult;
@@ -96,14 +97,6 @@ Deno.serve(async (req) => {
       if (user.id !== creatorUserId) {
         return jsonError('You are not authorized to complete this call', 403, corsHeaders);
       }
-    } else if (fan_access_token) {
-      // Fan path: validate the secret token issued at booking time
-      const storedToken = booking.fan_access_token as string | null;
-      if (!storedToken || fan_access_token !== storedToken) {
-        return jsonError('Invalid access token', 403, corsHeaders);
-      }
-    } else {
-      return jsonError('Authentication required', 403, corsHeaders);
     }
 
     // Block if already terminal

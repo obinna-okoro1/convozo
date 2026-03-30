@@ -396,7 +396,12 @@ verify_jwt = false  # Public — fans purchase shop items without being logged i
 verify_jwt = false  # Purchase verified via stripe session_id, not JWT
 
 [functions.check-no-show]
-verify_jwt = false  # Internal cron — auth handled via service role key
+verify_jwt = false  # Internal cron — auth handled via x-internal-secret header
+           # Cron schedule managed via pg_cron in migration 046_pg_cron_schedules.sql
+
+[functions.release-payout]
+verify_jwt = false  # Internal cron — auth handled via x-internal-secret header
+            # Cron schedule managed via pg_cron in migration 046_pg_cron_schedules.sql
 
 [functions.complete-call]
 verify_jwt = false  # Auth handled internally via getUser(token)

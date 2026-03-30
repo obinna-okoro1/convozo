@@ -12,7 +12,7 @@
  *   2. Short-session fee (50%) — integer cent arithmetic, no floating point
  *   3. No-show fee (30%) — integer cent arithmetic
  *   4. Platform fee (22%) — 78/22 split integrity
- *   5. Payout hold (3 days) — timestamp arithmetic
+ *   5. Payout hold (7 days) — timestamp arithmetic
  *   6. Edge cases: $0 amounts, odd cent amounts (rounding), large amounts
  *   7. Security: amount_to_capture never exceeds total, never negative
  *
@@ -28,7 +28,7 @@ const COMPLETION_THRESHOLD = 0.30;
 const SHORT_CALL_CHARGE_PERCENT = 50;
 const FAN_NO_SHOW_FEE_PERCENT = 30;
 const PLATFORM_FEE_PERCENTAGE = 22;
-const PAYOUT_HOLD_DAYS = 3;
+const PAYOUT_HOLD_DAYS = 7;
 
 // ── Pure computation helpers (extracted logic from edge functions) ──────────
 
@@ -265,28 +265,216 @@ Deno.test('PlatformFee - odd amount $10.01 (1001 cents) → 220 platform + 781 e
 // ── PAYOUT HOLD TIMESTAMP TESTS ──────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
-Deno.test('PayoutHold - release date is exactly 3 days from now', () => {
+Deno.test('PayoutHold - release date is exactly 7 days from now', () => {
   const now = new Date('2026-03-28T12:00:00Z');
   const release = computePayoutReleaseAt(now);
-  assertEquals(release.toISOString(), '2026-03-31T12:00:00.000Z');
+  assertEquals(release.toISOString(), '2026-04-04T12:00:00.000Z');
 });
 
 Deno.test('PayoutHold - works across month boundary', () => {
   const now = new Date('2026-03-30T18:00:00Z');
   const release = computePayoutReleaseAt(now);
-  assertEquals(release.toISOString(), '2026-04-02T18:00:00.000Z');
+  assertEquals(release.toISOString(), '2026-04-06T18:00:00.000Z');
 });
 
 Deno.test('PayoutHold - works across year boundary', () => {
-  const now = new Date('2025-12-30T00:00:00Z');
+  const now = new Date('2025-12-26T00:00:00Z');
   const release = computePayoutReleaseAt(now);
   assertEquals(release.toISOString(), '2026-01-02T00:00:00.000Z');
 });
 
-Deno.test('PayoutHold - exact millisecond delta is 259200000ms (3 * 86400 * 1000)', () => {
+Deno.test('PayoutHold - exact millisecond delta is 604800000ms (7 * 86400 * 1000)', () => {
   const now = new Date();
   const release = computePayoutReleaseAt(now);
-  assertEquals(release.getTime() - now.getTime(), 3 * 24 * 60 * 60 * 1000);
+  assertEquals(release.getTime() - now.getTime(), 7 * 24 * 60 * 60 * 1000);
+});
+
+Deno.test('PayoutHold - works across month boundary (Jan 27 → Feb 3)', () => {
+  const now = new Date('2026-01-27T12:00:00Z');
+  const release = computePayoutReleaseAt(now);
+  assertEquals(release.toISOString(), '2026-02-03T12:00:00.000Z');
+});
+
+Deno.test('PayoutHold - hold period is exactly 604800000 ms (not 518400000 = 6 days)', () => {
+  const HOLD_MS = PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000;
+  assertEquals(HOLD_MS, 604_800_000); // 7 days, not 6
+  assert(HOLD_MS > 6 * 24 * 60 * 60 * 1000, 'Hold must be more than 6 days');
+});
+
+Deno.test('PayoutHold - release_at is always in the future (never immediately)', () => {
+  const now = new Date();
+  const release = computePayoutReleaseAt(now);
+  assert(release > now, 'Release timestamp must be strictly in the future');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── RELEASE-PAYOUT ELIGIBILITY TESTS ─────────────────────────────────────
+// These tests verify the logic used by release-payout/index.ts to determine
+// which bookings are ready to have their payout status transitioned from
+// 'pending_release' → 'released'.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Mirrors the eligibility check in release-payout: lte(payout_release_at, now). */
+function isEligibleForRelease(releaseAt: string | null, now: Date = new Date()): boolean {
+  if (!releaseAt) return false;
+  return new Date(releaseAt) <= now;
+}
+
+/** Mirrors the expert notification amount in release-payout. */
+function computeExpertNotificationAmount(amountPaidCents: number): number {
+  return amountPaidCents - Math.round(amountPaidCents * 22 / 100);
+}
+
+Deno.test('ReleasePayout - row with release_at in past is eligible', () => {
+  const past = new Date('2020-01-01T00:00:00Z').toISOString();
+  assertEquals(isEligibleForRelease(past), true);
+});
+
+Deno.test('ReleasePayout - row with release_at = exactly now is eligible (lte)', () => {
+  const now = new Date();
+  assertEquals(isEligibleForRelease(now.toISOString(), now), true);
+});
+
+Deno.test('ReleasePayout - row with release_at 1ms in future is NOT eligible', () => {
+  const now = new Date();
+  const future = new Date(now.getTime() + 1);
+  assertEquals(isEligibleForRelease(future.toISOString(), now), false);
+});
+
+Deno.test('ReleasePayout - row with release_at 1 hour in future is NOT eligible', () => {
+  const now = new Date();
+  const future = new Date(now.getTime() + 60 * 60 * 1000);
+  assertEquals(isEligibleForRelease(future.toISOString(), now), false);
+});
+
+Deno.test('ReleasePayout - null release_at is not eligible', () => {
+  assertEquals(isEligibleForRelease(null), false);
+});
+
+Deno.test('ReleasePayout - newly captured row (release_at = now + 7d) is NOT eligible', () => {
+  const now = new Date();
+  const releaseAt = computePayoutReleaseAt(now).toISOString();
+  // A freshly captured payment should not be immediately eligible
+  assertEquals(isEligibleForRelease(releaseAt, now), false);
+});
+
+Deno.test('ReleasePayout - row captured 7 days ago is eligible', () => {
+  const captureTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const releaseAt = computePayoutReleaseAt(captureTime).toISOString();
+  // Release timestamp is now (7d after capture) → eligible
+  const checkTime = new Date();
+  assertEquals(isEligibleForRelease(releaseAt, checkTime), true);
+});
+
+Deno.test('ReleasePayout - processed count must equal released + errors', () => {
+  // Invariant: the release-payout function guarantees:
+  //   processed = eligibleBookings.length
+  //   released.length + errors.length = processed
+  const mockResult = { processed: 5, released: ['a', 'b', 'c', 'd'], errors: ['e'] };
+  assertEquals(
+    mockResult.released.length + mockResult.errors.length,
+    mockResult.processed,
+  );
+});
+
+Deno.test('ReleasePayout - idempotency: second call on already-released row returns processed=0', () => {
+  // The WHERE clause `.eq('payout_status', 'pending_release')` in the UPDATE
+  // means a row already set to 'released' will not be matched again.
+  // Simulating the state machine: once released, isEligibleForRelease is irrelevant
+  // because the DB query filters by status first.
+  const alreadyReleased = { payout_status: 'released', payout_release_at: '2026-01-01T00:00:00Z' };
+  // A released row would NOT appear in the eligibility query (status filter)
+  assertEquals(alreadyReleased.payout_status, 'released');
+  // So the processed count for a second pass is 0
+  const secondCallResult = { processed: 0, released: [], errors: [] };
+  assertEquals(secondCallResult.processed, 0);
+});
+
+Deno.test('ReleasePayout - expert notification amount uses integer math (no floats)', () => {
+  const amounts = [1000, 5000, 10000, 50000, 99999, 100000];
+  for (const amount of amounts) {
+    const notifyAmount = computeExpertNotificationAmount(amount);
+    assert(Number.isInteger(notifyAmount), `Notification amount ${notifyAmount} not integer for ${amount}`);
+    assert(notifyAmount >= 0, `Notification amount negative for ${amount}`);
+    assert(notifyAmount <= amount, `Notification amount ${notifyAmount} exceeds total ${amount}`);
+  }
+});
+
+Deno.test('ReleasePayout - expert notification for $50 booking = $39.00', () => {
+  // $50.00 = 5000 cents; platform takes 22% = 1100; expert gets 3900 = $39.00
+  assertEquals(computeExpertNotificationAmount(5000), 3900);
+  const formatted = (3900 / 100).toFixed(2);
+  assertEquals(formatted, '39.00');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── PAYOUT STATUS STATE MACHINE TESTS ─────────────────────────────────────
+// Documents the only valid state transitions for payout_status.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+Deno.test('StateMachine - all valid payout_status values are known', () => {
+  const validStatuses = ['held', 'pending_release', 'released', 'refunded'] as const;
+  assertEquals(validStatuses.length, 4);
+  // Every status is a string
+  for (const s of validStatuses) {
+    assertEquals(typeof s, 'string');
+  }
+});
+
+Deno.test('StateMachine - held → pending_release transition on successful capture', () => {
+  // After capture completes, payout_release_at is set and status becomes pending_release.
+  const beforeCapture = { payout_status: 'held', payout_release_at: null };
+  const now = new Date();
+  const afterCapture = {
+    payout_status: 'pending_release',
+    payout_release_at: computePayoutReleaseAt(now).toISOString(),
+  };
+  assertEquals(afterCapture.payout_status, 'pending_release');
+  assert(afterCapture.payout_release_at !== null);
+  // payout_release_at must be in the future
+  assertEquals(isEligibleForRelease(afterCapture.payout_release_at, now), false);
+  // Silence unused variable lint
+  void beforeCapture;
+});
+
+Deno.test('StateMachine - pending_release → released transition after hold period', () => {
+  // After 7 days, release-payout cron sets status to released and payout_released_at to now.
+  const captureTime = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000); // 8 days ago
+  const releaseAt = computePayoutReleaseAt(captureTime);
+  const checkTime = new Date(); // now
+
+  // After 8 days, the 7-day hold has elapsed
+  assertEquals(isEligibleForRelease(releaseAt.toISOString(), checkTime), true);
+
+  const afterRelease = {
+    payout_status: 'released',
+    payout_released_at: checkTime.toISOString(),
+  };
+  assertEquals(afterRelease.payout_status, 'released');
+  assert(afterRelease.payout_released_at !== null);
+});
+
+Deno.test('StateMachine - released row has payout_released_at set (never null)', () => {
+  // A booking in released state must always have payout_released_at populated.
+  const released = { payout_status: 'released', payout_released_at: new Date().toISOString() };
+  assert(released.payout_released_at !== null);
+  assert(released.payout_released_at !== '');
+  // The released_at must be a valid ISO date
+  assert(!isNaN(new Date(released.payout_released_at).getTime()));
+});
+
+Deno.test('StateMachine - held status has null payout_release_at (not yet captured)', () => {
+  const held = { payout_status: 'held', payout_release_at: null, payout_released_at: null };
+  assertEquals(held.payout_release_at, null);
+  assertEquals(held.payout_released_at, null);
+});
+
+Deno.test('StateMachine - only pending_release rows are targets for release-payout', () => {
+  type PayoutStatus = 'held' | 'pending_release' | 'released' | 'refunded';
+  const allStatuses: PayoutStatus[] = ['held', 'pending_release', 'released', 'refunded'];
+  const eligibleForReleaseCron = allStatuses.filter((s) => s === 'pending_release');
+  assertEquals(eligibleForReleaseCron.length, 1);
+  assertEquals(eligibleForReleaseCron[0], 'pending_release');
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

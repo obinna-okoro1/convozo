@@ -42,9 +42,15 @@ export interface CallBooking {
   // Escrow payout tracking
   payout_status: PayoutStatus;
   payout_released_at: string | null;
-  /** When the 3-day hold expires and payout can be released to expert */
+  /** When the 7-day hold expires and payout can be released to expert */
   payout_release_at: string | null;
   refunded_at: string | null;
+  /** Stripe refund ID (re_xxx) — set by create-refund, null until refunded */
+  refund_id: string | null;
+  /** Stripe dispute ID (dp_xxx) — set by dispute handler on chargeback */
+  dispute_id: string | null;
+  /** Timestamp when a chargeback froze the payout */
+  dispute_frozen_at: string | null;
   /** Whether payment was authorized only ('manual') or captured at checkout ('automatic') */
   capture_method: 'manual' | 'automatic';
   /** Fan timezone captured at booking time (IANA, e.g. "America/New_York") */

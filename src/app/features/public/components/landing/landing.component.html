@@ -284,8 +284,8 @@
               <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <h3 class="text-xl font-black text-content mb-2">Instant Payouts</h3>
-          <p class="text-content-secondary text-sm leading-relaxed">Stripe-powered payouts. Bank-level security. Your money in 24 hours, every time.</p>
+          <h3 class="text-xl font-black text-content mb-2">Secure Payouts</h3>
+          <p class="text-content-secondary text-sm leading-relaxed">Stripe-powered payouts. Bank-level security. Earn 78% of every session, released within 7 days.</p>
         </div>
 
         <!-- Card 5 — Digital Shop -->
@@ -366,6 +366,65 @@
           }
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ─── BUILT FOR PROFESSIONALS ─── -->
+  <section class="relative z-10 py-16 px-4 sm:px-6 overflow-hidden">
+    <div class="max-w-3xl mx-auto text-center mb-10">
+      <p class="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-3">Who it's for</p>
+      <h2 class="text-3xl sm:text-4xl font-black text-content tracking-tight">Built for professionals like you</h2>
+      <p class="text-content-secondary mt-3 text-base">If you have expertise, Convozo turns it into income.</p>
+    </div>
+
+    <!-- Marquee row 1 — scrolls left -->
+    <div class="relative">
+      <!-- fade edges -->
+      <div class="pointer-events-none absolute inset-y-0 left-0 w-16 z-10" style="background:linear-gradient(to right,var(--color-surface),transparent)"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 w-16 z-10" style="background:linear-gradient(to left,var(--color-surface),transparent)"></div>
+
+      <div class="flex gap-3 mb-3" style="animation:marquee-left 30s linear infinite;width:max-content">
+        @for (p of professions; track p.label) {
+          <div class="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl card-glass hover:border-accent/30 transition-colors cursor-default">
+            <span class="text-2xl leading-none" aria-hidden="true">{{ p.emoji }}</span>
+            <span class="text-sm font-bold text-content whitespace-nowrap">{{ p.label }}</span>
+          </div>
+        }
+        <!-- duplicate for seamless loop -->
+        @for (p of professions; track p.label + '_dup1')
+        {
+          <div class="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl card-glass hover:border-accent/30 transition-colors cursor-default">
+            <span class="text-2xl leading-none" aria-hidden="true">{{ p.emoji }}</span>
+            <span class="text-sm font-bold text-content whitespace-nowrap">{{ p.label }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Row 2 — scrolls right, offset start -->
+      <div class="flex gap-3" style="animation:marquee-right 36s linear infinite;width:max-content">
+        @for (p of professions.slice().reverse(); track p.label) {
+          <div class="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl card-glass hover:border-accent/30 transition-colors cursor-default">
+            <span class="text-2xl leading-none" aria-hidden="true">{{ p.emoji }}</span>
+            <span class="text-sm font-bold text-content whitespace-nowrap">{{ p.label }}</span>
+          </div>
+        }
+        @for (p of professions.slice().reverse(); track p.label + '_dup2') {
+          <div class="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl card-glass hover:border-accent/30 transition-colors cursor-default">
+            <span class="text-2xl leading-none" aria-hidden="true">{{ p.emoji }}</span>
+            <span class="text-sm font-bold text-content whitespace-nowrap">{{ p.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- CTA nudge -->
+    <div class="text-center mt-10">
+      <a routerLink="/auth/signup" class="inline-flex items-center gap-2 text-sm font-bold text-accent hover:underline underline-offset-4 transition-colors">
+        Join them — it's free
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+        </svg>
+      </a>
     </div>
   </section>
 

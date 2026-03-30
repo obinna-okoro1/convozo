@@ -1,7 +1,8 @@
 /**
  * Unit tests for AnalyticsService
  * Covers: empty state, revenue/message calculations, growth metrics,
- * top senders, daily stats, type breakdown, and formatting helpers.
+ * top senders, daily stats, type breakdown, formatting helpers, and
+ * refund/dispute exclusion from revenue (financial integrity).
  */
 
 import { TestBed } from '@angular/core/testing';
@@ -26,6 +27,7 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     conversation_token: 'test-token-1',
     created_at: now,
     updated_at: now,
+    refunded_at: null,
     ...overrides,
   };
 }
@@ -58,6 +60,9 @@ function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
     payout_released_at: null,
     payout_release_at: null,
     refunded_at: null,
+    refund_id: null,
+    dispute_id: null,
+    dispute_frozen_at: null,
     capture_method: 'manual',
     fan_timezone: 'UTC',
     created_at: now,
@@ -243,6 +248,145 @@ describe('AnalyticsService', () => {
 
     it('formats zero as +0.0%', () => {
       expect(service.formatPercentage(0)).toBe('+0.0%');
+    });
+  });
+
+  // ── Refund exclusion from revenue ─────────────────────────────────────────
+  // Refunded messages/bookings must NEVER inflate revenue figures.
+  // Analytics uses activeMessages (refunded_at === null) and
+  // activeBookings (payout_status !== 'refunded' && !== 'disputed').
+
+  describe('calculateAnalytics() — refunded message exclusion', () => {
+    it('excludes refunded message from totalRevenue', () => {
+      const active = makeMessage({ amount_paid: 1000 }); // $10 — counts
+      const refunded = makeMessage({
+        id: 'msg-refunded',
+        amount_paid: 2000, // $20 — must NOT count
+        refunded_at: new Date().toISOString(),
+      });
+      const result = service.calculateAnalytics([active, refunded]);
+      // Only $10 should count toward revenue
+      expect(result.totalRevenue).toBeCloseTo(10);
+    });
+
+    it('still counts refunded message in totalMessages (it happened)', () => {
+      const active = makeMessage({ amount_paid: 1000 });
+      const refunded = makeMessage({
+        id: 'msg-refunded',
+        amount_paid: 2000,
+        refunded_at: new Date().toISOString(),
+      });
+      const result = service.calculateAnalytics([active, refunded]);
+      // totalMessages reflects all inquiries received, regardless of refund status
+      expect(result.totalMessages).toBe(2);
+    });
+
+    it('excludes refunded message from avgMessageValue calculation', () => {
+      // $10 active + $50 refunded → avg should be $10 (only 1 active item)
+      const active = makeMessage({ amount_paid: 1000 });
+      const refunded = makeMessage({
+        id: 'msg-refunded',
+        amount_paid: 5000,
+        refunded_at: new Date().toISOString(),
+      });
+      const result = service.calculateAnalytics([active, refunded]);
+      expect(result.avgMessageValue).toBeCloseTo(10);
+    });
+
+    it('excludes refunded message from topSenders revenue', () => {
+      const messages = [
+        makeMessage({ sender_email: 'alice@test.com', sender_name: 'Alice', amount_paid: 5000 }),
+        makeMessage({
+          id: 'msg-2',
+          sender_email: 'alice@test.com',
+          sender_name: 'Alice',
+          amount_paid: 3000,
+          refunded_at: new Date().toISOString(), // $30 refunded — must not count
+        }),
+      ];
+      const result = service.calculateAnalytics(messages);
+      const alice = result.topSenders.find((s) => s.email === 'alice@test.com');
+      // Only the non-refunded $50 should be in alice's totalSpent
+      expect(alice?.totalSpent).toBeCloseTo(50);
+    });
+
+    it('all-refunded messages → totalRevenue = 0', () => {
+      const refundedAt = new Date().toISOString();
+      const messages = [
+        makeMessage({ amount_paid: 1000, refunded_at: refundedAt }),
+        makeMessage({ id: 'msg-2', amount_paid: 2000, refunded_at: refundedAt }),
+      ];
+      const result = service.calculateAnalytics(messages);
+      expect(result.totalRevenue).toBe(0);
+    });
+  });
+
+  describe('calculateAnalytics() — disputed/refunded booking exclusion', () => {
+    it('excludes booking with payout_status=refunded from totalRevenue', () => {
+      const active = makeBooking({ amount_paid: 5000 }); // $50 — counts
+      const refunded = makeBooking({
+        id: 'booking-refunded',
+        amount_paid: 10000, // $100 — must NOT count
+        payout_status: 'refunded',
+      });
+      const result = service.calculateAnalytics([], [active, refunded]);
+      expect(result.totalRevenue).toBeCloseTo(50);
+    });
+
+    it('excludes booking with payout_status=disputed from totalRevenue', () => {
+      const active = makeBooking({ amount_paid: 5000 }); // $50 — counts
+      const disputed = makeBooking({
+        id: 'booking-disputed',
+        amount_paid: 10000, // $100 frozen by chargeback — must NOT count
+        payout_status: 'disputed',
+        dispute_id: 'dp_test_xyz',
+        dispute_frozen_at: new Date().toISOString(),
+      });
+      const result = service.calculateAnalytics([], [active, disputed]);
+      expect(result.totalRevenue).toBeCloseTo(50);
+    });
+
+    it('disputed booking excluded from avgMessageValue', () => {
+      // $50 active + $100 disputed → avg should be $50 (1 active item)
+      const active = makeBooking({ amount_paid: 5000 });
+      const disputed = makeBooking({
+        id: 'b-disputed',
+        amount_paid: 10000,
+        payout_status: 'disputed',
+        dispute_id: 'dp_test',
+        dispute_frozen_at: new Date().toISOString(),
+      });
+      const result = service.calculateAnalytics([], [active, disputed]);
+      expect(result.avgMessageValue).toBeCloseTo(50);
+    });
+
+    it('disputed booking excluded from messageTypeBreakdown session revenue', () => {
+      const active = makeBooking({ amount_paid: 5000 });
+      const disputed = makeBooking({
+        id: 'b-disputed',
+        amount_paid: 10000,
+        payout_status: 'disputed',
+        dispute_id: 'dp_test',
+        dispute_frozen_at: new Date().toISOString(),
+      });
+      const result = service.calculateAnalytics([], [active, disputed]);
+      const sessionEntry = result.messageTypeBreakdown.find((e) => e.type === 'session');
+      // Revenue in breakdown must not include the disputed $100
+      expect(sessionEntry?.revenue).toBeCloseTo(50);
+    });
+
+    it('mix of active, refunded, disputed bookings — only active counts', () => {
+      const active = makeBooking({ id: 'b-active', amount_paid: 3000 }); // $30
+      const refunded = makeBooking({ id: 'b-refunded', amount_paid: 5000, payout_status: 'refunded' }); // $50
+      const disputed = makeBooking({
+        id: 'b-disputed',
+        amount_paid: 10000,
+        payout_status: 'disputed',
+        dispute_id: 'dp_x',
+        dispute_frozen_at: new Date().toISOString(),
+      }); // $100
+      const result = service.calculateAnalytics([], [active, refunded, disputed]);
+      expect(result.totalRevenue).toBeCloseTo(30);
     });
   });
 });

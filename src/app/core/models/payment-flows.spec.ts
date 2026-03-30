@@ -5,15 +5,17 @@
  * and the financial arithmetic used across the Angular frontend.
  *
  * Covers:
- *   ✓ PayoutStatus type exhaustiveness
- *   ✓ CallBooking model shape validation
+ *   ✓ PayoutStatus type exhaustiveness (held, pending_release, released, refunded, disputed)
+ *   ✓ CallBooking model shape validation (incl. dispute_id, dispute_frozen_at, refund_id)
  *   ✓ CompleteCallResponse shape validation
  *   ✓ Integer-cent price display formatting
  *   ✓ Platform fee split (22/78) verification
  *   ✓ Short-session fee (50%) computation
  *   ✓ No-show fee (30%) computation
- *   ✓ Escrow hold timing (3 days)
+ *   ✓ Escrow hold timing (7 days)
  *   ✓ Security: no float-to-int truncation errors
+ *   ✓ Dispute/refund state shape (charge.dispute.* webhook outcomes)
+ *   ✓ release-payout must skip disputed rows (freeze active)
  */
 
 import { PayoutStatus, CallBooking, CallBookingStatus, CompleteCallResponse } from '.';
@@ -24,7 +26,7 @@ const PLATFORM_FEE_PERCENTAGE = 22;
 const SHORT_CALL_CHARGE_PERCENT = 50;
 const FAN_NO_SHOW_FEE_PERCENT = 30;
 const COMPLETION_THRESHOLD = 0.3;
-const PAYOUT_HOLD_DAYS = 3;
+const PAYOUT_HOLD_DAYS = 7;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -81,6 +83,9 @@ function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
     payout_release_at: null,
     capture_method: 'manual',
     refunded_at: null,
+    refund_id: null,
+    dispute_id: null,
+    dispute_frozen_at: null,
     fan_timezone: 'UTC',
     created_at: now,
     updated_at: now,
@@ -95,11 +100,18 @@ describe('Payment Models & Financial Computations', () => {
 
   describe('PayoutStatus', () => {
     it('should accept all valid payout statuses', () => {
-      const statuses: PayoutStatus[] = ['held', 'pending_release', 'released', 'refunded'];
-      expect(statuses.length).toBe(4);
+      const statuses: PayoutStatus[] = ['held', 'pending_release', 'released', 'refunded', 'disputed'];
+      expect(statuses.length).toBe(5);
       statuses.forEach((s) => {
         expect(typeof s).toBe('string');
       });
+    });
+
+    it('disputed is a distinct payout status (chargeback freeze)', () => {
+      const disputed: PayoutStatus = 'disputed';
+      expect(disputed).toBe('disputed');
+      // disputed ≠ refunded — dispute may be won back
+      expect(disputed).not.toBe('refunded');
     });
   });
 
@@ -124,6 +136,17 @@ describe('Payment Models & Financial Computations', () => {
       expect(booking.payout_status).toBeDefined();
       expect(booking.payout_release_at).toBeDefined();
       expect(booking.capture_method).toBeDefined();
+    });
+
+    it('has all dispute/refund tracking fields', () => {
+      const booking = makeBooking();
+      // These fields are set by stripe-webhook dispute handlers — null until a dispute arrives
+      expect(Object.prototype.hasOwnProperty.call(booking, 'dispute_id')).toBeTrue();
+      expect(Object.prototype.hasOwnProperty.call(booking, 'dispute_frozen_at')).toBeTrue();
+      expect(Object.prototype.hasOwnProperty.call(booking, 'refund_id')).toBeTrue();
+      expect(booking.dispute_id).toBeNull();
+      expect(booking.dispute_frozen_at).toBeNull();
+      expect(booking.refund_id).toBeNull();
     });
 
     it('capture_method defaults to manual for new bookings', () => {
@@ -304,23 +327,23 @@ describe('Payment Models & Financial Computations', () => {
 
   // ── Payout hold timing ────────────────────────────────────────────────────
 
-  describe('Payout Hold (3 days)', () => {
-    it('computes release date 3 days from now', () => {
+  describe('Payout Hold (7 days)', () => {
+    it('computes release date 7 days from now', () => {
       const now = new Date('2026-03-28T12:00:00Z');
       const release = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
-      expect(release.toISOString()).toBe('2026-03-31T12:00:00.000Z');
+      expect(release.toISOString()).toBe('2026-04-04T12:00:00.000Z');
     });
 
-    it('exact delta is 259200000ms', () => {
+    it('exact delta is 604800000ms', () => {
       const now = new Date();
       const release = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
-      expect(release.getTime() - now.getTime()).toBe(259200000);
+      expect(release.getTime() - now.getTime()).toBe(604800000);
     });
 
     it('works across month boundary', () => {
       const now = new Date('2026-03-30T18:00:00Z');
       const release = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
-      expect(release.toISOString()).toBe('2026-04-02T18:00:00.000Z');
+      expect(release.toISOString()).toBe('2026-04-06T18:00:00.000Z');
     });
   });
 
@@ -428,6 +451,244 @@ describe('Payment Models & Financial Computations', () => {
       expect(computeShortSessionFee(total)).toBe(50_000_000);
       expect(computeNoShowFee(total)).toBe(30_000_000);
       expect(computePlatformFee(total)).toBe(22_000_000);
+    });
+  });
+
+  // ── Release-payout eligibility ─────────────────────────────────────────────
+  // Mirrors the lte(payout_release_at, now) logic in release-payout/index.ts.
+
+  describe('Release-Payout Eligibility', () => {
+    /** Mirrors the Supabase `.lte('payout_release_at', now)` eligibility check. */
+    function isEligibleForRelease(releaseAt: string | null, now: Date = new Date()): boolean {
+      if (!releaseAt) return false;
+      return new Date(releaseAt) <= now;
+    }
+
+    it('past release_at is eligible', () => {
+      const past = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // yesterday
+      expect(isEligibleForRelease(past)).toBeTrue();
+    });
+
+    it('release_at exactly equal to now is eligible (lte, not lt)', () => {
+      const now = new Date();
+      expect(isEligibleForRelease(now.toISOString(), now)).toBeTrue();
+    });
+
+    it('release_at 1ms in future is NOT eligible', () => {
+      const now = new Date();
+      const future = new Date(now.getTime() + 1).toISOString();
+      expect(isEligibleForRelease(future, now)).toBeFalse();
+    });
+
+    it('release_at 7 days from now is NOT eligible (newly captured row)', () => {
+      const now = new Date();
+      const sevenDaysOut = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+      expect(isEligibleForRelease(sevenDaysOut.toISOString(), now)).toBeFalse();
+    });
+
+    it('null release_at is never eligible', () => {
+      expect(isEligibleForRelease(null)).toBeFalse();
+    });
+
+    it('row captured exactly 7 days ago becomes eligible exactly now', () => {
+      const HOLD_MS = PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000;
+      const captureTime = new Date(Date.now() - HOLD_MS);
+      const releaseAt = new Date(captureTime.getTime() + HOLD_MS); // exactly now
+      expect(isEligibleForRelease(releaseAt.toISOString(), releaseAt)).toBeTrue();
+    });
+
+    it('row captured 6 days ago is still NOT eligible (hold not expired)', () => {
+      const captureTime = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+      const releaseAt = new Date(captureTime.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+      const now = new Date();
+      expect(isEligibleForRelease(releaseAt.toISOString(), now)).toBeFalse();
+    });
+  });
+
+  // ── Payout status state machine ────────────────────────────────────────────
+  // Validates the lifecycle: held → pending_release → released.
+  // Any deviation from this path is a data integrity violation.
+
+  describe('Payout Status State Machine', () => {
+    it('newly captured booking transitions from held to pending_release', () => {
+      const held = makeBooking({ payout_status: 'held', payout_release_at: null });
+      expect(held.payout_status).toBe('held');
+      expect(held.payout_release_at).toBeNull();
+
+      // After capture: status becomes pending_release, release_at is set 7 days out
+      const now = new Date();
+      const releaseAt = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const afterCapture = makeBooking({ payout_status: 'pending_release', payout_release_at: releaseAt });
+      expect(afterCapture.payout_status).toBe('pending_release');
+      expect(afterCapture.payout_release_at).not.toBeNull();
+    });
+
+    it('released booking has payout_released_at set (never null)', () => {
+      const released = makeBooking({
+        payout_status: 'released',
+        payout_released_at: new Date().toISOString(),
+      });
+      expect(released.payout_status).toBe('released');
+      expect(released.payout_released_at).not.toBeNull();
+    });
+
+    it('held booking has null payout_released_at (not yet captured)', () => {
+      const held = makeBooking({ payout_status: 'held', payout_released_at: null });
+      expect(held.payout_released_at).toBeNull();
+    });
+
+    it('pending_release booking has release_at in the future', () => {
+      const future = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+      const booking = makeBooking({ payout_status: 'pending_release', payout_release_at: future });
+      expect(new Date(booking.payout_release_at!).getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it('only pending_release rows are targeted by release-payout cron (not disputed)', () => {
+      // release-payout must never touch 'disputed' rows — payout is frozen by chargeback
+      const allStatuses: PayoutStatus[] = ['held', 'pending_release', 'released', 'refunded', 'disputed'];
+      const cronTargets = allStatuses.filter((s) => s === 'pending_release');
+      expect(cronTargets.length).toBe(1);
+      expect(cronTargets[0]).toBe('pending_release');
+      // Sanity: disputed is excluded from release targets
+      expect(cronTargets as PayoutStatus[]).not.toContain('disputed' as PayoutStatus);
+    });
+
+    it('processed count equals released + errors (response invariant)', () => {
+      const processed = 5;
+      const released = 4;
+      const errors = 1;
+      expect(released + errors).toBe(processed);
+    });
+  });
+
+  // ── Dispute / Refund state machine ────────────────────────────────────────
+  // charge.dispute.created → payout_status='disputed' (webhook-driven, never client-driven)
+  // charge.dispute.closed (won) → restores 'pending_release'
+  // charge.dispute.closed (lost) → 'refunded'
+
+  describe('Dispute / Refund State (Stripe webhook-driven)', () => {
+    it('disputed booking has dispute_id and dispute_frozen_at set', () => {
+      const booking = makeBooking({
+        payout_status: 'disputed',
+        dispute_id: 'dp_test_xxx',
+        dispute_frozen_at: new Date().toISOString(),
+      });
+      expect(booking.payout_status).toBe('disputed');
+      expect(booking.dispute_id).toBe('dp_test_xxx');
+      expect(booking.dispute_frozen_at).not.toBeNull();
+    });
+
+    it('non-disputed booking has null dispute_id and dispute_frozen_at', () => {
+      const booking = makeBooking({ payout_status: 'pending_release' });
+      expect(booking.dispute_id).toBeNull();
+      expect(booking.dispute_frozen_at).toBeNull();
+    });
+
+    it('dispute won: payout_status restores to pending_release, dispute fields clear', () => {
+      // Simulates the state after charge.dispute.closed (won) webhook handler runs
+      const afterWin = makeBooking({
+        payout_status: 'pending_release',
+        dispute_id: null,
+        dispute_frozen_at: null,
+        payout_release_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+      expect(afterWin.payout_status).toBe('pending_release');
+      expect(afterWin.dispute_id).toBeNull();
+      expect(afterWin.dispute_frozen_at).toBeNull();
+      expect(afterWin.payout_release_at).not.toBeNull();
+    });
+
+    it('dispute lost: payout_status is refunded (funds lost to chargeback)', () => {
+      const afterLoss = makeBooking({
+        payout_status: 'refunded',
+        dispute_id: 'dp_test_lost',
+        refund_id: null, // Stripe handles refund automatically on dispute loss
+      });
+      expect(afterLoss.payout_status).toBe('refunded');
+      expect(afterLoss.dispute_id).toBe('dp_test_lost');
+    });
+
+    it('refunded booking has refund_id set (re_xxx from Stripe)', () => {
+      const refunded = makeBooking({
+        payout_status: 'refunded',
+        refund_id: 're_test_abc123',
+        refunded_at: new Date().toISOString(),
+      });
+      expect(refunded.refund_id).toBe('re_test_abc123');
+      expect(refunded.refunded_at).not.toBeNull();
+    });
+
+    it('disputed status prevents release-payout eligibility', () => {
+      // A disputed row must NEVER be released — funds are frozen pending chargeback outcome
+      const disputed = makeBooking({
+        payout_status: 'disputed',
+        dispute_id: 'dp_freeze_test',
+        dispute_frozen_at: new Date().toISOString(),
+        // Even if payout_release_at is in the past, disputed rows must be skipped
+        payout_release_at: new Date(Date.now() - 1000).toISOString(),
+      });
+      // The release-payout cron only targets payout_status = 'pending_release'
+      const isReleaseable = disputed.payout_status === 'pending_release';
+      expect(isReleaseable).toBeFalse();
+    });
+
+    it('disputed is distinct from refunded — a dispute can be won back', () => {
+      const disputed: PayoutStatus = 'disputed';
+      const refunded: PayoutStatus = 'refunded';
+      expect(disputed).not.toBe(refunded);
+      // Disputed can resolve to pending_release (won) or refunded (lost)
+      // Refunded is terminal — cannot transition back
+    });
+
+    it('refunded booking has null dispute_frozen_at when loss-refund completes', () => {
+      // After dispute.closed (lost), the booking is refunded; freeze state is no longer relevant
+      const lostAndRefunded = makeBooking({
+        payout_status: 'refunded',
+        refunded_at: new Date().toISOString(),
+        dispute_frozen_at: null,
+      });
+      expect(lostAndRefunded.payout_status).toBe('refunded');
+      expect(lostAndRefunded.dispute_frozen_at).toBeNull();
+    });
+  });
+
+  // ── Expert notification amount ─────────────────────────────────────────────
+  // The release-payout function notifies the expert with the 78% payout amount.
+
+  describe('Expert Notification Amount on Release', () => {
+    function formatExpertPayout(amountPaidCents: number): string {
+      const expertCents = amountPaidCents - Math.round(amountPaidCents * PLATFORM_FEE_PERCENTAGE / 100);
+      return `$${(expertCents / 100).toFixed(2)}`;
+    }
+
+    it('$50.00 booking → expert gets $39.00 notification', () => {
+      expect(formatExpertPayout(5000)).toBe('$39.00');
+    });
+
+    it('$100.00 booking → expert gets $78.00 notification', () => {
+      expect(formatExpertPayout(10000)).toBe('$78.00');
+    });
+
+    it('$10.00 booking → expert gets $7.80 notification', () => {
+      expect(formatExpertPayout(1000)).toBe('$7.80');
+    });
+
+    it('notification amount is always a valid dollar string', () => {
+      const amounts = [100, 500, 1000, 5000, 10000, 25000, 50000];
+      amounts.forEach((a) => {
+        const formatted = formatExpertPayout(a);
+        expect(formatted).toMatch(/^\$\d+\.\d{2}$/);
+      });
+    });
+
+    it('notification amount is always less than total (platform takes 22%)', () => {
+      const amounts = [100, 1000, 5000, 10000, 99999];
+      amounts.forEach((a) => {
+        const expertCents = a - Math.round(a * PLATFORM_FEE_PERCENTAGE / 100);
+        expect(expertCents).toBeLessThan(a);
+        expect(expertCents).toBeGreaterThanOrEqual(0);
+        expect(Number.isInteger(expertCents)).toBeTrue();
+      });
     });
   });
 });

@@ -19,6 +19,8 @@ export interface Message {
   replied_at: string | null;
   /** UUID token used to identify the conversation without auth (client-facing URL). */
   conversation_token: string;
+  /** Set when the expert issues a refund via create-refund. */
+  refunded_at: string | null;
   created_at: string;
   updated_at: string;
 }
