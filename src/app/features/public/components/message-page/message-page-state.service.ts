@@ -26,6 +26,12 @@ export class MessagePageStateService {
 
   // ── Availability data ──
   readonly availabilitySlots = signal<AvailabilitySlot[]>([]);
+  /**
+   * ISO strings of already-confirmed or in-progress call_bookings for this
+   * creator. Passed to the booking form so taken slots are hidden from the
+   * picker before the client reaches Stripe.
+   */
+  readonly bookedIsos = signal<string[]>([]);
 
   // ── Links data ──
   readonly creatorLinks = signal<CreatorLink[]>([]);
@@ -188,6 +194,7 @@ export class MessagePageStateService {
       const creatorId = (data as CreatorProfile).id;
       await Promise.all([
         this.loadAvailabilitySlots(creatorId),
+        this.loadConfirmedBookings(creatorId),
         this.loadCreatorLinks(creatorId),
         this.loadCreatorPosts(creatorId),
       ]);
@@ -213,6 +220,31 @@ export class MessagePageStateService {
       }
     } catch (err) {
       console.error('Failed to load availability slots:', err);
+    }
+  }
+
+  /**
+   * Fetches confirmed and in-progress call bookings for this creator so the
+   * booking form can hide already-taken time slots before the client hits Stripe.
+   * Only future bookings are fetched — no need to exclude the past.
+   */
+  private async loadConfirmedBookings(creatorId: string): Promise<void> {
+    try {
+      const now = new Date().toISOString();
+      const { data, error } = await this.supabaseService.client
+        .rpc('get_creator_booked_slots', {
+          p_creator_id: creatorId,
+          p_after_ts: now,
+        });
+
+      if (error == null && data != null) {
+        this.bookedIsos.set(
+          (data as { scheduled_at: string }[])
+            .map((b) => new Date(b.scheduled_at).toISOString()),
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load confirmed bookings:', err);
     }
   }
 

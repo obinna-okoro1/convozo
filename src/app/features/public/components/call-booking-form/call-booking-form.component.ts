@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { APP_CONSTANTS } from '@core/constants';
 import { AvailabilitySlot, DayOfWeek } from '@core/models';
 
@@ -29,7 +30,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-call-booking-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './call-booking-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -38,6 +39,12 @@ export class CallBookingFormComponent {
   public readonly callDuration = input.required<number>();
   public readonly creatorName = input.required<string>();
   public readonly availabilitySlots = input<AvailabilitySlot[]>([]);
+  /**
+   * ISO strings of slots that are already confirmed or in-progress.
+   * These are filtered out of the time-slot picker so clients can never
+   * attempt to book a taken slot.
+   */
+  public readonly bookedIsos = input<string[]>([]);
   public readonly submitting = input<boolean>(false);
 
   public readonly formSubmit = output<CallBookingFormData>();
@@ -89,6 +96,8 @@ export class CallBookingFormComponent {
   protected readonly slotMap = computed<Map<string, SlotGroup>>(() => {
     const duration = this.callDuration();
     const availability = this.availabilitySlots();
+    // Build a fast lookup set from the parent-supplied booked ISO timestamps
+    const bookedSet = new Set(this.bookedIsos());
     const map = new Map<string, SlotGroup>();
 
     if (!availability.length || duration <= 0) { return map; }
@@ -126,9 +135,12 @@ export class CallBookingFormComponent {
         for (let s = startMin; s + duration <= endMin; s += duration) {
           const slotDate = new Date(date);
           slotDate.setHours(Math.floor(s / 60), s % 60, 0, 0);
+          const iso = slotDate.toISOString();
           if (slotDate <= now) { continue; }
+          // Skip slots that are already taken by another confirmed booking
+          if (bookedSet.has(iso)) { continue; }
           times.push({
-            iso: slotDate.toISOString(),
+            iso,
             label: `${this.fmt(s)} – ${this.fmt(s + duration)}`,
           });
         }

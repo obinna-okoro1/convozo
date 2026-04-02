@@ -4,6 +4,7 @@
     [callDuration]="state.callDuration()"
     [creatorName]="state.creator()?.display_name ?? ''"
     [availabilitySlots]="state.availabilitySlots()"
+    [bookedIsos]="state.bookedIsos()"
     [submitting]="state.submitting()"
     (formSubmit)="onCallBookingSubmit($event)"
   />

@@ -5,7 +5,9 @@
     "types": []
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "cypress/**/*.ts",
+    "cypress.config.ts"
   ],
   "references": [
     { "path": "./tsconfig.spec.json" }

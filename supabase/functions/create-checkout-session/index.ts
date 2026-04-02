@@ -1,11 +1,27 @@
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
-import { jsonOk, jsonError, makeRateLimiter, getAppUrl, getPlatformFeePercentage } from '../_shared/http.ts';
+import { jsonOk, jsonError, makeRateLimiter, checkDbRateLimit, getAppUrl, getPlatformFeePercentage } from '../_shared/http.ts';
 import { isPaystackCountry, initializePaystackTransaction } from '../_shared/paystack.ts';
 
-// Rate limit: 10 checkout requests per hour per sender email
-const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
+// Two-layer rate limiting:
+//   Layer 1 (in-memory): cheap synchronous check, per instance — catches burst
+//   Layer 2 (DB):        shared across all instances — catches distributed spam
+// Max: 10 checkout requests per hour per sender email.
+const RATE_LIMIT_MAX = 10;
+const checkLocalRateLimit = makeRateLimiter(RATE_LIMIT_MAX, 60 * 60 * 1000);
+
+/**
+ * Returns a sha256 hex string of "action:email" suitable for use as a
+ * rate-limit bucket key. Avoids storing raw email addresses in the DB.
+ */
+async function hashRateLimitKey(action: string, email: string): Promise<string> {
+  const data = new TextEncoder().encode(`${action}:${email.toLowerCase().trim()}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -29,8 +45,18 @@ Deno.serve(async (req) => {
       return jsonError('Creator not found', 404, corsHeaders);
     }
 
-    // Check rate limit
-    if (!checkRateLimit(sender_email)) {
+    // Two-layer rate limit:
+    //   Layer 1 — fast in-memory check (per instance, synchronous)
+    if (!checkLocalRateLimit(sender_email)) {
+      return jsonError('Rate limit exceeded. Please try again later.', 429, {
+        ...corsHeaders,
+        'Retry-After': '3600',
+      });
+    }
+    //   Layer 2 — DB-backed check shared across all function instances
+    const rateLimitKey = await hashRateLimitKey('checkout', sender_email);
+    const withinDbLimit = await checkDbRateLimit(supabase, rateLimitKey, RATE_LIMIT_MAX);
+    if (!withinDbLimit) {
       return jsonError('Rate limit exceeded. Please try again later.', 429, {
         ...corsHeaders,
         'Retry-After': '3600',
@@ -145,6 +171,8 @@ Deno.serve(async (req) => {
 
     // Create Stripe Checkout session
     const sessionConfig = {
+      // Expire after 30 minutes — reduces abuse window and orphaned sessions.
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       payment_method_types: ['card'],
       line_items: [
         {
@@ -165,6 +193,10 @@ Deno.serve(async (req) => {
       customer_email: sender_email,
       payment_intent_data: {
         application_fee_amount: platformFee,
+        // on_behalf_of: makes the charge appear on the connected account's statement
+        // and applies their local country processing rate (e.g. 1.4%+€0.25 for EU
+        // experts serving EU clients instead of the platform's 2.9%+$0.30 rate).
+        on_behalf_of: stripeAccount.stripe_account_id,
         transfer_data: {
           destination: stripeAccount.stripe_account_id,
         },

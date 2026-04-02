@@ -5,6 +5,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { APP_CONSTANTS } from '@core/constants';
 
@@ -17,7 +18,7 @@ export interface MessageFormData {
 @Component({
   selector: 'app-message-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './message-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

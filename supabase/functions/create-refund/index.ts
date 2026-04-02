@@ -54,6 +54,23 @@ interface RefundPayload {
 /** Booking statuses that mean the payment was already captured. */
 const CAPTURED_STATUSES = ['completed', 'no_show', 'in_progress'] as const;
 
+// Stripe's processing fee is non-refundable. Per our Terms of Service, this fee
+// is deducted from the refunded amount rather than absorbed by the platform.
+// The client receives slightly less than the original charge; Convozo does not
+// retain the difference — it was already taken by Stripe on the original charge.
+const STRIPE_FEE_PERCENT = 0.015;       // 1.5% of the charged amount
+const STRIPE_FEE_FLAT_CENTS = 25;       // €0.25 / $0.25 flat fee
+
+/**
+ * Returns the amount to refund after deducting the estimated Stripe processing
+ * fee. Only applied to captured charges — voided authorizations are free.
+ */
+function refundAmountAfterFee(chargedCents: number): number {
+  const estimatedFee =
+    Math.round(chargedCents * STRIPE_FEE_PERCENT) + STRIPE_FEE_FLAT_CENTS;
+  return Math.max(0, chargedCents - estimatedFee);
+}
+
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -155,14 +172,17 @@ async function refundMessage(
   }
 
   // ── Issue Stripe refund ──────────────────────────────────────────
-  // reverse_transfer: true unwinds the destination charge — connected account's
-  // balance is reversed so the platform does not absorb the loss alone.
+  // The refund amount excludes the estimated Stripe processing fee (~1.5% +
+  // €0.25) which is non-refundable per our Terms of Service. reverse_transfer
+  // unwinds the destination charge so the connected account's balance is also
+  // reversed — the platform does not absorb the loss alone.
+  const refundAmount = refundAmountAfterFee(payment.amount);
   let stripeRefund: { id: string };
   try {
     stripeRefund = await stripe.refunds.create({
       payment_intent: payment.stripe_payment_intent_id,
+      amount: refundAmount,
       reverse_transfer: true,
-      // refund_application_fee defaults to true for full refunds on destination charges
     });
   } catch (stripeErr) {
     const msg = stripeErr instanceof Error ? stripeErr.message : String(stripeErr);
@@ -281,14 +301,18 @@ async function refundCallBooking(
     return jsonOk({ refunded: true, refund_id: null }, corsHeaders);
   }
 
-  // ── Path B: Payment was captured → issue full refund ─────────────────────
+  // ── Path B: Payment was captured → issue partial refund (fee-adjusted) ────
+  // Deduct the estimated Stripe processing fee (~1.5% + €0.25) from the refund.
+  // Per our Terms of Service, this fee is non-refundable by Stripe and is
+  // passed to the client rather than absorbed by the platform. reverse_transfer
+  // unwinds the transfer to the expert's connected account.
+  const refundAmount = refundAmountAfterFee(booking.amount_paid);
   let stripeRefund: { id: string };
   try {
     stripeRefund = await stripe.refunds.create({
       payment_intent: booking.stripe_payment_intent_id,
+      amount: refundAmount,
       reverse_transfer: true,
-      // reverse_transfer unwinds the transfer to the expert's connected account.
-      // The expert's balance absorbs the reversal — the platform does not pay.
     });
   } catch (stripeErr) {
     const msg = stripeErr instanceof Error ? stripeErr.message : String(stripeErr);

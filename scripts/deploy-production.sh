@@ -23,6 +23,54 @@ if [[ $? -ne 0 ]]; then
 fi
 echo "✅ All tests passed."
 
+echo "⚙️  Running Deno backend unit tests..."
+DENO_BIN="$(command -v deno 2>/dev/null || echo "$HOME/.deno/bin/deno")"
+(cd supabase/functions && "$DENO_BIN" task test)
+if [[ $? -ne 0 ]]; then
+  echo "❌ Backend unit tests failed. Deployment aborted."
+  exit 1
+fi
+echo "✅ Backend unit tests passed."
+
+echo "🔌 Running backend integration tests..."
+if ! curl -sf http://127.0.0.1:54321/health >/dev/null 2>&1; then
+  echo "⚠️  Local Supabase not running — skipping integration tests."
+  echo "   Run 'supabase start && supabase db reset' then re-run to include them."
+else
+  supabase functions serve >/tmp/convozo-functions-serve.log 2>&1 &
+  FUNCTIONS_PID=$!
+  sleep 6
+  set +e
+  INTEGRATION_FAILED=0
+  python3 supabase/functions/tests/test_analytics_retention.py || INTEGRATION_FAILED=1
+  python3 supabase/functions/tests/test_functions.py            || INTEGRATION_FAILED=1
+  python3 supabase/functions/tests/test_payment_flows.py        || INTEGRATION_FAILED=1
+  kill "$FUNCTIONS_PID" 2>/dev/null
+  set -e
+  if [[ $INTEGRATION_FAILED -ne 0 ]]; then
+    echo "❌ Backend integration tests failed. Deployment aborted."
+    exit 1
+  fi
+  echo "✅ Backend integration tests passed."
+fi
+
+echo "🌐 Running E2E tests..."
+if [[ -n "${STAGING_URL:-}" ]]; then
+  echo "   Target: $STAGING_URL (live staging)"
+  npx cypress run --config "baseUrl=$STAGING_URL"
+  CYPRESS_EXIT=$?
+else
+  echo "   ⚠️  STAGING_URL not set — running against local dev server."
+  echo "   Tip: export STAGING_URL=https://your-branch.convozo.pages.dev"
+  npx start-server-and-test 'npx ng serve' http://localhost:4200 'npx cypress run'
+  CYPRESS_EXIT=$?
+fi
+if [[ $CYPRESS_EXIT -ne 0 ]]; then
+  echo "❌ E2E tests failed. Deployment aborted."
+  exit 1
+fi
+echo "✅ E2E tests passed."
+
 echo "� Verifying production build..."
 npx ng build --configuration=production
 if [[ $? -ne 0 ]]; then

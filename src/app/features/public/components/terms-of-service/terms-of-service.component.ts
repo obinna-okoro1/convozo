@@ -8,6 +8,6 @@ import { RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TermsOfServiceComponent {
-  protected readonly lastUpdated = 'March 28, 2026';
+  protected readonly lastUpdated = 'April 2, 2026';
   protected readonly currentYear = new Date().getFullYear();
 }
