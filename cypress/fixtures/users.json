@@ -1,0 +1,23 @@
+{
+  "seedCreator": {
+    "email": "creator@example.com",
+    "password": "sample123",
+    "slug": "sarahjohnson",
+    "displayName": "Sarah Johnson",
+    "messagePrice": 1000,
+    "callPrice": 5000,
+    "callsEnabled": true
+  },
+  "seedCreator2": {
+    "email": "creator2@example.com",
+    "password": "sample123",
+    "slug": "mikechen",
+    "displayName": "Mike Chen",
+    "messagePrice": 500,
+    "callsEnabled": false
+  },
+  "seedClient": {
+    "email": "john@example.com",
+    "password": "clienttest123"
+  }
+}

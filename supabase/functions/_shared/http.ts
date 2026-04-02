@@ -2,13 +2,14 @@
  * Shared HTTP utilities for Convozo Edge Functions.
  *
  * Provides:
- *   jsonOk(body, headers)       — 200 JSON response
- *   jsonError(msg, status, hdrs) — error JSON response
- *   requireAuth(req, supabase, headers) — JWT auth guard; throws on failure
- *   makeRateLimiter(max, windowMs)      — returns a per-key rate-limit checker
+ *   jsonOk(body, headers)            — 200 JSON response
+ *   jsonError(msg, status, hdrs)     — error JSON response
+ *   requireAuth(req, supabase, hdrs) — JWT auth guard; returns user or 401 Response
+ *   makeRateLimiter(max, windowMs)   — in-process rate limiter (fast first pass)
+ *   checkDbRateLimit(supabase, key, max) — DB-backed distributed rate limiter
  *
  * Usage:
- *   import { jsonOk, jsonError, requireAuth, makeRateLimiter } from '../_shared/http.ts';
+ *   import { jsonOk, jsonError, requireAuth, checkDbRateLimit } from '../_shared/http.ts';
  */
 
 // Minimal duck-type so we don't need an esm.sh import just for types.
@@ -82,23 +83,10 @@ export async function requireAuth(
 /**
  * Creates an in-memory sliding-window rate limiter.
  *
- * @param max       Maximum number of requests allowed within `windowMs`.
- * @param windowMs  Window size in milliseconds (e.g. 60 * 60 * 1000 for 1 hour).
- * @returns         A `check(key)` function — returns `true` if within limit,
- *                  `false` if the limit has been exceeded.
+ * ⚠️ LIMITATION: Per-process only. Use checkDbRateLimit() for financial
+ * endpoints where bypassing multiple instances is a concern.
  *
- * ⚠️ LIMITATION: This rate limiter is per-process. In serverless environments
- * each cold start resets all counters, and concurrent function instances each
- * have their own independent stores. It is effective against casual abuse but
- * not against a determined attacker who can force cold starts or hit multiple
- * instances. For financial endpoints (create-checkout-session) this is a
- * defence-in-depth layer — Stripe's own fraud detection is the hard backstop.
- * A production-grade solution would use a distributed store (e.g. Redis or
- * a Supabase table with TTL) shared across all instances.
- *
- * Usage:
- *   const checkRateLimit = makeRateLimiter(10, 60 * 60 * 1000);
- *   if (!checkRateLimit(userEmail)) return jsonError('Rate limit exceeded', 429, corsHeaders);
+ * Kept as a cheap synchronous fast-path guard before hitting the DB.
  */
 export function makeRateLimiter(max: number, windowMs: number): (key: string) => boolean {
   const store = new Map<string, number[]>();
@@ -112,6 +100,52 @@ export function makeRateLimiter(max: number, windowMs: number): (key: string) =>
     return true;
   };
 }
+
+// ── DB-backed distributed rate limiter ──────────────────────────────────────
+
+/**
+ * Checks and increments a rate limit counter in the checkout_rate_limits table.
+ *
+ * Unlike makeRateLimiter(), this is shared across ALL Edge Function instances —
+ * there is no per-instance blind spot. Uses an atomic upsert so concurrent
+ * requests from different instances increment the same counter.
+ *
+ * The key should be a hashed value (sha256 of "action:email") — never store
+ * raw email addresses in this table.
+ *
+ * @param supabaseClient  The service-role supabase client.
+ * @param hashedKey       Hashed identifier for this rate limit bucket.
+ * @param max             Maximum requests allowed per hour.
+ * @returns               true if within limit, false if limit exceeded.
+ */
+export async function checkDbRateLimit(
+  // deno-lint-ignore no-explicit-any
+  supabaseClient: any,
+  hashedKey: string,
+  max: number,
+): Promise<boolean> {
+  // Truncate to the current 1-hour window (floor to the hour boundary)
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  const windowStart = now.toISOString();
+
+  // Atomic upsert: insert a new row with count=1, or increment if it exists.
+  // Returns the updated count so we can reject in the same round-trip.
+  const { data, error } = await supabaseClient.rpc('upsert_checkout_rate_limit', {
+    p_key: hashedKey,
+    p_window_start: windowStart,
+  });
+
+  if (error) {
+    // On DB error, fail open — do not block the user due to an infra hiccup.
+    // The in-memory limiter is the fallback in this case.
+    console.error('[checkDbRateLimit] DB error (failing open):', error.message);
+    return true;
+  }
+
+  return (data as number) <= max;
+}
+
 
 // ── Platform fee helper ──────────────────────────────────────────────────────
 

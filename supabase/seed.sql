@@ -188,13 +188,15 @@ VALUES (
 ) ON CONFLICT (user_id) DO NOTHING;
 
 -- Sample Creator Settings (Single Pricing + Calls)
-INSERT INTO public.creator_settings (creator_id, message_price, call_price, call_duration, calls_enabled, response_expectation, auto_reply_text)
+INSERT INTO public.creator_settings (creator_id, message_price, call_price, call_duration, calls_enabled, messages_enabled, tips_enabled, response_expectation, auto_reply_text)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   1000, -- $10 for messages
   5000, -- $50 for 30min calls
   30, -- 30 minutes
   true, -- calls enabled
+  true, -- messages enabled (required for Consult tab to appear in Cypress tests)
+  true, -- tips enabled (required for Support tab to appear in Cypress tests)
   '24-48 hours',
   'Thanks for reaching out! To send me a priority message, visit: https://convozo.com/sarahjohnson'
 ) ON CONFLICT (creator_id) DO NOTHING;

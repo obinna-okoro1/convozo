@@ -50,16 +50,11 @@ Deno.serve(async (req) => {
 
     let accountId = existingAccount?.stripe_account_id;
 
-    // Create new Stripe Connect Express account if doesn't exist
+    // Create new Stripe Connect Standard account if doesn't exist
     if (!accountId) {
       const account = await stripe.accounts.create({
-        type: 'express',
+        type: 'standard',
         email: email,
-        business_type: 'individual',
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
         metadata: {
           creator_id,
           display_name: display_name || '',
@@ -105,13 +100,8 @@ Deno.serve(async (req) => {
       await supabase.from('stripe_accounts').delete().eq('creator_id', creator_id);
 
       const freshAccount = await stripe.accounts.create({
-        type: 'express',
+        type: 'standard',
         email: email,
-        business_type: 'individual',
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
         metadata: { creator_id, display_name: display_name || '' },
       });
 
