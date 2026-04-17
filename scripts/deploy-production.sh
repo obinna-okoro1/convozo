@@ -47,7 +47,7 @@ if [[ $LOCAL_SUPABASE_RUNNING -eq 0 ]]; then
 else
   # Start functions serve — keep it alive through both integration AND E2E phases.
   # E2E test 09-call-booking-slots directly calls the Edge Function endpoint.
-  supabase functions serve >/tmp/convozo-functions-serve.log 2>&1 &
+  supabase functions serve --env-file supabase/.env >/tmp/convozo-functions-serve.log 2>&1 &
   FUNCTIONS_PID=$!
   sleep 6
   set +e

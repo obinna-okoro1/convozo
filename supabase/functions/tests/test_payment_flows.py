@@ -37,8 +37,8 @@ Coverage:
   ✓ Stripe webhook — valid signature → 200
   ✓ Stripe webhook — idempotency (duplicate session_id skipped)
   ✓ Stripe webhook — payment_status guard (non-paid, non-call → skip)
-  ✓ Paystack webhook — missing signature → 401
-  ✓ Paystack webhook — invalid HMAC → 401
+  ✓ Flutterwave webhook — missing signature → 400
+  ✓ Flutterwave webhook — invalid signature → 400
 
   ═══════════════════════════════════════════════════════════════════════════
   CALL COMPLETION & ESCROW
@@ -323,7 +323,15 @@ def _psql(sql: str) -> str:
             ["docker", "exec", "supabase_db_convozo", "psql", "-U", "postgres", "-d", "postgres", "-t", "-A", "-c", sql],
             capture_output=True, text=True, timeout=10,
         )
-        stdout = result.stdout.strip()
+        # Strip psql command-tag lines (e.g. "INSERT 0 1", "UPDATE 1") that
+        # appear after RETURNING output even with -t (tuples-only) mode.
+        stdout_lines = [
+            line for line in result.stdout.splitlines()
+            if line and not line.strip().upper().startswith(
+                ("INSERT ", "UPDATE ", "DELETE ", "SELECT ")
+            )
+        ]
+        stdout = "\n".join(stdout_lines).strip()
         stderr = result.stderr.strip()
         if stdout:
             return stdout
@@ -963,46 +971,46 @@ def test_stripe_webhook_valid_signature_non_checkout() -> TestResult:
     return fail(name, f"Unexpected status {status}: {body}")
 
 
-def test_paystack_webhook_no_signature() -> TestResult:
-    """Paystack webhook without HMAC signature → 401."""
-    name = "webhook: Paystack — no signature → 401"
-    url = f"{BASE_URL}/paystack-webhook"
+def test_flutterwave_webhook_no_signature_payment() -> TestResult:
+    """Flutterwave webhook without verif-hash header → 400."""
+    name = "webhook: Flutterwave — no signature → 400"
+    url = f"{BASE_URL}/flutterwave-webhook"
     req = urllib.request.Request(
         url,
-        data=json.dumps({"event": "charge.success"}).encode(),
+        data=json.dumps({"event": "charge.completed", "data": {}}).encode(),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
     try:
         with urllib.request.urlopen(req) as resp:
-            return fail(name, f"Expected 401, got {resp.status}")
+            return fail(name, f"Expected 400, got {resp.status}")
     except urllib.error.HTTPError as e:
-        if e.code in (401, 400):
+        if e.code in (400, 401):
             return ok(name, f"Got {e.code}")
-        return fail(name, f"Expected 401, got {e.code}")
+        return fail(name, f"Expected 400, got {e.code}")
 
 
-def test_paystack_webhook_invalid_signature() -> TestResult:
-    """Paystack webhook with wrong HMAC → 401."""
-    name = "webhook: Paystack — invalid HMAC → 401"
-    payload = json.dumps({"event": "charge.success", "data": {"reference": "ref_123"}})
-    url = f"{BASE_URL}/paystack-webhook"
+def test_flutterwave_webhook_invalid_signature_payment() -> TestResult:
+    """Flutterwave webhook with wrong verif-hash → 400."""
+    name = "webhook: Flutterwave — invalid signature → 400"
+    payload = json.dumps({"event": "charge.completed", "data": {"tx_ref": "ref_123"}})
+    url = f"{BASE_URL}/flutterwave-webhook"
     req = urllib.request.Request(
         url,
         data=payload.encode(),
         headers={
             "Content-Type": "application/json",
-            "x-paystack-signature": "0000000000000000000000000000000000000000",
+            "verif-hash": "wrong-secret-hash",
         },
         method="POST",
     )
     try:
         with urllib.request.urlopen(req) as resp:
-            return fail(name, f"Expected 401, got {resp.status}")
+            return fail(name, f"Expected 400, got {resp.status}")
     except urllib.error.HTTPError as e:
-        if e.code in (401, 400):
+        if e.code in (400, 401):
             return ok(name, f"Got {e.code}")
-        return fail(name, f"Expected 401, got {e.code}")
+        return fail(name, f"Expected 400, got {e.code}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1415,10 +1423,10 @@ def test_db_rls_enabled_stripe_accounts() -> TestResult:
     return ok(name)
 
 
-def test_db_rls_enabled_paystack_subaccounts() -> TestResult:
-    """RLS is enabled on paystack_subaccounts table."""
-    name = "integrity: RLS on paystack_subaccounts"
-    rls = _psql("SELECT rowsecurity FROM pg_tables WHERE tablename='paystack_subaccounts' AND schemaname='public';")
+def test_db_rls_enabled_flutterwave_subaccounts() -> TestResult:
+    """RLS is enabled on flutterwave_subaccounts table."""
+    name = "integrity: RLS on flutterwave_subaccounts"
+    rls = _psql("SELECT rowsecurity FROM pg_tables WHERE tablename='flutterwave_subaccounts' AND schemaname='public';")
     if rls.strip().lower() != "t":
         return fail(name, f"RLS not enabled: {rls}")
     return ok(name)
@@ -2159,7 +2167,7 @@ def test_release_payout_skips_disputed_rows() -> TestResult:
         "SELECT id, 'DisputeSkip', 'disputeskip@example.com', 30, 5000, 'completed', 'UTC', "
         "'disputed', 'manual', NOW() - INTERVAL '1 second', 'dp_skip_freeze', NOW() "
         "FROM creators WHERE slug = 'sarahjohnson' LIMIT 1 RETURNING id;"
-    ).strip()
+    ).strip().split('\n')[0]
     if not booking_id or "ERROR" in booking_id:
         return fail(name, f"Could not create test booking: {booking_id}")
 
@@ -2262,8 +2270,8 @@ SECTIONS = {
         test_stripe_webhook_no_signature,
         test_stripe_webhook_invalid_signature,
         test_stripe_webhook_valid_signature_non_checkout,
-        test_paystack_webhook_no_signature,
-        test_paystack_webhook_invalid_signature,
+        test_flutterwave_webhook_no_signature_payment,
+        test_flutterwave_webhook_invalid_signature_payment,
     ],
     "escrow": [
         test_complete_call_missing_booking_id,
@@ -2318,7 +2326,7 @@ SECTIONS = {
         test_db_rls_enabled_call_bookings,
         test_db_rls_enabled_payments,
         test_db_rls_enabled_stripe_accounts,
-        test_db_rls_enabled_paystack_subaccounts,
+        test_db_rls_enabled_flutterwave_subaccounts,
         test_db_idempotency_unique_constraints,
         test_db_payout_released_at_column,
         test_db_payout_status_default_is_held,
