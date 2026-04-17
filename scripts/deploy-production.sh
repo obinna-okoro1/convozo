@@ -33,10 +33,15 @@ fi
 echo "✅ Backend unit tests passed."
 
 echo "🔌 Running backend integration tests..."
+FUNCTIONS_PID=""
+LOCAL_SUPABASE_RUNNING=0
 if ! curl -sf http://127.0.0.1:54321/health >/dev/null 2>&1; then
   echo "⚠️  Local Supabase not running — skipping integration tests."
   echo "   Run 'supabase start && supabase db reset' then re-run to include them."
 else
+  LOCAL_SUPABASE_RUNNING=1
+  # Start functions serve — keep it alive through both integration AND E2E phases.
+  # E2E test 09-call-booking-slots directly calls the Edge Function endpoint.
   supabase functions serve >/tmp/convozo-functions-serve.log 2>&1 &
   FUNCTIONS_PID=$!
   sleep 6
@@ -45,9 +50,9 @@ else
   python3 supabase/functions/tests/test_analytics_retention.py || INTEGRATION_FAILED=1
   python3 supabase/functions/tests/test_functions.py            || INTEGRATION_FAILED=1
   python3 supabase/functions/tests/test_payment_flows.py        || INTEGRATION_FAILED=1
-  kill "$FUNCTIONS_PID" 2>/dev/null
   set -e
   if [[ $INTEGRATION_FAILED -ne 0 ]]; then
+    kill "$FUNCTIONS_PID" 2>/dev/null
     echo "❌ Backend integration tests failed. Deployment aborted."
     exit 1
   fi
@@ -64,6 +69,10 @@ else
   echo "   Tip: export STAGING_URL=https://your-branch.convozo.pages.dev"
   npx start-server-and-test 'npx ng serve' http://localhost:4200 'npx cypress run'
   CYPRESS_EXIT=$?
+fi
+# Kill functions serve now that both integration and E2E phases are complete
+if [[ -n "$FUNCTIONS_PID" ]]; then
+  kill "$FUNCTIONS_PID" 2>/dev/null
 fi
 if [[ $CYPRESS_EXIT -ne 0 ]]; then
   echo "❌ E2E tests failed. Deployment aborted."
