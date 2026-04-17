@@ -100,10 +100,27 @@ CREATE INDEX IF NOT EXISTS idx_payments_flutterwave_tx_ref
 -- for consistency so future engineers aren't confused by "paystack" names on the
 -- Flutterwave table.
 
-ALTER POLICY "Creators can view own paystack subaccount"
-  ON public.flutterwave_subaccounts
-  RENAME TO "Creators can view own flutterwave subaccount";
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'flutterwave_subaccounts'
+      AND policyname = 'Creators can view own paystack subaccount'
+  ) THEN
+    ALTER POLICY "Creators can view own paystack subaccount"
+      ON public.flutterwave_subaccounts
+      RENAME TO "Creators can view own flutterwave subaccount";
+  END IF;
 
-ALTER POLICY "Service role full access on paystack_subaccounts"
-  ON public.flutterwave_subaccounts
-  RENAME TO "Service role full access on flutterwave_subaccounts";
+  IF EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'flutterwave_subaccounts'
+      AND policyname = 'Service role full access on paystack_subaccounts'
+  ) THEN
+    ALTER POLICY "Service role full access on paystack_subaccounts"
+      ON public.flutterwave_subaccounts
+      RENAME TO "Service role full access on flutterwave_subaccounts";
+  END IF;
+END $$;
