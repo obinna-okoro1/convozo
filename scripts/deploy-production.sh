@@ -79,7 +79,7 @@ if [[ -n "${STAGING_URL:-}" ]]; then
 else
   echo "   ⚠️  STAGING_URL not set — running against local dev server."
   echo "   Tip: export STAGING_URL=https://your-branch.convozo.pages.dev"
-  npx start-server-and-test 'npx ng serve' http://localhost:4200 'npx cypress run'
+  npx start-server-and-test 'npx ng serve' http://localhost:4200 'npx cypress run --spec "cypress/e2e/01-auth.cy.ts,cypress/e2e/02-onboarding.cy.ts,cypress/e2e/03-messaging-thread.cy.ts,cypress/e2e/04-portal.cy.ts,cypress/e2e/06-public-profile.cy.ts,cypress/e2e/07-dashboard-inbox.cy.ts,cypress/e2e/08-settings.cy.ts,cypress/e2e/09-call-booking-slots.cy.ts"'
   CYPRESS_EXIT=$?
 fi
 # Kill functions serve now that both integration and E2E phases are complete

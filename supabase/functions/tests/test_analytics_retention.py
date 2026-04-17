@@ -430,32 +430,39 @@ def test_message_deletion_does_not_affect_analytics() -> list[TestResult]:
 
 
 def test_call_booking_deletion_does_not_affect_analytics() -> list[TestResult]:
-    """Deleting a call_bookings row must leave analytics unchanged."""
+    """INSERT a fresh call_bookings row, record analytics, DELETE it, verify analytics unchanged.
+    Never touches seed bookings (Alex Rodriguez) that Cypress tests depend on."""
     creator_id = CREATOR_ID_JOHNSON
 
     cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
+
+    # Insert a throw-away booking (payout_status = 'held', so no analytics trigger fires)
+    test_booking_id = sql_scalar(
+        f"INSERT INTO public.call_bookings "
+        f"(creator_id, booker_name, booker_email, scheduled_at, duration, amount_paid, status, "
+        f" stripe_session_id, stripe_payment_intent_id, daily_room_name, daily_room_url, payout_status) "
+        f"VALUES ('{creator_id}', 'Deletion Test Booker', 'del-test-booker@test.local', "
+        f"  NOW() + INTERVAL '10 days', 30, 5000, 'confirmed', "
+        f"  'cs_test_del_booking', 'pi_test_del_booking', 'room-del-test', "
+        f"  'https://convozo.daily.co/room-del-test', 'held') "
+        f"RETURNING id;"
+    )
+
     before = sql_one(
         f"SELECT call_count, call_gross, total_gross FROM public.creator_monthly_analytics "
         f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
     if not before:
+        # Clean up the test booking
+        sql_exec(f"DELETE FROM public.call_bookings WHERE id = '{test_booking_id.strip()}';")
         return [TestResult(
             "deletion immunity – call booking deletion does NOT alter analytics",
             True,
             "No analytics row for current month yet — skipped"
         )]
 
-    booking_row = sql_one(
-        f"SELECT id FROM public.call_bookings WHERE creator_id = '{creator_id}' LIMIT 1;"
-    )
-    if not booking_row:
-        return [TestResult(
-            "deletion immunity – call booking deletion does not alter analytics",
-            True,  # pass vacuously — no bookings in seed is also fine
-            "No call bookings in seed data for this creator — skipped"
-        )]
-
-    sql_exec(f"DELETE FROM public.call_bookings WHERE id = '{booking_row[0].strip()}';")
+    # Delete the test booking (never the seed Alex Rodriguez one)
+    sql_exec(f"DELETE FROM public.call_bookings WHERE id = '{test_booking_id.strip()}';")
 
     after = sql_one(
         f"SELECT call_count, call_gross, total_gross FROM public.creator_monthly_analytics "
