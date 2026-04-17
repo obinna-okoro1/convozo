@@ -1,15 +1,15 @@
 /**
- * Unit tests for CreatorService — Paystack payment provider routing and methods.
+ * Unit tests for CreatorService — Flutterwave payment provider routing and methods.
  *
  * What these tests cover:
  *   1. createCreator() payment_provider routing
- *      — NG/ZA (any case) → 'paystack'
+ *      — NG/ZA (any case) → 'flutterwave'
  *      — All other countries → 'stripe'
  *      — Country code is always uppercased before being stored
- *   2. getPaystackSubaccount() — queries the correct table with creator_id
- *   3. getPaystackBanks() — invokes get-paystack-banks edge function with country
- *   4. resolvePaystackAccount() — invokes get-paystack-banks with resolve:true params
- *   5. createPaystackSubaccount() — invokes create-paystack-subaccount with all params
+ *   2. getFlutterwaveSubaccount() — queries the correct table with creator_id
+ *   3. getFlutterwaveBanks() — invokes get-flutterwave-banks edge function with country
+ *   4. resolveFlutterwaveAccount() — invokes get-flutterwave-banks with resolve:true params
+ *   5. createFlutterwaveSubaccount() — invokes create-flutterwave-recipient with all params
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -103,28 +103,28 @@ describe('CreatorService', () => {
       return { insertArgs };
     }
 
-    it('sets payment_provider to "paystack" for NG creators', async () => {
+    it('sets payment_provider to "flutterwave" for NG creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('NG'));
-      expect(insertArgs[0].payment_provider).toBe('paystack');
+      expect(insertArgs[0].payment_provider).toBe('flutterwave');
     });
 
-    it('sets payment_provider to "paystack" for ZA creators', async () => {
+    it('sets payment_provider to "flutterwave" for ZA creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('ZA'));
-      expect(insertArgs[0].payment_provider).toBe('paystack');
+      expect(insertArgs[0].payment_provider).toBe('flutterwave');
     });
 
-    it('sets payment_provider to "paystack" for lowercase "ng" (case-insensitive)', async () => {
+    it('sets payment_provider to "flutterwave" for lowercase "ng" (case-insensitive)', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('ng'));
-      expect(insertArgs[0].payment_provider).toBe('paystack');
+      expect(insertArgs[0].payment_provider).toBe('flutterwave');
     });
 
-    it('sets payment_provider to "paystack" for lowercase "za" (case-insensitive)', async () => {
+    it('sets payment_provider to "flutterwave" for lowercase "za" (case-insensitive)', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('za'));
-      expect(insertArgs[0].payment_provider).toBe('paystack');
+      expect(insertArgs[0].payment_provider).toBe('flutterwave');
     });
 
     it('sets payment_provider to "stripe" for US creators', async () => {
@@ -196,20 +196,20 @@ describe('CreatorService', () => {
     });
   });
 
-  // ── getPaystackSubaccount ──────────────────────────────────────────────────
+  // ── getFlutterwaveSubaccount ───────────────────────────────────────────────
 
-  describe('getPaystackSubaccount()', () => {
-    it('queries the paystack_subaccounts table', async () => {
+  describe('getFlutterwaveSubaccount()', () => {
+    it('queries the flutterwave_subaccounts table', async () => {
       const chain = makeQueryChain({ data: null, error: null });
       mockClient.from.and.returnValue(chain);
-      await service.getPaystackSubaccount('creator-1');
-      expect(mockClient.from).toHaveBeenCalledWith('paystack_subaccounts');
+      await service.getFlutterwaveSubaccount('creator-1');
+      expect(mockClient.from).toHaveBeenCalledWith('flutterwave_subaccounts');
     });
 
     it('filters by creator_id', async () => {
       const chain = makeQueryChain({ data: null, error: null });
       mockClient.from.and.returnValue(chain);
-      await service.getPaystackSubaccount('creator-42');
+      await service.getFlutterwaveSubaccount('creator-42');
       expect(chain.eq).toHaveBeenCalledWith('creator_id', 'creator-42');
     });
 
@@ -217,14 +217,14 @@ describe('CreatorService', () => {
       const mockSubaccount = {
         id: 'sub-1',
         creator_id: 'creator-1',
-        subaccount_code: 'ACCT_abc',
+        subaccount_id: 'RS_abc123',
         is_active: true,
       };
       const chain = makeQueryChain({ data: mockSubaccount, error: null });
       mockClient.from.and.returnValue(chain);
-      const result = await service.getPaystackSubaccount('creator-1');
+      const result = await service.getFlutterwaveSubaccount('creator-1');
       expect(result.data).toEqual(
-        jasmine.objectContaining({ id: 'sub-1', subaccount_code: 'ACCT_abc' }),
+        jasmine.objectContaining({ id: 'sub-1', subaccount_id: 'RS_abc123' }),
       );
       expect(result.error).toBeNull();
     });
@@ -232,21 +232,21 @@ describe('CreatorService', () => {
     it('returns null data when no subaccount exists', async () => {
       const chain = makeQueryChain({ data: null, error: null });
       mockClient.from.and.returnValue(chain);
-      const result = await service.getPaystackSubaccount('creator-new');
+      const result = await service.getFlutterwaveSubaccount('creator-new');
       expect(result.data).toBeNull();
     });
   });
 
-  // ── getPaystackBanks ──────────────────────────────────────────────────────
+  // ── getFlutterwaveBanks ───────────────────────────────────────────────────
 
-  describe('getPaystackBanks()', () => {
-    it('invokes the get-paystack-banks edge function', async () => {
+  describe('getFlutterwaveBanks()', () => {
+    it('invokes the get-flutterwave-banks edge function', async () => {
       mockClient.functions.invoke.and.returnValue(
         Promise.resolve({ data: { banks: [] }, error: null }),
       );
-      await service.getPaystackBanks('NG');
+      await service.getFlutterwaveBanks('NG');
       expect(mockClient.functions.invoke).toHaveBeenCalledWith(
-        'get-paystack-banks',
+        'get-flutterwave-banks',
         jasmine.objectContaining({ body: { country: 'NG' } }),
       );
     });
@@ -255,7 +255,7 @@ describe('CreatorService', () => {
       mockClient.functions.invoke.and.returnValue(
         Promise.resolve({ data: { banks: [] }, error: null }),
       );
-      await service.getPaystackBanks('ZA');
+      await service.getFlutterwaveBanks('ZA');
       const [, options] = mockClient.functions.invoke.calls.mostRecent().args as [
         string,
         { body: { country: string } },
@@ -268,30 +268,30 @@ describe('CreatorService', () => {
       mockClient.functions.invoke.and.returnValue(
         Promise.resolve({ data: { banks: mockBanks }, error: null }),
       );
-      const result = await service.getPaystackBanks('NG');
+      const result = await service.getFlutterwaveBanks('NG');
       expect((result.data as any).banks).toEqual(mockBanks);
     });
 
     it('propagates edge function errors', async () => {
       const fnError = { message: 'Edge function unavailable' };
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
-      const result = await service.getPaystackBanks('NG');
+      const result = await service.getFlutterwaveBanks('NG');
       expect(result.error).toEqual(
         jasmine.objectContaining({ message: 'Edge function unavailable' }),
       );
     });
   });
 
-  // ── resolvePaystackAccount ────────────────────────────────────────────────
+  // ── resolveFlutterwaveAccount ─────────────────────────────────────────────
 
-  describe('resolvePaystackAccount()', () => {
-    it('invokes the get-paystack-banks edge function with resolve:true', async () => {
+  describe('resolveFlutterwaveAccount()', () => {
+    it('invokes the get-flutterwave-banks edge function with resolve:true', async () => {
       mockClient.functions.invoke.and.returnValue(
         Promise.resolve({ data: { account_name: 'JOHN DOE' }, error: null }),
       );
-      await service.resolvePaystackAccount('1234567890', '044');
+      await service.resolveFlutterwaveAccount('1234567890', '044');
       expect(mockClient.functions.invoke).toHaveBeenCalledWith(
-        'get-paystack-banks',
+        'get-flutterwave-banks',
         jasmine.objectContaining({
           body: { resolve: true, account_number: '1234567890', bank_code: '044' },
         }),
@@ -302,7 +302,7 @@ describe('CreatorService', () => {
       mockClient.functions.invoke.and.returnValue(
         Promise.resolve({ data: { account_name: 'ADEWALE' }, error: null }),
       );
-      await service.resolvePaystackAccount('9999999999', '033');
+      await service.resolveFlutterwaveAccount('9999999999', '033');
       const [, options] = mockClient.functions.invoke.calls.mostRecent().args as [
         string,
         { body: { account_number: string; bank_code: string } },
@@ -315,35 +315,35 @@ describe('CreatorService', () => {
       mockClient.functions.invoke.and.returnValue(
         Promise.resolve({ data: { account_name: 'NOMSA DLAMINI' }, error: null }),
       );
-      const result = await service.resolvePaystackAccount('6200123456', 'FNB');
+      const result = await service.resolveFlutterwaveAccount('6200123456', 'FNB');
       expect((result.data as any).account_name).toBe('NOMSA DLAMINI');
     });
 
     it('propagates edge function errors on failure', async () => {
       const fnError = { message: 'Could not resolve account' };
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
-      const result = await service.resolvePaystackAccount('0000000000', '044');
+      const result = await service.resolveFlutterwaveAccount('0000000000', '044');
       expect(result.error).toEqual(
         jasmine.objectContaining({ message: 'Could not resolve account' }),
       );
     });
   });
 
-  // ── createPaystackSubaccount ──────────────────────────────────────────────
+  // ── createFlutterwaveSubaccount ───────────────────────────────────────────
 
-  describe('createPaystackSubaccount()', () => {
-    it('invokes the create-paystack-subaccount edge function', async () => {
+  describe('createFlutterwaveSubaccount()', () => {
+    it('invokes the create-flutterwave-recipient edge function', async () => {
       mockClient.functions.invoke.and.returnValue(
-        Promise.resolve({ data: { subaccount_code: 'ACCT_new' }, error: null }),
+        Promise.resolve({ data: { subaccount_id: 'RS_new' }, error: null }),
       );
-      await service.createPaystackSubaccount({
+      await service.createFlutterwaveSubaccount({
         bankCode: '044',
         accountNumber: '1234567890',
         businessName: 'Test Creator',
         country: 'NG',
       });
       expect(mockClient.functions.invoke).toHaveBeenCalledWith(
-        'create-paystack-subaccount',
+        'create-flutterwave-recipient',
         jasmine.objectContaining({
           body: {
             bank_code: '044',
@@ -357,7 +357,7 @@ describe('CreatorService', () => {
 
     it('passes all four required params to the edge function', async () => {
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: null }));
-      await service.createPaystackSubaccount({
+      await service.createFlutterwaveSubaccount({
         bankCode: 'FNB',
         accountNumber: '6200123456',
         businessName: 'Nomsa Dlamini',
@@ -376,22 +376,22 @@ describe('CreatorService', () => {
     });
 
     it('returns the subaccount data on success', async () => {
-      const mockData = { subaccount_code: 'ACCT_xyz', is_active: true };
+      const mockData = { subaccount_id: 'RS_xyz', is_active: true };
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: mockData, error: null }));
-      const result = await service.createPaystackSubaccount({
+      const result = await service.createFlutterwaveSubaccount({
         bankCode: '044',
         accountNumber: '1234567890',
         businessName: 'Test',
         country: 'NG',
       });
-      expect(result.data).toEqual(jasmine.objectContaining({ subaccount_code: 'ACCT_xyz' }));
+      expect(result.data).toEqual(jasmine.objectContaining({ subaccount_id: 'RS_xyz' }));
       expect(result.error).toBeNull();
     });
 
     it('propagates edge function errors', async () => {
       const fnError = { message: 'Bank code invalid' };
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
-      const result = await service.createPaystackSubaccount({
+      const result = await service.createFlutterwaveSubaccount({
         bankCode: '000',
         accountNumber: '0000000000',
         businessName: 'Test',

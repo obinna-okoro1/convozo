@@ -1,7 +1,7 @@
 /**
- * get-paystack-banks
+ * get-flutterwave-banks
  *
- * Returns the list of supported banks for a Paystack country, or resolves a bank
+ * Returns the list of supported banks for a Flutterwave country, or resolves a bank
  * account number to its registered account name.
  *
  * What it expects (request body):
@@ -9,7 +9,7 @@
  *   { resolve: true, account_number: string, bank_code: string }  — resolve account name
  *
  * What it returns:
- *   { banks: PaystackBank[] }            — when listing
+ *   { banks: FlutterwaveBank[] }         — when listing
  *   { account_name: string }             — when resolving
  *
  * This endpoint is called from Settings → Payments for NG/ZA creators.
@@ -18,7 +18,11 @@
 
 import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { jsonOk, jsonError } from '../_shared/http.ts';
-import { getPaystackBanks, resolvePaystackAccountName, isPaystackCountry } from '../_shared/paystack.ts';
+import {
+  getFlutterwaveBanks,
+  resolveFlutterwaveAccountName,
+  isFlutterwaveCountry,
+} from '../_shared/flutterwave.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -50,20 +54,20 @@ Deno.serve(async (req) => {
       }
 
       // Wrap the resolve call separately so we can return a 422 with a user-friendly
-      // message when Paystack rejects the account (wrong number, unrecognised bank code).
+      // message when Flutterwave rejects the account (wrong number, unrecognised bank code).
       // The outer try/catch handles unexpected system errors separately.
       try {
-        const accountName = await resolvePaystackAccountName(account_number, bank_code);
+        const accountName = await resolveFlutterwaveAccountName(account_number, bank_code);
         return jsonOk({ account_name: accountName }, corsHeaders);
       } catch (resolveErr) {
         const resolveMsg = (resolveErr as Error).message ?? '';
-        console.error('[get-paystack-banks] resolve error:', resolveMsg);
-        // Paystack rejected the account details — surface the reason as a 422 so the
+        console.error('[get-flutterwave-banks] resolve error:', resolveMsg);
+        // Flutterwave rejected the account details — surface the reason as a 422 so the
         // Angular client can distinguish "wrong details" from a system error.
-        if (resolveMsg.includes('Paystack account resolution failed:')) {
-          const paystackReason = resolveMsg.split('Paystack account resolution failed:')[1]?.trim() ?? '';
-          const userMessage = paystackReason
-            ? `Account not found: ${paystackReason}`
+        if (resolveMsg.includes('Flutterwave account resolution failed:')) {
+          const reason = resolveMsg.split('Flutterwave account resolution failed:')[1]?.trim() ?? '';
+          const userMessage = reason
+            ? `Account not found: ${reason}`
             : 'Account not found. Please verify your account number and bank.';
           return jsonError(userMessage, 422, corsHeaders);
         }
@@ -76,19 +80,19 @@ Deno.serve(async (req) => {
       return jsonError('country is required', 400, corsHeaders);
     }
 
-    if (!isPaystackCountry(country)) {
-      return jsonError('Paystack is only available for NG and ZA', 400, corsHeaders);
+    if (!isFlutterwaveCountry(country)) {
+      return jsonError('Flutterwave is only available for NG and ZA', 400, corsHeaders);
     }
 
-    const banks = await getPaystackBanks(country.toUpperCase());
+    const banks = await getFlutterwaveBanks(country.toUpperCase());
     return jsonOk({ banks }, corsHeaders);
 
   } catch (err) {
     const message = (err as Error).message ?? 'Unknown error';
-    console.error('[get-paystack-banks] Error:', message);
+    console.error('[get-flutterwave-banks] Error:', message);
 
-    if (message.includes('Paystack')) {
-      return jsonError(`Paystack error: ${message}`, 502, corsHeaders);
+    if (message.includes('Flutterwave')) {
+      return jsonError(`Flutterwave error: ${message}`, 502, corsHeaders);
     }
 
     return jsonError('An internal error occurred', 500, corsHeaders);

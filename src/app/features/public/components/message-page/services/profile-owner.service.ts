@@ -21,7 +21,7 @@ import {
   CallBooking,
   CreatorMonthlyAnalytics,
   StripeAccount,
-  PaystackSubaccount,
+  FlutterwaveSubaccount,
 } from '@core/models';
 import { SupabaseService } from '@core/services/supabase.service';
 import { AuthService } from '@features/auth/services/auth.service';
@@ -40,14 +40,14 @@ export class ProfileOwnerService {
   readonly creatorId = signal<string | null>(null);
   readonly creatorSlug = signal<string | null>(null);
   readonly settings = signal<CreatorSettings | null>(null);
-  private readonly paymentProvider = signal<'stripe' | 'paystack'>('stripe');
+  private readonly paymentProvider = signal<'stripe' | 'flutterwave'>('stripe');
 
-  // ── Data signals ───────────────────────────────────────────────────
+  // ── Data signals ──────────────────────────────────────────────
   readonly messages = signal<Message[]>([]);
   readonly callBookings = signal<CallBooking[]>([]);
   readonly monthlyAnalytics = signal<CreatorMonthlyAnalytics[]>([]);
   readonly stripeAccount = signal<StripeAccount | null>(null);
-  readonly paystackSubaccount = signal<PaystackSubaccount | null>(null);
+  readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
 
   // ── Computed ───────────────────────────────────────────────────────
   readonly unreadCount = computed(() => this.messages().filter((m) => !m.is_handled).length);
@@ -60,8 +60,8 @@ export class ProfileOwnerService {
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
   readonly isPaymentReady = computed(() => {
-    if (this.paymentProvider() === 'paystack') {
-      return !!(this.paystackSubaccount()?.is_active);
+    if (this.paymentProvider() === 'flutterwave') {
+      return !!(this.flutterwaveSubaccount()?.is_active);
     }
     return this.isStripeConnected();
   });
@@ -201,9 +201,9 @@ export class ProfileOwnerService {
     if (stripeRes.data) this.stripeAccount.set(stripeRes.data);
     if (analyticsRes.data) this.monthlyAnalytics.set(analyticsRes.data);
 
-    if (creator.payment_provider === 'paystack') {
-      const { data: pst } = await this.creatorService.getPaystackSubaccount(creator.id);
-      this.paystackSubaccount.set(pst ?? null);
+    if (creator.payment_provider === 'flutterwave') {
+      const { data: flw } = await this.creatorService.getFlutterwaveSubaccount(creator.id);
+      this.flutterwaveSubaccount.set(flw ?? null);
     }
   }
 }

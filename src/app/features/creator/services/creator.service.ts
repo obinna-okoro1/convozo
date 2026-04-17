@@ -11,8 +11,8 @@ import { Injectable } from '@angular/core';
 import {
   Creator,
   CreatorSettings,
-  PaystackSubaccount,
-  PaystackBank,
+  FlutterwaveSubaccount,
+  FlutterwaveBank,
   SupabaseResponse,
   EdgeFunctionResponse,
   StripeConnectResponse,
@@ -52,7 +52,7 @@ export class CreatorService {
     profileImageUrl?: string;
     /**
      * ISO 3166-1 alpha-2 country code detected from the phone code picker.
-     * Determines payment_provider: NG/ZA → 'paystack'; all others → 'stripe'.
+     * Determines payment_provider: NG/ZA → 'flutterwave'; all others → 'stripe'.
      */
     country: string;
     // ── Expertise (optional — collected in onboarding step 2) ──────────────
@@ -63,9 +63,9 @@ export class CreatorService {
     linkedinUrl?: string;
   }): Promise<SupabaseResponse<Creator>> {
     // Determine the payment provider based on country.
-    // NG and ZA creators use Paystack; all others use Stripe.
-    const PAYSTACK_COUNTRIES = new Set(['NG', 'ZA']);
-    const paymentProvider = PAYSTACK_COUNTRIES.has(data.country.toUpperCase()) ? 'paystack' : 'stripe';
+    // NG and ZA creators use Flutterwave; all others use Stripe.
+    const FLUTTERWAVE_COUNTRIES = new Set(['NG', 'ZA']);
+    const paymentProvider = FLUTTERWAVE_COUNTRIES.has(data.country.toUpperCase()) ? 'flutterwave' : 'stripe';
 
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -231,64 +231,64 @@ export class CreatorService {
     return this.supabaseService.verifyConnectAccount(accountId);
   }
 
-  // ── Paystack ─────────────────────────────────────────────────────────────────
+  // ── Flutterwave ───────────────────────────────────────────────────────────────
 
   /**
-   * Fetch the creator's Paystack subaccount, if one has been set up.
+   * Fetch the creator's Flutterwave subaccount, if one has been set up.
    * Returns null data if no subaccount exists yet.
    */
-  public async getPaystackSubaccount(
+  public async getFlutterwaveSubaccount(
     creatorId: string,
-  ): Promise<SupabaseResponse<PaystackSubaccount | null>> {
+  ): Promise<SupabaseResponse<FlutterwaveSubaccount | null>> {
     const { data, error } = await this.supabaseService.client
-      .from('paystack_subaccounts')
+      .from('flutterwave_subaccounts')
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    return { data: data as PaystackSubaccount | null, error };
+    return { data: data as FlutterwaveSubaccount | null, error };
   }
 
   /**
-   * Fetch the list of banks for the given country from the Paystack API (via Edge Function).
+   * Fetch the list of banks for the given country from the Flutterwave API (via Edge Function).
    * Returns bank name + code pairs used to populate the bank picker in Settings.
    */
-  public async getPaystackBanks(
+  public async getFlutterwaveBanks(
     country: string,
-  ): Promise<EdgeFunctionResponse<PaystackBank[]>> {
+  ): Promise<EdgeFunctionResponse<FlutterwaveBank[]>> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'get-paystack-banks',
+      'get-flutterwave-banks',
       { body: { country } },
     );
-    return { data: data as PaystackBank[] | undefined, error };
+    return { data: data as FlutterwaveBank[] | undefined, error };
   }
 
   /**
    * Resolve a bank account number to the registered account name.
    * Called before the creator confirms their bank setup in Settings.
    */
-  public async resolvePaystackAccount(
+  public async resolveFlutterwaveAccount(
     accountNumber: string,
     bankCode: string,
   ): Promise<EdgeFunctionResponse<{ account_name: string }>> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'get-paystack-banks',
+      'get-flutterwave-banks',
       { body: { resolve: true, account_number: accountNumber, bank_code: bankCode } },
     );
     return { data: data as { account_name: string } | undefined, error };
   }
 
   /**
-   * Register the creator's bank account as a Paystack subaccount.
+   * Register the creator's bank account as a Flutterwave subaccount.
    * Called from Settings → Payments when the creator submits their bank details.
    */
-  public async createPaystackSubaccount(params: {
+  public async createFlutterwaveSubaccount(params: {
     bankCode: string;
     accountNumber: string;
     businessName: string;
     country: string;
-  }): Promise<EdgeFunctionResponse<PaystackSubaccount>> {
+  }): Promise<EdgeFunctionResponse<FlutterwaveSubaccount>> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'create-paystack-subaccount',
+      'create-flutterwave-recipient',
       {
         body: {
           bank_code: params.bankCode,
@@ -298,20 +298,6 @@ export class CreatorService {
         },
       },
     );
-    return { data: data as PaystackSubaccount | undefined, error };
-  }
-
-  /**
-   * Re-fetch the creator's Paystack subaccount verification status from Paystack's
-   * API and update the DB record. Called when the creator clicks "Refresh Status"
-   * in Settings → Payments. Paystack verifies bank accounts asynchronously after
-   * subaccount creation, so the creator may need to refresh once Paystack is done.
-   */
-  public async syncPaystackStatus(): Promise<EdgeFunctionResponse<PaystackSubaccount>> {
-    const { data, error } = await this.supabaseService.client.functions.invoke(
-      'create-paystack-subaccount',
-      { body: { sync_status: true } },
-    );
-    return { data: data as PaystackSubaccount | undefined, error };
+    return { data: data as FlutterwaveSubaccount | undefined, error };
   }
 }

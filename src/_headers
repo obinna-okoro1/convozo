@@ -22,10 +22,10 @@
   # - script-src 'self': AOT-compiled Angular bundles only, no inline scripts
   # - style-src 'self' 'unsafe-inline': Tailwind runtime styles need unsafe-inline
   # - img-src: blob: for client-side image processing, Supabase storage for avatars/banners
-  # - connect-src: Supabase REST+Realtime, Stripe API, Paystack, Daily.co video
+  # - connect-src: Supabase REST+Realtime, Stripe API, Flutterwave, Daily.co video
   # - frame-src: Stripe hosted checkout + Daily.co video call iframe
   # - object-src 'none': block plugins; worker-src: SW only from origin
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.paystack.co https://*.daily.co; frame-src https://checkout.stripe.com https://*.daily.co; object-src 'none'; worker-src 'self'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.flutterwave.com https://*.daily.co; frame-src https://checkout.stripe.com https://*.daily.co; object-src 'none'; worker-src 'self'; base-uri 'self'; form-action 'self'
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate

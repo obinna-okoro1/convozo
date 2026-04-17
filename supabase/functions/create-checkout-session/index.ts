@@ -2,7 +2,7 @@ import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { stripe } from '../_shared/stripe.ts';
 import { supabase } from '../_shared/supabase.ts';
 import { jsonOk, jsonError, makeRateLimiter, checkDbRateLimit, getAppUrl, getPlatformFeePercentage } from '../_shared/http.ts';
-import { isPaystackCountry, initializePaystackTransaction } from '../_shared/paystack.ts';
+import { isFlutterwaveCountry, initializeFlutterwavePayment } from '../_shared/flutterwave.ts';
 
 // Two-layer rate limiting:
 //   Layer 1 (in-memory): cheap synchronous check, per instance — catches burst
@@ -77,10 +77,10 @@ Deno.serve(async (req) => {
       return jsonError('Invalid email address', 400, corsHeaders);
     }
 
-    // Get creator info — fetch payment_provider and paystack_subaccounts alongside stripe_accounts.
+    // Get creator info — fetch payment_provider and flutterwave_subaccounts alongside stripe_accounts.
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, display_name, payment_provider, country, stripe_accounts(stripe_account_id), paystack_subaccounts(subaccount_code, is_active), creator_settings(message_price, tips_enabled)')
+      .select('id, display_name, payment_provider, country, stripe_accounts(stripe_account_id), flutterwave_subaccounts(subaccount_id, is_active), creator_settings(message_price, tips_enabled)')
       .eq('slug', creator_slug)
       .eq('is_active', true)
       .single();
@@ -126,28 +126,28 @@ Deno.serve(async (req) => {
     // ── Route to the correct payment provider ──────────────────────────────────
     const paymentProvider = (creator.payment_provider as string) ?? 'stripe';
 
-    if (paymentProvider === 'paystack' || isPaystackCountry((creator.country as string) ?? '')) {
-      // ── Paystack checkout (NG / ZA creators) ────────────────────────────────
-      const subaccountRow = creator.paystack_subaccounts as
-        | { subaccount_code: string; is_active: boolean }
+    if (paymentProvider === 'flutterwave' || isFlutterwaveCountry((creator.country as string) ?? '')) {
+      // ── Flutterwave checkout (NG / ZA creators) ──────────────────────────────
+      const subaccountRow = creator.flutterwave_subaccounts as
+        | { subaccount_id: string; is_active: boolean }
         | null;
 
-      if (!subaccountRow?.subaccount_code || !subaccountRow.is_active) {
+      if (!subaccountRow?.subaccount_id || !subaccountRow.is_active) {
         return jsonError('Creator payment setup incomplete', 400, corsHeaders);
       }
 
-      // Unique reference — stable within a 10-minute window for idempotency.
+      // Unique tx_ref — stable within a 10-minute window for idempotency.
       const windowSlot = Math.floor(Date.now() / (10 * 60 * 1000));
       const refRaw = `${sender_email}:${creator_slug}:${validMessageType}:${serverPrice}:${message_content.slice(0, 50)}:${windowSlot}`;
-      const reference = btoa(refRaw).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
+      const txRef = btoa(refRaw).replace(/[^a-zA-Z0-9]/g, '').slice(0, 100);
 
-      const result = await initializePaystackTransaction({
+      const result = await initializeFlutterwavePayment({
         email: sender_email,
+        customerName: sender_name.slice(0, 100),
         amountCents: serverPrice,
-        subaccountCode: subaccountRow.subaccount_code,
-        platformFeePct: platformFeePercentage,
-        callbackUrl: `${appUrl}/success?reference=${reference}&creator=${creator_slug}`,
-        reference,
+        subaccountId: subaccountRow.subaccount_id,
+        redirectUrl: `${appUrl}/success?tx_ref=${txRef}&creator=${creator_slug}`,
+        txRef,
         metadata: {
           creator_id: creator.id,
           message_content: message_content.slice(0, 490),
@@ -155,11 +155,11 @@ Deno.serve(async (req) => {
           sender_email,
           message_type: validMessageType,
           amount: serverPrice.toString(),
-          provider: 'paystack',
+          provider: 'flutterwave',
         },
       });
 
-      return jsonOk({ url: result.authorizationUrl, reference: result.reference }, corsHeaders);
+      return jsonOk({ url: result.checkoutUrl, reference: result.txRef }, corsHeaders);
     }
 
     // ── Stripe checkout (all other creators) ──────────────────────────────────
