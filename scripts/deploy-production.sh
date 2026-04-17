@@ -34,12 +34,17 @@ echo "✅ Backend unit tests passed."
 
 echo "🔌 Running backend integration tests..."
 FUNCTIONS_PID=""
+# Use nc to check if port 54321 is accepting connections — more reliable than
+# curl /health which can return non-200 even when Supabase is fully operational.
 LOCAL_SUPABASE_RUNNING=0
-if ! curl -sf http://127.0.0.1:54321/health >/dev/null 2>&1; then
+if nc -z -w2 127.0.0.1 54321 2>/dev/null; then
+  LOCAL_SUPABASE_RUNNING=1
+fi
+
+if [[ $LOCAL_SUPABASE_RUNNING -eq 0 ]]; then
   echo "⚠️  Local Supabase not running — skipping integration tests."
   echo "   Run 'supabase start && supabase db reset' then re-run to include them."
 else
-  LOCAL_SUPABASE_RUNNING=1
   # Start functions serve — keep it alive through both integration AND E2E phases.
   # E2E test 09-call-booking-slots directly calls the Edge Function endpoint.
   supabase functions serve >/tmp/convozo-functions-serve.log 2>&1 &
