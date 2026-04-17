@@ -50,6 +50,13 @@ else
   supabase functions serve --env-file supabase/.env >/tmp/convozo-functions-serve.log 2>&1 &
   FUNCTIONS_PID=$!
   sleep 6
+
+  # Reset local DB to a clean seed state before integration tests.
+  # analytics and functions tests require predictable seed data.
+  echo "🗄️  Resetting local DB to clean seed state..."
+  supabase db reset
+  echo "✅ DB reset complete."
+
   set +e
   INTEGRATION_FAILED=0
   python3 supabase/functions/tests/test_analytics_retention.py || INTEGRATION_FAILED=1

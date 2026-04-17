@@ -192,14 +192,17 @@ def test_backfill_populated() -> list[TestResult]:
         f"row count={count}"
     ))
 
-    # Ronaldo has 2 completed payments in seed — check message_count >= 1
+    # Ronaldo has 2 completed payments in seed — check at least 1 analytics row
+    # with total_gross > 0. Use ORDER BY month DESC to get the most recent row,
+    # which contains the seed-data payments (seeded with NOW()).
     row = sql_one(
         f"SELECT message_count, message_gross, total_gross FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{CREATOR_ID_RONALDO}';"
+        f"WHERE creator_id = '{CREATOR_ID_RONALDO}' "
+        f"ORDER BY month DESC LIMIT 1;"
     )
     results.append(TestResult(
         "back-fill – Ronaldo has analytics from seed payments",
-        row is not None and int(row[0]) >= 1,
+        row is not None and int(row[2]) > 0,
         f"row={row}"
     ))
     return results
@@ -372,34 +375,34 @@ def test_message_deletion_does_not_affect_analytics() -> list[TestResult]:
     Deleting a message row must leave analytics completely unchanged.
     Analytics are immutable to content deletions — only account deletion
     cascade-removes them.
-    """
-    creator_id = CREATOR_ID_RONALDO
 
-    # Record analytics state before delete — filter to current month for consistency
+    We INSERT a fresh test message (not a seed message) so that deleting it
+    never affects other tests that depend on seed data (e.g. the portal tests).
+    """
+    creator_id = CREATOR_ID_JOHNSON
+    test_msg_id = str(uuid.uuid4())
+
+    # Insert a fresh test message (no payment — messages don't require one)
+    sql_exec(
+        f"INSERT INTO public.messages "
+        f"  (id, creator_id, sender_name, sender_email, message_content, "
+        f"   amount_paid, message_type, is_handled) "
+        f"VALUES "
+        f"  ('{test_msg_id}', '{creator_id}', 'Delete Test', "
+        f"   'delete-test@example.com', 'Test message for deletion immunity', "
+        f"   1000, 'message', false);"
+    )
+
+    # Record analytics state AFTER inserting (but no payment → analytics unchanged)
     cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     before = sql_one(
         f"SELECT message_count, message_gross, message_net, total_gross, total_net "
         f"FROM public.creator_monthly_analytics "
         f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
-    if not before:
-        return [TestResult(
-            "deletion immunity – message deletion does NOT alter analytics",
-            True,
-            "No analytics row for current month yet — skipped (no trigger data to protect)"
-        )]
 
-    # Find a message belonging to this creator and delete it
-    msg_row = sql_one(
-        f"SELECT id FROM public.messages WHERE creator_id = '{creator_id}' LIMIT 1;"
-    )
-    if not msg_row:
-        return [fail(
-            "deletion immunity – message deletion does not alter analytics",
-            "No messages found for creator in seed data — re-run supabase db reset"
-        )]
-
-    sql_exec(f"DELETE FROM public.messages WHERE id = '{msg_row[0].strip()}';")
+    # Delete the test message — analytics must stay identical
+    sql_exec(f"DELETE FROM public.messages WHERE id = '{test_msg_id}';")
 
     after = sql_one(
         f"SELECT message_count, message_gross, message_net, total_gross, total_net "
@@ -408,12 +411,16 @@ def test_message_deletion_does_not_affect_analytics() -> list[TestResult]:
     )
 
     unchanged = (
-        after is not None
-        and int(before[0]) == int(after[0])  # message_count
-        and int(before[1]) == int(after[1])  # message_gross
-        and int(before[2]) == int(after[2])  # message_net
-        and int(before[3]) == int(after[3])  # total_gross
-        and int(before[4]) == int(after[4])  # total_net
+        before == after  # both could be None (no current-month row) — that's fine
+        or (
+            before is not None
+            and after is not None
+            and int(before[0]) == int(after[0])  # message_count
+            and int(before[1]) == int(after[1])  # message_gross
+            and int(before[2]) == int(after[2])  # message_net
+            and int(before[3]) == int(after[3])  # total_gross
+            and int(before[4]) == int(after[4])  # total_net
+        )
     )
     return [TestResult(
         "deletion immunity – message deletion does NOT alter analytics",
