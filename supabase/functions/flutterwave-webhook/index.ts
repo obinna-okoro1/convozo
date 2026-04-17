@@ -1,38 +1,38 @@
 /**
- * paystack-webhook
+ * flutterwave-webhook
  *
- * Handles incoming Paystack webhook events for Convozo.
+ * Handles incoming Flutterwave webhook events for Convozo.
  *
  * What it does:
- *   - Verifies the x-paystack-signature header using HMAC-SHA512
- *   - Handles the `charge.success` event
- *   - Performs a secondary verify call to Paystack to confirm the payment
+ *   - Verifies the verif-hash header against FLW_SECRET_HASH (timing-safe comparison)
+ *   - Handles the `charge.completed` event with status `successful`
+ *   - Performs a secondary verify call to Flutterwave using the transaction ID to confirm payment
  *   - Inserts the message or call booking record
- *   - Sends confirmation emails to the fan and notification emails to the creator
+ *   - Sends confirmation emails to the client and notification emails to the expert
  *   - Triggers push notifications (fire-and-forget)
  *
  * What it expects:
- *   - POST request from Paystack with a valid x-paystack-signature header
- *   - Metadata embedded in the transaction at checkout time:
- *       For messages: creator_id, message_content, sender_name, sender_email, message_type, amount
+ *   - POST request from Flutterwave with a valid verif-hash header
+ *   - Metadata embedded in the transaction at checkout time (data.meta):
+ *       For messages: creator_id, message_content, sender_name, sender_email, message_type, amount, provider
  *       For calls:    type='call_booking', creator_id, booker_name, booker_email,
- *                     message_content, duration, scheduled_at, fan_timezone, amount
+ *                     message_content, duration, scheduled_at, fan_timezone, amount, provider
  *
  * What it returns:
  *   - 200 JSON for all successfully handled (or safely skipped) events
- *   - 400 JSON for invalid signature or missing data
- *   - 500 JSON for unexpected processing errors (Paystack will retry)
+ *   - 400 JSON for invalid/missing signature
+ *   - 500 JSON for unexpected processing errors (Flutterwave will retry)
  *
  * Errors it can produce:
- *   - Signature mismatch → 400 (not retried by Paystack)
+ *   - Signature mismatch → 400 (not retried by Flutterwave)
  *   - Duplicate event (idempotency key collision) → 200 silently skipped
- *   - DB insert failure → 500 (Paystack retries after delay)
+ *   - DB insert failure → 500 (Flutterwave retries after delay)
  */
 
 import {
-  verifyPaystackSignature,
-  verifyPaystackTransaction,
-} from '../_shared/paystack.ts';
+  verifyFlutterwaveSignature,
+  verifyFlutterwaveTransaction,
+} from '../_shared/flutterwave.ts';
 import { supabase, supabaseUrl, supabaseServiceKey } from '../_shared/supabase.ts';
 import {
   sendEmail,
@@ -63,115 +63,105 @@ async function sendPushNotification(creatorId: string, title: string, body: stri
     });
     if (!res.ok) {
       const text = await res.text();
-      console.error('[paystack-webhook] Push notification failed:', res.status, text);
+      console.error('[flutterwave-webhook] Push notification failed:', res.status, text);
     }
   } catch (err) {
-    console.error('[paystack-webhook] Push notification error (non-fatal):', (err as Error).message);
+    console.error('[flutterwave-webhook] Push notification error (non-fatal):', (err as Error).message);
   }
-}
-
-// ── Metadata extractor ────────────────────────────────────────────────────────
-
-/**
- * Paystack embeds metadata as custom_fields array.
- * Convert it to a plain key→value object for easy access.
- */
-function extractMetadata(
-  customFields?: Array<{ variable_name: string; value: string }>,
-): Record<string, string> {
-  if (!customFields) return {};
-  const result: Record<string, string> = {};
-  for (const field of customFields) {
-    result[field.variable_name] = field.value;
-  }
-  return result;
 }
 
 // ── Webhook handler ───────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
-  const signature = req.headers.get('x-paystack-signature');
+  // Flutterwave v3 sends the raw FLW_SECRET_HASH as the `verif-hash` header.
+  const signature = req.headers.get('verif-hash');
 
   if (!signature) {
-    return new Response(JSON.stringify({ error: 'Missing x-paystack-signature' }), {
+    return new Response(JSON.stringify({ error: 'Missing verif-hash header' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // Read raw body bytes — must remain unmodified for signature verification.
-  const rawBody = new Uint8Array(await req.arrayBuffer());
-
-  // Verify signature before trusting any payload content.
-  const isValid = await verifyPaystackSignature(rawBody, signature);
-  if (!isValid) {
-    console.error('[paystack-webhook] Invalid signature — rejecting request');
+  // Timing-safe comparison — reject before reading body if signature is wrong.
+  if (!verifyFlutterwaveSignature(signature)) {
+    console.error('[flutterwave-webhook] Invalid verif-hash — rejecting request');
     return new Response(JSON.stringify({ error: 'Invalid signature' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const event = JSON.parse(new TextDecoder().decode(rawBody)) as {
+  const event = await req.json() as {
     event: string;
     data: {
-      status: string;
-      reference: string;
-      amount: number;
+      id: number;           // Flutterwave's internal numeric transaction ID
+      status: string;       // 'successful' | 'failed' | 'pending'
+      tx_ref: string;       // our unique reference
+      amount: number;       // full currency units (e.g. 10.00 for $10)
       currency: string;
       customer: { email: string };
-      metadata: {
-        custom_fields?: Array<{ variable_name: string; value: string }>;
-      };
+      meta: Record<string, string> | null;
     };
   };
 
-  // Only process successful charges.
-  if (event.event !== 'charge.success') {
-    console.log('[paystack-webhook] Ignoring event:', event.event);
+  // Only process completed charges.
+  if (event.event !== 'charge.completed') {
+    console.log('[flutterwave-webhook] Ignoring event:', event.event);
     return new Response(JSON.stringify({ received: true, skipped: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const { reference, amount: rawAmount, metadata } = event.data;
+  const { id: transactionId, status: eventStatus, tx_ref } = event.data;
 
-  // Additional safety: verify the transaction with Paystack's API directly.
+  if (eventStatus !== 'successful') {
+    console.log('[flutterwave-webhook] Non-successful charge status:', eventStatus);
+    return new Response(JSON.stringify({ received: true, skipped: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Secondary verification: call Flutterwave's API to confirm the transaction.
   // This prevents replay attacks and ensures the amount is authoritative.
-  let verifiedTx: Awaited<ReturnType<typeof verifyPaystackTransaction>>;
+  // IMPORTANT: use the numeric transactionId (data.id), not the tx_ref.
+  let verifiedTx: Awaited<ReturnType<typeof verifyFlutterwaveTransaction>>;
   try {
-    verifiedTx = await verifyPaystackTransaction(reference);
+    verifiedTx = await verifyFlutterwaveTransaction(transactionId);
   } catch (err) {
-    console.error('[paystack-webhook] Transaction verification failed:', (err as Error).message);
+    console.error('[flutterwave-webhook] Transaction verification failed:', (err as Error).message);
     return new Response(JSON.stringify({ error: 'Could not verify transaction' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  if (verifiedTx.status !== 'success') {
-    console.log('[paystack-webhook] Transaction not successful, status:', verifiedTx.status);
+  if (verifiedTx.status !== 'successful') {
+    console.log('[flutterwave-webhook] Transaction not successful after verify, status:', verifiedTx.status);
     return new Response(JSON.stringify({ received: true, skipped: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // Use the Paystack-authoritative amount, not metadata.
-  const amountInCents = verifiedTx.amount; // Paystack amount is already in subunits
+  // Use the Flutterwave-authoritative amount (already converted to integer cents by verifyFlutterwaveTransaction).
+  const amountInCents = verifiedTx.amountCents;
 
-  const meta = extractMetadata(metadata?.custom_fields);
+  const meta = verifiedTx.meta;
   const { creator_id, message_type, provider } = meta;
 
-  if (!creator_id || provider !== 'paystack') {
-    console.log('[paystack-webhook] Skipping — missing creator_id or not a Paystack transaction');
+  if (!creator_id || provider !== 'flutterwave') {
+    console.log('[flutterwave-webhook] Skipping — missing creator_id or not a Flutterwave transaction');
     return new Response(JSON.stringify({ received: true, skipped: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
+  // Use tx_ref as the idempotency key — stable, unique, and controlled by us.
+  const reference = verifiedTx.txRef || tx_ref;
   const appUrl = getAppUrl();
 
   // ── Call booking ────────────────────────────────────────────────────────────
@@ -184,11 +174,11 @@ Deno.serve(async (req) => {
     const { data: existingBooking } = await supabase
       .from('call_bookings')
       .select('id')
-      .eq('paystack_reference', reference)
+      .eq('flutterwave_tx_ref', reference)
       .maybeSingle();
 
     if (existingBooking) {
-      console.log('[paystack-webhook] Duplicate booking, skipping:', reference);
+      console.log('[flutterwave-webhook] Duplicate booking, skipping:', reference);
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -215,7 +205,7 @@ Deno.serve(async (req) => {
       creatorMeetingToken = await createMeetingToken(room.name, creatorName, true, durationMinutes);
       fanMeetingToken = await createMeetingToken(room.name, booker_name, false, durationMinutes);
     } catch (dailyErr) {
-      console.error('[paystack-webhook] Daily room creation failed (non-fatal):', (dailyErr as Error).message);
+      console.error('[flutterwave-webhook] Daily room creation failed (non-fatal):', (dailyErr as Error).message);
     }
 
     const { data: booking, error: bookingError } = await supabase
@@ -228,8 +218,7 @@ Deno.serve(async (req) => {
         amount_paid: amountInCents,
         status: 'confirmed',
         call_notes: message_content || null,
-        // Store Paystack reference so we can detect duplicates on webhook retries
-        paystack_reference: reference,
+        flutterwave_tx_ref: reference,
         scheduled_at: scheduled_at || null,
         fan_timezone: fan_timezone || 'UTC',
         daily_room_name: dailyRoomName,
@@ -243,17 +232,17 @@ Deno.serve(async (req) => {
 
     if (bookingError) {
       if (bookingError.code === '23505') {
-        console.log('[paystack-webhook] Duplicate booking (23505), skipping:', reference);
+        console.log('[flutterwave-webhook] Duplicate booking (23505), skipping:', reference);
         return new Response(JSON.stringify({ received: true, duplicate: true }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
       }
-      console.error('[paystack-webhook] Error creating call booking:', bookingError);
+      console.error('[flutterwave-webhook] Error creating call booking:', bookingError);
       throw bookingError;
     }
 
-    console.log('[paystack-webhook] Call booking created:', booking.id);
+    console.log('[flutterwave-webhook] Call booking created:', booking.id);
 
     // Log room creation
     if (dailyRoomName) {
@@ -326,11 +315,11 @@ Deno.serve(async (req) => {
     const { data: existingMessage } = await supabase
       .from('messages')
       .select('id')
-      .eq('paystack_reference', reference)
+      .eq('flutterwave_tx_ref', reference)
       .maybeSingle();
 
     if (existingMessage) {
-      console.log('[paystack-webhook] Duplicate message, skipping:', reference);
+      console.log('[flutterwave-webhook] Duplicate message, skipping:', reference);
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -346,24 +335,24 @@ Deno.serve(async (req) => {
         message_content,
         amount_paid: amountInCents,
         message_type: validMessageType,
-        paystack_reference: reference,
+        flutterwave_tx_ref: reference,
       })
       .select('id')
       .single();
 
     if (messageError) {
       if (messageError.code === '23505') {
-        console.log('[paystack-webhook] Duplicate message (23505), skipping:', reference);
+        console.log('[flutterwave-webhook] Duplicate message (23505), skipping:', reference);
         return new Response(JSON.stringify({ received: true, duplicate: true }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
       }
-      console.error('[paystack-webhook] Error creating message:', messageError);
+      console.error('[flutterwave-webhook] Error creating message:', messageError);
       throw messageError;
     }
 
-    // Record payment analytics
+    // Record payment analytics — integer cents throughout, no floating point
     const platformFee = Math.round(amountInCents * PLATFORM_FEE_PERCENTAGE / 100);
     const creatorAmount = amountInCents - platformFee;
 
@@ -372,7 +361,7 @@ Deno.serve(async (req) => {
       .insert({
         message_id: message.id,
         creator_id,
-        paystack_reference: reference,
+        flutterwave_tx_ref: reference,
         amount: amountInCents,
         platform_fee: platformFee,
         creator_amount: creatorAmount,
@@ -381,11 +370,11 @@ Deno.serve(async (req) => {
       });
 
     if (paymentError) {
-      console.error('[paystack-webhook] Error creating payment record:', paymentError);
+      console.error('[flutterwave-webhook] Error creating payment record:', paymentError);
       throw paymentError;
     }
 
-    console.log('[paystack-webhook] Message and payment created:', message.id);
+    console.log('[flutterwave-webhook] Message and payment created:', message.id);
 
     // Emails
     const { data: msgCreator } = await supabase

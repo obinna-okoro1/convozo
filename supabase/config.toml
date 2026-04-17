@@ -412,14 +412,14 @@ verify_jwt = false  # Auth handled internally via getUser(token)
 [functions.send-push-notification]
 verify_jwt = false  # Auth handled internally via service role key
 
-[functions.get-paystack-banks]
+[functions.get-flutterwave-banks]
 verify_jwt = false  # Public — bank list is public information, no auth needed
 
-[functions.create-paystack-subaccount]
+[functions.create-flutterwave-recipient]
 verify_jwt = false  # Auth handled internally via getUser(token)
 
-[functions.paystack-webhook]
-verify_jwt = false  # Paystack authenticates via webhook signature verification
+[functions.flutterwave-webhook]
+verify_jwt = false  # Flutterwave authenticates via verif-hash header
 
 [functions.get-conversation]
 verify_jwt = false  # Public — uses conversation_token for ownership, no JWT needed
@@ -435,7 +435,8 @@ STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
 APP_URL = "env(APP_URL)"
 PLATFORM_FEE_PERCENTAGE = "env(PLATFORM_FEE_PERCENTAGE)"
-PAYSTACK_SECRET_KEY = "env(PAYSTACK_SECRET_KEY)"
+FLW_SECRET_KEY = "env(FLW_SECRET_KEY)"
+FLW_SECRET_HASH = "env(FLW_SECRET_HASH)"
 
 [analytics]
 enabled = true

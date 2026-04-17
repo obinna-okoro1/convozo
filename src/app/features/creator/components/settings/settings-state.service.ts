@@ -10,8 +10,8 @@ import {
   Creator,
   CreatorSettings,
   StripeAccount,
-  PaystackSubaccount,
-  PaystackBank,
+  FlutterwaveSubaccount,
+  FlutterwaveBank,
   EXPERT_CATEGORIES,
   getCategoryById,
   type ExpertSubcategory,
@@ -28,14 +28,14 @@ export class SettingsStateService {
   readonly creator = signal<Creator | null>(null);
   readonly settings = signal<CreatorSettings | null>(null);
   readonly paymentAccount = signal<StripeAccount | null>(null);
-  /** Paystack subaccount for NG/ZA creators. Null until loaded or not set up yet. */
-  readonly paystackSubaccount = signal<PaystackSubaccount | null>(null);
-  /** Bank list for the Paystack bank picker. */
-  readonly paystackBanks = signal<PaystackBank[]>([]);
-  /** True while the Paystack bank list is loading. */
-  readonly paystackBanksLoading = signal(false);
-  /** True while the Paystack subaccount is being created. */
-  readonly paystackConnecting = signal(false);
+  /** Flutterwave subaccount for NG/ZA creators. Null until loaded or not set up yet. */
+  readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
+  /** Bank list for the Flutterwave bank picker. */
+  readonly flutterwaveBanks = signal<FlutterwaveBank[]>([]);
+  /** True while the Flutterwave bank list is loading. */
+  readonly flutterwaveBanksLoading = signal(false);
+  /** True while the Flutterwave subaccount is being created. */
+  readonly flutterwaveConnecting = signal(false);
 
   // ── Shared UI state ────────────────────────────────────────────────
   readonly loading = signal(false);
@@ -164,29 +164,28 @@ export class SettingsStateService {
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
 
-  /** True when this creator uses Paystack (NG/ZA). */
-  readonly isPaystackCreator = computed(
-    () => this.creator()?.payment_provider === 'paystack',
+  /** True when this creator uses Flutterwave (NG/ZA). */
+  readonly isFlutterwaveCreator = computed(
+    () => this.creator()?.payment_provider === 'flutterwave',
   );
 
   /**
-   * True when the Paystack subaccount is set up and active.
-   * We do NOT require is_verified here — Paystack verifies asynchronously (can take
-   * several business days). The subaccount can receive split payments as soon as it
-   * is active. is_verified is shown as an informational badge in the UI only.
+   * True when the Flutterwave subaccount is set up and active.
+   * Flutterwave subaccounts are immediately active upon creation — no async
+   * verification step is needed.
    */
-  readonly isPaystackConnected = computed(
-    () => !!(this.paystackSubaccount()?.is_active),
+  readonly isFlutterwaveConnected = computed(
+    () => !!(this.flutterwaveSubaccount()?.is_active),
   );
 
   /**
    * True when payments are ready to accept — regardless of provider.
    * Stripe creators: onboarding completed + charges enabled.
-   * Paystack creators: bank account active and verified by Paystack.
+   * Flutterwave creators: bank account active.
    * Used to gate the Monetization and Shop settings views.
    */
   readonly isPaymentReady = computed(
-    () => this.isStripeConnected() || this.isPaystackConnected(),
+    () => this.isStripeConnected() || this.isFlutterwaveConnected(),
   );
 
   constructor(
@@ -513,8 +512,8 @@ export class SettingsStateService {
       }
 
       // Load payment account based on the creator's provider
-      if (creatorData.payment_provider === 'paystack') {
-        await this.loadPaystackSubaccount(creatorData.id);
+      if (creatorData.payment_provider === 'flutterwave') {
+        await this.loadFlutterwaveSubaccount(creatorData.id);
       } else {
         await this.loadPaymentAccount(creatorData.id);
       }
@@ -537,10 +536,10 @@ export class SettingsStateService {
     }
   }
 
-  private async loadPaystackSubaccount(creatorId: string): Promise<void> {
-    const { data } = await this.creatorService.getPaystackSubaccount(creatorId);
+  private async loadFlutterwaveSubaccount(creatorId: string): Promise<void> {
+    const { data } = await this.creatorService.getFlutterwaveSubaccount(creatorId);
     if (data) {
-      this.paystackSubaccount.set(data);
+      this.flutterwaveSubaccount.set(data);
     }
   }
 
@@ -548,18 +547,18 @@ export class SettingsStateService {
    * Resolve a bank account number to the registered account name.
    * Used by the UI to verify the account before submitting bank setup.
    */
-  async resolvePaystackAccount(
+  async resolveFlutterwaveAccount(
     accountNumber: string,
     bankCode: string,
   ): Promise<{ accountName: string | null; error: string | null }> {
     try {
-      const { data, error } = await this.creatorService.resolvePaystackAccount(
+      const { data, error } = await this.creatorService.resolveFlutterwaveAccount(
         accountNumber,
         bankCode,
       );
       if (error) {
         // The edge function returns a 422 with a user-facing message in the JSON body
-        // when Paystack rejects the account details. Try to extract it.
+        // when Flutterwave rejects the account details. Try to extract it.
         let userMessage = 'Could not verify account. Please check your account number and bank.';
         try {
           const context = (error as { context?: Response }).context;
@@ -581,37 +580,37 @@ export class SettingsStateService {
 
   /**
    * Load the bank list for the creator's country (NG or ZA).
-   * Called lazily when the creator opens the Paystack bank setup form.
+   * Called lazily when the creator opens the Flutterwave bank setup form.
    */
-  async loadPaystackBanks(): Promise<void> {
+  async loadFlutterwaveBanks(): Promise<void> {
     const country = this.creator()?.country;
     if (!country) return;
 
-    this.paystackBanksLoading.set(true);
+    this.flutterwaveBanksLoading.set(true);
     try {
-      const { data, error } = await this.creatorService.getPaystackBanks(country);
+      const { data, error } = await this.creatorService.getFlutterwaveBanks(country);
       if (error) {
         this.error.set('Failed to load bank list. Please try again.');
         return;
       }
       // Edge function returns { banks: [...] } — extract the array
-      const responseData = data as unknown as { banks?: PaystackBank[] } | PaystackBank[] | null;
-      const banks: PaystackBank[] = Array.isArray(responseData)
+      const responseData = data as unknown as { banks?: FlutterwaveBank[] } | FlutterwaveBank[] | null;
+      const banks: FlutterwaveBank[] = Array.isArray(responseData)
         ? responseData
-        : (responseData as { banks?: PaystackBank[] } | null)?.banks ?? [];
-      this.paystackBanks.set(banks);
+        : (responseData as { banks?: FlutterwaveBank[] } | null)?.banks ?? [];
+      this.flutterwaveBanks.set(banks);
     } catch {
       this.error.set('Failed to load bank list. Please try again.');
     } finally {
-      this.paystackBanksLoading.set(false);
+      this.flutterwaveBanksLoading.set(false);
     }
   }
 
   /**
-   * Submit the creator's bank account details to set up a Paystack subaccount.
+   * Submit the creator's bank account details to set up a Flutterwave subaccount.
    * Called from Settings → Payments for NG/ZA creators.
    */
-  async connectPaystack(params: {
+  async connectFlutterwave(params: {
     bankCode: string;
     accountNumber: string;
     businessName: string;
@@ -619,11 +618,11 @@ export class SettingsStateService {
     const country = this.creator()?.country;
     if (!country) return;
 
-    this.paystackConnecting.set(true);
+    this.flutterwaveConnecting.set(true);
     this.error.set(null);
 
     try {
-      const { data, error } = await this.creatorService.createPaystackSubaccount({
+      const { data, error } = await this.creatorService.createFlutterwaveSubaccount({
         bankCode: params.bankCode,
         accountNumber: params.accountNumber,
         businessName: params.businessName,
@@ -635,35 +634,14 @@ export class SettingsStateService {
         return;
       }
 
-      this.paystackSubaccount.set(data as unknown as PaystackSubaccount);
+      this.flutterwaveSubaccount.set(data as unknown as FlutterwaveSubaccount);
       this.success.set(true);
       setTimeout(() => this.success.set(false), 3000);
     } catch {
       this.error.set('An unexpected error occurred. Please try again.');
     } finally {
-      this.paystackConnecting.set(false);
+      this.flutterwaveConnecting.set(false);
     }
   }
 
-  /**
-   * Re-fetch is_verified / is_active from Paystack's API and update our DB.
-   * Called when the creator clicks "Refresh Status" on the Payments view.
-   * Paystack verifies bank accounts asynchronously after subaccount creation,
-   * so the creator may need to refresh once Paystack has completed verification.
-   */
-  async refreshPaystackStatus(): Promise<void> {
-    this.error.set(null);
-    try {
-      const { data, error } = await this.creatorService.syncPaystackStatus();
-      if (error) {
-        this.error.set((error as { message?: string })?.message ?? 'Failed to refresh status');
-        return;
-      }
-      if (data) {
-        this.paystackSubaccount.set(data as unknown as PaystackSubaccount);
-      }
-    } catch {
-      this.error.set('Failed to refresh Paystack status. Please try again.');
-    }
-  }
 }

@@ -11,7 +11,7 @@ Tests every function handler against the LOCAL Supabase stack
 Usage:
   python3 supabase/functions/tests/test_functions.py
   python3 supabase/functions/tests/test_functions.py --function create-checkout-session
-  python3 supabase/functions/tests/test_functions.py --function get-paystack-banks
+  python3 supabase/functions/tests/test_functions.py --function get-flutterwave-banks
   python3 supabase/functions/tests/test_functions.py --verbose
 
 Structure:
@@ -26,9 +26,9 @@ Covered functions:
   ✓ create-connect-account
   ✓ verify-connect-account
   ✓ stripe-webhook (signature validation, idempotency, payment_status guard)
-  ✓ get-paystack-banks (country validation, resolve mode, live bank list for NG/ZA)
-  ✓ create-paystack-subaccount (auth guard, body validation, country routing)
-  ✓ paystack-webhook (HMAC-SHA512 signature, event routing, Paystack verify)
+  ✓ get-flutterwave-banks (country validation, resolve mode, live bank list for NG/ZA)
+  ✓ create-flutterwave-recipient (auth guard, body validation, country routing)
+  ✓ flutterwave-webhook (verif-hash signature, event routing, Flutterwave verify)
   ✓ get-conversation (token validation, 404 on unknown token)
   ✓ post-client-reply (token/content validation, 404 on unknown, 405 on GET)
   ✓ get-client-portal (auth guard — 401 without JWT, data isolation, RLS verification)
@@ -108,8 +108,8 @@ def _read_webhook_secret() -> str:
 WEBHOOK_SECRET = _read_webhook_secret()
 
 
-# Paystack secret key — read from supabase/.env (same file, different key)
-def _read_paystack_secret() -> str:
+# Flutterwave webhook hash — read from supabase/.env
+def _read_flw_secret_hash() -> str:
     env_path = os.path.join(
         os.path.dirname(__file__), "..", "..", "..", ".env"
     )
@@ -118,14 +118,14 @@ def _read_paystack_secret() -> str:
     try:
         with open(env_path) as f:
             for line in f:
-                if "PAYSTACK_SECRET_KEY" in line and "=" in line:
+                if "FLW_SECRET_HASH" in line and "=" in line:
                     return line.split("=", 1)[1].strip()
     except FileNotFoundError:
         pass
     return ""
 
 
-PAYSTACK_SECRET_KEY = _read_paystack_secret()
+FLW_SECRET_HASH = _read_flw_secret_hash()
 
 # Cached creator JWT — obtained by signing in with the seed creator credentials.
 # Lazy-loaded by _get_creator_jwt() the first time a test needs it.
@@ -218,18 +218,14 @@ def _make_stripe_sig(payload: str) -> str:
     return f"t={ts},v1={sig}"
 
 
-def _make_paystack_sig(payload: str) -> str:
+def _make_flw_sig() -> str:
     """
-    Build a valid x-paystack-signature header value.
+    Return the verif-hash header value for Flutterwave webhook requests.
 
-    Paystack uses HMAC-SHA512 of the raw body bytes (not the timestamp-prefixed
-    format Stripe uses). The result is a 128-character lowercase hex digest.
+    Flutterwave uses a plain-string shared secret (FLW_SECRET_HASH), NOT an
+    HMAC digest. The entire header value equals the secret hash verbatim.
     """
-    return hmac.new(
-        PAYSTACK_SECRET_KEY.encode("utf-8"),
-        payload.encode("utf-8"),
-        hashlib.sha512,
-    ).hexdigest()
+    return FLW_SECRET_HASH
 
 
 def _post_no_auth(path: str, body: dict) -> tuple:
@@ -715,156 +711,150 @@ def test_webhook_wrong_event_type() -> list[TestResult]:
     )]
 
 
-# ── get-paystack-banks ────────────────────────────────────────────────────────
+# ── get-flutterwave-banks ─────────────────────────────────────────────────────
 
-def test_paystack_banks_missing_country() -> list[TestResult]:
+def test_flutterwave_banks_missing_country() -> list[TestResult]:
     """No country field — must return 400 with a clear error."""
-    status, body = _post("get-paystack-banks", {})
+    status, body = _post("get-flutterwave-banks", {})
     return [expect_status(
-        "get-paystack-banks – missing country returns 400",
+        "get-flutterwave-banks – missing country returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_banks_invalid_country() -> list[TestResult]:
-    """US is not a Paystack-supported country — must reject with 400."""
-    status, body = _post("get-paystack-banks", {"country": "US"})
+def test_flutterwave_banks_invalid_country() -> list[TestResult]:
+    """US is not a Flutterwave-supported country — must reject with 400."""
+    status, body = _post("get-flutterwave-banks", {"country": "US"})
     results = [expect_status(
-        "get-paystack-banks – unsupported country returns 400",
+        "get-flutterwave-banks – unsupported country returns 400",
         status, 400, body,
     )]
     results.append(expect_error(
-        "get-paystack-banks – error message mentions NG and ZA",
+        "get-flutterwave-banks – error message mentions NG and ZA",
         body, "NG and ZA",
     ))
     return results
 
 
-def test_paystack_banks_resolve_missing_fields() -> list[TestResult]:
+def test_flutterwave_banks_resolve_missing_fields() -> list[TestResult]:
     """`resolve=true` without account_number or bank_code — must return 400."""
-    status, body = _post("get-paystack-banks", {"resolve": True})
+    status, body = _post("get-flutterwave-banks", {"resolve": True})
     return [expect_status(
-        "get-paystack-banks – resolve with no fields returns 400",
+        "get-flutterwave-banks – resolve with no fields returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_banks_resolve_bad_account_format() -> list[TestResult]:
+def test_flutterwave_banks_resolve_bad_account_format() -> list[TestResult]:
     """`resolve=true` with a non-numeric account_number — must return 400."""
-    status, body = _post("get-paystack-banks", {
+    status, body = _post("get-flutterwave-banks", {
         "resolve": True,
         "account_number": "not-a-number",
         "bank_code": "044",
     })
     return [expect_status(
-        "get-paystack-banks – resolve with non-digit account returns 400",
+        "get-flutterwave-banks – resolve with non-digit account returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_banks_nigeria() -> list[TestResult]:
+def test_flutterwave_banks_nigeria() -> list[TestResult]:
     """
-    NG country triggers a live Paystack API call.
+    NG country triggers a live Flutterwave API call.
     Expects a non-empty list of banks with the correct shape.
 
-    NOTE: Requires PAYSTACK_SECRET_KEY in supabase/.env and internet access
-    from the local functions server. Will return 502 if Paystack is unreachable.
+    NOTE: Requires FLW_SECRET_HASH in supabase/.env and internet access
+    from the local functions server. Will return 502 if Flutterwave is unreachable.
     """
-    status, body = _post("get-paystack-banks", {"country": "NG"})
+    status, body = _post("get-flutterwave-banks", {"country": "NG"})
     results = [expect_status(
-        "get-paystack-banks – NG returns 200",
+        "get-flutterwave-banks – NG returns 200",
         status, 200, body,
     )]
     if status == 200:
         banks = body.get("banks", [])
         results.append(TestResult(
-            "get-paystack-banks – NG response contains a non-empty banks list",
+            "get-flutterwave-banks – NG response contains a non-empty banks list",
             isinstance(banks, list) and len(banks) > 0,
             f"banks count: {len(banks) if isinstance(banks, list) else type(banks).__name__}",
         ))
         if isinstance(banks, list) and banks:
             first = banks[0]
-            required_keys = ("name", "code", "country", "currency")
+            required_keys = ("name", "code")
             results.append(TestResult(
-                "get-paystack-banks – each NG bank has name, code, country, currency",
+                "get-flutterwave-banks – each NG bank has name and code",
                 all(k in first for k in required_keys),
                 f"keys present: {[k for k in required_keys if k in first]}",
             ))
     return results
 
 
-def test_paystack_banks_south_africa() -> list[TestResult]:
-    """
-    ZA country returns a non-empty list of South African banks.
-    Validates that the country-name mapping (south africa, not 'za') works correctly.
-    """
-    status, body = _post("get-paystack-banks", {"country": "ZA"})
+def test_flutterwave_banks_south_africa() -> list[TestResult]:
+    """ZA country returns a non-empty list of South African banks."""
+    status, body = _post("get-flutterwave-banks", {"country": "ZA"})
     results = [expect_status(
-        "get-paystack-banks – ZA returns 200",
+        "get-flutterwave-banks – ZA returns 200",
         status, 200, body,
     )]
     if status == 200:
         banks = body.get("banks", [])
         results.append(TestResult(
-            "get-paystack-banks – ZA response contains a non-empty banks list",
+            "get-flutterwave-banks – ZA response contains a non-empty banks list",
             isinstance(banks, list) and len(banks) > 0,
             f"banks count: {len(banks) if isinstance(banks, list) else type(banks).__name__}",
         ))
     return results
 
 
-def test_paystack_banks_lowercase_country() -> list[TestResult]:
+def test_flutterwave_banks_lowercase_country() -> list[TestResult]:
     """
     Country code is case-insensitive — 'ng' must work exactly like 'NG'.
-    The function uppercases the country before calling isPaystackCountry().
+    The function uppercases the country before calling isFlutterwaveCountry().
     """
-    status, body = _post("get-paystack-banks", {"country": "ng"})
+    status, body = _post("get-flutterwave-banks", {"country": "ng"})
     return [expect_status(
-        "get-paystack-banks – lowercase 'ng' is accepted (case-insensitive)",
+        "get-flutterwave-banks – lowercase 'ng' is accepted (case-insensitive)",
         status, 200, body,
     )]
 
 
-# ── create-paystack-subaccount ────────────────────────────────────────────────
+# ── create-flutterwave-recipient ─────────────────────────────────────────────
 
-def test_paystack_sub_no_auth() -> list[TestResult]:
+def test_flutterwave_recipient_no_auth() -> list[TestResult]:
     """
     Request without any Authorization header must return 401.
     requireAuth() checks for the header before reading the body.
     """
-    status, body = _post_no_auth("create-paystack-subaccount", {
+    status, body = _post_no_auth("create-flutterwave-recipient", {
         "bank_code": "044",
         "account_number": "1234567890",
         "country": "NG",
         "business_name": "Test",
     })
     return [expect_status(
-        "create-paystack-subaccount – no Authorization header returns 401",
+        "create-flutterwave-recipient – no Authorization header returns 401",
         status, 401, body,
     )]
 
 
-def test_paystack_sub_anon_key_rejected() -> list[TestResult]:
+def test_flutterwave_recipient_anon_key_rejected() -> list[TestResult]:
     """
     The Supabase anon key is a role JWT, NOT a user session token.
     requireAuth() calls supabase.auth.getUser(token) which rejects it → 401.
-
-    NOTE: _post() always sends ANON_KEY as Bearer — this test verifies that
-    anon-role JWTs cannot be used to authenticate as a creator.
     """
-    status, body = _post("create-paystack-subaccount", {
+    status, body = _post("create-flutterwave-recipient", {
         "bank_code": "044",
         "account_number": "1234567890",
         "country": "NG",
         "business_name": "Test",
     })
     return [expect_status(
-        "create-paystack-subaccount – anon key is rejected with 401",
+        "create-flutterwave-recipient – anon key is rejected with 401",
         status, 401, body,
     )]
 
 
-def test_paystack_sub_missing_fields() -> list[TestResult]:
+def test_flutterwave_recipient_missing_fields() -> list[TestResult]:
     """
     Authenticated request with an empty body must return 400.
     bank_code, account_number, and country are all required.
@@ -872,33 +862,33 @@ def test_paystack_sub_missing_fields() -> list[TestResult]:
     jwt = _get_creator_jwt()
     if not jwt:
         return [fail(
-            "create-paystack-subaccount – missing fields returns 400",
+            "create-flutterwave-recipient – missing fields returns 400",
             "Could not obtain creator JWT — is `supabase start` running?",
         )]
     status, body = _post(
-        "create-paystack-subaccount",
+        "create-flutterwave-recipient",
         {},
         headers={"Authorization": f"Bearer {jwt}"},
     )
     return [expect_status(
-        "create-paystack-subaccount – empty body returns 400",
+        "create-flutterwave-recipient – empty body returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_sub_non_paystack_country() -> list[TestResult]:
+def test_flutterwave_recipient_non_flutterwave_country() -> list[TestResult]:
     """
-    country='US' in the request body is not a Paystack country.
+    country='US' in the request body is not a Flutterwave country.
     Must be rejected with 403 before any DB lookup.
     """
     jwt = _get_creator_jwt()
     if not jwt:
         return [fail(
-            "create-paystack-subaccount – non-Paystack country returns 403",
+            "create-flutterwave-recipient – non-Flutterwave country returns 403",
             "Could not obtain creator JWT",
         )]
     status, body = _post(
-        "create-paystack-subaccount",
+        "create-flutterwave-recipient",
         {
             "bank_code": "044",
             "account_number": "1234567890",
@@ -908,24 +898,24 @@ def test_paystack_sub_non_paystack_country() -> list[TestResult]:
         headers={"Authorization": f"Bearer {jwt}"},
     )
     return [expect_status(
-        "create-paystack-subaccount – country=US is rejected with 403",
+        "create-flutterwave-recipient – country=US is rejected with 403",
         status, 403, body,
     )]
 
 
-def test_paystack_sub_missing_business_name() -> list[TestResult]:
+def test_flutterwave_recipient_missing_business_name() -> list[TestResult]:
     """
-    NG country passes the isPaystackCountry() check but missing business_name
+    NG country passes the isFlutterwaveCountry() check but missing business_name
     returns 400. Validates that the post-country validation is also enforced.
     """
     jwt = _get_creator_jwt()
     if not jwt:
         return [fail(
-            "create-paystack-subaccount – missing business_name returns 400",
+            "create-flutterwave-recipient – missing business_name returns 400",
             "Could not obtain creator JWT",
         )]
     status, body = _post(
-        "create-paystack-subaccount",
+        "create-flutterwave-recipient",
         {
             "bank_code": "044",
             "account_number": "1234567890",
@@ -935,24 +925,24 @@ def test_paystack_sub_missing_business_name() -> list[TestResult]:
         headers={"Authorization": f"Bearer {jwt}"},
     )
     return [expect_status(
-        "create-paystack-subaccount – missing business_name returns 400",
+        "create-flutterwave-recipient – missing business_name returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_sub_invalid_account_format() -> list[TestResult]:
+def test_flutterwave_recipient_invalid_account_format() -> list[TestResult]:
     """
     account_number must be 6-20 digits. Non-digit characters are rejected with 400.
-    This regex check happens server-side regardless of what Paystack would do.
+    This regex check happens server-side regardless of what Flutterwave would do.
     """
     jwt = _get_creator_jwt()
     if not jwt:
         return [fail(
-            "create-paystack-subaccount – invalid account format returns 400",
+            "create-flutterwave-recipient – invalid account format returns 400",
             "Could not obtain creator JWT",
         )]
     status, body = _post(
-        "create-paystack-subaccount",
+        "create-flutterwave-recipient",
         {
             "bank_code": "044",
             "account_number": "not-digits",  # fails /^\d{6,20}$/
@@ -962,24 +952,24 @@ def test_paystack_sub_invalid_account_format() -> list[TestResult]:
         headers={"Authorization": f"Bearer {jwt}"},
     )
     return [expect_status(
-        "create-paystack-subaccount – non-digit account_number returns 400",
+        "create-flutterwave-recipient – non-digit account_number returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_sub_invalid_bank_code_format() -> list[TestResult]:
+def test_flutterwave_recipient_invalid_bank_code_format() -> list[TestResult]:
     """
     bank_code must be 2-10 digits. Alphabetic bank codes are rejected with 400.
-    This validates that the bank_code format check runs before any Paystack call.
+    This validates that the bank_code format check runs before any Flutterwave call.
     """
     jwt = _get_creator_jwt()
     if not jwt:
         return [fail(
-            "create-paystack-subaccount – invalid bank code format returns 400",
+            "create-flutterwave-recipient – invalid bank code format returns 400",
             "Could not obtain creator JWT",
         )]
     status, body = _post(
-        "create-paystack-subaccount",
+        "create-flutterwave-recipient",
         {
             "bank_code": "NOTDIGITS",  # fails /^\d{2,10}$/
             "account_number": "1234567890",
@@ -989,16 +979,16 @@ def test_paystack_sub_invalid_bank_code_format() -> list[TestResult]:
         headers={"Authorization": f"Bearer {jwt}"},
     )
     return [expect_status(
-        "create-paystack-subaccount – non-digit bank_code returns 400",
+        "create-flutterwave-recipient – non-digit bank_code returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_sub_non_paystack_creator() -> list[TestResult]:
+def test_flutterwave_recipient_non_flutterwave_creator() -> list[TestResult]:
     """
     sarahjohnson (seed creator) has no country in seed.sql — country is NULL.
     After all body validation passes, the DB lookup finds the creator but
-    isPaystackCountry(null → '') returns false → 403 'not set up for Paystack'.
+    isFlutterwaveCountry(null → '') returns false → 403 'not set up for Flutterwave'.
 
     This validates that the server enforces payment_provider routing via the DB,
     not just by trusting the request body country field.
@@ -1006,161 +996,159 @@ def test_paystack_sub_non_paystack_creator() -> list[TestResult]:
     jwt = _get_creator_jwt()
     if not jwt:
         return [fail(
-            "create-paystack-subaccount – non-Paystack creator returns 403",
+            "create-flutterwave-recipient – creator without Flutterwave country returns 403",
             "Could not obtain creator JWT",
         )]
     # All body fields are valid — the rejection comes from the creator's DB record
     status, body = _post(
-        "create-paystack-subaccount",
+        "create-flutterwave-recipient",
         {
             "bank_code": "044",
             "account_number": "1234567890",
             "country": "NG",
-            "business_name": "Dwayne Johnson",
+            "business_name": "Test Creator",
         },
         headers={"Authorization": f"Bearer {jwt}"},
     )
     return [expect_status(
-        "create-paystack-subaccount – creator without Paystack country returns 403",
+        "create-flutterwave-recipient – creator without Flutterwave country returns 403",
         status, 403, body,
     )]
 
 
-# ── paystack-webhook ──────────────────────────────────────────────────────────
+# ── flutterwave-webhook ───────────────────────────────────────────────────────
 
-def test_paystack_webhook_no_signature() -> list[TestResult]:
+def test_flutterwave_webhook_no_signature() -> list[TestResult]:
     """
-    POST to paystack-webhook without x-paystack-signature must return 400
+    POST to flutterwave-webhook without verif-hash must return 400
     immediately — the function checks the header before reading the body.
     """
-    if not PAYSTACK_SECRET_KEY:
+    if not FLW_SECRET_HASH:
         return [fail(
-            "paystack-webhook – missing signature returns 400",
-            "PAYSTACK_SECRET_KEY not found in supabase/.env — skipping",
+            "flutterwave-webhook – missing signature returns 400",
+            "FLW_SECRET_HASH not found in supabase/.env — skipping",
         )]
-    payload = json.dumps({"event": "charge.success", "data": {}})
-    status, body = _post_raw("paystack-webhook", payload, {
+    payload = json.dumps({"event": "charge.completed", "data": {}})
+    status, body = _post_raw("flutterwave-webhook", payload, {
         "Content-Type": "application/json",
-        # x-paystack-signature intentionally absent
+        # verif-hash intentionally absent
     })
     return [expect_status(
-        "paystack-webhook – missing x-paystack-signature returns 400",
+        "flutterwave-webhook – missing verif-hash returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_webhook_invalid_signature() -> list[TestResult]:
+def test_flutterwave_webhook_invalid_signature() -> list[TestResult]:
     """
-    POST with a malformed / wrong signature must return 400.
-    HMAC-SHA512 verification happens before any payload processing.
+    POST with the wrong verif-hash must return 400.
+    The function compares the header value against FLW_SECRET_HASH before
+    processing any payload.
     """
-    if not PAYSTACK_SECRET_KEY:
+    if not FLW_SECRET_HASH:
         return [fail(
-            "paystack-webhook – invalid signature returns 400",
-            "PAYSTACK_SECRET_KEY not found — skipping",
+            "flutterwave-webhook – invalid signature returns 400",
+            "FLW_SECRET_HASH not found — skipping",
         )]
-    payload = json.dumps({"event": "charge.success", "data": {}})
-    status, body = _post_raw("paystack-webhook", payload, {
+    payload = json.dumps({"event": "charge.completed", "data": {}})
+    status, body = _post_raw("flutterwave-webhook", payload, {
         "Content-Type": "application/json",
-        "x-paystack-signature": "deadbeef" * 16,  # 128-char hex but wrong key
+        "verif-hash": "wrong-secret-hash",
     })
     return [expect_status(
-        "paystack-webhook – wrong x-paystack-signature returns 400",
+        "flutterwave-webhook – wrong verif-hash returns 400",
         status, 400, body,
     )]
 
 
-def test_paystack_webhook_unhandled_event() -> list[TestResult]:
+def test_flutterwave_webhook_unhandled_event() -> list[TestResult]:
     """
-    Non-charge.success events (e.g. transfer.success) must be accepted silently
-    with 200 and skipped=true. No DB writes should occur. This validates the
-    event-type guard at the top of the handler.
+    Non-charge.completed events (e.g. transfer.completed) must be accepted
+    silently with 200 and skipped=true. No DB writes should occur. This
+    validates the event-type guard at the top of the handler.
     """
-    if not PAYSTACK_SECRET_KEY:
+    if not FLW_SECRET_HASH:
         return [fail(
-            "paystack-webhook – unhandled event returns 200",
-            "PAYSTACK_SECRET_KEY not found — skipping",
+            "flutterwave-webhook – unhandled event returns 200",
+            "FLW_SECRET_HASH not found — skipping",
         )]
     payload = json.dumps({
-        "event": "transfer.success",
+        "event": "transfer.completed",
         "data": {
-            "status": "success",
+            "status": "successful",
             "reference": "TEST_TRANSFER_001",
-            "amount": 50000,
+            "amount": 5000,
             "currency": "NGN",
             "customer": {"email": "test@example.com"},
-            "metadata": {},
+            "meta": {},
         },
     })
-    sig = _make_paystack_sig(payload)
-    status, body = _post_raw("paystack-webhook", payload, {
+    sig = _make_flw_sig()
+    status, body = _post_raw("flutterwave-webhook", payload, {
         "Content-Type": "application/json",
-        "x-paystack-signature": sig,
+        "verif-hash": sig,
     })
     results = [expect_status(
-        "paystack-webhook – transfer.success returns 200",
+        "flutterwave-webhook – transfer.completed returns 200",
         status, 200, body,
     )]
     results.append(TestResult(
-        "paystack-webhook – unhandled event body has skipped=true",
+        "flutterwave-webhook – unhandled event body has skipped=true",
         body.get("skipped") is True,
         f"body={body}",
     ))
     return results
 
 
-def test_paystack_webhook_charge_triggers_verify() -> list[TestResult]:
+def test_flutterwave_webhook_charge_triggers_verify() -> list[TestResult]:
     """
-    charge.success with a valid HMAC-SHA512 signature and a fake reference
-    passes signature verification but then calls verifyPaystackTransaction()
-    against the live Paystack API. Paystack rejects the fake reference,
-    causing the function to return 500.
+    charge.completed with a valid verif-hash and a fake tx_ref passes signature
+    verification but then calls verifyFlutterwaveTransaction() against the live
+    Flutterwave API. Flutterwave rejects the fake reference, causing the function
+    to return 500.
 
     This confirms:
-      1. HMAC-SHA512 signature verification works correctly
-      2. The server-side Paystack transaction verify call is made (not skipped)
+      1. verif-hash signature verification works correctly
+      2. The server-side Flutterwave transaction verify call is made (not skipped)
       3. Error handling returns a structured 500 (not a crash or 200)
 
-    In production, the reference is a real Paystack reference — this test
+    In production, the tx_ref is a real Flutterwave reference — this test
     exercises the exact same code path but with a fake reference so no money moves.
     """
-    if not PAYSTACK_SECRET_KEY:
+    if not FLW_SECRET_HASH:
         return [fail(
-            "paystack-webhook – charge.success triggers Paystack verify",
-            "PAYSTACK_SECRET_KEY not found — skipping",
+            "flutterwave-webhook – charge.completed triggers Flutterwave verify",
+            "FLW_SECRET_HASH not found — skipping",
         )]
     fake_ref = f"TEST_FAKE_REF_{int(time.time())}"
     payload = json.dumps({
-        "event": "charge.success",
+        "event": "charge.completed",
         "data": {
-            "status": "success",
-            "reference": fake_ref,
-            "amount": 100000,  # 1000 NGN in kobo
+            "status": "successful",
+            "tx_ref": fake_ref,
+            "amount": 10000,  # NGN
             "currency": "NGN",
-            "customer": {"email": "fan@example.com"},
-            "metadata": {
-                "custom_fields": [
-                    {"variable_name": "creator_id",
-                     "value": "33333333-3333-3333-3333-333333333333"},
-                    {"variable_name": "provider", "value": "paystack"},
-                    {"variable_name": "message_type", "value": "message"},
-                    {"variable_name": "sender_name", "value": "Test Fan"},
-                    {"variable_name": "sender_email", "value": "fan@example.com"},
-                    {"variable_name": "message_content", "value": "Test message"},
-                ],
+            "customer": {"email": "client@example.com"},
+            "meta": {
+                "creator_id": "33333333-3333-3333-3333-333333333333",
+                "provider": "flutterwave",
+                "message_type": "message",
+                "sender_name": "Test Client",
+                "sender_email": "client@example.com",
+                "message_content": "Test message",
             },
         },
     })
-    sig = _make_paystack_sig(payload)
-    status, body = _post_raw("paystack-webhook", payload, {
+    sig = _make_flw_sig()
+    status, body = _post_raw("flutterwave-webhook", payload, {
         "Content-Type": "application/json",
-        "x-paystack-signature": sig,
+        "verif-hash": sig,
     })
-    # Valid sig + fake reference → verifyPaystackTransaction() throws
+    # Valid sig + fake tx_ref → verifyFlutterwaveTransaction() throws
     # → function returns 500 "Could not verify transaction"
     # This is the expected response confirming the verify call was made.
     return [expect_status(
-        "paystack-webhook – charge.success calls Paystack verify (fake ref → 500)",
+        "flutterwave-webhook – charge.completed calls Flutterwave verify (fake ref → 500)",
         status, 500, body,
     )]
 
@@ -1948,30 +1936,30 @@ ALL_SUITES = {
         test_webhook_valid_sig_unpaid_session,
         test_webhook_wrong_event_type,
     ],
-    "get-paystack-banks": [
-        test_paystack_banks_missing_country,
-        test_paystack_banks_invalid_country,
-        test_paystack_banks_resolve_missing_fields,
-        test_paystack_banks_resolve_bad_account_format,
-        test_paystack_banks_nigeria,
-        test_paystack_banks_south_africa,
-        test_paystack_banks_lowercase_country,
+    "get-flutterwave-banks": [
+        test_flutterwave_banks_missing_country,
+        test_flutterwave_banks_invalid_country,
+        test_flutterwave_banks_resolve_missing_fields,
+        test_flutterwave_banks_resolve_bad_account_format,
+        test_flutterwave_banks_nigeria,
+        test_flutterwave_banks_south_africa,
+        test_flutterwave_banks_lowercase_country,
     ],
-    "create-paystack-subaccount": [
-        test_paystack_sub_no_auth,
-        test_paystack_sub_anon_key_rejected,
-        test_paystack_sub_missing_fields,
-        test_paystack_sub_non_paystack_country,
-        test_paystack_sub_missing_business_name,
-        test_paystack_sub_invalid_account_format,
-        test_paystack_sub_invalid_bank_code_format,
-        test_paystack_sub_non_paystack_creator,
+    "create-flutterwave-recipient": [
+        test_flutterwave_recipient_no_auth,
+        test_flutterwave_recipient_anon_key_rejected,
+        test_flutterwave_recipient_missing_fields,
+        test_flutterwave_recipient_non_flutterwave_country,
+        test_flutterwave_recipient_missing_business_name,
+        test_flutterwave_recipient_invalid_account_format,
+        test_flutterwave_recipient_invalid_bank_code_format,
+        test_flutterwave_recipient_non_flutterwave_creator,
     ],
-    "paystack-webhook": [
-        test_paystack_webhook_no_signature,
-        test_paystack_webhook_invalid_signature,
-        test_paystack_webhook_unhandled_event,
-        test_paystack_webhook_charge_triggers_verify,
+    "flutterwave-webhook": [
+        test_flutterwave_webhook_no_signature,
+        test_flutterwave_webhook_invalid_signature,
+        test_flutterwave_webhook_unhandled_event,
+        test_flutterwave_webhook_charge_triggers_verify,
     ],
     "get-conversation": [
         test_conversation_missing_token,
@@ -2075,7 +2063,7 @@ def main() -> None:
     print("Convozo Edge Function Integration Tests")
     print(f"Target: {BASE_URL}")
     print(f"Stripe webhook secret:   {'found' if WEBHOOK_SECRET else 'NOT FOUND (stripe-webhook tests will skip)'}")
-    print(f"Paystack secret key:     {'found' if PAYSTACK_SECRET_KEY else 'NOT FOUND (paystack tests will skip)'}")
+    print(f"Flutterwave secret hash: {'found' if FLW_SECRET_HASH else 'NOT FOUND (flutterwave-webhook tests will skip)'}")
     print(f"Creator JWT:             will sign in as creator@example.com on first use")
 
     sys.exit(run(suites, verbose=args.verbose))

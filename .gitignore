@@ -54,3 +54,4 @@ supabase/.env.stripe-keys
 !supabase/.env.production
 scripts/setup-test-account.sh
 scripts/create-test-stripe-account.py
+cypress/screenshots/

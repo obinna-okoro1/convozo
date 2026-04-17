@@ -10,9 +10,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <div>
-            @if (state.isPaystackCreator()) {
-              <p class="font-semibold text-content text-sm">Bank account verification pending</p>
-              <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Paystack has verified your bank account.</p>
+            @if (state.isFlutterwaveCreator()) {
+              <p class="font-semibold text-content text-sm">Bank account required</p>
+              <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until your Flutterwave bank account is connected.</p>
               <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Go to Payments <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
             } @else {
               <p class="font-semibold text-content text-sm">Connect Stripe to enable your shop</p>

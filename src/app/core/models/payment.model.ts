@@ -1,6 +1,6 @@
 /**
  * Payment domain models
- * Stripe Connect accounts, Paystack subaccounts, and payment-related types.
+ * Stripe Connect accounts, Flutterwave subaccounts, and payment-related types.
  */
 
 export type PayoutStatus = 'held' | 'pending_release' | 'released' | 'refunded' | 'disputed';
@@ -17,26 +17,25 @@ export interface StripeAccount {
   updated_at: string;
 }
 
-/** A creator's registered bank account on Paystack (NG/ZA creators only). */
-export interface PaystackSubaccount {
+/** A creator's registered bank account on Flutterwave (NG/ZA creators only). */
+export interface FlutterwaveSubaccount {
   id: string;
   creator_id: string;
-  /** Paystack subaccount code, e.g. ACCT_xxxxxx */
-  subaccount_code: string;
+  /** Flutterwave subaccount ID, e.g. RS_xxxxxx */
+  subaccount_id: string;
   business_name: string;
   bank_name: string;
   bank_code: string;
   account_number: string;
   account_name: string | null;
   country: string;
-  is_verified: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-/** A bank entry returned by the Paystack /bank list endpoint. */
-export interface PaystackBank {
+/** A bank entry returned by the Flutterwave /banks list endpoint. */
+export interface FlutterwaveBank {
   name: string;
   code: string;
   country: string;

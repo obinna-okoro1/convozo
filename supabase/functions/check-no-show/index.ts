@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
             console.error(`[check-no-show] Fan no-show fee capture failed for booking ${booking.id}:`, (captureErr as Error).message);
           }
         } else {
-          // No Stripe payment (e.g. Paystack) — release payout directly
+          // No Stripe payment (e.g. Flutterwave) — release payout directly
           updatePayload.payout_status = 'released';
           updatePayload.payout_released_at = now.toISOString();
           payoutReleased = true;

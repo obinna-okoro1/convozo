@@ -145,8 +145,8 @@ def test_table_exists() -> list[TestResult]:
 def test_unique_constraint() -> list[TestResult]:
     """UNIQUE(creator_id, month) must be enforced."""
     creator_id = CREATOR_ID_RONALDO
-    # This month should already exist from the seed back-fill
-    month = "2026-03-01"
+    # Use the current month — seed payments use NOW() so this row is guaranteed to exist
+    month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     try:
         sql_exec(
             f"INSERT INTO public.creator_monthly_analytics (creator_id, month) "
@@ -192,14 +192,17 @@ def test_backfill_populated() -> list[TestResult]:
         f"row count={count}"
     ))
 
-    # Ronaldo has 2 completed payments in seed — check message_count >= 1
+    # Ronaldo has 2 completed payments in seed — check at least 1 analytics row
+    # with total_gross > 0. Use ORDER BY month DESC to get the most recent row,
+    # which contains the seed-data payments (seeded with NOW()).
     row = sql_one(
         f"SELECT message_count, message_gross, total_gross FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{CREATOR_ID_RONALDO}';"
+        f"WHERE creator_id = '{CREATOR_ID_RONALDO}' "
+        f"ORDER BY month DESC LIMIT 1;"
     )
     results.append(TestResult(
         "back-fill – Ronaldo has analytics from seed payments",
-        row is not None and int(row[0]) >= 1,
+        row is not None and int(row[2]) > 0,
         f"row={row}"
     ))
     return results
@@ -209,7 +212,7 @@ def test_backfill_totals_consistent() -> list[TestResult]:
     """total_gross must equal message_gross + call_gross + shop_gross for each row."""
     rows = sql(
         "SELECT creator_id, month, total_gross, "
-        "       (message_gross + call_gross + shop_gross) AS computed_total "
+        "       (message_gross + call_gross + shop_gross + support_gross) AS computed_total "
         "FROM public.creator_monthly_analytics;"
     )
     inconsistent = [
@@ -236,11 +239,12 @@ def test_payment_completed_increments_analytics() -> list[TestResult]:
     fee = platform_fee(amount)
     creator_net = net(amount)
 
-    # Record state before
+    # Record state before — filter to current month (trigger uses DATE_TRUNC('month', NOW()))
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     before = sql_one(
         f"SELECT message_count, message_gross, message_net, total_gross, total_net "
         f"FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{creator_id}';"
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
     before_count = int(before[0]) if before else 0
     before_gross = int(before[1]) if before else 0
@@ -261,7 +265,7 @@ def test_payment_completed_increments_analytics() -> list[TestResult]:
     after = sql_one(
         f"SELECT message_count, message_gross, message_net, total_gross, total_net "
         f"FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{creator_id}';"
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
     results = []
     results.append(TestResult(
@@ -304,6 +308,7 @@ def test_payment_refund_increments_refund_columns() -> list[TestResult]:
     session_id = f"cs_test_{payment_id[:8]}"
 
     # Insert a completed payment
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     sql_exec(
         f"INSERT INTO public.payments "
         f"  (id, creator_id, stripe_session_id, amount, platform_fee, creator_amount, "
@@ -317,7 +322,7 @@ def test_payment_refund_increments_refund_columns() -> list[TestResult]:
         f"SELECT message_refund_count, message_refund_amount, message_gross, message_net, "
         f"       total_gross, total_net, total_refunds "
         f"FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{creator_id}';"
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     # Simulate Stripe refund webhook updating payment status
@@ -329,7 +334,7 @@ def test_payment_refund_increments_refund_columns() -> list[TestResult]:
         f"SELECT message_refund_count, message_refund_amount, message_gross, message_net, "
         f"       total_gross, total_net, total_refunds "
         f"FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{creator_id}';"
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     results = []
@@ -370,39 +375,52 @@ def test_message_deletion_does_not_affect_analytics() -> list[TestResult]:
     Deleting a message row must leave analytics completely unchanged.
     Analytics are immutable to content deletions — only account deletion
     cascade-removes them.
-    """
-    creator_id = CREATOR_ID_RONALDO
 
-    # Record analytics state before delete
+    We INSERT a fresh test message (not a seed message) so that deleting it
+    never affects other tests that depend on seed data (e.g. the portal tests).
+    """
+    creator_id = CREATOR_ID_JOHNSON
+    test_msg_id = str(uuid.uuid4())
+
+    # Insert a fresh test message (no payment — messages don't require one)
+    sql_exec(
+        f"INSERT INTO public.messages "
+        f"  (id, creator_id, sender_name, sender_email, message_content, "
+        f"   amount_paid, message_type, is_handled) "
+        f"VALUES "
+        f"  ('{test_msg_id}', '{creator_id}', 'Delete Test', "
+        f"   'delete-test@example.com', 'Test message for deletion immunity', "
+        f"   1000, 'message', false);"
+    )
+
+    # Record analytics state AFTER inserting (but no payment → analytics unchanged)
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     before = sql_one(
         f"SELECT message_count, message_gross, message_net, total_gross, total_net "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
-    # Find a message belonging to this creator and delete it
-    msg_row = sql_one(
-        f"SELECT id FROM public.messages WHERE creator_id = '{creator_id}' LIMIT 1;"
-    )
-    if not msg_row:
-        return [fail(
-            "deletion immunity – message deletion does not alter analytics",
-            "No messages found for creator in seed data — re-run supabase db reset"
-        )]
-
-    sql_exec(f"DELETE FROM public.messages WHERE id = '{msg_row[0].strip()}';")
+    # Delete the test message — analytics must stay identical
+    sql_exec(f"DELETE FROM public.messages WHERE id = '{test_msg_id}';")
 
     after = sql_one(
         f"SELECT message_count, message_gross, message_net, total_gross, total_net "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     unchanged = (
-        after is not None
-        and int(before[0]) == int(after[0])  # message_count
-        and int(before[1]) == int(after[1])  # message_gross
-        and int(before[2]) == int(after[2])  # message_net
-        and int(before[3]) == int(after[3])  # total_gross
-        and int(before[4]) == int(after[4])  # total_net
+        before == after  # both could be None (no current-month row) — that's fine
+        or (
+            before is not None
+            and after is not None
+            and int(before[0]) == int(after[0])  # message_count
+            and int(before[1]) == int(after[1])  # message_gross
+            and int(before[2]) == int(after[2])  # message_net
+            and int(before[3]) == int(after[3])  # total_gross
+            and int(before[4]) == int(after[4])  # total_net
+        )
     )
     return [TestResult(
         "deletion immunity – message deletion does NOT alter analytics",
@@ -412,29 +430,43 @@ def test_message_deletion_does_not_affect_analytics() -> list[TestResult]:
 
 
 def test_call_booking_deletion_does_not_affect_analytics() -> list[TestResult]:
-    """Deleting a call_bookings row must leave analytics unchanged."""
+    """INSERT a fresh call_bookings row, record analytics, DELETE it, verify analytics unchanged.
+    Never touches seed bookings (Alex Rodriguez) that Cypress tests depend on."""
     creator_id = CREATOR_ID_JOHNSON
+
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
+
+    # Insert a throw-away booking (payout_status = 'held', so no analytics trigger fires)
+    test_booking_id = sql_scalar(
+        f"INSERT INTO public.call_bookings "
+        f"(creator_id, booker_name, booker_email, scheduled_at, duration, amount_paid, status, "
+        f" stripe_session_id, stripe_payment_intent_id, daily_room_name, daily_room_url, payout_status) "
+        f"VALUES ('{creator_id}', 'Deletion Test Booker', 'del-test-booker@test.local', "
+        f"  NOW() + INTERVAL '10 days', 30, 5000, 'confirmed', "
+        f"  'cs_test_del_booking', 'pi_test_del_booking', 'room-del-test', "
+        f"  'https://convozo.daily.co/room-del-test', 'held') "
+        f"RETURNING id;"
+    )
 
     before = sql_one(
         f"SELECT call_count, call_gross, total_gross FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{creator_id}';"
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
-
-    booking_row = sql_one(
-        f"SELECT id FROM public.call_bookings WHERE creator_id = '{creator_id}' LIMIT 1;"
-    )
-    if not booking_row:
+    if not before:
+        # Clean up the test booking
+        sql_exec(f"DELETE FROM public.call_bookings WHERE id = '{test_booking_id.strip()}';")
         return [TestResult(
-            "deletion immunity – call booking deletion does not alter analytics",
-            True,  # pass vacuously — no bookings in seed is also fine
-            "No call bookings in seed data for this creator — skipped"
+            "deletion immunity – call booking deletion does NOT alter analytics",
+            True,
+            "No analytics row for current month yet — skipped"
         )]
 
-    sql_exec(f"DELETE FROM public.call_bookings WHERE id = '{booking_row[0].strip()}';")
+    # Delete the test booking (never the seed Alex Rodriguez one)
+    sql_exec(f"DELETE FROM public.call_bookings WHERE id = '{test_booking_id.strip()}';")
 
     after = sql_one(
         f"SELECT call_count, call_gross, total_gross FROM public.creator_monthly_analytics "
-        f"WHERE creator_id = '{creator_id}';"
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     unchanged = (
@@ -459,9 +491,11 @@ def test_call_payout_released_increments_analytics() -> list[TestResult]:
     call_net = net(amount)
     booking_id = str(uuid.uuid4())
 
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     before = sql_one(
         f"SELECT call_count, call_gross, call_net, total_gross, total_net "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
     before_call_count = int(before[0]) if before else 0
     before_call_gross = int(before[1]) if before else 0
@@ -483,7 +517,8 @@ def test_call_payout_released_increments_analytics() -> list[TestResult]:
 
     after = sql_one(
         f"SELECT call_count, call_gross, call_net, total_gross, total_net "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     results = []
@@ -513,6 +548,7 @@ def test_call_refund_increments_refund_columns() -> list[TestResult]:
     amount = 5000
     booking_id = str(uuid.uuid4())
 
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     sql_exec(
         f"INSERT INTO public.call_bookings "
         f"  (id, creator_id, booker_name, booker_email, scheduled_at, duration, "
@@ -524,7 +560,8 @@ def test_call_refund_increments_refund_columns() -> list[TestResult]:
 
     before = sql_one(
         f"SELECT call_refund_count, call_refund_amount, call_net, total_refunds "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     sql_exec(
@@ -533,7 +570,8 @@ def test_call_refund_increments_refund_columns() -> list[TestResult]:
 
     after = sql_one(
         f"SELECT call_refund_count, call_refund_amount, call_net, total_refunds "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     results = []
@@ -581,9 +619,11 @@ def test_shop_order_completed_increments_analytics() -> list[TestResult]:
     order_id = str(uuid.uuid4())
     idemp = str(uuid.uuid4())
 
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     before = sql_one(
         f"SELECT shop_order_count, shop_gross, shop_net, total_gross "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
     before_count = int(before[0]) if before else 0
     before_gross = int(before[1]) if before else 0
@@ -599,7 +639,8 @@ def test_shop_order_completed_increments_analytics() -> list[TestResult]:
 
     after = sql_one(
         f"SELECT shop_order_count, shop_gross, shop_net, total_gross "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     results = []
@@ -646,9 +687,11 @@ def test_shop_order_refund_increments_refund_columns() -> list[TestResult]:
         f"   {amount}, 'cs_shop_ref_{order_id[:8]}', '{idemp}', 'completed');"
     )
 
+    cur_month = sql_scalar("SELECT DATE_TRUNC('month', NOW())::DATE;")
     before = sql_one(
         f"SELECT shop_refund_count, shop_refund_amount, shop_net, total_refunds "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     sql_exec(
@@ -657,7 +700,8 @@ def test_shop_order_refund_increments_refund_columns() -> list[TestResult]:
 
     after = sql_one(
         f"SELECT shop_refund_count, shop_refund_amount, shop_net, total_refunds "
-        f"FROM public.creator_monthly_analytics WHERE creator_id = '{creator_id}';"
+        f"FROM public.creator_monthly_analytics "
+        f"WHERE creator_id = '{creator_id}' AND month = '{cur_month}';"
     )
 
     shop_net_amt = net(amount)

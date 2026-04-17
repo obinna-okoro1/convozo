@@ -15,8 +15,8 @@ export interface Creator {
   phone_number: string;
   /** ISO 3166-1 alpha-2 country code detected at signup, e.g. 'NG', 'US'. */
   country: string;
-  /** Payment provider assigned at signup based on country. NG/ZA → 'paystack'; all others → 'stripe'. */
-  payment_provider: 'stripe' | 'paystack';
+  /** Payment provider assigned at signup based on country. NG/ZA → 'flutterwave'; all others → 'stripe'. */
+  payment_provider: 'stripe' | 'flutterwave';
   is_active: boolean;
 
   // ── Professional taxonomy (migration 041) ─────────────────────────────────

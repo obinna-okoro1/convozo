@@ -9,7 +9,7 @@
 -- release the slot so it can be re-booked.
 --
 -- The Edge Function (create-call-booking-session) does an early conflict check
--- before creating the Stripe/Paystack session. This index is the hard
+-- before creating the Stripe/Flutterwave session. This index is the hard
 -- safety net that handles the narrow concurrent-payment race window.
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_call_bookings_no_double_book

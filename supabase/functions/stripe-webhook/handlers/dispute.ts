@@ -76,7 +76,7 @@ export async function handleDisputeCreated(
 
   const affected = frozenBooking ?? frozenPayment;
   if (!affected) {
-    // May be a Paystack payment or an unrecognised PI — log and return 200.
+    // May be a Flutterwave payment or an unrecognised PI — log and return 200.
     // Returning 200 prevents Stripe from endlessly retrying an unmatchable event.
     console.warn('[dispute] No matching record found for PI:', paymentIntentId, '— skipping');
     return { received: true };

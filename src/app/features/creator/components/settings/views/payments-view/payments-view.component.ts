@@ -13,7 +13,7 @@ export class PaymentsViewComponent implements OnInit {
   protected readonly refreshing = signal(false);
   protected readonly stripeConnectEnabled = FEATURE_FLAGS.STRIPE_CONNECT_ENABLED;
 
-  // ── Paystack bank setup form ──────────────────────────────────────
+  // ── Flutterwave bank setup form ──────────────────────────────────────
   protected readonly bankCode = signal('');
   protected readonly accountNumber = signal('');
   protected readonly businessName = signal('');
@@ -26,19 +26,19 @@ export class PaymentsViewComponent implements OnInit {
   protected readonly selectedBankName = computed(() => {
     const code = this.bankCode();
     if (!code) return '';
-    return this.state.paystackBanks().find(b => b.code === code)?.name ?? '';
+    return this.state.flutterwaveBanks().find((b: { code: string; name: string }) => b.code === code)?.name ?? '';
   });
 
   /**
    * Banks filtered by the current search term.
    * Capped at 60 results to keep the dropdown DOM lightweight.
-   * When no search is typed, shows the first 60 banks (alphabetical from Paystack).
+   * When no search is typed, shows the first 60 banks (alphabetical from Flutterwave).
    */
   protected readonly filteredBanks = computed(() => {
     const search = this.bankSearch().toLowerCase().trim();
-    const banks = this.state.paystackBanks();
+    const banks = this.state.flutterwaveBanks();
     if (!search) return banks.slice(0, 60);
-    return banks.filter(b => b.name.toLowerCase().includes(search)).slice(0, 60);
+    return banks.filter((b: { name: string }) => b.name.toLowerCase().includes(search)).slice(0, 60);
   });
   protected readonly resolvedAccountName = signal<string | null>(null);
   protected readonly resolving = signal(false);
@@ -55,13 +55,6 @@ export class PaymentsViewComponent implements OnInit {
     const needsStripeRefresh = returningFromStripe || (account != null && !account.onboarding_completed);
     if (needsStripeRefresh) {
       void this.state.refreshStripeStatus();
-    }
-
-    // For Paystack creators: auto-refresh live status from Paystack on every page
-    // load so the UI always reflects current verification state without requiring
-    // the creator to manually click "Refresh Status".
-    if (this.state.isPaystackCreator() && this.state.paystackSubaccount()) {
-      void this.state.refreshPaystackStatus();
     }
 
     // Pre-fill the business name with the creator's display name
@@ -81,14 +74,7 @@ export class PaymentsViewComponent implements OnInit {
     this.refreshing.set(false);
   }
 
-  /** Re-fetch is_verified / is_active from Paystack and update the UI badge. */
-  protected async refreshPaystackStatus(): Promise<void> {
-    this.refreshing.set(true);
-    await this.state.refreshPaystackStatus();
-    this.refreshing.set(false);
-  }
-
-  // ── Paystack methods ──────────────────────────────────────────────
+  // ── Flutterwave methods ────────────────────────────────────────────
 
   protected openBankForm(): void {
     this.showBankForm.set(true);
@@ -96,7 +82,7 @@ export class PaymentsViewComponent implements OnInit {
     this.resolveError.set(null);
     this.bankSearch.set('');
     this.bankDropdownOpen.set(false);
-    void this.state.loadPaystackBanks();
+    void this.state.loadFlutterwaveBanks();
   }
 
   protected openBankDropdown(): void {
@@ -140,7 +126,7 @@ export class PaymentsViewComponent implements OnInit {
     this.resolveError.set(null);
     this.resolvedAccountName.set(null);
 
-    const { accountName, error } = await this.state.resolvePaystackAccount(num, code);
+    const { accountName, error } = await this.state.resolveFlutterwaveAccount(num, code);
     this.resolvedAccountName.set(accountName);
     this.resolveError.set(error);
     this.resolving.set(false);
@@ -158,7 +144,7 @@ export class PaymentsViewComponent implements OnInit {
   protected async submitBankAccount(): Promise<void> {
     if (!this.canSubmitBank) return;
 
-    await this.state.connectPaystack({
+    await this.state.connectFlutterwave({
       bankCode: this.bankCode(),
       accountNumber: this.accountNumber(),
       businessName: this.businessName(),
@@ -169,4 +155,3 @@ export class PaymentsViewComponent implements OnInit {
     }
   }
 }
-
