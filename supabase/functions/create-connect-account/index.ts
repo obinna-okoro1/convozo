@@ -89,10 +89,14 @@ Deno.serve(async (req) => {
         type: 'account_onboarding',
       });
     } catch (linkErr: unknown) {
-      const stripeErr = linkErr as { code?: string; raw?: { param?: string } };
+      const stripeErr = linkErr as { code?: string; type?: string; message?: string; raw?: { param?: string } };
+      // A test-mode account ID used against a live key returns no `code` but
+      // has type=invalid_request_error and a message about "not connected".
+      // A fully missing account returns code=resource_missing with param=account.
       const isStaleAccount =
-        stripeErr?.code === 'resource_missing' &&
-        stripeErr?.raw?.param === 'account';
+        (stripeErr?.code === 'resource_missing' && stripeErr?.raw?.param === 'account') ||
+        (stripeErr?.type === 'invalid_request_error' && typeof stripeErr?.message === 'string' &&
+          (stripeErr.message.includes('not connected') || stripeErr.message.includes('does not exist')));
 
       if (!isStaleAccount) throw linkErr;
 
