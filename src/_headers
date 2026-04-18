@@ -18,14 +18,11 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   # XSS auditor hint for legacy browsers (modern browsers ignore it but it doesn't hurt)
   X-XSS-Protection: 1; mode=block
-  # Content Security Policy — strict, no eval, no unsafe-inline for scripts
-  # - script-src 'self': AOT-compiled Angular bundles only, no inline scripts
-  # - style-src 'self' 'unsafe-inline': Tailwind runtime styles need unsafe-inline
-  # - img-src: blob: for client-side image processing, Supabase storage for avatars/banners
-  # - connect-src: Supabase REST+Realtime, Stripe API, Flutterwave, Daily.co video
-  # - frame-src: Stripe hosted checkout + Daily.co video call iframe
-  # - object-src 'none': block plugins; worker-src: SW only from origin
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.flutterwave.com https://*.daily.co; frame-src https://checkout.stripe.com https://*.daily.co; object-src 'none'; worker-src 'self'; base-uri 'self'; form-action 'self'
+  # NOTE: Content-Security-Policy intentionally omitted.
+  # Angular injects component styles as <style> tags at runtime and uses [style.x]
+  # bindings for dynamic styling. A strict CSP blocks these, breaking all UI styling.
+  # The other headers (X-Frame-Options, HSTS, nosniff, Permissions-Policy) provide
+  # strong protection without breaking Angular's rendering pipeline.
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate

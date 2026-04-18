@@ -850,7 +850,94 @@ VALUES
   ('77777777-7777-7777-7777-777777777777', 'client',
    'We''re a premium fitness supplements brand. Ideally 2 posts and a reel per month for a 3-month campaign.',
    NOW() - INTERVAL '1 hour');
+-- ============================================================================
+-- NIGERIAN FLUTTERWAVE CREATOR (User 5: Chioma Okafor)
+-- Used by Flutterwave integration tests — must remain country=NG, payment_provider=flutterwave.
+-- Do NOT change to Stripe; Stripe creator tests use sarahjohnson exclusively.
+-- ============================================================================
 
+-- Auth user for Chioma
+INSERT INTO auth.users (
+  id, instance_id, email, encrypted_password, email_confirmed_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
+  created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role
+) VALUES (
+  'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  '00000000-0000-0000-0000-000000000000',
+  'chioma@example.com',
+  crypt('sample123', gen_salt('bf')),
+  NOW(), '', '', '', '', NOW(), NOW(),
+  '{"provider":"email","providers":["email"]}',
+  '{"name":"Chioma Okafor"}',
+  'authenticated', 'authenticated'
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+SELECT
+  'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  '{"sub":"cccccccc-cccc-cccc-cccc-cccccccccccc","email":"chioma@example.com"}'::jsonb,
+  'email', NOW(), NOW(), NOW()
+WHERE NOT EXISTS (
+  SELECT 1 FROM auth.identities WHERE user_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' AND provider = 'email'
+);
+
+-- Creator profile — Nigerian, Flutterwave payment provider
+INSERT INTO public.creators (
+  id, user_id, email, display_name, slug, bio,
+  profile_image_url, phone_number, is_active,
+  country, payment_provider
+) VALUES (
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  'chioma@example.com',
+  'Chioma Okafor',
+  'chiomaokafor',
+  'Lagos-based business consultant • helping African startups scale 🚀',
+  'https://i.pravatar.cc/400?img=45',
+  '+234 802-555-0199',
+  true,
+  'NG',
+  'flutterwave'
+) ON CONFLICT (user_id) DO NOTHING;
+
+-- Creator settings — messages + calls enabled
+INSERT INTO public.creator_settings (
+  creator_id, message_price, call_price, call_duration,
+  calls_enabled, messages_enabled, tips_enabled, response_expectation
+) VALUES (
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  1000,  -- $10 for messages (USD cents)
+  5000,  -- $50 for 30min calls (USD cents)
+  30,
+  true, true, true,
+  '24-48 hours'
+) ON CONFLICT (creator_id) DO NOTHING;
+
+-- Expert credentials
+UPDATE public.creators SET
+  category            = 'business',
+  subcategory         = 'startup_consulting',
+  profession_title    = 'Startup Growth Consultant',
+  years_of_experience = 7,
+  linkedin_url        = 'https://linkedin.com/in/chioma-okafor'
+WHERE id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+
+-- Flutterwave subaccount — fake ID for local testing
+INSERT INTO public.flutterwave_subaccounts (
+  creator_id, subaccount_id, business_name, bank_name,
+  bank_code, account_number, country, is_active, account_name
+) VALUES (
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  'RS_TEST_CHIOMA_DEV',
+  'Chioma Okafor Consulting',
+  'Access Bank',
+  '044',
+  '1234567890',
+  'NG',
+  true,
+  'CHIOMA OKAFOR'
+) ON CONFLICT (creator_id) DO NOTHING;
 -- Output summary
 SELECT 'Seed data inserted successfully!' as message;
 SELECT '✅ Created 2 test users (password: sample123)' as info_1;

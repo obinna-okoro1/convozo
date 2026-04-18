@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
         subaccountId: subaccountRow.subaccount_id,
         redirectUrl: `${appUrl}/success?tx_ref=${txRef}&creator=${creator_slug}`,
         txRef,
+        country: (creator.country as string) ?? 'NG',
         metadata: {
           creator_id: creator.id,
           message_content: message_content.slice(0, 490),

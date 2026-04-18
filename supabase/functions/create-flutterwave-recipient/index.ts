@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
     // Resolve the authenticated user to find their creator record
     const { data: creator, error: creatorError } = await supabase
       .from('creators')
-      .select('id, payment_provider, country')
+      .select('id, email, payment_provider, country')
       .eq('user_id', user.id)
       .single();
 
@@ -128,6 +128,7 @@ Deno.serve(async (req) => {
     // Create the Flutterwave subaccount — this is synchronous and immediately usable.
     const result = await createFlutterwaveSubaccount({
       businessName: business_name,
+      businessEmail: (creator.email as string) ?? user.email ?? '',
       bankCode: bank_code,
       accountNumber: account_number,
       country: country.toUpperCase(),

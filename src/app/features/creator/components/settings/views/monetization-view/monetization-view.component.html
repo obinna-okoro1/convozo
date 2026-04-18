@@ -72,9 +72,9 @@
               <label for="callPrice" class="form-label">Session Price <span class="text-red-400">*</span></label>
               <div class="flex items-center gap-3">
                 <span class="text-xl font-semibold text-content-secondary">$</span>
-                <input type="number" id="callPrice" [value]="state.callPrice() / 100" (input)="state.callPrice.set(state.inputNumber($event) * 100)" min="1" step="1" required class="input flex-1" />
+                <input type="number" id="callPrice" [value]="state.callPrice() / 100" (input)="state.callPrice.set(state.inputNumber($event) * 100)" min="5" step="1" required class="input flex-1" />
               </div>
-              <p class="form-hint">Price per session in USD</p>
+              <p class="form-hint">Minimum $5 per session</p>
             </div>
             <div>
               <label for="callDuration" class="form-label">Session Duration <span class="text-red-400">*</span></label>

@@ -146,11 +146,16 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Use the Flutterwave-authoritative amount (already converted to integer cents by verifyFlutterwaveTransaction).
-  const amountInCents = verifiedTx.amountCents;
-
   const meta = verifiedTx.meta;
   const { creator_id, message_type, provider } = meta;
+
+  // Use the original USD cents stored in meta at checkout time as the authoritative
+  // amount. This is necessary because charges are now made in local currency (NGN/ZAR)
+  // so verifiedTx.amountCents would be in local kobo/cents, not USD cents.
+  // Fall back to verifiedTx.amountCents only if meta.amount is missing (legacy txns).
+  const amountInCents = meta.amount
+    ? parseInt(meta.amount, 10)
+    : verifiedTx.amountCents;
 
   if (!creator_id || provider !== 'flutterwave') {
     console.log('[flutterwave-webhook] Skipping — missing creator_id or not a Flutterwave transaction');

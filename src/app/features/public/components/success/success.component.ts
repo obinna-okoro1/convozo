@@ -53,6 +53,17 @@ export class SuccessComponent implements OnInit {
     const shop = this.route.snapshot.queryParamMap.get('shop');
     const creator = this.route.snapshot.queryParamMap.get('creator');
 
+    // Flutterwave appends ?status=successful|cancelled|failed to the redirect URL.
+    // If the payment was not successful, redirect back — never show the success screen.
+    const flwStatus = this.route.snapshot.queryParamMap.get('status');
+    if (flwStatus && flwStatus !== 'successful') {
+      const slug = creator ?? '/';
+      void this.router.navigate(creator ? ['/', creator] : ['/'], {
+        queryParams: { payment: 'cancelled' },
+      });
+      return;
+    }
+
     this.isCallBooking.set(type === 'call');
     this.isShopPurchase.set(shop === '1');
     this.isSupportTip.set(type === 'support');
