@@ -176,6 +176,7 @@ Deno.serve(async (req) => {
         subaccountId: subaccountRow.subaccount_id,
         redirectUrl: `${appUrl}/success?tx_ref=${txRef}&type=call&creator=${payload.creator_slug}`,
         txRef,
+        country: (creator.country as string) ?? 'NG',
         metadata: {
           type: 'call_booking',
           creator_id: creator.id,
