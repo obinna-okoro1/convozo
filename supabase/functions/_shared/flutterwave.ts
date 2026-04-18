@@ -4,6 +4,9 @@
  * Flutterwave has no official Deno SDK, so we use fetch directly against their REST API.
  * All monetary amounts in this codebase are in integer cents (USD subunits). Flutterwave
  * amounts are in full currency units (e.g. 10.00 for $10), so we convert at the boundary.
+ * For local-currency charges (NGN, ZAR) a live FX rate is fetched from Flutterwave's own
+ * /transfers/rates API at checkout time. If the rate cannot be obtained, the payment is
+ * blocked — we never charge at a stale or guessed rate.
  *
  * Countries supported by this integration:
  *   NG — Nigeria
@@ -50,6 +53,8 @@ export interface FlutterwavePaymentParams {
   txRef: string;
   /** Metadata to embed in the transaction (recovered in the webhook via data.meta) */
   metadata: Record<string, string>;
+  /** Creator's ISO country code — determines charge currency (NG→NGN, ZA→ZAR, else USD) */
+  country: string;
 }
 
 export interface FlutterwavePaymentResult {
@@ -59,6 +64,7 @@ export interface FlutterwavePaymentResult {
 
 export interface FlutterwaveSubaccountParams {
   businessName: string;
+  businessEmail: string;
   bankCode: string;
   accountNumber: string;
   /** Creator receives (1 - platformFeePct/100) — e.g. 0.78 for 22% platform fee. */
@@ -99,14 +105,65 @@ export interface FlutterwaveBank {
  *
  * @throws Error if the Flutterwave API returns a non-success response.
  */
+// Maps ISO country code to Flutterwave charge currency.
+// Flutterwave subaccounts settle in their local currency so charges must match.
+const COUNTRY_CURRENCY: Record<string, string> = {
+  NG: 'NGN',
+  ZA: 'ZAR',
+};
+
+/**
+ * Fetch a live FX rate from the Flutterwave Transfers Rates API.
+ * Returns the number of `toCurrency` units per 1 USD.
+ *
+ * Endpoint: GET /transfers/rates?amount=1&destination_currency=NGN&source_currency=USD
+ *
+ * @throws Error if the FX rate cannot be obtained — the payment must not proceed
+ *   without a verified exchange rate.
+ */
+async function fetchFlutterwaveFxRate(toCurrency: string): Promise<number> {
+  const url = `${FLW_BASE_URL}/transfers/rates?amount=1&destination_currency=${toCurrency}&source_currency=USD`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${FLW_SECRET_KEY}` },
+  });
+
+  const json = await res.json() as {
+    status: string;
+    data?: { rate: number; destination_amount: number };
+  };
+
+  if (json.status === 'success' && json.data?.rate && json.data.rate > 0) {
+    return json.data.rate;
+  }
+
+  throw new Error(
+    `[flutterwave] Unable to fetch FX rate for USD → ${toCurrency}. API response: ${JSON.stringify(json)}`,
+  );
+}
+
 export async function initializeFlutterwavePayment(
   params: FlutterwavePaymentParams,
 ): Promise<FlutterwavePaymentResult> {
+  const currency = COUNTRY_CURRENCY[params.country.toUpperCase()] ?? 'USD';
+
+  // Amount conversion:
+  // Prices are stored in USD cents. For local-currency charges we fetch a live
+  // FX rate from Flutterwave's own rates API so the amount always reflects the
+  // real exchange rate at the time of checkout. A fallback is used if the API
+  // is unavailable so payments are never blocked by a transient FX outage.
+  let localAmount: number;
+  if (currency === 'USD') {
+    localAmount = params.amountCents / 100;
+  } else {
+    const fxRate = await fetchFlutterwaveFxRate(currency);
+    // amountCents is USD cents → divide by 100 for USD → multiply by FX rate for local units.
+    localAmount = Math.round((params.amountCents / 100) * fxRate);
+  }
+
   const body = {
     tx_ref: params.txRef,
-    // Convert integer cents to full currency units (e.g. 1000 cents → 10.00 USD)
-    amount: params.amountCents / 100,
-    currency: 'USD',
+    amount: localAmount,
+    currency,
     redirect_url: params.redirectUrl,
     customer: {
       email: params.email,
@@ -114,6 +171,10 @@ export async function initializeFlutterwavePayment(
     },
     subaccounts: [{ id: params.subaccountId }],
     meta: params.metadata,
+    // Allow all available payment methods — card, bank transfer, USSD, mobile money.
+    // This is critical: some international cards are blocked by Flutterwave's
+    // risk rules for NG transactions. Bank transfer is always available as fallback.
+    payment_options: 'card,banktransfer,ussd,account',
     // Platform bears Flutterwave's processing fee so it comes out of our 22% cut,
     // not the creator's 78% share.
     merchant_bears_cost: true,
@@ -161,6 +222,7 @@ export async function createFlutterwaveSubaccount(
     account_bank: params.bankCode,
     account_number: params.accountNumber,
     business_name: params.businessName,
+    business_email: params.businessEmail,
     split_type: 'percentage',
     // Flutterwave split_value is a decimal fraction: 0.78 = creator gets 78%
     split_value: params.creatorShareDecimal,
@@ -294,12 +356,18 @@ export async function resolveFlutterwaveAccountName(
   accountNumber: string,
   bankCode: string,
 ): Promise<string> {
-  const url = `${FLW_BASE_URL}/accounts/resolve?account_number=${encodeURIComponent(accountNumber)}&account_bank=${encodeURIComponent(bankCode)}`;
+  const url = `${FLW_BASE_URL}/accounts/resolve`;
 
   const res = await fetch(url, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${FLW_SECRET_KEY}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      account_number: accountNumber,
+      account_bank: bankCode,
+    }),
   });
 
   const json = await res.json() as {

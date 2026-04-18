@@ -173,13 +173,25 @@ export class CreatorService {
     shopEnabled: boolean;
     responseExpectation: string;
   }): Promise<SupabaseResponse<CreatorSettings>> {
+    // Ensure prices meet DB constraints: message_price >= 100, call_price >= 500.
+    // Send null (not undefined) when a feature is disabled so the DB column is cleared.
+    const messagePrice = data.messagesEnabled
+      ? Math.max(data.messagePrice ?? 100, 100)
+      : null;
+    const callPrice = data.callsEnabled
+      ? Math.max(data.callPrice ?? 500, 500)
+      : null;
+    const callDuration = data.callsEnabled
+      ? Math.min(Math.max(data.callDuration ?? 30, 5), 240)
+      : null;
+
     const { data: settings, error } = await this.supabaseService.client
       .from('creator_settings')
       .update({
-        message_price: data.messagePrice,
+        message_price: messagePrice,
         messages_enabled: data.messagesEnabled,
-        call_price: data.callPrice,
-        call_duration: data.callDuration,
+        call_price: callPrice,
+        call_duration: callDuration,
         calls_enabled: data.callsEnabled,
         tips_enabled: data.tipsEnabled,
         shop_enabled: data.shopEnabled,
