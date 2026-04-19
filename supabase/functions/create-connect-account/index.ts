@@ -89,14 +89,22 @@ Deno.serve(async (req) => {
         type: 'account_onboarding',
       });
     } catch (linkErr: unknown) {
-      const stripeErr = linkErr as { code?: string; type?: string; message?: string; raw?: { param?: string } };
-      // A test-mode account ID used against a live key returns no `code` but
-      // has type=invalid_request_error and a message about "not connected".
-      // A fully missing account returns code=resource_missing with param=account.
+      const stripeErr = linkErr as { code?: string; type?: string; message?: string; param?: string; raw?: { param?: string; type?: string } };
+      // Detect stale/invalid Stripe account IDs — covers:
+      //   1. Fully deleted account → code=resource_missing, param=account
+      //   2. Test-mode account used with live key → type=invalid_request_error,
+      //      message contains "not connected", "does not exist", or "No such account"
+      //   3. Any account-related invalid_request_error (broad fallback)
+      const accountParam = stripeErr?.param === 'account' || stripeErr?.raw?.param === 'account';
+      const isInvalidRequest = stripeErr?.type === 'invalid_request_error' ||
+        stripeErr?.raw?.type === 'invalid_request_error' ||
+        stripeErr?.type === 'StripeInvalidRequestError';
+      const messageHint = typeof stripeErr?.message === 'string' &&
+        /not connected|does not exist|no such account|not.+found/i.test(stripeErr.message);
+
       const isStaleAccount =
-        (stripeErr?.code === 'resource_missing' && stripeErr?.raw?.param === 'account') ||
-        (stripeErr?.type === 'invalid_request_error' && typeof stripeErr?.message === 'string' &&
-          (stripeErr.message.includes('not connected') || stripeErr.message.includes('does not exist')));
+        (stripeErr?.code === 'resource_missing' && accountParam) ||
+        (isInvalidRequest && (accountParam || messageHint));
 
       if (!isStaleAccount) throw linkErr;
 
@@ -129,8 +137,15 @@ Deno.serve(async (req) => {
     }
 
     return jsonOk({ url: accountLink.url, account_id: accountId }, corsHeaders);
-  } catch (err) {
-    console.error('Error creating Connect account:', err);
+  } catch (err: unknown) {
+    const errObj = err as { type?: string; code?: string; message?: string; statusCode?: number };
+    console.error('[create-connect-account] FATAL:', JSON.stringify({
+      type: errObj?.type,
+      code: errObj?.code,
+      message: errObj?.message,
+      statusCode: errObj?.statusCode,
+      raw: String(err),
+    }));
     return jsonError('An internal error occurred. Please try again later.', 500, corsHeaders);
   }
 });
