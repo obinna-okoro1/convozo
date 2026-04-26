@@ -70,6 +70,8 @@ export class SettingsStateService {
   readonly callPrice = signal(2000);
   readonly callDuration = signal(10);
   readonly callsEnabled = signal(false);
+  readonly sessionType = signal<'online' | 'physical' | 'both'>('online');
+  readonly physicalAddress = signal('');
   readonly tipsEnabled = signal(false);
   readonly shopEnabled = signal(false);
   readonly responseExpectation = signal('');
@@ -94,6 +96,8 @@ export class SettingsStateService {
     callPrice: 2000,
     callDuration: 10,
     callsEnabled: false,
+    sessionType: 'online' as 'online' | 'physical' | 'both',
+    physicalAddress: '',
     tipsEnabled: false,
     shopEnabled: false,
     responseExpectation: '',
@@ -136,6 +140,8 @@ export class SettingsStateService {
       this.callPrice() !== o.callPrice ||
       this.callDuration() !== o.callDuration ||
       this.callsEnabled() !== o.callsEnabled ||
+      this.sessionType() !== o.sessionType ||
+      this.physicalAddress() !== o.physicalAddress ||
       this.tipsEnabled() !== o.tipsEnabled ||
       this.shopEnabled() !== o.shopEnabled ||
       this.responseExpectation() !== o.responseExpectation
@@ -324,6 +330,8 @@ export class SettingsStateService {
       callPrice: this.callsEnabled() ? this.callPrice() : undefined,
       callDuration: this.callsEnabled() ? this.callDuration() : undefined,
       callsEnabled: this.callsEnabled(),
+      sessionType: this.sessionType(),
+      physicalAddress: this.callsEnabled() && this.sessionType() !== 'online' ? (this.physicalAddress() || null) : null,
       tipsEnabled: this.tipsEnabled(),
       shopEnabled: this.shopEnabled(),
       responseExpectation: this.responseExpectation() || '',
@@ -338,6 +346,8 @@ export class SettingsStateService {
         callPrice: this.callPrice(),
         callDuration: this.callDuration(),
         callsEnabled: this.callsEnabled(),
+        sessionType: this.sessionType(),
+        physicalAddress: this.physicalAddress(),
         tipsEnabled: this.tipsEnabled(),
         shopEnabled: this.shopEnabled(),
         responseExpectation: this.responseExpectation(),
@@ -496,6 +506,8 @@ export class SettingsStateService {
         this.callPrice.set(settingsData.data.call_price ?? 2000);
         this.callDuration.set(settingsData.data.call_duration ?? 10);
         this.callsEnabled.set(settingsData.data.calls_enabled);
+        this.sessionType.set(settingsData.data.session_type ?? 'online');
+        this.physicalAddress.set(settingsData.data.physical_address ?? '');
         this.tipsEnabled.set(settingsData.data.tips_enabled ?? false);
         this.shopEnabled.set(settingsData.data.shop_enabled ?? false);
         this.responseExpectation.set(settingsData.data.response_expectation || '');
@@ -505,6 +517,8 @@ export class SettingsStateService {
           callPrice: settingsData.data.call_price ?? 2000,
           callDuration: settingsData.data.call_duration ?? 10,
           callsEnabled: settingsData.data.calls_enabled,
+          sessionType: settingsData.data.session_type ?? 'online',
+          physicalAddress: settingsData.data.physical_address ?? '',
           tipsEnabled: settingsData.data.tips_enabled ?? false,
           shopEnabled: settingsData.data.shop_enabled ?? false,
           responseExpectation: settingsData.data.response_expectation || '',

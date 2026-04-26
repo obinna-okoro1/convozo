@@ -169,6 +169,8 @@ export class CreatorService {
     callPrice?: number;
     callDuration?: number;
     callsEnabled: boolean;
+    sessionType: 'online' | 'physical' | 'both';
+    physicalAddress: string | null;
     tipsEnabled: boolean;
     shopEnabled: boolean;
     responseExpectation: string;
@@ -193,6 +195,8 @@ export class CreatorService {
         call_price: callPrice,
         call_duration: callDuration,
         calls_enabled: data.callsEnabled,
+        session_type: data.sessionType,
+        physical_address: data.physicalAddress,
         tips_enabled: data.tipsEnabled,
         shop_enabled: data.shopEnabled,
         response_expectation: data.responseExpectation,

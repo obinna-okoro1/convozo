@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
   // ── Call booking ────────────────────────────────────────────────────────────
 
   if (meta.type === 'call_booking') {
-    const { booker_name, booker_email, message_content, duration, scheduled_at, fan_timezone } = meta;
+    const { booker_name, booker_email, message_content, duration, scheduled_at, fan_timezone, session_type } = meta;
     const durationMinutes = parseInt(duration || '30', 10);
 
     // Idempotency: check if booking already created for this reference
@@ -226,6 +226,7 @@ Deno.serve(async (req) => {
         flutterwave_tx_ref: reference,
         scheduled_at: scheduled_at || null,
         fan_timezone: fan_timezone || 'UTC',
+        session_type: session_type || 'online',
         daily_room_name: dailyRoomName,
         daily_room_url: dailyRoomUrl,
         creator_meeting_token: creatorMeetingToken,

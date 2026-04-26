@@ -55,6 +55,8 @@ export interface CallBooking {
   capture_method: 'manual' | 'automatic';
   /** Fan timezone captured at booking time (IANA, e.g. "America/New_York") */
   fan_timezone: string;
+  /** Session mode: 'online' (video call) or 'physical' (in-person). */
+  session_type: 'online' | 'physical';
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +71,8 @@ export interface CallBookingPayload {
   scheduled_at: string;
   /** IANA timezone string captured from fan's browser (e.g. "America/New_York") */
   fan_timezone: string;
+  /** Session mode the client chose: 'online' or 'physical'. */
+  session_type: 'online' | 'physical';
 }
 
 // ── Video Call Types ─────────────────────────────────────────────────────────

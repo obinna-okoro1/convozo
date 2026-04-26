@@ -43,6 +43,10 @@ export interface CreatorSettings {
   call_price: number | null;
   call_duration: number | null;
   calls_enabled: boolean;
+  /** Whether sessions are online, physical (in-person), or both (client chooses). */
+  session_type: 'online' | 'physical' | 'both';
+  /** Address for in-person sessions — required when session_type is 'physical' or 'both'. */
+  physical_address: string | null;
   tips_enabled: boolean;
   shop_enabled: boolean;
   response_expectation: string | null;

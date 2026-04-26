@@ -28,6 +28,7 @@ interface CallBookingMetadata {
   duration: string;
   scheduled_at: string;
   fan_timezone: string;
+  session_type: 'online' | 'physical';
 }
 
 /** Returns a JSON-serialisable response body. */
@@ -37,7 +38,7 @@ export async function handleCallBooking(
   const meta = session.metadata as unknown as CallBookingMetadata;
   const {
     creator_id, booker_name, booker_email,
-    message_content, duration, scheduled_at, fan_timezone,
+    message_content, duration, scheduled_at, fan_timezone, session_type,
   } = meta;
 
   const amountInCents = session.amount_total || 0;
@@ -72,6 +73,7 @@ export async function handleCallBooking(
       fan_meeting_token: dailyRoom.fanToken,
       payout_status: 'held',
       capture_method: captureMethod,
+      session_type: session_type || 'online',
     })
     .select()
     .single();

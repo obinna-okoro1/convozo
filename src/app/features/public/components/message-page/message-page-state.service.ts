@@ -52,6 +52,10 @@ export class MessagePageStateService {
   readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
   readonly tipsEnabled = computed(() => this.settings()?.tips_enabled ?? false);
   readonly shopEnabled = computed(() => this.settings()?.shop_enabled ?? false);
+  /** Session format offered: 'online', 'physical', or 'both'. */
+  readonly sessionType = computed(() => this.settings()?.session_type ?? 'online');
+  /** In-person address; only populated when sessionType is 'physical' or 'both'. */
+  readonly physicalAddress = computed(() => this.settings()?.physical_address ?? '');
   readonly responseExpectation = computed(
     () => this.settings()?.response_expectation ?? '24-48 hours',
   );
@@ -365,6 +369,7 @@ export class MessagePageStateService {
         price: this.callPriceCents(),
         scheduled_at: formData.scheduledAt,
         fan_timezone: formData.timezone,
+        session_type: formData.sessionType,
       });
 
       if (error || !data?.url) {

@@ -10,6 +10,8 @@ export interface CallBookingFormData {
   messageContent: string;
   scheduledAt: string;
   timezone: string;
+  /** Which mode the client chose at booking time. */
+  sessionType: 'online' | 'physical';
 }
 
 interface SlotGroup {
@@ -46,12 +48,18 @@ export class CallBookingFormComponent {
    */
   public readonly bookedIsos = input<string[]>([]);
   public readonly submitting = input<boolean>(false);
+  /** Session type offered by the expert: 'online', 'physical', or 'both'. */
+  public readonly sessionType = input<'online' | 'physical' | 'both'>('online');
+  /** Physical address shown when sessionType is 'physical' or 'both'. */
+  public readonly physicalAddress = input<string>('');
 
   public readonly formSubmit = output<CallBookingFormData>();
 
   protected senderName = '';
   protected senderEmail = '';
   protected messageContent = '';
+  /** The mode chosen by the client when the expert offers both. Defaults to online. */
+  protected readonly selectedSessionType = signal<'online' | 'physical'>('online');
 
   protected readonly selectedDate = signal<string>('');
   protected selectedIso = '';
@@ -243,12 +251,16 @@ export class CallBookingFormComponent {
 
   protected onSubmit(): void {
     if (!this.selectedIso) { return; }
+    // If expert only offers one mode, use that; otherwise use what client picked.
+    const resolvedType: 'online' | 'physical' =
+      this.sessionType() === 'both' ? this.selectedSessionType() : (this.sessionType() as 'online' | 'physical');
     this.formSubmit.emit({
       senderName: this.senderName,
       senderEmail: this.senderEmail,
       messageContent: this.messageContent,
       scheduledAt: this.selectedIso,
       timezone: this.timezone,
+      sessionType: resolvedType,
     });
   }
 

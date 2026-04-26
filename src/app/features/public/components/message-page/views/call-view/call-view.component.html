@@ -6,6 +6,8 @@
     [availabilitySlots]="state.availabilitySlots()"
     [bookedIsos]="state.bookedIsos()"
     [submitting]="state.submitting()"
+    [sessionType]="state.sessionType()"
+    [physicalAddress]="state.physicalAddress()"
     (formSubmit)="onCallBookingSubmit($event)"
   />
 } @else {

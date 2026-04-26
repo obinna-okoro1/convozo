@@ -35,6 +35,8 @@ interface CallBookingPayload {
   scheduled_at: string;
   /** IANA timezone string from fan's browser (e.g. "America/New_York") */
   fan_timezone: string;
+  /** Whether the client wants an online video call or in-person meeting. */
+  session_type: 'online' | 'physical';
 }
 
 Deno.serve(async (req) => {
@@ -188,6 +190,7 @@ Deno.serve(async (req) => {
           amount: serverPrice.toString(),
           scheduled_at: payload.scheduled_at,
           fan_timezone: payload.fan_timezone || 'UTC',
+          session_type: payload.session_type || 'online',
           provider: 'flutterwave',
         },
       });
@@ -232,6 +235,8 @@ Deno.serve(async (req) => {
         // Fan's chosen call time — stored as scheduled_at on booking creation
         scheduled_at: payload.scheduled_at,
         fan_timezone: payload.fan_timezone || 'UTC',
+        // 'online' or 'physical' — stored on call_booking row
+        session_type: payload.session_type || 'online',
       },
       payment_intent_data: {
         // Manual capture (authorization hold): authorize the card at checkout but
