@@ -64,6 +64,17 @@ export class CallBookingPage {
 
   selectDayByNumber(dayOfMonth: number): this {
     this.ensureAvailableDaysVisible();
+    // The calendar only renders the current month's days. If the target day of the
+    // month isn't visible (e.g. it falls in the next calendar month), click the
+    // "Next month" navigation button once before searching.
+    cy.get('button[aria-label^="Select day"]', { timeout: 10000 }).then(($buttons) => {
+      const visible = [...$buttons].some(
+        (btn) => btn.textContent?.trim() === String(dayOfMonth),
+      );
+      if (!visible) {
+        cy.get('button[aria-label="Next month"]').click();
+      }
+    });
     cy.contains('button[aria-label^="Select day"]', String(dayOfMonth), { timeout: 10000 })
       .first()
       .click();

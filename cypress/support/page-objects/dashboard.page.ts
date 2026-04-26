@@ -82,8 +82,10 @@ export class DashboardPage {
   }
 
   assertConfirmedBadgeVisible(): this {
-    // The badge renders 'Confirmed' (capital C) — use a case-insensitive regex
-    cy.contains(/^confirmed$/i, { timeout: 8000 }).should('be.visible');
+    // The badge renders 'Confirmed' (capital C) — use a case-insensitive regex.
+    // scrollIntoView() is required because the badge lives inside a fixed-position
+    // ancestor that can be obscured by other overlapping elements.
+    cy.contains(/^confirmed$/i, { timeout: 8000 }).scrollIntoView().should('be.visible');
     return this;
   }
 
