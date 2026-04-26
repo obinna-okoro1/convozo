@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convozo — Ad Creatives & Copy Library</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a855f7;
+      --purple-dark: #5b21b6;
+      --gold: #f59e0b;
+      --green: #10b981;
+      --red: #ef4444;
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --surface2: #1e1e28;
+      --border: #2a2a38;
+      --text: #f1f1f5;
+      --muted: #8b8b9e;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,19,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.875rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    nav .logo { font-weight: 800; font-size: 1.25rem; color: var(--purple-light); margin-right: auto; }
+    nav a {
+      color: var(--muted); text-decoration: none; font-size: 0.8125rem;
+      font-weight: 500; padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem; transition: all .2s;
+    }
+    nav a:hover { color: var(--text); background: var(--surface2); }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 72rem; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+
+    h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.375rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--purple-light); }
+    h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+    .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 3rem; }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 4rem; scroll-margin-top: 5rem; }
+    .section-header {
+      border-left: 3px solid var(--purple);
+      padding-left: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .section-header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
+
+    /* ── AUDIENCE BADGE ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; padding: 0.25rem 0.625rem;
+      border-radius: 999px; margin-bottom: 0.75rem;
+    }
+    .badge.expert { background: rgba(124,58,237,.2); color: var(--purple-light); border: 1px solid rgba(124,58,237,.35); }
+    .badge.client { background: rgba(245,158,11,.15); color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
+    .badge.retargeting { background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.875rem;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: var(--purple); }
+
+    .card-meta {
+      display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .format-tag {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; padding: 0.1875rem 0.5rem;
+      border-radius: 0.25rem;
+      background: var(--surface2); color: var(--muted); border: 1px solid var(--border);
+    }
+    .platform-tag {
+      font-size: 0.6875rem; font-weight: 700; padding: 0.1875rem 0.5rem;
+      border-radius: 0.25rem; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .platform-tag.ig { background: rgba(225,48,108,.15); color: #f472b6; border: 1px solid rgba(225,48,108,.3); }
+    .platform-tag.fb { background: rgba(24,119,242,.15); color: #60a5fa; border: 1px solid rgba(24,119,242,.3); }
+    .platform-tag.both { background: rgba(124,58,237,.15); color: var(--purple-light); border: 1px solid rgba(124,58,237,.3); }
+
+    /* ── COPY BLOCK ── */
+    .copy-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 0.625rem;
+      padding: 1.25rem 1.375rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .copy-block .label {
+      font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 0.625rem;
+    }
+    .copy-block .copy-text {
+      font-size: 0.9375rem; line-height: 1.7; color: var(--text);
+      white-space: pre-line;
+    }
+    .copy-block .hook { color: #fcd34d; font-weight: 700; }
+    .copy-block .cta-text { color: var(--purple-light); font-weight: 700; }
+    .copy-block .emoji { font-style: normal; }
+
+    .copy-btn {
+      position: absolute; top: 0.875rem; right: 0.875rem;
+      background: var(--border); border: none; border-radius: 0.375rem;
+      color: var(--muted); font-size: 0.75rem; font-weight: 600;
+      padding: 0.3rem 0.625rem; cursor: pointer; transition: all .2s;
+    }
+    .copy-btn:hover { background: var(--purple); color: #fff; }
+
+    /* ── VISUAL SPEC ── */
+    .visual-spec {
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 0.625rem;
+      padding: 1.125rem 1.375rem;
+      margin-bottom: 1rem;
+    }
+    .visual-spec .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 0.5rem; }
+    .visual-spec ul { list-style: none; }
+    .visual-spec ul li {
+      font-size: 0.875rem; padding: 0.25rem 0; color: var(--text);
+      border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem;
+    }
+    .visual-spec ul li:last-child { border-bottom: none; }
+    .visual-spec ul li::before { content: "→"; color: var(--purple-light); flex-shrink: 0; }
+
+    /* ── HOOK LIST ── */
+    .hook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 0.875rem; }
+    .hook-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 0.625rem;
+      padding: 1rem 1.125rem;
+      display: flex; gap: 0.75rem; align-items: flex-start;
+    }
+    .hook-num {
+      flex-shrink: 0;
+      width: 1.75rem; height: 1.75rem; border-radius: 50%;
+      background: var(--purple-dark); color: #fff;
+      font-size: 0.75rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hook-item p { font-size: 0.9rem; line-height: 1.5; }
+
+    /* ── METRICS TABLE ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .metric-card .value { font-size: 2rem; font-weight: 800; color: var(--purple-light); }
+    .metric-card .name { font-size: 0.8125rem; color: var(--muted); margin-top: 0.25rem; }
+    .metric-card .target { font-size: 0.75rem; color: var(--green); margin-top: 0.125rem; font-weight: 600; }
+
+    /* ── SCRIPT BLOCK ── */
+    .script-block {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 0.625rem; padding: 1.25rem; margin-bottom: 1rem;
+    }
+    .script-line { display: flex; gap: 1rem; margin-bottom: 0.875rem; align-items: flex-start; }
+    .script-line:last-child { margin-bottom: 0; }
+    .timestamp {
+      flex-shrink: 0; font-size: 0.6875rem; font-weight: 700;
+      background: var(--purple-dark); color: #e9d5ff;
+      padding: 0.1875rem 0.5rem; border-radius: 0.25rem; margin-top: 0.125rem;
+    }
+    .script-line .action { font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--gold); margin-bottom: 0.1875rem; }
+    .script-line .words { font-size: 0.875rem; color: var(--text); }
+
+    /* ── OBJECTION ── */
+    .objection-grid { display: grid; gap: 0.875rem; }
+    .objection-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 0.75rem; padding: 1.25rem; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 1.25rem;
+    }
+    @media (max-width: 640px) { .objection-card { grid-template-columns: 1fr; } }
+    .obj-q { border-right: 1px solid var(--border); padding-right: 1.25rem; }
+    @media (max-width: 640px) { .obj-q { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 1rem; } }
+    .obj-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 0.375rem; }
+    .obj-label.q { color: var(--red); }
+    .obj-label.a { color: var(--green); }
+    .obj-q p, .obj-a p { font-size: 0.9rem; line-height: 1.55; }
+
+    /* ── TARGETING ── */
+    .target-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; }
+    .target-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 0.75rem; padding: 1.25rem;
+    }
+    .target-card h4 { font-size: 0.9375rem; font-weight: 700; margin-bottom: 0.875rem; color: var(--text); }
+    .target-card ul { list-style: none; }
+    .target-card ul li { font-size: 0.8125rem; padding: 0.25rem 0; color: var(--muted); display: flex; gap: 0.5rem; }
+    .target-card ul li::before { content: "•"; color: var(--purple-light); }
+
+    /* ── BUDGET ── */
+    .budget-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .budget-table th { text-align: left; padding: 0.75rem 1rem; background: var(--surface2); color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; }
+    .budget-table td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+    .budget-table tr:hover td { background: var(--surface2); }
+    .budget-table .green { color: var(--green); font-weight: 700; }
+    .budget-table .gold { color: var(--gold); font-weight: 700; }
+
+    /* ── DIVIDER ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+    /* ── SCROLL TO TOP ── */
+    .toc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 0.875rem; padding: 1.5rem;
+      margin-bottom: 3rem; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.5rem;
+    }
+    .toc a { color: var(--muted); text-decoration: none; font-size: 0.875rem; padding: 0.375rem 0.5rem; border-radius: 0.375rem; display: flex; gap: 0.5rem; align-items: center; }
+    .toc a:hover { color: var(--text); background: var(--surface2); }
+    .toc a::before { content: "↗"; font-size: 0.75rem; color: var(--purple-light); }
+
+    /* ── NOTE ── */
+    .note {
+      background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.3);
+      border-radius: 0.625rem; padding: 1rem 1.25rem;
+      font-size: 0.875rem; color: #c4b5fd; margin-bottom: 1.5rem;
+    }
+    .note strong { color: var(--purple-light); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">Convozo Ads</span>
+  <a href="#hooks">Hooks</a>
+  <a href="#expert-ads">Expert Ads</a>
+  <a href="#client-ads">Client Ads</a>
+  <a href="#video-scripts">Video Scripts</a>
+  <a href="#retargeting">Retargeting</a>
+  <a href="#targeting">Targeting</a>
+  <a href="#budget">Budget</a>
+</nav>
+
+<div class="page">
+
+  <h1>Convozo — Ad Creative Library</h1>
+  <p class="subtitle">High-conversion Instagram & Facebook ads. Two audiences: experts who want to monetise, and clients who want expert access.</p>
+
+  <div class="toc">
+    <a href="#benchmarks">Benchmark Targets</a>
+    <a href="#hooks">Power Hook Library</a>
+    <a href="#expert-ads">Expert Acquisition Ads</a>
+    <a href="#client-ads">Client Acquisition Ads</a>
+    <a href="#video-scripts">Video / Reel Scripts</a>
+    <a href="#stories">Stories Format</a>
+    <a href="#carousel">Carousel Concepts</a>
+    <a href="#retargeting">Retargeting Ads</a>
+    <a href="#objections">Objection Handling</a>
+    <a href="#targeting">Targeting Setup</a>
+    <a href="#budget">Budget Allocation</a>
+  </div>
+
+  <!-- ─────────────── BENCHMARKS ─────────────── -->
+  <div class="section" id="benchmarks">
+    <div class="section-header">
+      <h2>Target Benchmarks</h2>
+      <p>What "good" looks like for each metric. Optimise ads weekly against these.</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="value">3–5%</div>
+        <div class="name">CTR (Link)</div>
+        <div class="target">▲ Pause below 1%</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">&lt;$1.20</div>
+        <div class="name">Cost Per Click</div>
+        <div class="target">▲ Scale below $0.80</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">4–8%</div>
+        <div class="name">Landing CVR</div>
+        <div class="target">▲ Target 6% signup</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">&lt;$12</div>
+        <div class="name">Cost Per Lead</div>
+        <div class="target">▲ Expert sign-up</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">2.5×+</div>
+        <div class="name">ROAS</div>
+        <div class="target">▲ Scale at 3×+</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">40%+</div>
+        <div class="name">Hook Rate (3s)</div>
+        <div class="target">▲ Reel / Story opens</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>A/B Test Rule:</strong> Run 3–5 creatives per ad set. Kill losers at $20 spend. Scale winners at 2× budget every 48–72 hours. Never edit a winning ad — duplicate and scale.
+    </div>
+  </div>
+
+  <!-- ─────────────── HOOK LIBRARY ─────────────── -->
+  <div class="section" id="hooks">
+    <div class="section-header">
+      <h2>Power Hook Library</h2>
+      <p>First 3 seconds decide everything. Use these as opening lines in video or the first sentence of static copy.</p>
+    </div>
+
+    <h3 style="color:var(--gold);margin-bottom:1rem;">🎯 For Experts / Professionals</h3>
+    <div class="hook-grid" style="margin-bottom:2rem;">
+      <div class="hook-item"><div class="hook-num">1</div><p>"You're giving away advice for free. Here's how to charge for it."</p></div>
+      <div class="hook-item"><div class="hook-num">2</div><p>"I made $4,200 last month answering questions I already knew the answers to."</p></div>
+      <div class="hook-item"><div class="hook-num">3</div><p>"Every DM you answer for free is money you left on the table."</p></div>
+      <div class="hook-item"><div class="hook-num">4</div><p>"Your 10 years of experience is worth more than $0 per message."</p></div>
+      <div class="hook-item"><div class="hook-num">5</div><p>"Stop trading time for DMs. Start getting paid for your expertise."</p></div>
+      <div class="hook-item"><div class="hook-num">6</div><p>"What if your inbox made you money while you slept?"</p></div>
+      <div class="hook-item"><div class="hook-num">7</div><p>"Lawyers, coaches, consultants — this is how you monetise what you already know."</p></div>
+      <div class="hook-item"><div class="hook-num">8</div><p>"I set this up in 10 minutes. Now clients pay before they ask their question."</p></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin-bottom:1rem;">👤 For Clients / Buyers</h3>
+    <div class="hook-grid">
+      <div class="hook-item"><div class="hook-num">1</div><p>"Get a real answer from a real expert. Not Google. Not Reddit."</p></div>
+      <div class="hook-item"><div class="hook-num">2</div><p>"You can now DM a lawyer directly and actually get a reply."</p></div>
+      <div class="hook-item"><div class="hook-num">3</div><p>"Skip the $300/hour consultation. Ask your question for $25."</p></div>
+      <div class="hook-item"><div class="hook-num">4</div><p>"What would a 20-minute conversation with the right expert be worth to you?"</p></div>
+      <div class="hook-item"><div class="hook-num">5</div><p>"The expert you've been following finally opened their inbox — and it's affordable."</p></div>
+      <div class="hook-item"><div class="hook-num">6</div><p>"Stop guessing. Pay for certainty."</p></div>
+    </div>
+  </div>
+
+  <!-- ─────────────── EXPERT ADS ─────────────── -->
+  <div class="section" id="expert-ads">
+    <div class="section-header">
+      <h2>Expert Acquisition Ads</h2>
+      <p>Target professionals who want to monetise their knowledge. Best performing audience: lawyers, coaches, consultants, doctors, financial advisors.</p>
+    </div>
+
+    <!-- AD E1 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">Single Image / Static</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>Ad E1 — "The Free Advice Problem"</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text (Feed)</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">You've spent years building expertise. Why are you still giving it away for free?</span>
+
+Every DM you answer. Every "quick question" from a stranger. Every voice note you record explaining something you already know 100 times — that's money you're leaving on the table.
+
+Convozo gives you a personal link. Clients pay before they ask. You reply when it suits you.
+
+Lawyers, coaches, consultants, advisors, doctors — this is built for you.
+
+✅ Set up in under 10 minutes
+✅ You keep 78% of every payment
+✅ No subscriptions. No monthly fees
+✅ Works on your phone
+
+<span class="cta-text">👉 Get your free Convozo link at convozo.com</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline (shown below image)</div>
+        <div class="copy-text">Get Paid for Every Consultation — Starting Today</div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Description</div>
+        <div class="copy-text">Your expertise is worth real money. Set your price, share your link, get paid.</div>
+      </div>
+
+      <div class="visual-spec">
+        <div class="label">Visual Direction</div>
+        <ul>
+          <li>Dark purple gradient background (#1e1b4b → #7c3aed)</li>
+          <li>Bold white headline: "Stop Giving Free Advice" — 60pt minimum</li>
+          <li>Sub-line: "Convozo — Get paid for your expertise"</li>
+          <li>Single phone mockup showing a payout notification: "You received $85.00 from a client"</li>
+          <li>Convozo logo bottom right. No busy backgrounds.</li>
+          <li>Aspect: 1:1 for Feed, 9:16 crop for Stories</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- AD E2 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">Single Image / Static</span>
+        <span class="platform-tag ig">Instagram</span>
+      </div>
+      <h3>Ad E2 — "The Income Unlock"</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">A lawyer in Lagos made ₦380,000 last month answering questions on Convozo.</span>
+
+He didn't change his job. He didn't start a YouTube channel. He didn't build a course.
+
+He set a price. He shared one link. Clients paid. He replied.
+
+That's it.
+
+If you're a lawyer, doctor, financial advisor, coach, or any kind of professional — you already have what people are willing to pay for.
+
+You just need a way to collect that payment.
+
+<span class="cta-text">convozo.com — Free to join. Takes 10 minutes.</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Your Knowledge Is a Business. Start Treating It Like One.</div>
+      </div>
+
+      <div class="visual-spec">
+        <div class="label">Visual Direction</div>
+        <ul>
+          <li>Real-looking earnings summary screen (not cartoonish) — clean, dark UI</li>
+          <li>Show: "This week: $1,240" with a subtle upward graph</li>
+          <li>Professional-looking but warm — not cold fintech</li>
+          <li>Avoid stock photos of people; use product UI or abstract graphics</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- AD E3 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">Single Image</span>
+        <span class="platform-tag fb">Facebook</span>
+      </div>
+      <h3>Ad E3 — "The Simple Setup" (Pain-focused)</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">If you've ever answered a "can I just ask you a quick question" for free — this post is for you.</span>
+
+You're not a charity. You're a professional.
+
+And the truth is, people are MORE likely to take your advice seriously when they pay for it.
+
+Convozo is a platform where professionals charge for consultations. You get a link. Clients pay. You answer. Simple.
+
+Here's what makes it different:
+→ No platform selling you as a commodity
+→ No booking software with 30 fields to fill in
+→ No awkward conversation about money
+→ Clients pay upfront, every time
+
+Set your own price. Work on your own schedule.
+
+<span class="cta-text">Get started free → convozo.com</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">The Easiest Way to Charge for Your Expertise</div>
+      </div>
+    </div>
+
+    <!-- AD E4 — Short punchy -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">Short Copy (Mobile-first)</span>
+        <span class="platform-tag ig">Instagram</span>
+      </div>
+      <h3>Ad E4 — Ultra Short (Scroll-stopper)</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">Your advice is worth money.</span>
+
+Set a price. Share a link. Get paid.
+
+That's Convozo.
+
+<span class="cta-text">convozo.com — Free to start →</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Monetise Your Expertise in 10 Minutes</div>
+      </div>
+
+      <div class="visual-spec">
+        <div class="label">Visual Direction</div>
+        <ul>
+          <li>Minimal. Just the 3 steps as large text on dark bg: "Set a price → Share your link → Get paid"</li>
+          <li>Convozo brand colours. No clutter.</li>
+          <li>Works as a 6-second story bumper too</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── CLIENT ADS ─────────────── -->
+  <div class="section" id="client-ads">
+    <div class="section-header">
+      <h2>Client Acquisition Ads</h2>
+      <p>Target people who need expert advice but face cost, access, or friction barriers. Best performing: people searching for lawyers, financial advice, coaching.</p>
+    </div>
+
+    <!-- AD C1 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge client">Client Audience</span>
+        <span class="format-tag">Single Image</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>Ad C1 — "The Access Problem"</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">You don't need a $500 consultation. You need a real answer from someone who actually knows.</span>
+
+Convozo connects you directly with verified lawyers, financial advisors, coaches, and consultants.
+
+Ask your question. Get a personal, expert reply — not a template, not a forum post.
+
+💼 Legal questions
+💰 Financial decisions
+🧠 Business strategy
+❤️ Health & wellness
+
+Starting from $15. Pay once. Get your answer.
+
+<span class="cta-text">Find your expert → convozo.com</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Ask a Real Expert. Get a Real Answer.</div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Description</div>
+        <div class="copy-text">Skip the expensive consultation. Pay once, get expert advice directly.</div>
+      </div>
+
+      <div class="visual-spec">
+        <div class="label">Visual Direction</div>
+        <ul>
+          <li>Show a phone with a clean messaging interface — a reply from "James O., Lawyer" with a short professional answer</li>
+          <li>Warm, trust-building design — not cold or clinical</li>
+          <li>Person on phone looking relieved / satisfied (authentic, not stock-photo stiff)</li>
+          <li>Subtle "✓ Verified Expert" badge visible</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- AD C2 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge client">Client Audience</span>
+        <span class="format-tag">Single Image</span>
+        <span class="platform-tag fb">Facebook</span>
+      </div>
+      <h3>Ad C2 — "The Google Trap"</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">Stop Googling legal questions. Stop reading Reddit threads that don't apply to your situation.</span>
+
+Generic advice is free for a reason. It's not tailored to you.
+
+On Convozo, you talk directly to qualified professionals who answer YOUR specific question, with YOUR specific details.
+
+A lawyer who reads your contract. A financial advisor who reviews your actual numbers. A coach who knows your industry.
+
+One payment. One reply. Done.
+
+No appointment. No waiting room. No hourly billing surprise.
+
+<span class="cta-text">Get your question answered today → convozo.com</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Expert Advice That's Actually About You</div>
+      </div>
+    </div>
+
+    <!-- AD C3 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge client">Client Audience</span>
+        <span class="format-tag">Short Copy</span>
+        <span class="platform-tag ig">Instagram</span>
+      </div>
+      <h3>Ad C3 — Pain-Agitate-Solve (Ultra Short)</h3>
+
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">That legal question keeping you up at night?</span>
+
+A qualified lawyer will read it and reply personally.
+
+No appointment. No hourly rate shock.
+
+<span class="cta-text">convozo.com — Ask now →</span></div>
+      </div>
+
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Get Expert Legal Advice From $15</div>
+      </div>
+
+      <div class="visual-spec">
+        <div class="label">Visual Direction</div>
+        <ul>
+          <li>Dark, calm background. A single question bubble: "Is this contract enforceable in Nigeria?" </li>
+          <li>Reply bubble below it from "Adaeze M., Corporate Lawyer" with 2 lines of professional text</li>
+          <li>Minimalist. The conversation IS the creative.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ─────────────── VIDEO SCRIPTS ─────────────── -->
+  <div class="section" id="video-scripts">
+    <div class="section-header">
+      <h2>Video / Reel Scripts</h2>
+      <p>15–30 second scripts for Reels and Facebook video ads. Hook in 0–3s, conflict by 5s, solution by 10s, CTA by end.</p>
+    </div>
+
+    <!-- SCRIPT V1 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">30s Reel / Video</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>Script V1 — "The Free DM Problem" (Talking Head)</h3>
+      <div class="script-block">
+        <div class="script-line">
+          <span class="timestamp">0–3s</span>
+          <div>
+            <div class="action">HOOK — Look straight to camera</div>
+            <div class="words">"You're answering DMs for free. That needs to stop."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">3–8s</span>
+          <div>
+            <div class="action">CONFLICT — cut or zoom</div>
+            <div class="words">"Every free answer you give is a paid consultation you didn't charge for. If you're a lawyer, coach, advisor, or consultant — people are literally asking to pay you. You just haven't set up a way to collect it."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">8–18s</span>
+          <div>
+            <div class="action">SOLUTION — show phone screen</div>
+            <div class="words">"I use Convozo. You sign up, set your price, and get a link — like convozo.com/yourname. Clients go there, pay, ask their question. You reply when you want. I make [X] a month just from replies."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">18–25s</span>
+          <div>
+            <div class="action">SOCIAL PROOF + SIMPLICITY</div>
+            <div class="words">"Setup takes 10 minutes. No monthly fees. You keep 78% of every payment. It's free to start."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">25–30s</span>
+          <div>
+            <div class="action">CTA — point to link</div>
+            <div class="words">"Go to convozo.com — link in bio — and get your link today."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT V2 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge client">Client Audience</span>
+        <span class="format-tag">15s Reel</span>
+        <span class="platform-tag ig">Instagram</span>
+      </div>
+      <h3>Script V2 — "Ask an Expert" (Problem → Solution)</h3>
+      <div class="script-block">
+        <div class="script-line">
+          <span class="timestamp">0–2s</span>
+          <div>
+            <div class="action">TEXT ON SCREEN + VO</div>
+            <div class="words">"Still Googling your legal questions?"</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">2–6s</span>
+          <div>
+            <div class="action">SHOW: frustrated person at laptop scrolling results</div>
+            <div class="words">"Generic advice doesn't know your situation. A real lawyer does."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">6–12s</span>
+          <div>
+            <div class="action">SHOW: clean phone UI — paying and getting a reply</div>
+            <div class="words">"On Convozo, you pay once and get a personal reply from a verified expert. Lawyers, financial advisors, coaches — all available right now."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">12–15s</span>
+          <div>
+            <div class="action">CTA — bold text on screen</div>
+            <div class="words">"convozo.com — Get your answer today."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT V3 -->
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">60s Facebook Video</span>
+        <span class="platform-tag fb">Facebook</span>
+      </div>
+      <h3>Script V3 — "Before Convozo / After Convozo" (Testimonial Style)</h3>
+      <div class="script-block">
+        <div class="script-line">
+          <span class="timestamp">0–5s</span>
+          <div>
+            <div class="action">HOOK TEXT on dark bg</div>
+            <div class="words">"Before Convozo, I gave away hours of advice every week for free."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">5–15s</span>
+          <div>
+            <div class="action">BEFORE — show the pain</div>
+            <div class="words">"DMs. WhatsApp messages. 'Hey, quick question...' emails at 11pm. I was spending real time helping strangers with real problems — and making nothing from it."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">15–25s</span>
+          <div>
+            <div class="action">TRANSITION — "Then I found Convozo"</div>
+            <div class="words">"I signed up. Set my price at $50 per consultation. Got my link. Put it in my bio."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">25–45s</span>
+          <div>
+            <div class="action">AFTER — show the result (product screen)</div>
+            <div class="words">"First week — $350. Second week — $680. People were already willing to pay. I just wasn't giving them a way to do it. Now I reply to paid messages in the morning with my coffee and move on with my day."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">45–55s</span>
+          <div>
+            <div class="action">FEATURE SUMMARY</div>
+            <div class="words">"You keep 78%. No monthly fee. Set up takes 10 minutes. Stripe handles the payments."</div>
+          </div>
+        </div>
+        <div class="script-line">
+          <span class="timestamp">55–60s</span>
+          <div>
+            <div class="action">CTA</div>
+            <div class="words">"If you're a professional with knowledge people are asking about — go to convozo.com and set up your link today. It's free."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── STORIES ─────────────── -->
+  <div class="section" id="stories">
+    <div class="section-header">
+      <h2>Stories Format (9:16)</h2>
+      <p>5-frame story sequences. Swipe-up or link sticker CTA. Keep text minimal — let the visual carry the frame.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">5-Frame Story</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>Story S1 — "3 Things That Changed When I Started Charging"</h3>
+      <div class="visual-spec">
+        <div class="label">Frame Sequence</div>
+        <ul>
+          <li><strong>Frame 1 (Hook):</strong> Dark bg. Big text: "3 things that changed when I started charging for advice 👇"</li>
+          <li><strong>Frame 2:</strong> "1/ Clients took my advice more seriously" — smaller sub-text: "When people pay, they actually implement what you tell them."</li>
+          <li><strong>Frame 3:</strong> "2/ I stopped wasting time on tyre-kickers" — sub: "Paid clients are committed. Free askers usually aren't."</li>
+          <li><strong>Frame 4:</strong> "3/ I made an extra $1,800 in 30 days" — sub: "Just from replies. No new clients. No new work."</li>
+          <li><strong>Frame 5 (CTA):</strong> Convozo logo. "Get your paid consultation link free" + Link sticker → convozo.com</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge client">Client Audience</span>
+        <span class="format-tag">3-Frame Story</span>
+        <span class="platform-tag ig">Instagram</span>
+      </div>
+      <h3>Story S2 — Quick Client Story</h3>
+      <div class="visual-spec">
+        <div class="label">Frame Sequence</div>
+        <ul>
+          <li><strong>Frame 1 (Hook):</strong> "Got a question you can't afford to get wrong?" — dark bg, white text</li>
+          <li><strong>Frame 2 (Solution):</strong> Phone screen showing: "Ask [Expert Name], Lawyer • $35 • Replies within 24hrs" — clean product UI</li>
+          <li><strong>Frame 3 (CTA):</strong> "Get a personal reply from a verified expert" + Link sticker → convozo.com</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── CAROUSEL ─────────────── -->
+  <div class="section" id="carousel">
+    <div class="section-header">
+      <h2>Carousel Concepts</h2>
+      <p>Carousels get higher engagement and lower CPM. First card must stop the scroll. Each card continues the story. Last card = CTA.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge expert">Expert Audience</span>
+        <span class="format-tag">6-Card Carousel</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>Carousel CR1 — "Why Professionals Leave Money on the Table"</h3>
+      <div class="visual-spec">
+        <div class="label">Card Sequence</div>
+        <ul>
+          <li><strong>Card 1 (Hook):</strong> "Why smart professionals leave thousands on the table every month →" (dark purple, white text)</li>
+          <li><strong>Card 2:</strong> "They answer questions for free" — stat: "The average professional spends 4+ hours/week on unpaid advice."</li>
+          <li><strong>Card 3:</strong> "They assume people won't pay" — counter: "Wrong. 73% of people say they'd pay for personalised expert advice over generic content."</li>
+          <li><strong>Card 4:</strong> "They think setup is complicated" — counter: "Convozo takes 10 minutes. No tech skills needed."</li>
+          <li><strong>Card 5:</strong> "They wait for the 'right time'" — counter: "Every day you wait is a day someone else charges for what you give away free."</li>
+          <li><strong>Card 6 (CTA):</strong> "Start charging for your expertise today — convozo.com" — Convozo branding, bold CTA button design</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge client">Client Audience</span>
+        <span class="format-tag">5-Card Carousel</span>
+        <span class="platform-tag fb">Facebook</span>
+      </div>
+      <h3>Carousel CR2 — "How It Works" (Client Education)</h3>
+      <div class="visual-spec">
+        <div class="label">Card Sequence</div>
+        <ul>
+          <li><strong>Card 1:</strong> "Get expert advice in 3 steps →" (scroll hook)</li>
+          <li><strong>Card 2 — Step 1:</strong> "Find your expert" — Browse verified lawyers, coaches, advisors. See their price and response time.</li>
+          <li><strong>Card 3 — Step 2:</strong> "Pay once" — No hidden fees. No hourly billing surprise. One clear price upfront.</li>
+          <li><strong>Card 4 — Step 3:</strong> "Get your personal reply" — Your expert reads YOUR question and replies directly to you. Not a template.</li>
+          <li><strong>Card 5 (CTA):</strong> "Find your expert now → convozo.com"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ─────────────── RETARGETING ─────────────── -->
+  <div class="section" id="retargeting">
+    <div class="section-header">
+      <h2>Retargeting Ads</h2>
+      <p>For website visitors, profile viewers, and video watchers who didn't convert. Warmer audience = shorter copy, harder CTA.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge retargeting">Retargeting</span>
+        <span class="format-tag">Single Image</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>RT1 — Visited Site, Didn't Sign Up (Expert)</h3>
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text"><span class="hook">You checked out Convozo. Here's what you'd be missing if you don't start today.</span>
+
+Every week you wait = another week of free advice.
+
+Setup is free. Takes 10 minutes. And your first paid consultation could come within 24 hours of sharing your link.
+
+<span class="cta-text">convozo.com — Your link is waiting.</span></div>
+      </div>
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">You're One Link Away From Getting Paid for Your Expertise</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge retargeting">Retargeting</span>
+        <span class="format-tag">Single Image</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>RT2 — Video Viewer (Watched 50%+ of Expert Video)</h3>
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text">You watched how Convozo works. The only step left is signing up.
+
+Free. 10 minutes. Your paid consultation link — live tonight.
+
+<span class="cta-text">convozo.com →</span></div>
+      </div>
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Ready When You Are — Start Free Today</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-meta">
+        <span class="badge retargeting">Retargeting</span>
+        <span class="format-tag">Single Image</span>
+        <span class="platform-tag both">IG + FB</span>
+      </div>
+      <h3>RT3 — Client Retargeting (Visited, Didn't Pay)</h3>
+      <div class="copy-block">
+        <div class="label">Primary Text</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <div class="copy-text">Still thinking about that question?
+
+The expert you were looking at is still available.
+
+One payment. One personal reply. That's it.
+
+<span class="cta-text">convozo.com — Get your answer →</span></div>
+      </div>
+      <div class="copy-block">
+        <div class="label">Headline</div>
+        <div class="copy-text">Your Question Deserves a Real Answer</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── OBJECTIONS ─────────────── -->
+  <div class="section" id="objections">
+    <div class="section-header">
+      <h2>Objection-Busting Copy Inserts</h2>
+      <p>Drop these lines into longer ad copy to pre-empt the most common objections before they kill conversions.</p>
+    </div>
+
+    <div class="objection-grid">
+      <div class="objection-card">
+        <div class="obj-q">
+          <div class="obj-label q">Objection</div>
+          <p>"Will clients actually pay?"</p>
+        </div>
+        <div class="obj-a">
+          <div class="obj-label a">Counter</div>
+          <p>"People already pay lawyers, coaches, and advisors every day. They just need a frictionless way to pay <em>you</em>."</p>
+        </div>
+      </div>
+      <div class="objection-card">
+        <div class="obj-q">
+          <div class="obj-label q">Objection</div>
+          <p>"What if it's complicated to set up?"</p>
+        </div>
+        <div class="obj-a">
+          <div class="obj-label a">Counter</div>
+          <p>"Sign up, set a price, share your link. Most experts are live in under 10 minutes. No code. No tech knowledge required."</p>
+        </div>
+      </div>
+      <div class="objection-card">
+        <div class="obj-q">
+          <div class="obj-label q">Objection</div>
+          <p>"22% fee feels high"</p>
+        </div>
+        <div class="obj-a">
+          <div class="obj-label a">Counter</div>
+          <p>"You keep 78% — and Stripe's processing fee comes out of <em>Convozo's</em> 22%. You take home 78% clean, every time."</p>
+        </div>
+      </div>
+      <div class="objection-card">
+        <div class="obj-q">
+          <div class="obj-label q">Objection (Client)</div>
+          <p>"How do I know the expert is qualified?"</p>
+        </div>
+        <div class="obj-a">
+          <div class="obj-label a">Counter</div>
+          <p>"Every expert on Convozo has a verified professional profile. You can see their background, specialty, and response time before you pay."</p>
+        </div>
+      </div>
+      <div class="objection-card">
+        <div class="obj-q">
+          <div class="obj-label q">Objection (Client)</div>
+          <p>"What if they don't reply?"</p>
+        </div>
+        <div class="obj-a">
+          <div class="obj-label a">Counter</div>
+          <p>"Experts set their own response time — you see it before you pay. If they don't reply, you get a full refund. No questions asked."</p>
+        </div>
+      </div>
+      <div class="objection-card">
+        <div class="obj-q">
+          <div class="obj-label q">Objection</div>
+          <p>"I'm not famous enough / have no following"</p>
+        </div>
+        <div class="obj-a">
+          <div class="obj-label a">Counter</div>
+          <p>"You don't need followers. You need one skill people will pay for. Share your link in WhatsApp groups, email signatures, or LinkedIn. Clients come from referrals and search — not follower count."</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ─────────────── TARGETING ─────────────── -->
+  <div class="section" id="targeting">
+    <div class="section-header">
+      <h2>Targeting Setup</h2>
+      <p>Recommended Meta Ads audience configurations. Start broad, then narrow based on data.</p>
+    </div>
+
+    <div class="target-grid">
+      <div class="target-card">
+        <h4>🎯 Expert Audience — Cold</h4>
+        <ul>
+          <li>Age: 28–55</li>
+          <li>Interests: Legal services, Law, Consulting</li>
+          <li>Interests: Life coaching, Business coaching</li>
+          <li>Interests: Financial planning, Investment advice</li>
+          <li>Job titles: Lawyer, Attorney, Consultant, Advisor, Coach, Doctor</li>
+          <li>Behaviours: Small business owners</li>
+          <li>Exclude: People who already signed up (Custom Audience)</li>
+        </ul>
+      </div>
+      <div class="target-card">
+        <h4>👤 Client Audience — Cold</h4>
+        <ul>
+          <li>Age: 25–50</li>
+          <li>Interests: Legal advice, Personal finance</li>
+          <li>Interests: Entrepreneurship, Startups</li>
+          <li>Interests: Health & wellness, Mental health</li>
+          <li>Behaviours: Online buyers (high value)</li>
+          <li>Income: Top 25% (Facebook allows this in some markets)</li>
+          <li>Lookalike: 1% of existing paying clients</li>
+        </ul>
+      </div>
+      <div class="target-card">
+        <h4>🔁 Retargeting Audiences</h4>
+        <ul>
+          <li>Website visitors (last 30 days) — did not convert</li>
+          <li>Video viewers — watched 50%+ of any ad</li>
+          <li>IG Profile visitors (last 14 days)</li>
+          <li>FB Page engagers (last 14 days)</li>
+          <li>Custom audience: Email list upload (existing contacts)</li>
+          <li>Lookalike 1%: Based on all website visitors</li>
+        </ul>
+      </div>
+      <div class="target-card">
+        <h4>🌍 Geo Targets (Priority)</h4>
+        <ul>
+          <li>🇳🇬 Nigeria — Lagos, Abuja, PH (experts + clients)</li>
+          <li>🇬🇧 UK — London, Manchester (high intent, high LTV)</li>
+          <li>🇺🇸 USA — professional hubs (NY, LA, ATL)</li>
+          <li>🇬🇭 Ghana — Accra</li>
+          <li>🇰🇪 Kenya — Nairobi</li>
+          <li>Start with NG + GH — lower CPM, high conversion for expert supply</li>
+        </ul>
+      </div>
+      <div class="target-card">
+        <h4>📐 Ad Placement</h4>
+        <ul>
+          <li>Instagram Feed — primary (highest CTR)</li>
+          <li>Instagram Stories — video/story formats only</li>
+          <li>Instagram Reels — video scripts V1/V2/V3</li>
+          <li>Facebook Feed — long copy ads (E1, E3, C2)</li>
+          <li>Facebook Reels — mirror IG Reels</li>
+          <li>Disable: Audience Network, Messenger (lower quality)</li>
+        </ul>
+      </div>
+      <div class="target-card">
+        <h4>⚙️ Campaign Structure</h4>
+        <ul>
+          <li>Campaign: Conversion (not Reach or Traffic)</li>
+          <li>Optimise for: Lead or Purchase event (pixel required)</li>
+          <li>Budget: CBO (Campaign Budget Optimisation)</li>
+          <li>Ad sets: Max 4 per campaign</li>
+          <li>Ads per ad set: 3–5 creatives</li>
+          <li>Learning phase: Don't edit until 50 conversions/week</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── BUDGET ─────────────── -->
+  <div class="section" id="budget">
+    <div class="section-header">
+      <h2>Budget Allocation & Scaling Plan</h2>
+      <p>Start lean, validate, then scale only what's proven.</p>
+    </div>
+
+    <div class="note">
+      <strong>Phase 1 (Week 1–2):</strong> Test 3 expert ads + 2 client ads across 2 ad sets. Kill ads below 1% CTR. Scale winners only.
+    </div>
+
+    <div style="overflow-x:auto;border-radius:0.75rem;border:1px solid var(--border);">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Daily Budget</th>
+            <th>Focus</th>
+            <th>Goal</th>
+            <th>Scale Trigger</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Phase 1</strong> — Test (Wk 1–2)</td>
+            <td class="gold">$20–$30/day</td>
+            <td>Expert acquisition (NG/GH)</td>
+            <td>Find 2–3 winning creatives</td>
+            <td>CTR &gt; 2.5%, CPL &lt; $15</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 2</strong> — Validate (Wk 3–4)</td>
+            <td class="gold">$50–$80/day</td>
+            <td>Expert + Client (NG, UK)</td>
+            <td>Prove CPL below $12</td>
+            <td>ROAS &gt; 2×, consistent CVR</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 3</strong> — Scale (Mo 2)</td>
+            <td class="gold">$150–$300/day</td>
+            <td>Top 2 creatives only</td>
+            <td>Expert supply growth</td>
+            <td>Maintain CPL. Scale 2× every 4 days.</td>
+          </tr>
+          <tr>
+            <td><strong>Retargeting</strong> (ongoing)</td>
+            <td class="green">$10–$20/day</td>
+            <td>Warm audiences only</td>
+            <td>Recover abandoned visitors</td>
+            <td>Always on. Never pause.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <h3 style="margin-bottom:1rem;">Scaling Rules</h3>
+      <div class="hook-grid">
+        <div class="hook-item"><div class="hook-num">✓</div><p>Scale winning ad sets by 20% every 48–72 hours — not more. Rapid scaling resets the algorithm.</p></div>
+        <div class="hook-item"><div class="hook-num">✓</div><p>Never edit a live winning ad. Duplicate it, then scale the duplicate.</p></div>
+        <div class="hook-item"><div class="hook-num">✓</div><p>Pause any ad with CTR below 1% after $25 spend.</p></div>
+        <div class="hook-item"><div class="hook-num">✓</div><p>Always have 2–3 new creatives in testing alongside scaled ads.</p></div>
+        <div class="hook-item"><div class="hook-num">✓</div><p>Refresh creatives every 3–4 weeks to avoid audience fatigue.</p></div>
+        <div class="hook-item"><div class="hook-num">✓</div><p>Install the Meta Pixel on convozo.com and track "Sign Up" as a conversion event — essential for optimisation.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function copyText(btn) {
+    const block = btn.closest('.copy-block');
+    const text = block.querySelector('.copy-text').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.style.background = 'var(--green)';
+      btn.style.color = '#fff';
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Convozo — Marketing Posters</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --p:#7c3aed;--pl:#a855f7;--pd:#4c1d95;--pg:linear-gradient(135deg,#4c1d95 0%,#7c3aed 50%,#a855f7 100%);
+      --gold:#f59e0b;--green:#10b981;--white:#ffffff;--dark:#0a0a0f;
+    }
+    body{background:#111;font-family:'Inter',sans-serif;padding:2rem;color:#fff;}
+    h1{font-family:'Syne',sans-serif;font-size:1.5rem;color:#a855f7;margin-bottom:0.375rem;}
+    .page-sub{color:#666;font-size:0.8125rem;margin-bottom:2.5rem;}
+
+    /* Section labels */
+    .section-label{
+      font-size:0.6875rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:#555;margin:3rem 0 1.25rem;padding-bottom:0.5rem;
+      border-bottom:1px solid #1e1e1e;
+    }
+
+    /* Grid wrappers */
+    .grid-sq{display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:1rem;}
+    .grid-story{display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:1rem;}
+    .grid-land{display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:1rem;}
+
+    /* ══════════════════════════════════
+       BASE POSTER SHELL
+    ══════════════════════════════════ */
+    .poster{
+      position:relative;overflow:hidden;flex-shrink:0;
+      border-radius:1rem;
+      box-shadow:0 0.5rem 2rem rgba(0,0,0,.6);
+    }
+
+    /* ── SIZES ── */
+    .sq  {width:420px;height:420px;}   /* 1:1  feed */
+    .story{width:260px;height:462px;}  /* 9:16 story */
+    .land{width:560px;height:294px;}   /* 16:9 facebook */
+    .rect{width:380px;height:476px;}   /* 4:5  feed */
+
+    /* ══ POSTER 1 — Dark gradient "Stop Giving Free Advice" ══ */
+    .p1{background:linear-gradient(160deg,#0d0618 0%,#1a0533 40%,#3b0764 70%,#6d28d9 100%);}
+    .p1 .noise{
+      position:absolute;inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      opacity:.4;pointer-events:none;
+    }
+    .p1 .glow{
+      position:absolute;width:320px;height:320px;border-radius:50%;
+      background:radial-gradient(circle,rgba(124,58,237,.45) 0%,transparent 70%);
+      bottom:-80px;right:-80px;pointer-events:none;
+    }
+    .p1 .glow2{
+      position:absolute;width:200px;height:200px;border-radius:50%;
+      background:radial-gradient(circle,rgba(168,85,247,.3) 0%,transparent 70%);
+      top:-60px;left:-40px;pointer-events:none;
+    }
+    .p1 .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:2rem;}
+    .p1 .tag{
+      display:inline-flex;align-items:center;gap:0.375rem;
+      font-size:0.625rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      background:rgba(168,85,247,.2);border:1px solid rgba(168,85,247,.4);
+      color:#c4b5fd;padding:0.3125rem 0.75rem;border-radius:999px;width:fit-content;
+    }
+    .p1 .headline{
+      font-family:'Syne',sans-serif;font-size:2.375rem;font-weight:800;line-height:1.1;
+      color:#fff;margin-top:auto;
+    }
+    .p1 .headline span{
+      background:linear-gradient(90deg,#f59e0b,#fbbf24);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .p1 .sub{font-size:0.875rem;color:#c4b5fd;margin-top:0.75rem;line-height:1.5;}
+    .p1 .bottom{display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;}
+    .p1 .url{font-size:0.75rem;font-weight:700;color:#a78bfa;letter-spacing:.04em;}
+    .p1 .logo-badge{
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+      border-radius:0.5rem;padding:0.375rem 0.75rem;
+      font-family:'Syne',sans-serif;font-size:0.8125rem;font-weight:800;color:#fff;
+    }
+    .p1 .pill-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.875rem;}
+    .p1 .pill{
+      font-size:0.625rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+      color:#e9d5ff;padding:0.25rem 0.625rem;border-radius:999px;
+    }
+
+    /* ══ POSTER 2 — Bold white/light "Monetise Your Knowledge" ══ */
+    .p2{background:#f8f5ff;}
+    .p2 .stripe{
+      position:absolute;top:0;left:0;right:0;height:8px;
+      background:linear-gradient(90deg,#7c3aed,#a855f7,#7c3aed);
+    }
+    .p2 .accent-block{
+      position:absolute;bottom:0;right:0;width:200px;height:200px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      clip-path:polygon(100% 0,100% 100%,0 100%);
+      opacity:.12;
+    }
+    .p2 .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:2.25rem;}
+    .p2 .eyebrow{
+      font-size:0.625rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+      color:#7c3aed;margin-bottom:1.25rem;
+    }
+    .p2 .headline{
+      font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;
+      color:#1e1b4b;line-height:1.05;
+    }
+    .p2 .headline em{color:#7c3aed;font-style:normal;}
+    .p2 .divider{width:3rem;height:4px;background:var(--gold);border-radius:2px;margin:1.25rem 0;}
+    .p2 .body{font-size:0.875rem;color:#4c1d95;line-height:1.6;flex:1;}
+    .p2 .stats{display:flex;gap:1.25rem;margin-top:1.5rem;}
+    .p2 .stat-val{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:800;color:#7c3aed;}
+    .p2 .stat-lbl{font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6d28d9;margin-top:-0.125rem;}
+    .p2 .bottom{
+      display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;
+      padding-top:1rem;border-top:1px solid #e5e1ff;
+    }
+    .p2 .url{font-size:0.75rem;font-weight:700;color:#7c3aed;}
+    .p2 .cta-btn{
+      background:var(--p);color:#fff;font-size:0.75rem;font-weight:700;
+      padding:0.5rem 1.125rem;border-radius:999px;letter-spacing:.03em;
+    }
+
+    /* ══ POSTER 3 — Story: dark "Earn From Every Message" ══ */
+    .p3{background:linear-gradient(180deg,#090612 0%,#1a0535 50%,#2d1060 100%);}
+    .p3 .orb{
+      position:absolute;width:280px;height:280px;border-radius:50%;
+      background:radial-gradient(circle,rgba(124,58,237,.5) 0%,transparent 65%);
+      top:50%;left:50%;transform:translate(-50%,-50%);
+    }
+    .p3 .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;}
+    .p3 .icon-ring{
+      width:4rem;height:4rem;border-radius:50%;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.75rem;margin-bottom:1.25rem;
+      box-shadow:0 0 1.5rem rgba(124,58,237,.6);
+    }
+    .p3 .headline{
+      font-family:'Syne',sans-serif;font-size:1.625rem;font-weight:800;
+      color:#fff;line-height:1.15;margin-bottom:0.875rem;
+    }
+    .p3 .headline em{color:#f59e0b;font-style:normal;}
+    .p3 .sub{font-size:0.8125rem;color:#c4b5fd;line-height:1.55;margin-bottom:1.5rem;}
+    .p3 .amount{
+      font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;
+      background:linear-gradient(90deg,#f59e0b,#fbbf24);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      line-height:1;
+    }
+    .p3 .amount-sub{font-size:0.6875rem;color:#a78bfa;font-weight:600;margin-top:0.25rem;margin-bottom:1.5rem;}
+    .p3 .cta{
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff;font-size:0.8125rem;font-weight:700;
+      padding:0.625rem 1.5rem;border-radius:999px;
+      box-shadow:0 0 1.25rem rgba(124,58,237,.5);
+    }
+    .p3 .brand{position:absolute;bottom:1.25rem;font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:800;color:rgba(255,255,255,.35);}
+
+    /* ══ POSTER 4 — Story: white "3 Steps" ══ */
+    .p4{background:#fff;}
+    .p4 .top-bar{
+      position:absolute;top:0;left:0;right:0;height:5rem;
+      background:linear-gradient(135deg,#4c1d95,#7c3aed);
+    }
+    .p4 .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:1.375rem;}
+    .p4 .logo-area{margin-bottom:0.375rem;}
+    .p4 .logo-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff;}
+    .p4 .steps-title{
+      font-family:'Syne',sans-serif;font-size:1.375rem;font-weight:800;
+      color:#1e1b4b;margin:1.75rem 0 1rem;line-height:1.2;
+    }
+    .p4 .step{
+      display:flex;align-items:flex-start;gap:0.875rem;
+      margin-bottom:1rem;
+    }
+    .p4 .step-num{
+      flex-shrink:0;width:2rem;height:2rem;border-radius:50%;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff;font-size:0.875rem;font-weight:800;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .p4 .step-text h4{font-size:0.875rem;font-weight:700;color:#1e1b4b;margin-bottom:0.125rem;}
+    .p4 .step-text p{font-size:0.75rem;color:#6d28d9;line-height:1.4;}
+    .p4 .bottom-cta{
+      margin-top:auto;background:linear-gradient(135deg,#7c3aed,#a855f7);
+      border-radius:0.75rem;padding:1rem;text-align:center;
+    }
+    .p4 .bottom-cta p{font-size:0.6875rem;color:#e9d5ff;margin-bottom:0.25rem;}
+    .p4 .bottom-cta strong{font-family:'Syne',sans-serif;font-size:1rem;color:#fff;font-weight:800;}
+
+    /* ══ POSTER 5 — Landscape Facebook "The Numbers" ══ */
+    .p5{background:linear-gradient(135deg,#0a0014 0%,#1e0548 50%,#3b0764 100%);}
+    .p5 .grid-bg{
+      position:absolute;inset:0;
+      background-image:linear-gradient(rgba(124,58,237,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.06) 1px,transparent 1px);
+      background-size:2.5rem 2.5rem;
+    }
+    .p5 .content{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:center;}
+    .p5 .left{padding:2.25rem;}
+    .p5 .right{padding:2.25rem;border-left:1px solid rgba(124,58,237,.2);}
+    .p5 .eyebrow{font-size:0.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#a78bfa;margin-bottom:0.625rem;}
+    .p5 .headline{font-family:'Syne',sans-serif;font-size:1.875rem;font-weight:800;color:#fff;line-height:1.1;}
+    .p5 .headline em{color:#f59e0b;font-style:normal;}
+    .p5 .sub{font-size:0.8rem;color:#c4b5fd;margin-top:0.75rem;line-height:1.55;}
+    .p5 .cta-btn{
+      display:inline-flex;align-items:center;gap:0.375rem;
+      margin-top:1.25rem;background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff;font-size:0.75rem;font-weight:700;
+      padding:0.5rem 1.125rem;border-radius:999px;
+    }
+    .p5 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .p5 .stat-box{
+      background:rgba(255,255,255,.04);border:1px solid rgba(124,58,237,.25);
+      border-radius:0.625rem;padding:0.875rem;
+    }
+    .p5 .stat-val{font-family:'Syne',sans-serif;font-size:1.625rem;font-weight:800;color:#f59e0b;line-height:1;}
+    .p5 .stat-lbl{font-size:0.5625rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#a78bfa;margin-top:0.25rem;}
+
+    /* ══ POSTER 6 — Landscape "Client" light version ══ */
+    .p6{background:#faf8ff;}
+    .p6 .left-bar{position:absolute;left:0;top:0;bottom:0;width:0.5rem;background:linear-gradient(180deg,#7c3aed,#a855f7);}
+    .p6 .content{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:1fr 1.1fr;align-items:center;padding:2rem 2rem 2rem 2.5rem;gap:2rem;}
+    .p6 .eyebrow{font-size:0.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#7c3aed;margin-bottom:0.5rem;}
+    .p6 .headline{font-family:'Syne',sans-serif;font-size:1.875rem;font-weight:800;color:#1e1b4b;line-height:1.1;}
+    .p6 .headline em{color:#7c3aed;font-style:normal;}
+    .p6 .sub{font-size:0.8rem;color:#4c1d95;margin-top:0.75rem;line-height:1.55;}
+    .p6 .url{font-size:0.6875rem;font-weight:700;color:#7c3aed;margin-top:1rem;}
+    .p6 .chat-ui{
+      background:#1e1b4b;border-radius:0.875rem;padding:1.125rem;
+      display:flex;flex-direction:column;gap:0.625rem;
+    }
+    .p6 .chat-label{font-size:0.5625rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a78bfa;margin-bottom:0.25rem;}
+    .msg{padding:0.5rem 0.75rem;border-radius:0.625rem;font-size:0.6875rem;line-height:1.4;max-width:90%;}
+    .msg.q{background:rgba(255,255,255,.08);color:#e9d5ff;align-self:flex-start;}
+    .msg.a{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;align-self:flex-end;}
+    .msg.a .name{font-size:0.5625rem;font-weight:700;color:#e9d5ff;margin-bottom:0.125rem;}
+
+    /* ══ POSTER 7 — Square bold typographic "78%" ══ */
+    .p7{background:#0a0010;}
+    .p7 .bg-text{
+      position:absolute;font-family:'Syne',sans-serif;font-size:14rem;font-weight:800;
+      color:rgba(124,58,237,.08);top:50%;left:50%;transform:translate(-50%,-50%);
+      white-space:nowrap;pointer-events:none;letter-spacing:-.05em;
+    }
+    .p7 .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center;padding:2.25rem;}
+    .p7 .eyebrow{font-size:0.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#a78bfa;margin-bottom:1rem;}
+    .p7 .big-num{
+      font-family:'Syne',sans-serif;font-size:6.5rem;font-weight:800;line-height:1;
+      background:linear-gradient(90deg,#a855f7,#7c3aed);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .p7 .big-label{font-family:'Syne',sans-serif;font-size:1.625rem;font-weight:800;color:#fff;margin-top:-0.25rem;}
+    .p7 .rule{width:100%;height:1px;background:rgba(124,58,237,.3);margin:1.25rem 0;}
+    .p7 .detail{font-size:0.8125rem;color:#c4b5fd;line-height:1.6;}
+    .p7 .detail strong{color:#f59e0b;}
+    .p7 .url{font-size:0.75rem;font-weight:700;color:#a78bfa;margin-top:1.5rem;letter-spacing:.04em;}
+
+    /* ══ POSTER 8 — Square "Expert Profile" mock ══ */
+    .p8{background:linear-gradient(160deg,#0c0118 0%,#1a0535 60%,#2d1060 100%);}
+    .p8 .content{position:relative;z-index:2;height:100%;padding:1.75rem;display:flex;flex-direction:column;}
+    .p8 .tag{
+      font-size:0.5625rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:#a78bfa;margin-bottom:1rem;
+    }
+    .p8 .headline{
+      font-family:'Syne',sans-serif;font-size:1.625rem;font-weight:800;
+      color:#fff;line-height:1.2;margin-bottom:0.5rem;
+    }
+    .p8 .sub{font-size:0.8125rem;color:#c4b5fd;line-height:1.5;margin-bottom:1.25rem;}
+    .p8 .profile-card{
+      background:rgba(255,255,255,.06);border:1px solid rgba(124,58,237,.3);
+      border-radius:0.875rem;padding:1.125rem;flex:1;display:flex;flex-direction:column;justify-content:space-between;
+    }
+    .p8 .profile-top{display:flex;align-items:center;gap:0.75rem;}
+    .p8 .avatar{
+      width:2.75rem;height:2.75rem;border-radius:50%;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.125rem;flex-shrink:0;
+    }
+    .p8 .name{font-size:0.875rem;font-weight:700;color:#fff;}
+    .p8 .title{font-size:0.6875rem;color:#a78bfa;margin-top:0.125rem;}
+    .p8 .verified{
+      display:inline-flex;align-items:center;gap:0.25rem;
+      font-size:0.5625rem;font-weight:700;color:#10b981;
+      background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);
+      border-radius:999px;padding:0.1875rem 0.5rem;margin-top:0.375rem;
+    }
+    .p8 .stats-row{display:flex;gap:1.5rem;margin:0.875rem 0;}
+    .p8 .s-val{font-family:'Syne',sans-serif;font-size:1.125rem;font-weight:800;color:#f59e0b;}
+    .p8 .s-lbl{font-size:0.5625rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#a78bfa;}
+    .p8 .pay-btn{
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff;font-size:0.75rem;font-weight:700;
+      padding:0.5625rem;border-radius:0.5rem;text-align:center;
+      box-shadow:0 0 1rem rgba(124,58,237,.4);
+    }
+    .p8 .brand{
+      margin-top:auto;padding-top:1rem;
+      font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:800;color:rgba(255,255,255,.25);
+      text-align:right;
+    }
+
+    /* ══ POSTER 9 — Rect 4:5 "Before/After" ══ */
+    .p9{background:#fff;}
+    .p9 .content{height:100%;display:grid;grid-template-rows:auto 1fr auto;}
+    .p9 .top{
+      background:linear-gradient(135deg,#4c1d95,#7c3aed);
+      padding:1.5rem 1.75rem 1.25rem;
+    }
+    .p9 .top .label{font-size:0.5625rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c4b5fd;margin-bottom:0.375rem;}
+    .p9 .top h2{font-family:'Syne',sans-serif;font-size:1.625rem;font-weight:800;color:#fff;line-height:1.15;}
+    .p9 .mid{display:grid;grid-template-columns:1fr 1fr;flex:1;}
+    .p9 .before{background:#fef2f2;padding:1.25rem 1.375rem;border-right:2px solid #fff;}
+    .p9 .after{background:#f0fdf4;padding:1.25rem 1.375rem;}
+    .p9 .col-label{
+      font-size:0.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+      margin-bottom:0.875rem;padding-bottom:0.5rem;border-bottom:2px solid;
+    }
+    .p9 .before .col-label{color:#dc2626;border-color:#fca5a5;}
+    .p9 .after .col-label{color:#16a34a;border-color:#86efac;}
+    .p9 .item{
+      display:flex;align-items:flex-start;gap:0.5rem;
+      font-size:0.75rem;line-height:1.45;margin-bottom:0.625rem;
+    }
+    .p9 .item .dot{flex-shrink:0;width:0.4375rem;height:0.4375rem;border-radius:50%;margin-top:0.3125rem;}
+    .p9 .before .dot{background:#f87171;}
+    .p9 .after .dot{background:#4ade80;}
+    .p9 .before .item{color:#7f1d1d;}
+    .p9 .after .item{color:#14532d;}
+    .p9 .bottom{
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      padding:1rem 1.75rem;display:flex;align-items:center;justify-content:space-between;
+    }
+    .p9 .bottom span{font-size:0.875rem;font-weight:700;color:#fff;}
+    .p9 .bottom .arrow{font-size:1.25rem;color:#fcd34d;}
+
+    /* ══ POSTER 10 — Dark "Clients Pay First" story ══ */
+    .p10{background:linear-gradient(180deg,#06000f 0%,#130330 50%,#1e0548 100%);}
+    .p10 .dots{
+      position:absolute;inset:0;
+      background-image:radial-gradient(circle,rgba(168,85,247,.15) 1px,transparent 1px);
+      background-size:1.5rem 1.5rem;
+    }
+    .p10 .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:1.5rem;justify-content:space-between;}
+    .p10 .top-tag{
+      font-size:0.5625rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);
+      color:#c4b5fd;padding:0.3125rem 0.625rem;border-radius:999px;width:fit-content;
+    }
+    .p10 .mid{text-align:center;padding:0.75rem 0;}
+    .p10 .illo{font-size:3.5rem;margin-bottom:1rem;}
+    .p10 .headline{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;line-height:1.2;}
+    .p10 .headline em{color:#f59e0b;font-style:normal;}
+    .p10 .sub{font-size:0.75rem;color:#c4b5fd;margin-top:0.5rem;line-height:1.5;}
+    .p10 .check-list{margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem;}
+    .p10 .check{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#e9d5ff;}
+    .p10 .check::before{content:"✓";color:#10b981;font-weight:800;flex-shrink:0;}
+    .p10 .cta-box{
+      background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(168,85,247,.2));
+      border:1px solid rgba(168,85,247,.4);border-radius:0.875rem;
+      padding:1rem;text-align:center;
+    }
+    .p10 .cta-box p{font-size:0.6875rem;color:#a78bfa;margin-bottom:0.25rem;}
+    .p10 .cta-box strong{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff;}
+
+    /* ══ POSTER 11 — Square "Quote / Social Proof" ══ */
+    .p11{background:linear-gradient(145deg,#f5f3ff 0%,#ede9fe 100%);}
+    .p11 .content{height:100%;display:flex;flex-direction:column;padding:2.25rem;position:relative;}
+    .p11 .quote-mark{
+      font-family:'Syne',sans-serif;font-size:8rem;line-height:1;font-weight:800;
+      color:rgba(124,58,237,.12);position:absolute;top:0.75rem;left:1.5rem;
+    }
+    .p11 .quote{
+      font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;
+      color:#1e1b4b;line-height:1.3;margin-top:2rem;position:relative;z-index:1;flex:1;
+    }
+    .p11 .quote em{color:#7c3aed;font-style:normal;}
+    .p11 .author{margin-top:1.5rem;}
+    .p11 .author-name{font-size:0.875rem;font-weight:700;color:#4c1d95;}
+    .p11 .author-role{font-size:0.75rem;color:#7c3aed;margin-top:0.125rem;}
+    .p11 .amount-badge{
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      border-radius:0.75rem;padding:0.75rem 1.25rem;
+      display:flex;align-items:center;gap:1rem;margin-top:1.5rem;
+    }
+    .p11 .am-val{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:800;color:#fff;}
+    .p11 .am-sub{font-size:0.6875rem;color:#e9d5ff;font-weight:600;}
+    .p11 .brand-bottom{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(124,58,237,.2);
+    }
+    .p11 .brand-name{font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:800;color:#7c3aed;}
+    .p11 .brand-url{font-size:0.6875rem;color:#a78bfa;}
+
+    /* ══ POSTER 12 — Square "Comparison" ══ */
+    .p12{background:#09000f;}
+    .p12 .content{height:100%;display:flex;flex-direction:column;padding:1.75rem;}
+    .p12 .headline{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:#fff;margin-bottom:1.25rem;line-height:1.25;}
+    .p12 .headline em{color:#f59e0b;font-style:normal;}
+    .p12 .table{flex:1;display:flex;flex-direction:column;gap:0;}
+    .p12 .row{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:0;align-items:stretch;}
+    .p12 .row.header .cell{
+      background:rgba(255,255,255,.04);
+      font-size:0.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+      padding:0.625rem 0.75rem;
+    }
+    .p12 .row.header .cell:nth-child(2){color:#a78bfa;}
+    .p12 .row.header .cell:nth-child(3){color:#6b7280;}
+    .p12 .row:not(.header) .cell{
+      padding:0.625rem 0.75rem;border-top:1px solid rgba(255,255,255,.06);
+      font-size:0.75rem;
+    }
+    .p12 .cell:first-child{color:#d1d5db;}
+    .p12 .cell:nth-child(2){
+      background:rgba(124,58,237,.08);
+      color:#a78bfa;font-weight:700;text-align:center;
+    }
+    .p12 .cell:nth-child(3){color:#4b5563;text-align:center;}
+    .p12 .check-g{color:#10b981;font-weight:800;}
+    .p12 .x-r{color:#ef4444;}
+    .p12 .bottom{
+      margin-top:1.25rem;background:linear-gradient(135deg,#7c3aed,#a855f7);
+      border-radius:0.625rem;padding:0.875rem;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .p12 .bottom span{font-size:0.8125rem;font-weight:700;color:#fff;}
+    .p12 .bottom .arrow{color:#fcd34d;font-size:1rem;}
+
+    /* ── Print / Export note ── */
+    .export-note{
+      background:#1a1a24;border:1px solid #2a2a3a;border-radius:0.75rem;
+      padding:1.25rem 1.5rem;margin:3rem 0 1rem;font-size:0.8125rem;color:#888;
+      line-height:1.6;
+    }
+    .export-note strong{color:#a78bfa;}
+  </style>
+</head>
+<body>
+
+<h1>Convozo — Marketing Poster Library</h1>
+<p class="page-sub">12 production-ready ad poster designs · Instagram Feed, Stories, Facebook Feed · Dark & Light variants</p>
+
+<!-- ─────── SQUARE FEED POSTS ─────── -->
+<div class="section-label">📐 Square (1:1) — Instagram / Facebook Feed</div>
+<div class="grid-sq">
+
+  <!-- POSTER 1 -->
+  <div class="poster sq p1">
+    <div class="noise"></div>
+    <div class="glow"></div>
+    <div class="glow2"></div>
+    <div class="content">
+      <div>
+        <div class="tag">💡 For Professionals</div>
+      </div>
+      <div>
+        <div class="headline">Stop giving away<br/><span>free advice.</span></div>
+        <div class="sub">Your expertise is worth real money.<br/>Set a price. Share a link. Get paid.</div>
+        <div class="pill-row">
+          <div class="pill">✓ Free to start</div>
+          <div class="pill">✓ 10 min setup</div>
+          <div class="pill">✓ Keep 78%</div>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="url">convozo.com</div>
+        <div class="logo-badge">Convozo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTER 2 -->
+  <div class="poster sq p2">
+    <div class="stripe"></div>
+    <div class="accent-block"></div>
+    <div class="content">
+      <div class="eyebrow">Convozo — Monetise Your Expertise</div>
+      <div class="headline">Turn your<br/><em>knowledge</em><br/>into income.</div>
+      <div class="divider"></div>
+      <div class="body">Lawyers, coaches, consultants, advisors — professionals all over the world are earning from paid consultations on Convozo. Set your price. Share your link. Keep 78% of every payment.</div>
+      <div class="stats">
+        <div>
+          <div class="stat-val">78%</div>
+          <div class="stat-lbl">You keep</div>
+        </div>
+        <div>
+          <div class="stat-val">10min</div>
+          <div class="stat-lbl">To set up</div>
+        </div>
+        <div>
+          <div class="stat-val">Free</div>
+          <div class="stat-lbl">To join</div>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="url">convozo.com</div>
+        <div class="cta-btn">Get started →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTER 7 -->
+  <div class="poster sq p7">
+    <div class="bg-text">78%</div>
+    <div class="content">
+      <div class="eyebrow">Convozo Revenue Split</div>
+      <div class="big-num">78%</div>
+      <div class="big-label">Goes to you.<br/>Every time.</div>
+      <div class="rule"></div>
+      <div class="detail">
+        When a client pays for your consultation on Convozo, you keep <strong>78% of the payment</strong> — immediately. No monthly fees. No hidden deductions. No waiting for payouts.<br/><br/>The platform's 22% covers Stripe processing <em>and</em> Convozo's cut combined.
+      </div>
+      <div class="url">convozo.com — Free to join</div>
+    </div>
+  </div>
+
+  <!-- POSTER 8 -->
+  <div class="poster sq p8">
+    <div class="content">
+      <div class="tag">CONVOZO · EXPERT PROFILE</div>
+      <div class="headline">Your own<br/>consultation page.</div>
+      <div class="sub">Clients visit your link, pay upfront, and send their question. You reply on your schedule.</div>
+      <div class="profile-card">
+        <div>
+          <div class="profile-top">
+            <div class="avatar">👩‍⚖️</div>
+            <div>
+              <div class="name">Adaeze M.</div>
+              <div class="title">Corporate & Commercial Lawyer</div>
+              <div class="verified">✓ Verified Professional</div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div>
+              <div class="s-val">₦25,000</div>
+              <div class="s-lbl">Per consultation</div>
+            </div>
+            <div>
+              <div class="s-val">24hrs</div>
+              <div class="s-lbl">Response time</div>
+            </div>
+          </div>
+        </div>
+        <div class="pay-btn">Pay & Send Your Question →</div>
+      </div>
+      <div class="brand">convozo.com</div>
+    </div>
+  </div>
+
+  <!-- POSTER 11 -->
+  <div class="poster sq p11">
+    <div class="content">
+      <div class="quote-mark">"</div>
+      <div class="quote">"I made <em>₦380,000</em> in my first month — just from replying to messages I already knew the answers to."</div>
+      <div class="author">
+        <div class="author-name">Emeka O.</div>
+        <div class="author-role">Financial Advisor · Lagos</div>
+      </div>
+      <div class="amount-badge">
+        <div>
+          <div class="am-val">₦380k</div>
+          <div class="am-sub">First month on Convozo</div>
+        </div>
+      </div>
+      <div class="brand-bottom">
+        <div class="brand-name">Convozo</div>
+        <div class="brand-url">convozo.com</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTER 12 -->
+  <div class="poster sq p12">
+    <div class="content">
+      <div class="headline">Why experts choose<br/><em>Convozo</em> over the rest</div>
+      <div class="table">
+        <div class="row header">
+          <div class="cell"></div>
+          <div class="cell">Convozo</div>
+          <div class="cell">Others</div>
+        </div>
+        <div class="row"><div class="cell">Keep 78% of payment</div><div class="cell"><span class="check-g">✓</span></div><div class="cell x-r">✗</div></div>
+        <div class="row"><div class="cell">No monthly fee</div><div class="cell"><span class="check-g">✓</span></div><div class="cell x-r">✗</div></div>
+        <div class="row"><div class="cell">Set up in 10 minutes</div><div class="cell"><span class="check-g">✓</span></div><div class="cell x-r">✗</div></div>
+        <div class="row"><div class="cell">Clients pay before asking</div><div class="cell"><span class="check-g">✓</span></div><div class="cell x-r">✗</div></div>
+        <div class="row"><div class="cell">Video consultation bookings</div><div class="cell"><span class="check-g">✓</span></div><div class="cell x-r">✗</div></div>
+        <div class="row"><div class="cell">Works on mobile</div><div class="cell"><span class="check-g">✓</span></div><div class="cell"><span class="check-g">✓</span></div></div>
+      </div>
+      <div class="bottom">
+        <span>Free to join → convozo.com</span>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────── STORIES ─────── -->
+<div class="section-label">📱 Stories / Reels (9:16) — Instagram & Facebook Stories</div>
+<div class="grid-story">
+
+  <!-- POSTER 3 -->
+  <div class="poster story p3">
+    <div class="orb"></div>
+    <div class="content">
+      <div class="icon-ring">💬</div>
+      <div class="headline">Earn from<br/><em>every message.</em></div>
+      <div class="sub">Clients pay before they send their question. You reply when you want. That's it.</div>
+      <div class="amount">₦25k</div>
+      <div class="amount-sub">Per consultation · You keep 78%</div>
+      <div class="cta">Get your free link →</div>
+    </div>
+    <div class="brand">convozo.com</div>
+  </div>
+
+  <!-- POSTER 4 -->
+  <div class="poster story p4">
+    <div class="top-bar"></div>
+    <div class="content">
+      <div class="logo-area"><div class="logo-text">Convozo</div></div>
+      <div class="steps-title">Get paid for<br/>your expertise<br/>in 3 steps</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <h4>Create your profile</h4>
+          <p>Sign up free. Add your bio, specialty, and profile photo. Takes 5 minutes.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <h4>Set your price</h4>
+          <p>You decide what to charge per consultation. No limits. You're in control.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <h4>Share your link</h4>
+          <p>Put convozo.com/yourname in your bio. Clients pay and send their question.</p>
+        </div>
+      </div>
+      <div class="bottom-cta">
+        <p>Start earning today</p>
+        <strong>convozo.com</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTER 10 -->
+  <div class="poster story p10">
+    <div class="dots"></div>
+    <div class="content">
+      <div class="top-tag">For Lawyers · Coaches · Advisors</div>
+      <div class="mid">
+        <div class="illo">💰</div>
+        <div class="headline">Clients pay<br/><em>before</em> they<br/>ask.</div>
+        <div class="sub">No more free advice. No awkward money conversations. Payment is handled before the conversation starts.</div>
+        <div class="check-list">
+          <div class="check">Free to set up — live in 10 minutes</div>
+          <div class="check">You keep 78% of every payment</div>
+          <div class="check">Video calls + paid messages</div>
+          <div class="check">Reply on your own schedule</div>
+        </div>
+      </div>
+      <div class="cta-box">
+        <p>Get your consultation link</p>
+        <strong>convozo.com</strong>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────── LANDSCAPE / FACEBOOK ─────── -->
+<div class="section-label">🖥 Landscape (16:9) — Facebook Feed & Banner Ads</div>
+<div class="grid-land">
+
+  <!-- POSTER 5 -->
+  <div class="poster land p5">
+    <div class="grid-bg"></div>
+    <div class="content">
+      <div class="left">
+        <div class="eyebrow">Convozo — For Professionals</div>
+        <div class="headline">Your expertise<br/>should make you<br/><em>money.</em></div>
+        <div class="sub">Professionals on Convozo set their price, share one link, and collect payments from clients who want their knowledge. Lawyers, coaches, financial advisors, consultants — all earning from replies.</div>
+        <div class="cta-btn">Get started free → convozo.com</div>
+      </div>
+      <div class="right">
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-val">78%</div>
+            <div class="stat-lbl">You keep</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">10min</div>
+            <div class="stat-lbl">Setup time</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">$0</div>
+            <div class="stat-lbl">Monthly fee</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">24hr</div>
+            <div class="stat-lbl">Typical reply</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTER 6 -->
+  <div class="poster land p6">
+    <div class="left-bar"></div>
+    <div class="content">
+      <div>
+        <div class="eyebrow">Convozo — Expert Advice Platform</div>
+        <div class="headline">Real answers from<br/><em>real experts.</em></div>
+        <div class="sub">Skip the $500 consultation. On Convozo, you pay once and get a personal, detailed reply from a verified lawyer, financial advisor, or coach. Your specific situation. Not a template.</div>
+        <div class="url">Find your expert → convozo.com</div>
+      </div>
+      <div class="chat-ui">
+        <div class="chat-label">Live example</div>
+        <div class="msg q">"Is my freelance contract enforceable if the client hasn't signed?"</div>
+        <div class="msg a">
+          <div class="name">James A. · Corporate Lawyer ✓</div>
+          "Yes — conduct and part-performance can create a binding agreement even without signature in most jurisdictions..."
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────── 4:5 RECT ─────── -->
+<div class="section-label">📄 Rect (4:5) — Instagram Feed Tall</div>
+<div class="grid-sq">
+
+  <!-- POSTER 9 -->
+  <div class="poster rect p9">
+    <div class="content">
+      <div class="top">
+        <div class="label">Convozo — The Shift</div>
+        <h2>What changes when you start charging for your expertise</h2>
+      </div>
+      <div class="mid">
+        <div class="before">
+          <div class="col-label">❌ Before Convozo</div>
+          <div class="item"><div class="dot"></div><span>Answering DMs for free all day</span></div>
+          <div class="item"><div class="dot"></div><span>Clients don't take advice seriously</span></div>
+          <div class="item"><div class="dot"></div><span>No record of what you said</span></div>
+          <div class="item"><div class="dot"></div><span>Awkward money conversations</span></div>
+          <div class="item"><div class="dot"></div><span>Your time worth ₦0 per hour</span></div>
+        </div>
+        <div class="after">
+          <div class="col-label">✅ After Convozo</div>
+          <div class="item"><div class="dot"></div><span>Clients pay before they ask</span></div>
+          <div class="item"><div class="dot"></div><span>Paid advice gets implemented</span></div>
+          <div class="item"><div class="dot"></div><span>Everything in your dashboard</span></div>
+          <div class="item"><div class="dot"></div><span>Payment handled automatically</span></div>
+          <div class="item"><div class="dot"></div><span>You keep 78% of every session</span></div>
+        </div>
+      </div>
+      <div class="bottom">
+        <span>Join free → convozo.com</span>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="export-note">
+  <strong>To export as images:</strong> Open this file in Chrome → right-click any poster → "Inspect" → select the poster element → right-click → "Capture node screenshot". This gives you a pixel-perfect PNG at screen resolution. For print quality, zoom your browser to 200% first, then capture. All posters use standard ad dimensions: 1:1 (1080×1080), 9:16 (1080×1920), 16:9 (1920×1080), 4:5 (1080×1350).
+</div>
+
+</body>
+</html>
