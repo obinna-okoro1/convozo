@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     }
 
     // PostgREST returns one-to-one relationships as objects, not arrays
-    const settings = creator.creator_settings as { calls_enabled: boolean; call_duration: number; call_price: number } | null;
+    const settings = creator.creator_settings as { calls_enabled: boolean; call_duration: number; call_price: number; buffer_minutes: number } | null;
     if (!settings || !settings.calls_enabled) {
       return jsonError('Call bookings are not enabled for this creator', 400, corsHeaders);
     }
@@ -126,15 +126,26 @@ Deno.serve(async (req) => {
     }
 
     // ── Slot conflict check ──────────────────────────────────────────────────
-    // Prevent double-booking: reject if the requested time slot already has an
-    // active (confirmed or in_progress) booking for this creator.
-    // This is an early-rejection guard — the DB partial unique index in
-    // migration 035 is the hard safety net against concurrent race conditions.
+    // Prevent double-booking: reject if the requested slot overlaps any existing
+    // active booking, accounting for the creator's configured buffer time.
+    // A new slot at T conflicts with an existing booking at E if:
+    //   T < E + (duration + buffer)   AND   T + (duration + buffer) > E
+    // i.e. the new slot falls within the busy window [E, E + duration + buffer).
+    // This is an early-rejection guard — the DB partial unique index (migration 035)
+    // is the hard safety net against concurrent race conditions.
+    const bufferMinutes: number = settings.buffer_minutes ?? 0;
+    const durationMinutes: number = settings.call_duration;
+    const slotWindowMs = (durationMinutes + bufferMinutes) * 60 * 1000;
+    const newSlotMs = new Date(payload.scheduled_at).getTime();
+    const windowStart = new Date(newSlotMs - slotWindowMs + 1).toISOString();
+    const windowEnd = new Date(newSlotMs + slotWindowMs - 1).toISOString();
+
     const { data: slotConflict, error: slotCheckError } = await supabase
       .from('call_bookings')
       .select('id')
       .eq('creator_id', creator.id)
-      .eq('scheduled_at', payload.scheduled_at)
+      .gte('scheduled_at', windowStart)
+      .lte('scheduled_at', windowEnd)
       .in('status', ['confirmed', 'in_progress'])
       .maybeSingle();
 

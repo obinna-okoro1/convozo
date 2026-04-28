@@ -2,42 +2,44 @@
   <form (ngSubmit)="onSubmit()" class="space-y-5 px-6 lg:px-10 pb-6 pt-5">
 
     <!-- Pricing row -->
-    <div class="flex items-center justify-between py-4 px-5 rounded-2xl"
+    <div class="py-4 px-5 rounded-2xl"
          style="background: linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(236,72,153,0.06) 100%);
                 border: 1px solid rgba(124,58,237,0.12);">
-      <div>
+      <!-- Top: price + session type badge -->
+      <div class="flex items-start justify-between gap-3">
         <div class="flex items-baseline gap-1">
           <span class="text-3xl font-black text-content">${{ priceInDollars() }}</span>
           <span class="text-content-muted text-sm">/ {{ callDuration() }} min</span>
         </div>
-        <p class="text-content-muted text-xs mt-0.5 flex items-center gap-1.5">
-          <svg class="w-3 h-3 text-[#1a9e3f]" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-          </svg>
-          Secure payment
-        </p>
-      </div>
-      <div class="text-right">
-        <div class="flex items-center gap-1.5 mb-1">
+        <div class="flex items-center gap-1.5 flex-shrink-0 mt-1">
           @if (sessionType() === 'physical') {
-            <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <span class="text-xs font-semibold text-accent">In-person</span>
           } @else if (sessionType() === 'both') {
-            <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span class="text-xs font-semibold text-accent">Online or In-person</span>
           } @else {
-            <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
             <span class="text-xs font-semibold text-accent">Video Session</span>
           }
         </div>
+      </div>
+      <!-- Bottom: secure badge + slot hint -->
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+        <p class="text-content-muted text-xs flex items-center gap-1.5">
+          <svg class="w-3 h-3 text-[#1a9e3f] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          Secure payment
+        </p>
         <div class="flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3.5 h-3.5 text-content-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
           @if (selectedSlotLabel()) {
@@ -50,42 +52,12 @@
     </div>
 
     <!-- How it works -->
-
     <div class="rounded-xl px-4 py-3.5 space-y-2.5"
          style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.12);">
       <p class="font-semibold text-content text-sm">How it works</p>
-      <div class="space-y-2">
-        <div class="flex items-start gap-2.5">
-          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[0.625rem] font-bold text-accent flex-shrink-0 mt-px"
-                style="background: rgba(124,58,237,0.12);">1</span>
-          <p class="text-content-secondary text-sm leading-relaxed">Pay securely — your booking is confirmed immediately.</p>
-        </div>
-        <div class="flex items-start gap-2.5">
-          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[0.625rem] font-bold text-accent flex-shrink-0 mt-px"
-                style="background: rgba(124,58,237,0.12);">2</span>
-          <p class="text-content-secondary text-sm leading-relaxed">{{ creatorName() }} will confirm your slot and reach out with any details before the session.</p>
-        </div>
-        <div class="flex items-start gap-2.5">
-          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[0.625rem] font-bold text-accent flex-shrink-0 mt-px"
-                style="background: rgba(124,58,237,0.12);">3</span>
-          <p class="text-content-secondary text-sm leading-relaxed">Join your private {{ callDuration() }}-minute session via the link in your email.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cancellation & No-Show Policy -->
-    <div class="rounded-xl px-4 py-3.5 space-y-2"
-         style="background: rgba(215,0,21,0.04); border: 1px solid rgba(215,0,21,0.10);">
-      <p class="font-semibold text-content text-sm flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-[#d70015]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        </svg>
-        Session Policy
-      </p>
       <div class="space-y-1.5 text-content-secondary text-xs leading-relaxed">
-        <p>• Your card is <strong class="text-content">authorized but not charged</strong> until the session is validated.</p>
-        <p>• If the session lasts <strong class="text-content">less than 30%</strong> of the booked time, <strong class="text-content">50% of the session fee</strong> will be charged.</p>
-        <p>• If you <strong class="text-content">don't show up</strong>, a <strong class="text-content">30% no-show fee</strong> will be charged.</p>
+        <p>• Pick a slot, fill in your details, and pay — your booking is confirmed instantly.</p>
+        <p>• You'll receive a session link by email. No-shows incur a <strong class="text-content">30% fee</strong>; sessions under 30% of the booked time are charged at <strong class="text-content">50%</strong>.</p>
       </div>
     </div>
 
@@ -236,21 +208,20 @@
           <p class="form-label" id="cbf-time-label">
             Select a Time <span class="text-red-400">*</span>
           </p>
-          <div class="flex flex-wrap gap-2" role="group" aria-labelledby="cbf-time-label">
+          <div class="grid grid-cols-2 gap-2" role="group" aria-labelledby="cbf-time-label">
             @for (slot of timesForSelectedDay(); track slot.iso) {
               <button
                 type="button"
                 (click)="selectedIso = slot.iso"
-                class="px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all duration-150 leading-none"
+                class="px-3 py-2 rounded-xl text-xs font-semibold border transition-all duration-150 leading-none text-center"
                 [class.border-accent]="selectedIso === slot.iso"
                 [class.bg-accent]="selectedIso === slot.iso"
                 [class.text-white]="selectedIso === slot.iso"
-                [class.shadow-md]="selectedIso === slot.iso"
                 [class.border-separator]="selectedIso !== slot.iso"
                 [class.text-content-secondary]="selectedIso !== slot.iso"
-                [class.hover:border-accent/50]="selectedIso !== slot.iso"
+                [class.hover:border-accent]="selectedIso !== slot.iso"
                 [class.hover:text-accent]="selectedIso !== slot.iso"
-                [class.hover:bg-accent/5]="selectedIso !== slot.iso"
+                [class.hover:bg-accent/8]="selectedIso !== slot.iso"
                 [attr.aria-pressed]="selectedIso === slot.iso"
               >
                 {{ slot.label }}

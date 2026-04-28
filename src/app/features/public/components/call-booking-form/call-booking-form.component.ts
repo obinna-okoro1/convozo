@@ -52,6 +52,8 @@ export class CallBookingFormComponent {
   public readonly sessionType = input<'online' | 'physical' | 'both'>('online');
   /** Physical address shown when sessionType is 'physical' or 'both'. */
   public readonly physicalAddress = input<string>('');
+  /** Dead time (minutes) after each booking before the next slot is available. */
+  public readonly bufferMinutes = input<number>(0);
 
   public readonly formSubmit = output<CallBookingFormData>();
 
@@ -140,7 +142,8 @@ export class CallBookingFormComponent {
 
       const times: { iso: string; label: string }[] = [];
       for (const { startMin, endMin } of windows) {
-        for (let s = startMin; s + duration <= endMin; s += duration) {
+        const step = duration + this.bufferMinutes();
+        for (let s = startMin; s + duration <= endMin; s += step) {
           const slotDate = new Date(date);
           slotDate.setHours(Math.floor(s / 60), s % 60, 0, 0);
           const iso = slotDate.toISOString();

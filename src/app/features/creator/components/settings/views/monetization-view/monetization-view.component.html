@@ -86,6 +86,25 @@
             </div>
           </div>
 
+          <!-- Buffer time between bookings -->
+          <div>
+            <label for="bufferMinutes" class="form-label">Buffer Between Bookings</label>
+            <div class="flex items-center gap-3">
+              <input
+                type="number"
+                id="bufferMinutes"
+                [value]="state.bufferMinutes()"
+                (input)="state.bufferMinutes.set(state.inputNumber($event))"
+                min="0"
+                max="60"
+                step="5"
+                class="input flex-1"
+              />
+              <span class="text-content-muted text-sm font-medium">minutes</span>
+            </div>
+            <p class="form-hint">Dead time after each booking before the next slot is available (0 = back-to-back, max 60 min)</p>
+          </div>
+
           <!-- ── Session format (online / physical / both) ── -->
           <div class="space-y-2">
             <p class="form-label">Session Format <span class="text-red-400">*</span></p>

@@ -30,6 +30,11 @@ export interface Creator {
   years_of_experience: number | null;
   /** LinkedIn profile URL — used to verify professional credibility. */
   linkedin_url: string | null;
+  /**
+   * Controls public-facing copy on the booking page.
+   * 'consultant' = advisory/coaching language; 'practitioner' = appointment/clinical language.
+   */
+  profile_type: 'consultant' | 'practitioner';
 
   created_at: string;
   updated_at: string;
@@ -51,6 +56,8 @@ export interface CreatorSettings {
   shop_enabled: boolean;
   response_expectation: string | null;
   auto_reply_text: string | null;
+  /** Dead time in minutes between consecutive bookings. 0 = back-to-back allowed. */
+  buffer_minutes: number;
   created_at: string;
   updated_at: string;
 }

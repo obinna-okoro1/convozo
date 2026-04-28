@@ -1,9 +1,9 @@
 <!-- Owner management bar — only visible to the logged-in profile owner -->
 <app-owner-toolbar />
 
-<div class="min-h-screen bg-surface relative overflow-hidden" [class.pt-11]="ownerState.isOwner()">
+<div class="min-h-screen bg-surface relative overflow-x-hidden" [class.pt-11]="ownerState.isOwner()">
 
-  <!-- Ambient blobs — brand colour wash that makes backdrop-filter visible on glass tabs, cards & buttons regardless of banner -->
+  <!-- Ambient blobs — brand colour wash for glass effects -->
   <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
     <div style="position:absolute;top:-12rem;right:-6rem;width:40rem;height:40rem;background:radial-gradient(ellipse at 100% 0%,rgba(124,58,237,0.14) 0%,transparent 65%)"></div>
     <div style="position:absolute;top:28rem;left:-10rem;width:36rem;height:36rem;background:radial-gradient(ellipse at 0% 50%,rgba(236,72,153,0.11) 0%,transparent 65%)"></div>
@@ -42,37 +42,82 @@
     </div>
 
   } @else {
-    <!-- Main content -->
+    <!-- ── Main content ───────────────────────────────────────────────────── -->
     <div class="relative z-10">
-
-      <!-- Creator header -->
       @if (state.creator(); as creatorData) {
-        <div class="animate-fade-in">
-          <app-creator-profile-header
-            [creator]="creatorData"
-            [responseExpectation]="state.responseExpectation()"
-          />
+
+        <!--
+          Responsive layout:
+          Mobile  → single column: header stacked above content
+          lg+     → two columns: sticky profile card left, booking content right
+        -->
+        <div class="lg:max-w-5xl lg:mx-auto lg:px-6 lg:py-8 lg:grid lg:grid-cols-[22rem_1fr] lg:gap-8 lg:items-start">
+
+          <!-- ── Left: Profile header + desktop action list ───────────── -->
+          <div class="lg:sticky lg:top-6 animate-fade-in">
+            <app-creator-profile-header
+              [creator]="creatorData"
+              [responseExpectation]="state.responseExpectation()"
+            />
+
+            <!-- Desktop-only secondary action list (hidden on mobile — shown in bottom bar) -->
+            @if (secondaryActions().length > 0) {
+              <div class="hidden lg:flex flex-col gap-2 mt-4 px-1">
+                @for (action of secondaryActions(); track action.route) {
+                  <a [routerLink]="action.route"
+                     class="flex items-center gap-3 px-4 py-3 rounded-2xl card-glass hover:-translate-y-0.5 transition-all duration-200 group">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                         [style]="action.icon === 'support'
+                           ? 'background:linear-gradient(135deg,rgba(236,72,153,0.12) 0%,rgba(239,68,68,0.12) 100%)'
+                           : 'background:linear-gradient(135deg,rgba(124,58,237,0.12) 0%,rgba(236,72,153,0.12) 100%)'">
+                      @if (action.icon === 'message') {
+                        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                      } @else if (action.icon === 'support') {
+                        <svg class="w-3.5 h-3.5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                      } @else if (action.icon === 'shop') {
+                        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                      } @else {
+                        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                        </svg>
+                      }
+                    </div>
+                    <span class="text-sm font-semibold text-content group-hover:text-accent transition-colors">{{ action.label }}</span>
+                    <svg class="w-3.5 h-3.5 text-content-tertiary ml-auto group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- ── Right: Booking form + posts + links ──────────────────── -->
+          <div class="max-w-2xl mx-auto w-full px-4 sm:px-6 lg:px-0 pt-3 lg:pt-0 pb-28 lg:pb-8">
+            <router-outlet />
+
+            <!-- Footer -->
+            <div class="text-center mt-12">
+              <a routerLink="/home" class="inline-flex items-center gap-1.5 text-xs text-content-tertiary hover:text-content-secondary transition-colors duration-200">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs><linearGradient id="cvz-fp" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+                  <rect width="40" height="40" rx="8" fill="url(#cvz-fp)"/>
+                  <circle cx="20" cy="20" r="2.5" fill="white"/>
+                  <path d="M25 13 A8 8 0 1 0 25 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                </svg>
+                <span>Powered by <strong class="font-semibold">Convozo</strong></span>
+              </a>
+            </div>
+          </div>
+
         </div>
       }
-
-      <!-- Tabs + form -->
-      <div class="max-w-xl mx-auto px-4 pb-16">
-
-        <router-outlet />
-
-        <!-- Footer -->
-        <div class="text-center mt-12">
-          <a routerLink="/home" class="inline-flex items-center gap-1.5 text-xs text-content-tertiary hover:text-content-secondary transition-colors duration-200">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs><linearGradient id="cvz-fp" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
-              <rect width="40" height="40" rx="8" fill="url(#cvz-fp)"/>
-              <circle cx="20" cy="20" r="2.5" fill="white"/>
-              <path d="M25 13 A8 8 0 1 0 25 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-            </svg>
-            <span>Powered by <strong class="font-semibold">Convozo</strong></span>
-          </a>
-        </div>
-      </div>
     </div>
 
     <!-- ── Public panel drawer ───────────────────────────────────────── -->
@@ -146,6 +191,38 @@
             <app-support-view />
           } @else if (activePanelRoute() === 'posts') {
             <app-posts-view />
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── Mobile bottom action bar (hidden on lg+ where desktop list shows) -->
+    @if (secondaryActions().length > 0) {
+      <div class="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface/95 backdrop-blur-xl border-t border-surface-border"
+           style="padding-bottom: env(safe-area-inset-bottom, 0);">
+        <div class="flex items-center justify-around px-1" style="height: 3.5rem;">
+          @for (action of secondaryActions(); track action.route) {
+            <a [routerLink]="action.route"
+               class="flex flex-col items-center justify-center gap-0.5 min-w-[2.75rem] min-h-[2.75rem] px-3 py-1.5 rounded-xl text-content-secondary hover:text-accent active:scale-95 transition-all duration-150">
+              @if (action.icon === 'message') {
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              } @else if (action.icon === 'support') {
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              } @else if (action.icon === 'shop') {
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                </svg>
+              } @else {
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              }
+              <span class="text-[0.6rem] font-semibold leading-none">{{ action.label }}</span>
+            </a>
           }
         </div>
       </div>

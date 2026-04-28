@@ -104,6 +104,7 @@ export class CreatorService {
     professionTitle?: string | null;
     yearsOfExperience?: number | null;
     linkedinUrl?: string | null;
+    profileType?: 'consultant' | 'practitioner';
   }): Promise<SupabaseResponse<Creator>> {
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -119,6 +120,7 @@ export class CreatorService {
         profession_title: data.professionTitle,
         years_of_experience: data.yearsOfExperience,
         linkedin_url: data.linkedinUrl,
+        profile_type: data.profileType,
       })
       .eq('id', data.creatorId)
       .select()
@@ -174,6 +176,7 @@ export class CreatorService {
     tipsEnabled: boolean;
     shopEnabled: boolean;
     responseExpectation: string;
+    bufferMinutes?: number;
   }): Promise<SupabaseResponse<CreatorSettings>> {
     // Ensure prices meet DB constraints: message_price >= 100, call_price >= 500.
     // Send null (not undefined) when a feature is disabled so the DB column is cleared.
@@ -200,6 +203,7 @@ export class CreatorService {
         tips_enabled: data.tipsEnabled,
         shop_enabled: data.shopEnabled,
         response_expectation: data.responseExpectation,
+        buffer_minutes: data.bufferMinutes ?? 0,
       })
       .eq('id', data.settingsId)
       .select()
