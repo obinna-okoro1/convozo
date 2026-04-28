@@ -160,6 +160,7 @@ describe('EdgeFunctionService', () => {
         price: 5000,
         scheduled_at: '2026-04-01T14:00:00.000Z',
         fan_timezone: 'America/New_York',
+        session_type: 'online',
       });
 
       expect(result.data).toEqual(responseData);
@@ -194,6 +195,7 @@ describe('EdgeFunctionService', () => {
         price: 10000, // $100.00 in cents
         scheduled_at: '2026-04-01T14:00:00.000Z',
         fan_timezone: 'UTC',
+        session_type: 'online',
       });
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
