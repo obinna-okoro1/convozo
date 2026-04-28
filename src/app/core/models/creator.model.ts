@@ -30,6 +30,11 @@ export interface Creator {
   years_of_experience: number | null;
   /** LinkedIn profile URL — used to verify professional credibility. */
   linkedin_url: string | null;
+  /**
+   * Controls public-facing copy on the booking page.
+   * 'consultant' = advisory/coaching language; 'practitioner' = appointment/clinical language.
+   */
+  profile_type: 'consultant' | 'practitioner';
 
   created_at: string;
   updated_at: string;
@@ -43,10 +48,16 @@ export interface CreatorSettings {
   call_price: number | null;
   call_duration: number | null;
   calls_enabled: boolean;
+  /** Whether sessions are online, physical (in-person), or both (client chooses). */
+  session_type: 'online' | 'physical' | 'both';
+  /** Address for in-person sessions — required when session_type is 'physical' or 'both'. */
+  physical_address: string | null;
   tips_enabled: boolean;
   shop_enabled: boolean;
   response_expectation: string | null;
   auto_reply_text: string | null;
+  /** Dead time in minutes between consecutive bookings. 0 = back-to-back allowed. */
+  buffer_minutes: number;
   created_at: string;
   updated_at: string;
 }

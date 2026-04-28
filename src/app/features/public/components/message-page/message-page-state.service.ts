@@ -52,9 +52,28 @@ export class MessagePageStateService {
   readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
   readonly tipsEnabled = computed(() => this.settings()?.tips_enabled ?? false);
   readonly shopEnabled = computed(() => this.settings()?.shop_enabled ?? false);
+  /** Session format offered: 'online', 'physical', or 'both'. */
+  readonly sessionType = computed(() => this.settings()?.session_type ?? 'online');
+  /** In-person address; only populated when sessionType is 'physical' or 'both'. */
+  readonly physicalAddress = computed(() => this.settings()?.physical_address ?? '');
+  /**
+   * The primary booking type to show inline on the profile page.
+   * 'call' takes priority over 'message' since sessions are higher-value.
+   */
+  readonly primaryBookingType = computed((): 'call' | 'message' | null => {
+    if (this.callsEnabled()) return 'call';
+    if (this.messagesEnabled()) return 'message';
+    return null;
+  });
   readonly responseExpectation = computed(
     () => this.settings()?.response_expectation ?? '24-48 hours',
   );
+  /** Controls public-facing copy: 'consultant' = advisory language; 'practitioner' = appointment language. */
+  readonly profileType = computed(
+    (): 'consultant' | 'practitioner' => this.creator()?.profile_type ?? 'consultant',
+  );
+  /** Dead time in minutes between consecutive call bookings — fed to the slot generator. */
+  readonly bufferMinutes = computed(() => this.settings()?.buffer_minutes ?? 0);
 
   // ── Professional credentials (migration 041) ──
   readonly professionTitle     = computed(() => this.creator()?.profession_title ?? null);
@@ -365,6 +384,7 @@ export class MessagePageStateService {
         price: this.callPriceCents(),
         scheduled_at: formData.scheduledAt,
         fan_timezone: formData.timezone,
+        session_type: formData.sessionType,
       });
 
       if (error || !data?.url) {

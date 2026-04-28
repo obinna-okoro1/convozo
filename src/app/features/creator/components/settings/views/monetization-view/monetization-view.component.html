@@ -86,6 +86,83 @@
             </div>
           </div>
 
+          <!-- Buffer time between bookings -->
+          <div>
+            <label for="bufferMinutes" class="form-label">Buffer Between Bookings</label>
+            <div class="flex items-center gap-3">
+              <input
+                type="number"
+                id="bufferMinutes"
+                [value]="state.bufferMinutes()"
+                (input)="state.bufferMinutes.set(state.inputNumber($event))"
+                min="0"
+                max="60"
+                step="5"
+                class="input flex-1"
+              />
+              <span class="text-content-muted text-sm font-medium">minutes</span>
+            </div>
+            <p class="form-hint">Dead time after each booking before the next slot is available (0 = back-to-back, max 60 min)</p>
+          </div>
+
+          <!-- ── Session format (online / physical / both) ── -->
+          <div class="space-y-2">
+            <p class="form-label">Session Format <span class="text-red-400">*</span></p>
+            <div class="grid grid-cols-3 gap-2">
+              @for (opt of [
+                { value: 'online',   icon: 'video',    label: 'Online',    hint: 'Video call' },
+                { value: 'physical', icon: 'map-pin',  label: 'In-person', hint: 'Fixed address' },
+                { value: 'both',     icon: 'both',     label: 'Both',      hint: 'Client picks' }
+              ]; track opt.value) {
+                <button
+                  type="button"
+                  (click)="state.sessionType.set($any(opt.value))"
+                  class="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border-2 transition-all text-center"
+                  [class.border-accent]="state.sessionType() === opt.value"
+                  [class.bg-accent]="state.sessionType() === opt.value"
+                  [class.text-white]="state.sessionType() === opt.value"
+                  [class.border-separator]="state.sessionType() !== opt.value"
+                  [class.text-content-secondary]="state.sessionType() !== opt.value"
+                >
+                  @if (opt.icon === 'video') {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  } @else if (opt.icon === 'map-pin') {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  }
+                  <span class="text-xs font-semibold leading-tight">{{ opt.label }}</span>
+                  <span class="text-[0.65rem] opacity-75 leading-tight">{{ opt.hint }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Physical address — shown when in-person is offered -->
+          @if (state.sessionType() === 'physical' || state.sessionType() === 'both') {
+            <div class="animate-fade-in">
+              <label for="physicalAddress" class="form-label">
+                Physical Address <span class="text-red-400">*</span>
+              </label>
+              <textarea
+                id="physicalAddress"
+                [value]="state.physicalAddress()"
+                (input)="state.physicalAddress.set(state.inputValue($event))"
+                rows="2"
+                maxlength="300"
+                placeholder="e.g. Suite 4B, 221B Baker Street, London, NW1 6XE"
+                class="input resize-none"
+              ></textarea>
+              <p class="form-hint">This address is shown to the client after payment. Be precise.</p>
+            </div>
+          }
+
           <!-- Weekly Schedule — embedded availability manager -->
           <div class="rounded-xl border border-separator p-4 space-y-3">
             <div class="flex items-center gap-2">

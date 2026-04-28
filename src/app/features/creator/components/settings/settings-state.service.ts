@@ -59,6 +59,7 @@ export class SettingsStateService {
   readonly professionTitle = signal<string>('');
   readonly yearsOfExperience = signal<number | null>(null);
   readonly linkedinUrl = signal<string>('');
+  readonly profileType = signal<'consultant' | 'practitioner'>('consultant');
 
 
   private originalSlug = '';
@@ -70,9 +71,12 @@ export class SettingsStateService {
   readonly callPrice = signal(2000);
   readonly callDuration = signal(10);
   readonly callsEnabled = signal(false);
+  readonly sessionType = signal<'online' | 'physical' | 'both'>('online');
+  readonly physicalAddress = signal('');
   readonly tipsEnabled = signal(false);
   readonly shopEnabled = signal(false);
   readonly responseExpectation = signal('');
+  readonly bufferMinutes = signal<number>(0);
 
   // ── Dirty-state tracking ───────────────────────────────────────────
   readonly originalProfile = signal({
@@ -87,6 +91,7 @@ export class SettingsStateService {
     professionTitle: '',
     yearsOfExperience: null as number | null,
     linkedinUrl: '',
+    profileType: 'consultant' as 'consultant' | 'practitioner',
   });
   readonly originalMonetization = signal({
     messagePrice: 500,
@@ -94,9 +99,12 @@ export class SettingsStateService {
     callPrice: 2000,
     callDuration: 10,
     callsEnabled: false,
+    sessionType: 'online' as 'online' | 'physical' | 'both',
+    physicalAddress: '',
     tipsEnabled: false,
     shopEnabled: false,
     responseExpectation: '',
+    bufferMinutes: 0,
   });
 
   // ── Computed ───────────────────────────────────────────────────────
@@ -113,7 +121,8 @@ export class SettingsStateService {
       this.expertSubcategory() !== o.expertSubcategory ||
       this.professionTitle() !== o.professionTitle ||
       this.yearsOfExperience() !== o.yearsOfExperience ||
-      this.linkedinUrl() !== o.linkedinUrl
+      this.linkedinUrl() !== o.linkedinUrl ||
+      this.profileType() !== o.profileType
     );
   });
 
@@ -136,9 +145,12 @@ export class SettingsStateService {
       this.callPrice() !== o.callPrice ||
       this.callDuration() !== o.callDuration ||
       this.callsEnabled() !== o.callsEnabled ||
+      this.sessionType() !== o.sessionType ||
+      this.physicalAddress() !== o.physicalAddress ||
       this.tipsEnabled() !== o.tipsEnabled ||
       this.shopEnabled() !== o.shopEnabled ||
-      this.responseExpectation() !== o.responseExpectation
+      this.responseExpectation() !== o.responseExpectation ||
+      this.bufferMinutes() !== o.bufferMinutes
     );
   });
 
@@ -277,6 +289,7 @@ export class SettingsStateService {
       professionTitle: this.professionTitle() || null,
       yearsOfExperience: this.yearsOfExperience(),
       linkedinUrl: this.linkedinUrl() || null,
+      profileType: this.profileType(),
     });
 
     this.saving.set(false);
@@ -295,6 +308,7 @@ export class SettingsStateService {
         professionTitle: this.professionTitle(),
         yearsOfExperience: this.yearsOfExperience(),
         linkedinUrl: this.linkedinUrl(),
+        profileType: this.profileType(),
       });
       this.slugStatus.set('idle');
       this.success.set(true);
@@ -324,9 +338,12 @@ export class SettingsStateService {
       callPrice: this.callsEnabled() ? this.callPrice() : undefined,
       callDuration: this.callsEnabled() ? this.callDuration() : undefined,
       callsEnabled: this.callsEnabled(),
+      sessionType: this.sessionType(),
+      physicalAddress: this.callsEnabled() && this.sessionType() !== 'online' ? (this.physicalAddress() || null) : null,
       tipsEnabled: this.tipsEnabled(),
       shopEnabled: this.shopEnabled(),
       responseExpectation: this.responseExpectation() || '',
+      bufferMinutes: this.bufferMinutes(),
     });
 
     this.saving.set(false);
@@ -338,9 +355,12 @@ export class SettingsStateService {
         callPrice: this.callPrice(),
         callDuration: this.callDuration(),
         callsEnabled: this.callsEnabled(),
+        sessionType: this.sessionType(),
+        physicalAddress: this.physicalAddress(),
         tipsEnabled: this.tipsEnabled(),
         shopEnabled: this.shopEnabled(),
         responseExpectation: this.responseExpectation(),
+        bufferMinutes: this.bufferMinutes(),
       });
       this.success.set(true);
       setTimeout(() => this.success.set(false), 3000);
@@ -474,6 +494,7 @@ export class SettingsStateService {
       this.professionTitle.set(creatorData.profession_title || '');
       this.yearsOfExperience.set(creatorData.years_of_experience ?? null);
       this.linkedinUrl.set(creatorData.linkedin_url || '');
+      this.profileType.set(creatorData.profile_type ?? 'consultant');
       this.originalProfile.set({
         displayName: creatorData.display_name,
         slug: creatorData.slug,
@@ -486,6 +507,7 @@ export class SettingsStateService {
         professionTitle: creatorData.profession_title || '',
         yearsOfExperience: creatorData.years_of_experience ?? null,
         linkedinUrl: creatorData.linkedin_url || '',
+        profileType: creatorData.profile_type ?? 'consultant',
       });
 
       const settingsData = await this.creatorService.getCreatorSettings(creatorData.id);
@@ -496,18 +518,24 @@ export class SettingsStateService {
         this.callPrice.set(settingsData.data.call_price ?? 2000);
         this.callDuration.set(settingsData.data.call_duration ?? 10);
         this.callsEnabled.set(settingsData.data.calls_enabled);
+        this.sessionType.set(settingsData.data.session_type ?? 'online');
+        this.physicalAddress.set(settingsData.data.physical_address ?? '');
         this.tipsEnabled.set(settingsData.data.tips_enabled ?? false);
         this.shopEnabled.set(settingsData.data.shop_enabled ?? false);
         this.responseExpectation.set(settingsData.data.response_expectation || '');
+        this.bufferMinutes.set(settingsData.data.buffer_minutes ?? 0);
         this.originalMonetization.set({
           messagePrice: settingsData.data.message_price,
           messagesEnabled: settingsData.data.messages_enabled ?? false,
           callPrice: settingsData.data.call_price ?? 2000,
           callDuration: settingsData.data.call_duration ?? 10,
           callsEnabled: settingsData.data.calls_enabled,
+          sessionType: settingsData.data.session_type ?? 'online',
+          physicalAddress: settingsData.data.physical_address ?? '',
           tipsEnabled: settingsData.data.tips_enabled ?? false,
           shopEnabled: settingsData.data.shop_enabled ?? false,
           responseExpectation: settingsData.data.response_expectation || '',
+          bufferMinutes: settingsData.data.buffer_minutes ?? 0,
         });
       }
 

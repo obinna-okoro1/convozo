@@ -26,6 +26,7 @@ export class MessageFormComponent {
   public readonly priceCents = input.required<number>();
   public readonly creatorName = input.required<string>();
   public readonly responseExpectation = input<string>('24-48 hours');
+  public readonly profileType = input<'consultant' | 'practitioner'>('consultant');
   public readonly submitting = input<boolean>(false);
 
   public readonly formSubmit = output<MessageFormData>();
@@ -40,12 +41,16 @@ export class MessageFormComponent {
 
   protected readonly charCount = computed(() => this.messageContent.length);
 
-  protected readonly serviceDescription = computed(
-    () => `Get personalized advice delivered privately to you`,
+  protected readonly serviceDescription = computed(() =>
+    this.profileType() === 'practitioner'
+      ? 'Book a private appointment with this professional'
+      : 'Get personalized advice delivered privately to you',
   );
 
-  protected readonly submitLabel = computed(
-    () => `Send Inquiry — $${String(this.priceInDollars())}`,
+  protected readonly submitLabel = computed(() =>
+    this.profileType() === 'practitioner'
+      ? `Book Appointment — $${String(this.priceInDollars())}`
+      : `Send Inquiry — $${String(this.priceInDollars())}`,
   );
 
   protected onSubmit(): void {

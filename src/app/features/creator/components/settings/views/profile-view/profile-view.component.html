@@ -149,6 +149,40 @@
         />
         <p class="form-hint">Adds credibility to your public profile</p>
       </div>
+
+      <!-- Profile Type -->
+      <div class="pt-2 border-t border-separator">
+        <p class="text-base font-semibold text-content mb-1">Profile Type</p>
+        <p class="text-sm text-content-muted mb-3">Controls how clients experience your booking page</p>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            (click)="state.profileType.set('consultant')"
+            class="flex flex-col items-start gap-1 px-4 py-3 rounded-xl border-2 transition-all text-left"
+            [class.border-accent]="state.profileType() === 'consultant'"
+            [class.bg-accent]="state.profileType() === 'consultant'"
+            [class.text-white]="state.profileType() === 'consultant'"
+            [class.border-separator]="state.profileType() !== 'consultant'"
+            [class.text-content-secondary]="state.profileType() !== 'consultant'"
+          >
+            <span class="text-sm font-bold leading-tight">Consultant</span>
+            <span class="text-xs opacity-75 leading-tight">Inquiry / advisory copy</span>
+          </button>
+          <button
+            type="button"
+            (click)="state.profileType.set('practitioner')"
+            class="flex flex-col items-start gap-1 px-4 py-3 rounded-xl border-2 transition-all text-left"
+            [class.border-accent]="state.profileType() === 'practitioner'"
+            [class.bg-accent]="state.profileType() === 'practitioner'"
+            [class.text-white]="state.profileType() === 'practitioner'"
+            [class.border-separator]="state.profileType() !== 'practitioner'"
+            [class.text-content-secondary]="state.profileType() !== 'practitioner'"
+          >
+            <span class="text-sm font-bold leading-tight">Practitioner</span>
+            <span class="text-xs opacity-75 leading-tight">Appointment / clinical copy</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Profile Banner -->

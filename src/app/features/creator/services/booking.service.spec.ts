@@ -48,6 +48,7 @@ function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
     dispute_frozen_at: null,
     capture_method: 'manual',
     fan_timezone: 'UTC',
+    session_type: 'online' as const,
     created_at: now,
     updated_at: now,
     ...overrides,

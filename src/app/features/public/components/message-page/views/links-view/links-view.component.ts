@@ -20,13 +20,21 @@ import {
 } from '@features/link-in-bio/utils/brand-detection';
 import { LinkFormModalComponent } from '@features/link-in-bio/components/link-form-modal/link-form-modal.component';
 import { LinkService } from '@features/link-in-bio/services/link.service';
+import {
+  CallBookingFormComponent,
+  CallBookingFormData,
+} from '@features/public/components/call-booking-form/call-booking-form.component';
+import {
+  MessageFormComponent,
+  MessageFormData,
+} from '@features/public/components/message-form/message-form.component';
 
 /** Max words per post — must match the dashboard posts view */
 const MAX_POST_WORDS = 500;
 
 @Component({
   selector: 'app-links-view',
-  imports: [RouterLink, LinkFormModalComponent],
+  imports: [RouterLink, LinkFormModalComponent, CallBookingFormComponent, MessageFormComponent],
   templateUrl: './links-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -39,6 +47,16 @@ export class LinksViewComponent {
 
   /** Tracks which post is expanded — only one open at a time. */
   protected readonly expandedPostId = signal<string | null>(null);
+
+  // ── Booking form handlers ─────────────────────────────────────────
+
+  protected onCallBookingSubmit(formData: CallBookingFormData): void {
+    void this.state.onCallBookingSubmit(formData);
+  }
+
+  protected onMessageSubmit(formData: MessageFormData): void {
+    void this.state.onMessageSubmit(formData);
+  }
 
   // ── Link modal ────────────────────────────────────────────────────
   protected readonly showLinkModal = signal(false);

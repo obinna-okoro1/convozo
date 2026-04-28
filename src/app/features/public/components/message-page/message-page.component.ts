@@ -15,6 +15,12 @@ import { SupportViewComponent } from './views/support-view/support-view.componen
 const PUBLIC_PANELS = ['message', 'call', 'shop', 'support', 'posts'] as const;
 type PublicPanel = (typeof PUBLIC_PANELS)[number];
 
+interface SecondaryAction {
+  route: string;
+  label: string;
+  icon: string;
+}
+
 @Component({
   selector: 'app-message-page',
   imports: [
@@ -36,8 +42,6 @@ export class MessagePageComponent implements OnInit {
   protected readonly state = inject(MessagePageStateService);
   protected readonly ownerState = inject(ProfileOwnerService);
 
-  // ── Public panel drawer ────────────────────────────────────────────────────
-
   protected readonly activePanelRoute = computed((): PublicPanel | null => {
     const url = this.currentUrl();
     const segments = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
@@ -53,11 +57,11 @@ export class MessagePageComponent implements OnInit {
 
   protected readonly panelTitle = computed((): string => {
     const titles: Record<PublicPanel, string> = {
-      message: 'Send a Consultation',
-      call: 'Book a Session',
+      message: 'Send a Message',
+      call: 'Book a Call',
       shop: 'Products',
-      support: 'Support',
-      posts: 'All Posts',
+      support: 'Show Support',
+      posts: 'Posts',
     };
     const panel = this.activePanelRoute();
     return panel ? titles[panel] : '';
@@ -78,6 +82,26 @@ export class MessagePageComponent implements OnInit {
       posts: 'Latest updates and insights',
     };
     return panel ? subtitles[panel] : '';
+  });
+
+  /**
+   * Secondary actions for the bottom action bar (mobile) and left-column
+   * action list (desktop). Excludes the primary inline booking type.
+   */
+  protected readonly secondaryActions = computed((): SecondaryAction[] => {
+    const actions: SecondaryAction[] = [];
+    // Message only appears in the bar when calls are the primary inline form
+    if (this.state.messagesEnabled() && this.state.callsEnabled()) {
+      actions.push({ route: 'message', label: 'Message', icon: 'message' });
+    }
+    if (this.state.tipsEnabled()) {
+      actions.push({ route: 'support', label: 'Support', icon: 'support' });
+    }
+    if (this.state.shopEnabled()) {
+      actions.push({ route: 'shop', label: 'Products', icon: 'shop' });
+    }
+    actions.push({ route: 'posts', label: 'Posts', icon: 'posts' });
+    return actions;
   });
 
   private readonly route = inject(ActivatedRoute);
