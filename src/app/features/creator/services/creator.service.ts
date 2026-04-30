@@ -63,8 +63,10 @@ export class CreatorService {
     linkedinUrl?: string;
   }): Promise<SupabaseResponse<Creator>> {
     // Determine the payment provider based on country.
-    // NG and ZA creators use Flutterwave; all others use Stripe.
-    const FLUTTERWAVE_COUNTRIES = new Set(['NG', 'ZA']);
+    // African countries supported by Flutterwave use Flutterwave; all others use Stripe.
+    const FLUTTERWAVE_COUNTRIES = new Set([
+      'NG', 'ZA', 'GH', 'KE', 'TZ', 'UG', 'RW', 'ZM', 'CM', 'CI', 'SN', 'MA',
+    ]);
     const paymentProvider = FLUTTERWAVE_COUNTRIES.has(data.country.toUpperCase()) ? 'flutterwave' : 'stripe';
 
     const { data: creator, error } = await this.supabaseService.client

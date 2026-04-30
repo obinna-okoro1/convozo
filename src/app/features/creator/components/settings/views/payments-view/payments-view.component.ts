@@ -108,12 +108,28 @@ export class PaymentsViewComponent implements OnInit {
     this.bankCode.set(code);
     this.resolvedAccountName.set(null);
     this.resolveError.set(null);
+    // Non-NG: auto-mark as verified if account number is already filled.
+    if (!this.supportsNameResolution && this.accountNumber()) {
+      void this.resolveAccount();
+    }
   }
 
   protected onAccountNumberChange(num: string): void {
     this.accountNumber.set(num.replace(/\D/g, ''));
     this.resolvedAccountName.set(null);
     this.resolveError.set(null);
+    // Non-NG: no manual verify step — auto-mark as verified so canSubmitBank works.
+    if (!this.supportsNameResolution && this.bankCode()) {
+      void this.resolveAccount();
+    }
+  }
+
+  /**
+   * Account name resolution via NIBSS is only available for Nigeria.
+   * All other Flutterwave countries skip this step and go straight to submit.
+   */
+  protected get supportsNameResolution(): boolean {
+    return this.state.creator()?.country?.toUpperCase() === 'NG';
   }
 
   /** Resolve the account name so the creator can confirm before submitting. */
@@ -121,6 +137,14 @@ export class PaymentsViewComponent implements OnInit {
     const num = this.accountNumber();
     const code = this.bankCode();
     if (!num || !code) return;
+
+    // Non-NG countries: NIBSS resolution is not available — mark as verified
+    // immediately so the form can proceed to submit.
+    if (!this.supportsNameResolution) {
+      this.resolvedAccountName.set('–');
+      this.resolveError.set(null);
+      return;
+    }
 
     this.resolving.set(true);
     this.resolveError.set(null);

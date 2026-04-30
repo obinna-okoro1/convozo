@@ -9,8 +9,9 @@
  * blocked — we never charge at a stale or guessed rate.
  *
  * Countries supported by this integration:
- *   NG — Nigeria
- *   ZA — South Africa
+ *   NG — Nigeria      GH — Ghana          KE — Kenya          TZ — Tanzania
+ *   UG — Uganda        RW — Rwanda         ZM — Zambia         ZA — South Africa
+ *   CM — Cameroon      CI — Côte d'Ivoire  SN — Senegal        MA — Morocco
  *
  * Split model:
  *   Creator (subaccount) receives 78% of each transaction via Flutterwave's subaccount split.
@@ -29,8 +30,31 @@ const FLW_BASE_URL = 'https://api.flutterwave.com/v3';
 const FLW_SECRET_KEY = Deno.env.get('FLW_SECRET_KEY') ?? '';
 const FLW_SECRET_HASH = Deno.env.get('FLW_SECRET_HASH') ?? '';
 
-/** Countries that use Flutterwave instead of Stripe. */
-export const FLUTTERWAVE_COUNTRIES = new Set(['NG', 'ZA']);
+/**
+ * Countries that use Flutterwave instead of Stripe.
+ * Covers all African markets where Flutterwave supports bank subaccounts.
+ * Account name resolution (NIBSS) is only available for NG — all other countries
+ * skip the resolve step and go straight to subaccount creation.
+ */
+export const FLUTTERWAVE_COUNTRIES = new Set([
+  'NG', // Nigeria
+  'ZA', // South Africa
+  'GH', // Ghana
+  'KE', // Kenya
+  'TZ', // Tanzania
+  'UG', // Uganda
+  'RW', // Rwanda
+  'ZM', // Zambia
+  'CM', // Cameroon
+  'CI', // Côte d'Ivoire
+  'SN', // Senegal
+  'MA', // Morocco
+]);
+
+/** Only Nigeria supports Flutterwave's NIBSS account name resolution API. */
+export function supportsAccountNameResolution(countryIso: string): boolean {
+  return countryIso.toUpperCase() === 'NG';
+}
 
 export function isFlutterwaveCountry(countryIso: string): boolean {
   return FLUTTERWAVE_COUNTRIES.has(countryIso.toUpperCase());
@@ -108,8 +132,18 @@ export interface FlutterwaveBank {
 // Maps ISO country code to Flutterwave charge currency.
 // Flutterwave subaccounts settle in their local currency so charges must match.
 const COUNTRY_CURRENCY: Record<string, string> = {
-  NG: 'NGN',
-  ZA: 'ZAR',
+  NG: 'NGN', // Nigerian Naira
+  ZA: 'ZAR', // South African Rand
+  GH: 'GHS', // Ghanaian Cedi
+  KE: 'KES', // Kenyan Shilling
+  TZ: 'TZS', // Tanzanian Shilling
+  UG: 'UGX', // Ugandan Shilling
+  RW: 'RWF', // Rwandan Franc
+  ZM: 'ZMW', // Zambian Kwacha
+  CM: 'XAF', // Central African CFA Franc
+  CI: 'XOF', // West African CFA Franc
+  SN: 'XOF', // West African CFA Franc
+  MA: 'MAD', // Moroccan Dirham
 };
 
 /**

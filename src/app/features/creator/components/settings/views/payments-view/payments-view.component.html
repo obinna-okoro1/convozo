@@ -129,14 +129,16 @@
           <label class="form-label">Account Number</label>
           <div class="flex gap-2">
             <input type="text" class="form-input flex-1" [value]="accountNumber()" (input)="onAccountNumberChange($any($event.target).value)" placeholder="e.g. 0123456789" inputmode="numeric" maxlength="20" />
-            <button (click)="resolveAccount()" [disabled]="resolving() || !accountNumber() || !bankCode()" class="btn-ghost btn-md text-sm flex-shrink-0">
-              @if (resolving()) {
-                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-              } @else { Verify }
-            </button>
+            @if (supportsNameResolution) {
+              <button (click)="resolveAccount()" [disabled]="resolving() || !accountNumber() || !bankCode()" class="btn-ghost btn-md text-sm flex-shrink-0">
+                @if (resolving()) {
+                  <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                } @else { Verify }
+              </button>
+            }
           </div>
           @if (resolveError()) { <p class="form-error mt-1">{{ resolveError() }}</p> }
-          @if (resolvedAccountName()) {
+          @if (supportsNameResolution && resolvedAccountName()) {
             <div class="mt-2 flex items-center gap-2 text-sm text-[#1a9e3f]">
               <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
               <span>Account name: <strong>{{ resolvedAccountName() }}</strong></span>
@@ -144,7 +146,11 @@
           }
         </div>
 
-        <p class="text-xs text-content-muted mb-4">Verify your account number before saving. Flutterwave will use this to send your payouts.</p>
+        @if (supportsNameResolution) {
+          <p class="text-xs text-content-muted mb-4">Verify your account number before saving. Flutterwave will use this to send your payouts.</p>
+        } @else {
+          <p class="text-xs text-content-muted mb-4">Flutterwave will use this account to send your payouts.</p>
+        }
 
         <div class="flex gap-3">
           <button (click)="submitBankAccount()" [disabled]="!canSubmitBank || state.flutterwaveConnecting()" class="btn-primary btn-md flex items-center gap-2">

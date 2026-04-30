@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     }
 
     if (!isFlutterwaveCountry(country)) {
-      return jsonError('Flutterwave is only available for NG and ZA', 400, corsHeaders);
+      return jsonError('Flutterwave payouts are not available in your country', 400, corsHeaders);
     }
 
     const banks = await getFlutterwaveBanks(country.toUpperCase());
