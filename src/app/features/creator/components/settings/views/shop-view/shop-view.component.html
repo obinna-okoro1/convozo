@@ -31,11 +31,11 @@
         <p class="text-sm text-content-muted mt-0.5">Show your shop tab on your public profile</p>
       </div>
       <div class="flex items-center gap-2">
-        @if (state.saving()) {
+        @if (state.monetizationSaving()) {
           <svg class="animate-spin h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
         }
         <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
-          <input type="checkbox" [checked]="state.shopEnabled()" (change)="state.isPaymentReady() && toggleShop()" [disabled]="!state.isPaymentReady() || state.saving()" class="sr-only peer" />
+          <input type="checkbox" [checked]="state.shopEnabled()" (change)="state.isPaymentReady() && toggleShop()" [disabled]="!state.isPaymentReady() || state.monetizationSaving()" class="sr-only peer" />
           <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
         </label>
       </div>

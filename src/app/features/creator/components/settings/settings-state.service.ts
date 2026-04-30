@@ -39,7 +39,10 @@ export class SettingsStateService {
 
   // ── Shared UI state ────────────────────────────────────────────────
   readonly loading = signal(false);
-  readonly saving = signal(false);
+  /** True while the profile section is being saved — drives the Profile tab save button spinner. */
+  readonly profileSaving = signal(false);
+  /** True while the monetization section is being saved — drives the Monetization tab save button spinner. */
+  readonly monetizationSaving = signal(false);
   readonly success = signal(false);
   readonly error = signal<string | null>(null);
   readonly paymentConnecting = signal(false);
@@ -272,7 +275,7 @@ export class SettingsStateService {
       return;
     }
 
-    this.saving.set(true);
+    this.profileSaving.set(true);
     this.error.set(null);
     this.success.set(false);
 
@@ -292,7 +295,7 @@ export class SettingsStateService {
       profileType: this.profileType(),
     });
 
-    this.saving.set(false);
+    this.profileSaving.set(false);
 
     if (updated.data != null && updated.error == null) {
       this.originalSlug = this.slug();
@@ -319,6 +322,7 @@ export class SettingsStateService {
         this.slugStatus.set('taken');
         this.error.set('This slug is already taken — please choose a different one');
       } else {
+        console.error('[saveProfile] DB update failed:', updated.error);
         this.error.set('Failed to update profile');
       }
     }
@@ -327,7 +331,7 @@ export class SettingsStateService {
   // ── Monetization actions ───────────────────────────────────────────
 
   async saveMonetization(): Promise<void> {
-    this.saving.set(true);
+    this.monetizationSaving.set(true);
     this.error.set(null);
     this.success.set(false);
 
@@ -346,7 +350,7 @@ export class SettingsStateService {
       bufferMinutes: this.bufferMinutes(),
     });
 
-    this.saving.set(false);
+    this.monetizationSaving.set(false);
 
     if (updated.data != null && updated.error == null) {
       this.originalMonetization.set({
@@ -365,6 +369,7 @@ export class SettingsStateService {
       this.success.set(true);
       setTimeout(() => this.success.set(false), 3000);
     } else {
+      console.error('[saveMonetization] DB update failed:', updated.error);
       this.error.set('Failed to update monetization');
     }
   }

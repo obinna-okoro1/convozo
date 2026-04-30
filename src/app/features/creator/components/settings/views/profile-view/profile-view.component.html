@@ -152,7 +152,12 @@
 
       <!-- Profile Type -->
       <div class="pt-2 border-t border-separator">
-        <p class="text-base font-semibold text-content mb-1">Profile Type</p>
+        <div class="flex items-center gap-2 mb-1">
+          <p class="text-base font-semibold text-content">Profile Type</p>
+          @if (state.profileType() !== state.originalProfile().profileType) {
+            <span class="text-[0.65rem] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-500">Unsaved</span>
+          }
+        </div>
         <p class="text-sm text-content-muted mb-3">Controls how clients experience your booking page</p>
         <div class="grid grid-cols-2 gap-3">
           <button
@@ -282,10 +287,10 @@
       <button
         type="button"
         (click)="state.saveProfile()"
-        [disabled]="state.saving() || !state.canSaveProfile()"
+        [disabled]="state.profileSaving() || !state.canSaveProfile()"
         class="btn-primary btn-md flex items-center justify-center gap-2"
       >
-        @if (state.saving()) {
+        @if (state.profileSaving()) {
           <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>

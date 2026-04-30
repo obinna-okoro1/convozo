@@ -107,7 +107,12 @@
 
           <!-- ── Session format (online / physical / both) ── -->
           <div class="space-y-2">
-            <p class="form-label">Session Format <span class="text-red-400">*</span></p>
+            <div class="flex items-center gap-2">
+              <p class="form-label mb-0">Session Format <span class="text-red-400">*</span></p>
+              @if (state.sessionType() !== state.originalMonetization().sessionType) {
+                <span class="text-[0.65rem] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-500">Unsaved</span>
+              }
+            </div>
             <div class="grid grid-cols-3 gap-2">
               @for (opt of [
                 { value: 'online',   icon: 'video',    label: 'Online',    hint: 'Video call' },
@@ -220,10 +225,10 @@
       <button
         type="button"
         (click)="saveAll()"
-        [disabled]="state.saving() || !canSave()"
+        [disabled]="state.monetizationSaving() || !canSave()"
         class="btn-primary btn-md flex items-center justify-center gap-2"
       >
-        @if (state.saving()) {
+        @if (state.monetizationSaving()) {
           <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>

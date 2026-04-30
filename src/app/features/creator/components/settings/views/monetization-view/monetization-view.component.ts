@@ -36,7 +36,7 @@ export class MonetizationViewComponent {
 
   /**
    * Save both monetization settings and the availability schedule in parallel.
-   * state.saving is managed internally by saveMonetization() and drives the button spinner.
+   * state.monetizationSaving is managed internally by saveMonetization() and drives the button spinner.
    */
   protected async saveAll(): Promise<void> {
     await Promise.all([
