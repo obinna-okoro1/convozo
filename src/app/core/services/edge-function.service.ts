@@ -182,6 +182,23 @@ export class EdgeFunctionService {
     return this.invoke('get-shop-download', { session_id: sessionId });
   }
 
+  // ── Physical Meeting Verification ─────────────────────────────────
+
+  /**
+   * Verify an in-person meeting by submitting the client's CVZ code.
+   * Called by the expert from their dashboard after the session.
+   * On success the booking is marked completed and the 7-day payout hold begins.
+   */
+  async verifyPhysicalMeeting(
+    bookingId: string,
+    verificationCode: string,
+  ): Promise<EdgeFunctionResponse<{ status: string; booking_id: string }>> {
+    return this.invoke('verify-physical-meeting', {
+      booking_id: bookingId,
+      verification_code: verificationCode,
+    });
+  }
+
   // ── Client Portal ──────────────────────────────────────────────────
 
   /**

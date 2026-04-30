@@ -28,7 +28,7 @@ import { AuthService } from '@features/auth/services/auth.service';
 import { CreatorService } from '@features/creator/services/creator.service';
 import { MessageService } from '@features/creator/services/message.service';
 import { BookingService } from '@features/creator/services/booking.service';
-
+import { EdgeFunctionService } from '@core/services/edge-function.service';
 import { ToastService } from '@shared/services/toast.service';
 import { errorMessage } from '@shared/utils/error.utils';
 
@@ -82,6 +82,7 @@ export class ProfileOwnerService {
     private readonly creatorService: CreatorService,
     private readonly messageService: MessageService,
     private readonly bookingService: BookingService,
+    private readonly edgeFunctionService: EdgeFunctionService,
     private readonly toast: ToastService,
     private readonly router: Router,
   ) {}
@@ -146,6 +147,23 @@ export class ProfileOwnerService {
 
   joinVideoCall(booking: CallBooking): void {
     void this.router.navigate(['/call', booking.id], { queryParams: { role: 'creator' } });
+  }
+
+  async verifyPhysicalMeeting(bookingId: string, code: string): Promise<void> {
+    const { error } = await this.edgeFunctionService.verifyPhysicalMeeting(bookingId, code);
+    if (error) {
+      this.toast.error(error.message || 'Verification failed — please check the code and try again');
+      return;
+    }
+    // Update local state so UI reflects completed status immediately
+    this.callBookings.update((bks) =>
+      bks.map((b) =>
+        b.id === bookingId
+          ? { ...b, status: 'completed' as const, payout_status: 'pending_release' as const, meeting_verification_code: null }
+          : b,
+      ),
+    );
+    this.toast.success('Meeting confirmed! Payment hold period has started.');
   }
 
   confirmDelete(item: Message | CallBooking): void {

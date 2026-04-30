@@ -47,6 +47,17 @@ function formatCallTime(isoString: string, timezone: string): string {
   }
 }
 
+/**
+ * Format a 16-char CVZ verification code for display in emails.
+ * Input:  'CVZXXXXXXXXXXXXXXX' (16 chars, no separators)
+ * Output: 'CVZ-XXXX-XXXX-XXXXX'
+ */
+function formatVerificationCode(code: string): string {
+  const prefix = code.slice(0, 3); // 'CVZ'
+  const rest = code.slice(3);       // 13 random hex chars
+  return `${prefix}-${rest.slice(0, 4)}-${rest.slice(4, 8)}-${rest.slice(8)}`;
+}
+
 // ─── Core mailer ──────────────────────────────────────────────────────────────
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
@@ -194,30 +205,49 @@ export function callBookingConfirmationEmail(opts: {
   fanTimezone?: string;
   /** Magic-link URL for the client portal — absent if generation failed */
   portalUrl?: string;
+  /** Session mode — determines whether to show a join link or verification code. */
+  sessionType?: 'online' | 'physical';
+  /** CVZ verification code for physical sessions — shown prominently in email. */
+  meetingVerificationCode?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(opts.bookerName);
   const creator = escapeHtml(opts.creatorName);
   const amount = formatUsd(opts.amountCents);
+  const isPhysical = opts.sessionType === 'physical';
 
   const scheduleBlock = opts.scheduledAt
     ? `<div style="background:#ede9fe;border-left:4px solid #7c3aed;padding:14px 16px;border-radius:6px;margin:20px 0;">
-        <p style="margin:0 0 4px;font-weight:700;color:#5b21b6;">📅 Your call is scheduled for:</p>
+        <p style="margin:0 0 4px;font-weight:700;color:#5b21b6;">📅 Your ${isPhysical ? 'meeting' : 'call'} is scheduled for:</p>
         <p style="margin:0;color:#374151;font-size:15px;">${escapeHtml(formatCallTime(opts.scheduledAt, opts.fanTimezone || 'UTC'))}</p>
       </div>`
     : '';
 
-  const joinBlock = opts.callJoinUrl
-    ? `<div style="text-align:center;margin:24px 0;">
-        <a href="${escapeHtml(opts.callJoinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 40px;border-radius:12px;">
-          Join Video Call
-        </a>
+  // Physical sessions: show the CVZ verification code prominently.
+  // Online sessions: show the video call join button.
+  const actionBlock = isPhysical && opts.meetingVerificationCode
+    ? `<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:20px 24px;margin:24px 0;text-align:center;">
+        <p style="margin:0 0 8px;font-weight:700;color:#15803d;font-size:14px;text-transform:uppercase;letter-spacing:0.05em;">📋 Your Meeting Verification Code</p>
+        <p style="margin:0 0 16px;font-family:monospace;font-size:28px;font-weight:900;color:#111827;letter-spacing:0.12em;">${escapeHtml(formatVerificationCode(opts.meetingVerificationCode))}</p>
+        <p style="margin:0;color:#4b5563;font-size:13px;line-height:1.6;">
+          At the start of your meeting, show or read this code to <strong>${creator}</strong>.
+          They will enter it in their Convozo dashboard to confirm your session and release payment.
+        </p>
       </div>
-      <p style="color:#6b7280;font-size:13px;line-height:1.6;">
-        Use this link at the scheduled time. Both you and ${creator} need to join for the call to start.
+      <p style="color:#6b7280;font-size:12px;text-align:center;">
+        Keep this email safe. This code is unique to your booking and single-use.
       </p>`
-    : `<p style="color:#4b5563;line-height:1.6;">
-        All your booking details are in this email. We'll send you a secure join link before your call — keep an eye on your inbox!
-      </p>`;
+    : opts.callJoinUrl
+      ? `<div style="text-align:center;margin:24px 0;">
+          <a href="${escapeHtml(opts.callJoinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 40px;border-radius:12px;">
+            Join Video Call
+          </a>
+        </div>
+        <p style="color:#6b7280;font-size:13px;line-height:1.6;">
+          Use this link at the scheduled time. Both you and ${creator} need to join for the call to start.
+        </p>`
+      : `<p style="color:#4b5563;line-height:1.6;">
+          All your booking details are in this email. We'll send you a secure join link before your call — keep an eye on your inbox!
+        </p>`;
 
   const portalBlock = opts.portalUrl
     ? `<div style="text-align:center;margin:24px 0;">
@@ -230,17 +260,17 @@ export function callBookingConfirmationEmail(opts: {
       </p>`
     : '';
 
-  return {
-    subject: `Booking confirmed – ${opts.durationMinutes} min call with ${creator}`,
-    html: brandedWrapper(`
-      <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">You're booked, ${name}!</h2>
-      <p style="color:#4b5563;line-height:1.6;">
-        Your <strong>${amount}</strong> booking for a <strong>${opts.durationMinutes}-minute</strong>
-        video call with <strong>${creator}</strong> is confirmed.
-      </p>
-      ${scheduleBlock}
-      ${joinBlock}
-      <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
+  const whatHappensNext = isPhysical
+    ? `<div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
+        <p style="margin:0 0 4px;font-weight:600;color:#374151;">What happens next:</p>
+        <ul style="margin:8px 0 0;padding-left:20px;color:#4b5563;line-height:1.8;">
+          <li>Attend your in-person session at the scheduled time</li>
+          <li>Show ${creator} your verification code — they confirm the session in Convozo</li>
+          <li>Your payment is held securely until the meeting is confirmed</li>
+          <li>If ${creator} doesn't confirm within 24 hours of the scheduled time, you'll be refunded</li>
+        </ul>
+      </div>`
+    : `<div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
         <p style="margin:0 0 4px;font-weight:600;color:#374151;">What happens next:</p>
         <ul style="margin:8px 0 0;padding-left:20px;color:#4b5563;line-height:1.8;">
           <li>When both you and ${creator} join, the call starts automatically</li>
@@ -248,7 +278,23 @@ export function callBookingConfirmationEmail(opts: {
           <li>Your payment is held securely until the call is completed</li>
           <li>If ${creator} doesn't show up, you'll be refunded automatically</li>
         </ul>
-      </div>
+      </div>`;
+
+  const sessionLabel = isPhysical ? 'in-person meeting' : 'video call';
+
+  return {
+    subject: isPhysical
+      ? `Booking confirmed – ${opts.durationMinutes} min in-person meeting with ${creator}`
+      : `Booking confirmed – ${opts.durationMinutes} min call with ${creator}`,
+    html: brandedWrapper(`
+      <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">You're booked, ${name}!</h2>
+      <p style="color:#4b5563;line-height:1.6;">
+        Your <strong>${amount}</strong> booking for a <strong>${opts.durationMinutes}-minute</strong>
+        ${sessionLabel} with <strong>${creator}</strong> is confirmed.
+      </p>
+      ${scheduleBlock}
+      ${actionBlock}
+      ${whatHappensNext}
       ${portalBlock}
     `),
   };
@@ -303,16 +349,20 @@ export function newCallBookingNotificationEmail(opts: {
   scheduledAt?: string;
   /** Fan's IANA timezone string (e.g. 'America/New_York') */
   fanTimezone?: string;
-  /** Creator's unique join URL for the call room */
+  /** Creator's unique join URL for the call room (online sessions only) */
   creatorJoinUrl?: string;
+  /** Session mode — determines copy and whether to show a join button. */
+  sessionType?: 'online' | 'physical';
 }): { subject: string; html: string } {
   const creator = escapeHtml(opts.creatorName);
   const booker = escapeHtml(opts.bookerName);
   const email = escapeHtml(opts.bookerEmail);
   const amount = formatUsd(opts.amountCents);
+  const isPhysical = opts.sessionType === 'physical';
+
   const notesBlock = opts.callNotes
     ? `<div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
-        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Call notes from booker:</p>
+        <p style="margin:0 0 4px;font-weight:600;color:#374151;">${isPhysical ? 'Session' : 'Call'} notes from client:</p>
         <p style="margin:0;color:#4b5563;white-space:pre-wrap;">${escapeHtml(opts.callNotes)}</p>
       </div>`
     : '';
@@ -320,37 +370,55 @@ export function newCallBookingNotificationEmail(opts: {
     ? `<div style="background:#ede9fe;border-left:4px solid #7c3aed;padding:14px 16px;border-radius:6px;margin:20px 0;">
         <p style="margin:0 0 4px;font-weight:700;color:#5b21b6;">📅 Scheduled for:</p>
         <p style="margin:0;color:#374151;font-size:15px;">${escapeHtml(formatCallTime(opts.scheduledAt, opts.fanTimezone || 'UTC'))}</p>
-        ${opts.fanTimezone ? `<p style="margin:4px 0 0;color:#6b7280;font-size:12px;">Fan's timezone: ${escapeHtml(opts.fanTimezone)}</p>` : ''}
-      </div>`
-    : '';
-  const joinBlock = opts.creatorJoinUrl
-    ? `<div style="text-align:center;margin:24px 0;">
-        <a href="${escapeHtml(opts.creatorJoinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 40px;border-radius:12px;">
-          Join Video Call
-        </a>
+        ${opts.fanTimezone ? `<p style="margin:4px 0 0;color:#6b7280;font-size:12px;">Client's timezone: ${escapeHtml(opts.fanTimezone)}</p>` : ''}
       </div>`
     : '';
 
+  // Online: show join button. Physical: show verification code instructions.
+  const actionBlock = isPhysical
+    ? `<div style="background:#fefce8;border-left:4px solid #ca8a04;padding:14px 16px;border-radius:6px;margin:20px 0;">
+        <p style="margin:0 0 4px;font-weight:700;color:#854d0e;">📋 Verify the in-person meeting</p>
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">
+          Your client has been sent a unique CVZ verification code in their confirmation email.
+          At the start of your meeting, ask them to show you the code, then enter it in your
+          <strong>Convozo dashboard → Bookings</strong> to confirm the session and release payment.
+        </p>
+      </div>`
+    : opts.creatorJoinUrl
+      ? `<div style="text-align:center;margin:24px 0;">
+          <a href="${escapeHtml(opts.creatorJoinUrl)}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#db2777);color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 40px;border-radius:12px;">
+            Join Video Call
+          </a>
+        </div>`
+      : '';
+
+  const dashboardLink = !isPhysical && opts.creatorJoinUrl
+    ? `<p style="color:#4b5563;line-height:1.6;">
+        You can also join from your <a href="${escapeHtml(opts.creatorJoinUrl)}"
+          style="color:#7c3aed;font-weight:600;">Convozo dashboard</a> on the day of the call.
+      </p>`
+    : '';
+
+  const sessionLabel = isPhysical ? 'in-person meeting' : 'video call';
+  const subjectEmoji = isPhysical ? '📍' : '📞';
+
   return {
-    subject: `📞 New ${opts.durationMinutes}-min call booking from ${booker}`,
+    subject: `${subjectEmoji} New ${opts.durationMinutes}-min ${isPhysical ? 'in-person booking' : 'call booking'} from ${booker}`,
     html: brandedWrapper(`
-      <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">New call booking, ${creator}!</h2>
+      <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">New ${sessionLabel} booking, ${creator}!</h2>
       <p style="color:#4b5563;line-height:1.6;">
         <strong>${booker}</strong> just booked a <strong>${opts.durationMinutes}-minute</strong>
-        video call for <strong>${amount}</strong>.
+        ${sessionLabel} for <strong>${amount}</strong>.
       </p>
       ${scheduleBlock}
       <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
-        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Booker details:</p>
+        <p style="margin:0 0 4px;font-weight:600;color:#374151;">Client details:</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Name:</strong> ${booker}</p>
         <p style="margin:4px 0;color:#4b5563;"><strong>Email:</strong> ${email}</p>
       </div>
       ${notesBlock}
-      ${joinBlock}
-      <p style="color:#4b5563;line-height:1.6;">
-        You can also join from your <a href="${escapeHtml(opts.creatorJoinUrl || '')}"
-          style="color:#7c3aed;font-weight:600;">Convozo dashboard</a> on the day of the call.
-      </p>
+      ${actionBlock}
+      ${dashboardLink}
     `),
   };
 }

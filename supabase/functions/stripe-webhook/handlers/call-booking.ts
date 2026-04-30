@@ -31,6 +31,18 @@ interface CallBookingMetadata {
   session_type: 'online' | 'physical';
 }
 
+/**
+ * Generates a 16-character CVZ verification code for physical meeting sessions.
+ * Format: 'CVZ' + 13 uppercase hex characters (e.g. 'CVZ1A2B3C4D5E6F').
+ * The code is emailed to the client and entered by the expert to confirm attendance.
+ */
+function generateVerificationCode(): string {
+  const bytes = new Uint8Array(7); // 7 bytes → 14 hex chars; we take the first 13
+  crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0').toUpperCase()).join('');
+  return 'CVZ' + hex.slice(0, 13); // always exactly 16 chars
+}
+
 /** Returns a JSON-serialisable response body. */
 export async function handleCallBooking(
   session: Stripe.Checkout.Session,
@@ -43,9 +55,16 @@ export async function handleCallBooking(
 
   const amountInCents = session.amount_total || 0;
   const durationMinutes = parseInt(duration, 10);
+  const isPhysical = session_type === 'physical';
 
-  // ── Provision Daily.co room + tokens ──────────────────────────────
-  const dailyRoom = await provisionDailyRoom(session.id, durationMinutes, creator_id, booker_name);
+  // Generate a one-time CVZ code for physical sessions (replaces video join link).
+  // Online sessions use Daily.co room tokens instead.
+  const meetingVerificationCode = isPhysical ? generateVerificationCode() : null;
+
+  // ── Provision Daily.co room + tokens (online sessions only) ──────────────
+  const dailyRoom = isPhysical
+    ? { roomName: null, roomUrl: null, creatorToken: null, fanToken: null }
+    : await provisionDailyRoom(session.id, durationMinutes, creator_id, booker_name);
 
   // ── Insert booking ────────────────────────────────────────────────
   // Determine capture method from the PaymentIntent status.
@@ -74,6 +93,7 @@ export async function handleCallBooking(
       payout_status: 'held',
       capture_method: captureMethod,
       session_type: session_type || 'online',
+      meeting_verification_code: meetingVerificationCode,
     })
     .select()
     .single();
@@ -109,10 +129,10 @@ export async function handleCallBooking(
   if (creator) {
     const appUrl = getAppUrl();
     const fanToken = booking.fan_access_token as string;
-    const fanJoinUrl = `${appUrl}/call/${booking.id}?role=fan&token=${fanToken}`;
-    const creatorJoinUrl = `${appUrl}/call/${booking.id}?role=creator`;
+    const fanJoinUrl = isPhysical ? undefined : `${appUrl}/call/${booking.id}?role=fan&token=${fanToken}`;
+    const creatorJoinUrl = isPhysical ? undefined : `${appUrl}/call/${booking.id}?role=creator`;
 
-    // 1. Booker confirmation — includes magic-link to client portal
+    // 1. Booker confirmation — physical: shows CVZ code; online: shows video join link
     const portalUrl = await generateMagicLink(booker_email);
     const bookerPayload = callBookingConfirmationEmail({
       bookerName: booker_name,
@@ -123,10 +143,12 @@ export async function handleCallBooking(
       scheduledAt: scheduled_at || undefined,
       fanTimezone: fan_timezone || undefined,
       portalUrl: portalUrl ?? undefined,
+      sessionType: session_type,
+      meetingVerificationCode: meetingVerificationCode ?? undefined,
     });
     await sendEmail({ to: booker_email, ...bookerPayload, idempotencyKey: `${session.id}_call_booker` });
 
-    // 2. Creator notification
+    // 2. Creator notification — physical: instructions about CVZ code; online: join button
     const creatorPayload = newCallBookingNotificationEmail({
       creatorName: creator.display_name,
       bookerName: booker_name,
@@ -137,6 +159,7 @@ export async function handleCallBooking(
       scheduledAt: scheduled_at || undefined,
       fanTimezone: fan_timezone || undefined,
       creatorJoinUrl,
+      sessionType: session_type,
     });
     await sendEmail({ to: creator.email, ...creatorPayload, idempotencyKey: `${session.id}_call_creator` });
   }

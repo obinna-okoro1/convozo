@@ -49,6 +49,7 @@ function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
     capture_method: 'manual',
     fan_timezone: 'UTC',
     session_type: 'online' as const,
+    meeting_verification_code: null,
     created_at: now,
     updated_at: now,
     ...overrides,

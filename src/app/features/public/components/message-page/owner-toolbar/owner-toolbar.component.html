@@ -295,6 +295,7 @@
               (cancelBooking)="ownerState.cancelBooking($event)"
               (confirmDelete)="ownerState.confirmDelete($event)"
               (joinCall)="ownerState.joinVideoCall($event)"
+              (verifyPhysicalMeeting)="ownerState.verifyPhysicalMeeting($event.bookingId, $event.code)"
             />
           </div>
         }

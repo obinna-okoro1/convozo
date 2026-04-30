@@ -57,6 +57,13 @@ export interface CallBooking {
   fan_timezone: string;
   /** Session mode: 'online' (video call) or 'physical' (in-person). */
   session_type: 'online' | 'physical';
+  /**
+   * One-time CVZ verification code for physical sessions.
+   * Generated at checkout, emailed to the client, entered by the expert to confirm
+   * the in-person meeting took place. Nulled out after successful verification.
+   * Always null for online sessions.
+   */
+  meeting_verification_code: string | null;
   created_at: string;
   updated_at: string;
 }

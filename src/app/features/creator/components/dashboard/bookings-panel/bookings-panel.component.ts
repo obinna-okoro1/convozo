@@ -5,8 +5,11 @@
  * Cards lead with date/time; upcoming sessions have full inline actions;
  * past sessions are visually muted with a delete option.
  *
+ * Physical (in-person) sessions show a CVZ code input instead of a video join button.
+ * The expert enters the client's code to confirm the meeting took place.
+ *
  * Inputs:  bookings[] — all CallBooking records for this expert
- * Outputs: markCompleted, cancelBooking, confirmDelete, joinCall
+ * Outputs: markCompleted, cancelBooking, confirmDelete, joinCall, verifyPhysicalMeeting
  */
 
 import {
@@ -18,6 +21,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CallBooking } from '@core/models';
 
 interface FilterTab {
@@ -27,7 +31,7 @@ interface FilterTab {
 
 @Component({
   selector: 'app-bookings-panel',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './bookings-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -38,8 +42,12 @@ export class BookingsPanelComponent {
   public readonly cancelBooking = output<CallBooking>();
   public readonly confirmDelete = output<CallBooking>();
   public readonly joinCall = output<CallBooking>();
+  /** Emitted when the expert submits a CVZ verification code for a physical session. */
+  public readonly verifyPhysicalMeeting = output<{ bookingId: string; code: string }>();
 
   protected readonly bookingFilterStatus = signal<string>('all');
+  /** Per-booking CVZ code input values. Key = booking.id. */
+  protected readonly codeInputs = signal<Record<string, string>>({});
 
   protected readonly bookingStats = computed(() => {
     const bookings = this.bookings();
@@ -117,5 +125,15 @@ export class BookingsPanelComponent {
 
   protected onJoinCall(booking: CallBooking): void {
     this.joinCall.emit(booking);
+  }
+
+  protected onCodeInput(bookingId: string, value: string): void {
+    this.codeInputs.update((m) => ({ ...m, [bookingId]: value }));
+  }
+
+  protected onVerifyPhysicalMeeting(booking: CallBooking): void {
+    const code = (this.codeInputs()[booking.id] ?? '').trim();
+    if (!code) return;
+    this.verifyPhysicalMeeting.emit({ bookingId: booking.id, code });
   }
 }
