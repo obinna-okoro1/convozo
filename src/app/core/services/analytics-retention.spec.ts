@@ -165,29 +165,29 @@ describe('Analytics Retention – Frontend', () => {
     it('has separate refund fields for each revenue stream', () => {
       const row = makeMonthlyAnalytics();
       expect('message_refund_count' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('message_refund_amount' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('call_refund_count' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('call_refund_amount' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('shop_refund_count' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('shop_refund_amount' in row)
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('has platform_fee fields for every stream', () => {
       const row = makeMonthlyAnalytics();
       expect('message_platform_fee' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('call_platform_fee' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('shop_platform_fee' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('total_platform_fee' in row)
-        .toBeTrue();
+        .toBe(true);
     });
   });
 
@@ -542,17 +542,17 @@ describe('Analytics Retention – Frontend', () => {
     it('CreatorMonthlyAnalytics has all 6 support_* fields', () => {
       const row = makeMonthlyAnalytics();
       expect('support_count' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('support_gross' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('support_platform_fee' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('support_net' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('support_refund_count' in row)
-        .toBeTrue();
+        .toBe(true);
       expect('support_refund_amount' in row)
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('support stream is independent of message stream', () => {

@@ -14,6 +14,8 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 import { ShopService } from 'app/features/creator/services/shop.service';
 
 import { SuccessComponent } from './success.component';
@@ -27,11 +29,11 @@ function buildRoute(
 describe('SuccessComponent', () => {
   let fixture: ComponentFixture<SuccessComponent>;
   let router: Router;
-  let shopService: jasmine.SpyObj<ShopService>;
+  let shopService: SpyObj<ShopService>;
 
   function create(queryParams: Record<string, string> = {}): void {
-    shopService = jasmine.createSpyObj('ShopService', ['getShopDownloadUrl']);
-    shopService.getShopDownloadUrl.and.returnValue(
+    shopService = createSpyObj(['getShopDownloadUrl']);
+    shopService.getShopDownloadUrl.mockReturnValue(
       Promise.resolve({ data: undefined, error: { message: 'no session' } }),
     );
 
@@ -45,7 +47,8 @@ describe('SuccessComponent', () => {
     });
 
     router = TestBed.inject(Router);
-    spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
+    vi.spyOn(router, 'navigate')
+      .mockReturnValue(Promise.resolve(true));
 
     fixture = TestBed.createComponent(SuccessComponent);
     fixture.detectChanges();
@@ -62,13 +65,13 @@ describe('SuccessComponent', () => {
     create({ creator: 'johndoe' });
     expect(comp()
       .isCallBooking())
-      .toBeFalse();
+      .toBe(false);
     expect(comp()
       .isShopPurchase())
-      .toBeFalse();
+      .toBe(false);
     expect(comp()
       .isSupportTip())
-      .toBeFalse();
+      .toBe(false);
     expect(comp()
       .creatorSlug())
       .toBe('johndoe');
@@ -80,30 +83,30 @@ describe('SuccessComponent', () => {
     create({ type: 'call', creator: 'expert1' });
     expect(comp()
       .isCallBooking())
-      .toBeTrue();
+      .toBe(true);
     expect(comp()
       .isShopPurchase())
-      .toBeFalse();
+      .toBe(false);
     expect(comp()
       .isSupportTip())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('sets isSupportTip when type=support', () => {
     create({ type: 'support', creator: 'expert1' });
     expect(comp()
       .isSupportTip())
-      .toBeTrue();
+      .toBe(true);
     expect(comp()
       .isCallBooking())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('sets isShopPurchase when shop=1', () => {
     create({ shop: '1', creator: 'expert1', session_id: 'cs_test_123' });
     expect(comp()
       .isShopPurchase())
-      .toBeTrue();
+      .toBe(true);
   });
 
   // ── Flutterwave status redirect (critical security fix) ─────────────────
@@ -111,27 +114,27 @@ describe('SuccessComponent', () => {
   it('redirects away when Flutterwave status=cancelled', () => {
     create({ status: 'cancelled', creator: 'johndoe' });
     expect(router.navigate)
-      .toHaveBeenCalledOnceWith(
+      .toHaveBeenCalledExactlyOnceWith(
         ['/', 'johndoe'],
-        jasmine.objectContaining({ queryParams: { payment: 'cancelled' } }),
+        expect.objectContaining({ queryParams: { payment: 'cancelled' } }),
       );
   });
 
   it('redirects away when Flutterwave status=failed', () => {
     create({ status: 'failed', creator: 'johndoe' });
     expect(router.navigate)
-      .toHaveBeenCalledOnceWith(
+      .toHaveBeenCalledExactlyOnceWith(
         ['/', 'johndoe'],
-        jasmine.objectContaining({ queryParams: { payment: 'cancelled' } }),
+        expect.objectContaining({ queryParams: { payment: 'cancelled' } }),
       );
   });
 
   it('redirects to home when Flutterwave status=cancelled and no creator slug', () => {
     create({ status: 'cancelled' });
     expect(router.navigate)
-      .toHaveBeenCalledOnceWith(
+      .toHaveBeenCalledExactlyOnceWith(
         ['/'],
-        jasmine.objectContaining({ queryParams: { payment: 'cancelled' } }),
+        expect.objectContaining({ queryParams: { payment: 'cancelled' } }),
       );
   });
 
@@ -154,7 +157,7 @@ describe('SuccessComponent', () => {
     create({ status: 'cancelled', type: 'call', creator: 'x' });
     expect(comp()
       .isCallBooking())
-      .toBeFalse();
+      .toBe(false);
   });
 
   // ── goBack() navigation ─────────────────────────────────────────────────
@@ -200,7 +203,7 @@ describe('SuccessComponent', () => {
   it('calls shopService.getShopDownloadUrl when shop=1 with session_id', () => {
     create({ shop: '1', session_id: 'cs_test_abc', creator: 'x' });
     expect(shopService.getShopDownloadUrl)
-      .toHaveBeenCalledOnceWith('cs_test_abc');
+      .toHaveBeenCalledExactlyOnceWith('cs_test_abc');
   });
 
   it('does NOT call shopService when shop param is missing', () => {

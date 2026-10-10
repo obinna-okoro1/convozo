@@ -5,7 +5,7 @@
 
 import { TestBed } from '@angular/core/testing';
 
-import { Toast, ToastService, ToastType } from './toast.service';
+import { Toast, ToastService } from './toast.service';
 
 describe('ToastService', () => {
   let service: ToastService;
@@ -13,14 +13,12 @@ describe('ToastService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(ToastService);
-    // Use Jasmine's built-in clock mock — no zone.js/fakeAsync needed
-    jasmine.clock()
-      .install();
+    // Fake timers work without zone.js, so no fakeAsync is needed
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jasmine.clock()
-      .uninstall();
+    vi.useRealTimers();
   });
 
   it('should be created', () => {
@@ -123,15 +121,14 @@ describe('ToastService', () => {
       .toBe(1);
   });
 
-  // ── Auto-dismiss (jasmine.clock) ──────────────────────────────────────────
+  // ── Auto-dismiss (fake timers) ───────────────────────────────────────────
 
   it('auto-dismisses toast after its duration elapses', () => {
     service.success('Temporary', 1000);
     expect(service.toasts().length)
       .toBe(1);
 
-    jasmine.clock()
-      .tick(1000);
+    vi.advanceTimersByTime(1000);
 
     expect(service.toasts().length)
       .toBe(0);
@@ -139,8 +136,7 @@ describe('ToastService', () => {
 
   it('does NOT auto-dismiss when duration is 0', () => {
     service.success('Permanent', 0);
-    jasmine.clock()
-      .tick(60_000); // advance far into the future
+    vi.advanceTimersByTime(60_000); // advance far into the future
     expect(service.toasts().length)
       .toBe(1);
   });
@@ -149,15 +145,13 @@ describe('ToastService', () => {
     service.success('Short', 500);
     service.info('Long', 2000);
 
-    jasmine.clock()
-      .tick(500);
+    vi.advanceTimersByTime(500);
     expect(service.toasts().length)
       .toBe(1);
     expect(service.toasts()[0].message)
       .toBe('Long');
 
-    jasmine.clock()
-      .tick(1500);
+    vi.advanceTimersByTime(1500);
     expect(service.toasts().length)
       .toBe(0);
   });

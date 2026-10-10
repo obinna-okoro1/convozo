@@ -4,7 +4,7 @@
  * Covers: detectBrand, detectBrandKey, getBrandByKey, getAllBrands.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 
 
 import { detectBrand, detectBrandKey, getAllBrands, getBrandByKey } from './brand-detection';
@@ -200,7 +200,7 @@ describe('brand-detection', () => {
     it('returns an array of brands', () => {
       const brands = getAllBrands();
       expect(Array.isArray(brands))
-        .toBeTrue();
+        .toBe(true);
       expect(brands.length)
         .toBeGreaterThan(10);
     });

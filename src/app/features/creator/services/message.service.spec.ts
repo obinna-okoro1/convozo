@@ -10,6 +10,8 @@
 
 import { TestBed } from '@angular/core/testing';
 
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
+
 import { MessageService } from './message.service';
 import { Message } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -42,22 +44,29 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
 /** Build a fluent Supabase query chain spy returning the given final result. */
 function makeQueryChain(result: { data: unknown; error: unknown }) {
   const chain: any = {
-    select: jasmine.createSpy('select').and.returnValue(null as any),
-    eq: jasmine.createSpy('eq').and.returnValue(null as any),
-    neq: jasmine.createSpy('neq').and.returnValue(null as any),
-    order: jasmine.createSpy('order').and.returnValue(Promise.resolve(result)),
-    update: jasmine.createSpy('update').and.returnValue(null as any),
-    delete: jasmine.createSpy('delete').and.returnValue(null as any),
-    single: jasmine.createSpy('single').and.returnValue(Promise.resolve(result)),
+    select: vi.fn()
+      .mockReturnValue(null as any),
+    eq: vi.fn()
+      .mockReturnValue(null as any),
+    neq: vi.fn()
+      .mockReturnValue(null as any),
+    order: vi.fn()
+      .mockReturnValue(Promise.resolve(result)),
+    update: vi.fn()
+      .mockReturnValue(null as any),
+    delete: vi.fn()
+      .mockReturnValue(null as any),
+    single: vi.fn()
+      .mockReturnValue(Promise.resolve(result)),
   };
 
   // Make each method return the chain itself so calls can be chained.
-  chain.select.and.returnValue(chain);
-  chain.eq.and.returnValue(chain);
-  chain.neq.and.returnValue(chain);
-  chain.order.and.returnValue(Promise.resolve(result));
-  chain.update.and.returnValue(chain);
-  chain.delete.and.returnValue(chain);
+  chain.select.mockReturnValue(chain);
+  chain.eq.mockReturnValue(chain);
+  chain.neq.mockReturnValue(chain);
+  chain.order.mockReturnValue(Promise.resolve(result));
+  chain.update.mockReturnValue(chain);
+  chain.delete.mockReturnValue(chain);
 
   return chain;
 }
@@ -66,17 +75,18 @@ function makeQueryChain(result: { data: unknown; error: unknown }) {
 
 describe('MessageService', () => {
   let service: MessageService;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
   let mockClient: any;
 
   beforeEach(() => {
     mockClient = {
-      from: jasmine.createSpy('from'),
-      channel: jasmine.createSpy('channel'),
-      removeChannel: jasmine.createSpy('removeChannel').and.returnValue(Promise.resolve()),
+      from: vi.fn(),
+      channel: vi.fn(),
+      removeChannel: vi.fn()
+        .mockReturnValue(Promise.resolve()),
     };
 
-    supabaseSpy = jasmine.createSpyObj<SupabaseService>('SupabaseService', ['sendReplyEmail'], {
+    supabaseSpy = createSpyObj<SupabaseService>(['sendReplyEmail'], {
       client: mockClient,
     });
 
@@ -148,7 +158,7 @@ describe('MessageService', () => {
     it('returns messages from supabase on success', async () => {
       const messages = [makeMessage()];
       const chain = makeQueryChain({ data: messages, error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.getMessages('creator-1');
 
@@ -163,7 +173,7 @@ describe('MessageService', () => {
     it('returns error when supabase call fails', async () => {
       const dbError = { message: 'DB error', code: '500', details: '', hint: '' };
       const chain = makeQueryChain({ data: null, error: dbError });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.getMessages('creator-1');
 
@@ -174,7 +184,7 @@ describe('MessageService', () => {
 
     it('queries with neq filter to exclude call type messages', async () => {
       const chain = makeQueryChain({ data: [], error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       await service.getMessages('creator-1');
 
@@ -184,7 +194,7 @@ describe('MessageService', () => {
 
     it('orders by created_at descending', async () => {
       const chain = makeQueryChain({ data: [], error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       await service.getMessages('creator-1');
 
@@ -197,20 +207,20 @@ describe('MessageService', () => {
 
   describe('replyToMessage()', () => {
     it('returns success when sendReplyEmail resolves without error', async () => {
-      supabaseSpy.sendReplyEmail.and.returnValue(
+      supabaseSpy.sendReplyEmail.mockReturnValue(
         Promise.resolve({ data: undefined, error: undefined }),
       );
 
       const result = await service.replyToMessage('msg-1', 'Thanks!', 'user@test.com');
 
       expect(result.success)
-        .toBeTrue();
+        .toBe(true);
       expect(result.error)
         .toBeUndefined();
     });
 
     it('calls sendReplyEmail with messageId and reply content', async () => {
-      supabaseSpy.sendReplyEmail.and.returnValue(
+      supabaseSpy.sendReplyEmail.mockReturnValue(
         Promise.resolve({ data: undefined, error: undefined }),
       );
 
@@ -223,25 +233,25 @@ describe('MessageService', () => {
 
     it('returns failure when sendReplyEmail returns an error', async () => {
       const edgeError = { message: 'Edge function failed' };
-      supabaseSpy.sendReplyEmail.and.returnValue(
+      supabaseSpy.sendReplyEmail.mockReturnValue(
         Promise.resolve({ data: undefined, error: edgeError }),
       );
 
       const result = await service.replyToMessage('msg-1', 'reply', 'user@test.com');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toBeTruthy();
     });
 
     it('returns failure when sendReplyEmail throws', async () => {
-      supabaseSpy.sendReplyEmail.and.returnValue(Promise.reject(new Error('Network error')));
+      supabaseSpy.sendReplyEmail.mockReturnValue(Promise.reject(new Error('Network error')));
 
       const result = await service.replyToMessage('msg-1', 'reply', 'user@test.com');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toContain('Network error');
     });
@@ -252,11 +262,13 @@ describe('MessageService', () => {
   describe('markAsHandled()', () => {
     it('calls supabase update with is_handled = true', async () => {
       const chain: any = {
-        update: jasmine.createSpy('update').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: null })),
+        update: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(Promise.resolve({ error: null })),
       };
-      chain.update.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.update.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.markAsHandled('msg-1');
 
@@ -273,11 +285,13 @@ describe('MessageService', () => {
     it('returns error when update fails', async () => {
       const dbError = { message: 'Update failed', code: '500', details: '', hint: '' };
       const chain: any = {
-        update: jasmine.createSpy('update').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: dbError })),
+        update: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(Promise.resolve({ error: dbError })),
       };
-      chain.update.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.update.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.markAsHandled('msg-1');
 
@@ -290,11 +304,13 @@ describe('MessageService', () => {
   describe('deleteMessage()', () => {
     it('calls supabase delete on messages table', async () => {
       const chain: any = {
-        delete: jasmine.createSpy('delete').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: null })),
+        delete: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(Promise.resolve({ error: null })),
       };
-      chain.delete.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.delete.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.deleteMessage('msg-1');
 
@@ -311,11 +327,13 @@ describe('MessageService', () => {
     it('returns error when delete fails', async () => {
       const dbError = { message: 'Delete failed', code: '500', details: '', hint: '' };
       const chain: any = {
-        delete: jasmine.createSpy('delete').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: dbError })),
+        delete: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(Promise.resolve({ error: dbError })),
       };
-      chain.delete.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.delete.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.deleteMessage('msg-1');
 
@@ -332,7 +350,7 @@ describe('MessageService', () => {
           .toISOString() },
       ];
       const chain = makeQueryChain({ data: replies, error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.getReplies('msg-1');
 
@@ -347,7 +365,7 @@ describe('MessageService', () => {
     it('returns error when supabase call fails', async () => {
       const dbError = { message: 'DB error', code: '500', details: '', hint: '' };
       const chain = makeQueryChain({ data: null, error: dbError });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.getReplies('msg-1');
 
@@ -358,7 +376,7 @@ describe('MessageService', () => {
 
     it('filters by message_id', async () => {
       const chain = makeQueryChain({ data: [], error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       await service.getReplies('msg-abc');
 
@@ -368,7 +386,7 @@ describe('MessageService', () => {
 
     it('orders replies ascending (chronological)', async () => {
       const chain = makeQueryChain({ data: [], error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       await service.getReplies('msg-1');
 
@@ -382,13 +400,15 @@ describe('MessageService', () => {
   describe('subscribeToReplies()', () => {
     it('creates a channel named replies:<messageId>', () => {
       const mockChannel = {
-        on: jasmine.createSpy('on').and.returnValue(null as any),
-        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+        on: vi.fn()
+          .mockReturnValue(null as any),
+        subscribe: vi.fn()
+          .mockReturnValue({}),
       };
-      mockChannel.on.and.returnValue(mockChannel);
-      mockClient.channel.and.returnValue(mockChannel);
+      mockChannel.on.mockReturnValue(mockChannel);
+      mockClient.channel.mockReturnValue(mockChannel);
 
-      service.subscribeToReplies('msg-1', jasmine.createSpy());
+      service.subscribeToReplies('msg-1', vi.fn());
 
       expect(mockClient.channel)
         .toHaveBeenCalledWith('replies:msg-1');
@@ -396,15 +416,17 @@ describe('MessageService', () => {
 
     it('subscribes to INSERT events on message_replies', () => {
       const mockChannel = {
-        on: jasmine.createSpy('on').and.returnValue(null as any),
-        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+        on: vi.fn()
+          .mockReturnValue(null as any),
+        subscribe: vi.fn()
+          .mockReturnValue({}),
       };
-      mockChannel.on.and.returnValue(mockChannel);
-      mockClient.channel.and.returnValue(mockChannel);
+      mockChannel.on.mockReturnValue(mockChannel);
+      mockClient.channel.mockReturnValue(mockChannel);
 
-      service.subscribeToReplies('msg-1', jasmine.createSpy());
+      service.subscribeToReplies('msg-1', vi.fn());
 
-      const callArgs = mockChannel.on.calls.first().args as [string, object, ...unknown[]];
+      const callArgs = mockChannel.on.mock.calls[0] as [string, object, ...unknown[]];
       const filterArg = callArgs[1] as { event: string; table: string; filter: string };
       expect(callArgs[0])
         .toBe('postgres_changes');
@@ -418,13 +440,15 @@ describe('MessageService', () => {
 
     it('calls subscribe() on the channel', () => {
       const mockChannel = {
-        on: jasmine.createSpy('on').and.returnValue(null as any),
-        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+        on: vi.fn()
+          .mockReturnValue(null as any),
+        subscribe: vi.fn()
+          .mockReturnValue({}),
       };
-      mockChannel.on.and.returnValue(mockChannel);
-      mockClient.channel.and.returnValue(mockChannel);
+      mockChannel.on.mockReturnValue(mockChannel);
+      mockClient.channel.mockReturnValue(mockChannel);
 
-      service.subscribeToReplies('msg-1', jasmine.createSpy());
+      service.subscribeToReplies('msg-1', vi.fn());
 
       expect(mockChannel.subscribe)
         .toHaveBeenCalled();
@@ -447,13 +471,15 @@ describe('MessageService', () => {
   describe('subscribeToMessages()', () => {
     it('creates a channel and subscribes', () => {
       const mockChannel = {
-        on: jasmine.createSpy('on').and.returnValue(null as any),
-        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+        on: vi.fn()
+          .mockReturnValue(null as any),
+        subscribe: vi.fn()
+          .mockReturnValue({}),
       };
-      mockChannel.on.and.returnValue(mockChannel);
-      mockClient.channel.and.returnValue(mockChannel);
+      mockChannel.on.mockReturnValue(mockChannel);
+      mockClient.channel.mockReturnValue(mockChannel);
 
-      service.subscribeToMessages('creator-1', jasmine.createSpy());
+      service.subscribeToMessages('creator-1', vi.fn());
 
       expect(mockClient.channel)
         .toHaveBeenCalledWith('messages:creator-1');

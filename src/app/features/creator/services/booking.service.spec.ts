@@ -10,6 +10,8 @@
 
 import { TestBed } from '@angular/core/testing';
 
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
+
 import { BookingService } from './booking.service';
 import { CallBooking } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -63,17 +65,18 @@ function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
 
 describe('BookingService', () => {
   let service: BookingService;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
   let mockClient: any;
 
   beforeEach(() => {
     mockClient = {
-      from: jasmine.createSpy('from'),
-      channel: jasmine.createSpy('channel'),
-      removeChannel: jasmine.createSpy('removeChannel').and.returnValue(Promise.resolve()),
+      from: vi.fn(),
+      channel: vi.fn(),
+      removeChannel: vi.fn()
+        .mockReturnValue(Promise.resolve()),
     };
 
-    supabaseSpy = jasmine.createSpyObj<SupabaseService>('SupabaseService', [], {
+    supabaseSpy = createSpyObj<SupabaseService>([], {
       client: mockClient,
     });
 
@@ -95,15 +98,16 @@ describe('BookingService', () => {
     it('returns bookings on success', async () => {
       const bookings = [makeBooking()];
       const chain: any = {
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        order: jasmine
-          .createSpy('order')
-          .and.returnValue(Promise.resolve({ data: bookings, error: null })),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        order: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: bookings, error: null })),
       };
-      chain.select.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.select.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.getCallBookings('creator-1');
 
@@ -119,15 +123,16 @@ describe('BookingService', () => {
 
     it('orders results by created_at descending', async () => {
       const chain: any = {
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        order: jasmine
-          .createSpy('order')
-          .and.returnValue(Promise.resolve({ data: [], error: null })),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        order: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: [], error: null })),
       };
-      chain.select.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.select.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       await service.getCallBookings('creator-1');
 
@@ -138,15 +143,16 @@ describe('BookingService', () => {
     it('returns error on failure', async () => {
       const dbError = { message: 'DB error', code: '500', details: '', hint: '' };
       const chain: any = {
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        order: jasmine
-          .createSpy('order')
-          .and.returnValue(Promise.resolve({ data: null, error: dbError })),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        order: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: null, error: dbError })),
       };
-      chain.select.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.select.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.getCallBookings('creator-1');
 
@@ -162,17 +168,19 @@ describe('BookingService', () => {
     it('updates the status and returns the updated booking', async () => {
       const updated = makeBooking({ status: 'completed' });
       const chain: any = {
-        update: jasmine.createSpy('update').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        single: jasmine
-          .createSpy('single')
-          .and.returnValue(Promise.resolve({ data: updated, error: null })),
+        update: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        single: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: updated, error: null })),
       };
-      chain.update.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      chain.select.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.update.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      chain.select.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.updateBookingStatus('booking-1', 'completed');
 
@@ -191,17 +199,19 @@ describe('BookingService', () => {
     it('returns error when update fails', async () => {
       const dbError = { message: 'Update failed', code: '500', details: '', hint: '' };
       const chain: any = {
-        update: jasmine.createSpy('update').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        single: jasmine
-          .createSpy('single')
-          .and.returnValue(Promise.resolve({ data: null, error: dbError })),
+        update: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        single: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: null, error: dbError })),
       };
-      chain.update.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      chain.select.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.update.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      chain.select.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.updateBookingStatus('booking-1', 'cancelled');
 
@@ -216,11 +226,13 @@ describe('BookingService', () => {
   describe('deleteCallBooking()', () => {
     it('deletes a booking by id', async () => {
       const chain: any = {
-        delete: jasmine.createSpy('delete').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: null })),
+        delete: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(Promise.resolve({ error: null })),
       };
-      chain.delete.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.delete.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.deleteCallBooking('booking-1');
 
@@ -237,11 +249,13 @@ describe('BookingService', () => {
     it('returns error when delete fails', async () => {
       const dbError = { message: 'Delete failed', code: '500', details: '', hint: '' };
       const chain: any = {
-        delete: jasmine.createSpy('delete').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: dbError })),
+        delete: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(Promise.resolve({ error: dbError })),
       };
-      chain.delete.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.delete.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.deleteCallBooking('booking-1');
 
@@ -254,13 +268,15 @@ describe('BookingService', () => {
   describe('subscribeToCallBookings()', () => {
     it('creates a channel for the creator and subscribes', () => {
       const mockChannel = {
-        on: jasmine.createSpy('on').and.returnValue(null as any),
-        subscribe: jasmine.createSpy('subscribe').and.returnValue({}),
+        on: vi.fn()
+          .mockReturnValue(null as any),
+        subscribe: vi.fn()
+          .mockReturnValue({}),
       };
-      mockChannel.on.and.returnValue(mockChannel);
-      mockClient.channel.and.returnValue(mockChannel);
+      mockChannel.on.mockReturnValue(mockChannel);
+      mockClient.channel.mockReturnValue(mockChannel);
 
-      service.subscribeToCallBookings('creator-1', jasmine.createSpy());
+      service.subscribeToCallBookings('creator-1', vi.fn());
 
       expect(mockClient.channel)
         .toHaveBeenCalledWith('call_bookings:creator-1');

@@ -18,6 +18,8 @@
 
 import { TestBed } from '@angular/core/testing';
 
+import { createSpyObj } from '@testing/test-utils';
+
 import { CreatorService } from './creator.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
@@ -26,15 +28,17 @@ import { SupabaseService } from '../../../core/services/supabase.service';
 /** Build a fluent Supabase query chain that resolves to `result` at the terminal call. */
 function makeQueryChain(result: { data: unknown; error: unknown }) {
   const chain: any = {
-    select: jasmine.createSpy('select'),
-    insert: jasmine.createSpy('insert'),
-    eq: jasmine.createSpy('eq'),
-    maybeSingle: jasmine.createSpy('maybeSingle').and.returnValue(Promise.resolve(result)),
-    single: jasmine.createSpy('single').and.returnValue(Promise.resolve(result)),
+    select: vi.fn(),
+    insert: vi.fn(),
+    eq: vi.fn(),
+    maybeSingle: vi.fn()
+      .mockReturnValue(Promise.resolve(result)),
+    single: vi.fn()
+      .mockReturnValue(Promise.resolve(result)),
   };
-  chain.select.and.returnValue(chain);
-  chain.insert.and.returnValue(chain);
-  chain.eq.and.returnValue(chain);
+  chain.select.mockReturnValue(chain);
+  chain.insert.mockReturnValue(chain);
+  chain.eq.mockReturnValue(chain);
 
   return chain;
 }
@@ -60,15 +64,13 @@ describe('CreatorService', () => {
 
   beforeEach(() => {
     mockClient = {
-      from: jasmine.createSpy('from'),
+      from: vi.fn(),
       functions: {
-        invoke: jasmine.createSpy('invoke'),
+        invoke: vi.fn(),
       },
     };
 
-    const supabaseSpy = jasmine.createSpyObj<SupabaseService>(
-      'SupabaseService',
-      ['getCreatorByUserId', 'getCurrentUser'],
+    const supabaseSpy = createSpyObj<SupabaseService>(['getCreatorByUserId', 'getCurrentUser'],
       { client: mockClient },
     );
 
@@ -97,7 +99,7 @@ describe('CreatorService', () => {
         select: () => chain,
         single: () => Promise.resolve({ data: { id: 'creator-1' }, error: null }),
       };
-      mockClient.from.and.returnValue({
+      mockClient.from.mockReturnValue({
         insert: (data: unknown) => {
           insertArgs.push(data);
 
@@ -193,10 +195,10 @@ describe('CreatorService', () => {
         select: () => chain,
         single: () => Promise.resolve({ data: { id: 'creator-99' }, error: null }),
       };
-      mockClient.from.and.returnValue({ insert: () => chain });
+      mockClient.from.mockReturnValue({ insert: () => chain });
       const result = await service.createCreator(makeCreatorInput('NG'));
       expect(result.data)
-        .toEqual(jasmine.objectContaining({ id: 'creator-99' }));
+        .toEqual(expect.objectContaining({ id: 'creator-99' }));
       expect(result.error)
         .toBeNull();
     });
@@ -207,11 +209,11 @@ describe('CreatorService', () => {
         select: () => chain,
         single: () => Promise.resolve({ data: null, error: supabaseError }),
       };
-      mockClient.from.and.returnValue({ insert: () => chain });
+      mockClient.from.mockReturnValue({ insert: () => chain });
       const result = await service.createCreator(makeCreatorInput('NG'));
       expect(result.error)
         .toEqual(
-          jasmine.objectContaining({ message: 'unique constraint violation' }),
+          expect.objectContaining({ message: 'unique constraint violation' }),
         );
     });
   });
@@ -221,7 +223,7 @@ describe('CreatorService', () => {
   describe('getFlutterwaveSubaccount()', () => {
     it('queries the flutterwave_subaccounts table', async () => {
       const chain = makeQueryChain({ data: null, error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
       await service.getFlutterwaveSubaccount('creator-1');
       expect(mockClient.from)
         .toHaveBeenCalledWith('flutterwave_subaccounts');
@@ -229,7 +231,7 @@ describe('CreatorService', () => {
 
     it('filters by creator_id', async () => {
       const chain = makeQueryChain({ data: null, error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
       await service.getFlutterwaveSubaccount('creator-42');
       expect(chain.eq)
         .toHaveBeenCalledWith('creator_id', 'creator-42');
@@ -243,11 +245,11 @@ describe('CreatorService', () => {
         is_active: true,
       };
       const chain = makeQueryChain({ data: mockSubaccount, error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
       const result = await service.getFlutterwaveSubaccount('creator-1');
       expect(result.data)
         .toEqual(
-          jasmine.objectContaining({ id: 'sub-1', subaccount_id: 'RS_abc123' }),
+          expect.objectContaining({ id: 'sub-1', subaccount_id: 'RS_abc123' }),
         );
       expect(result.error)
         .toBeNull();
@@ -255,7 +257,7 @@ describe('CreatorService', () => {
 
     it('returns null data when no subaccount exists', async () => {
       const chain = makeQueryChain({ data: null, error: null });
-      mockClient.from.and.returnValue(chain);
+      mockClient.from.mockReturnValue(chain);
       const result = await service.getFlutterwaveSubaccount('creator-new');
       expect(result.data)
         .toBeNull();
@@ -266,23 +268,23 @@ describe('CreatorService', () => {
 
   describe('getFlutterwaveBanks()', () => {
     it('invokes the get-flutterwave-banks edge function', async () => {
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { banks: [] }, error: null }),
       );
       await service.getFlutterwaveBanks('NG');
       expect(mockClient.functions.invoke)
         .toHaveBeenCalledWith(
           'get-flutterwave-banks',
-          jasmine.objectContaining({ body: { country: 'NG' } }),
+          expect.objectContaining({ body: { country: 'NG' } }),
         );
     });
 
     it('passes the correct country code to the edge function', async () => {
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { banks: [] }, error: null }),
       );
       await service.getFlutterwaveBanks('ZA');
-      const [, options] = mockClient.functions.invoke.calls.mostRecent().args as [
+      const [, options] = mockClient.functions.invoke.mock.lastCall as [
         string,
         { body: { country: string } },
       ];
@@ -292,7 +294,7 @@ describe('CreatorService', () => {
 
     it('returns data and error from the edge function', async () => {
       const mockBanks = [{ name: 'GTBank', code: '058', country: 'Nigeria', currency: 'NGN' }];
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { banks: mockBanks }, error: null }),
       );
       const result = await service.getFlutterwaveBanks('NG');
@@ -302,11 +304,11 @@ describe('CreatorService', () => {
 
     it('propagates edge function errors', async () => {
       const fnError = { message: 'Edge function unavailable' };
-      mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
+      mockClient.functions.invoke.mockReturnValue(Promise.resolve({ data: null, error: fnError }));
       const result = await service.getFlutterwaveBanks('NG');
       expect(result.error)
         .toEqual(
-          jasmine.objectContaining({ message: 'Edge function unavailable' }),
+          expect.objectContaining({ message: 'Edge function unavailable' }),
         );
     });
   });
@@ -315,25 +317,25 @@ describe('CreatorService', () => {
 
   describe('resolveFlutterwaveAccount()', () => {
     it('invokes the get-flutterwave-banks edge function with resolve:true', async () => {
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { account_name: 'JOHN DOE' }, error: null }),
       );
       await service.resolveFlutterwaveAccount('1234567890', '044');
       expect(mockClient.functions.invoke)
         .toHaveBeenCalledWith(
           'get-flutterwave-banks',
-          jasmine.objectContaining({
+          expect.objectContaining({
             body: { resolve: true, account_number: '1234567890', bank_code: '044' },
           }),
         );
     });
 
     it('passes the account number and bank code correctly', async () => {
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { account_name: 'ADEWALE' }, error: null }),
       );
       await service.resolveFlutterwaveAccount('9999999999', '033');
-      const [, options] = mockClient.functions.invoke.calls.mostRecent().args as [
+      const [, options] = mockClient.functions.invoke.mock.lastCall as [
         string,
         { body: { account_number: string; bank_code: string } },
       ];
@@ -344,7 +346,7 @@ describe('CreatorService', () => {
     });
 
     it('returns the account name on success', async () => {
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { account_name: 'NOMSA DLAMINI' }, error: null }),
       );
       const result = await service.resolveFlutterwaveAccount('6200123456', 'FNB');
@@ -354,11 +356,11 @@ describe('CreatorService', () => {
 
     it('propagates edge function errors on failure', async () => {
       const fnError = { message: 'Could not resolve account' };
-      mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
+      mockClient.functions.invoke.mockReturnValue(Promise.resolve({ data: null, error: fnError }));
       const result = await service.resolveFlutterwaveAccount('0000000000', '044');
       expect(result.error)
         .toEqual(
-          jasmine.objectContaining({ message: 'Could not resolve account' }),
+          expect.objectContaining({ message: 'Could not resolve account' }),
         );
     });
   });
@@ -367,7 +369,7 @@ describe('CreatorService', () => {
 
   describe('createFlutterwaveSubaccount()', () => {
     it('invokes the create-flutterwave-recipient edge function', async () => {
-      mockClient.functions.invoke.and.returnValue(
+      mockClient.functions.invoke.mockReturnValue(
         Promise.resolve({ data: { subaccount_id: 'RS_new' }, error: null }),
       );
       await service.createFlutterwaveSubaccount({
@@ -379,7 +381,7 @@ describe('CreatorService', () => {
       expect(mockClient.functions.invoke)
         .toHaveBeenCalledWith(
           'create-flutterwave-recipient',
-          jasmine.objectContaining({
+          expect.objectContaining({
             body: {
               bank_code: '044',
               account_number: '1234567890',
@@ -391,14 +393,14 @@ describe('CreatorService', () => {
     });
 
     it('passes all four required params to the edge function', async () => {
-      mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: null }));
+      mockClient.functions.invoke.mockReturnValue(Promise.resolve({ data: null, error: null }));
       await service.createFlutterwaveSubaccount({
         bankCode: 'FNB',
         accountNumber: '6200123456',
         businessName: 'Nomsa Dlamini',
         country: 'ZA',
       });
-      const [, options] = mockClient.functions.invoke.calls.mostRecent().args as [
+      const [, options] = mockClient.functions.invoke.mock.lastCall as [
         string,
         {
           body: { bank_code: string; account_number: string; business_name: string; country: string };
@@ -416,7 +418,7 @@ describe('CreatorService', () => {
 
     it('returns the subaccount data on success', async () => {
       const mockData = { subaccount_id: 'RS_xyz', is_active: true };
-      mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: mockData, error: null }));
+      mockClient.functions.invoke.mockReturnValue(Promise.resolve({ data: mockData, error: null }));
       const result = await service.createFlutterwaveSubaccount({
         bankCode: '044',
         accountNumber: '1234567890',
@@ -424,14 +426,14 @@ describe('CreatorService', () => {
         country: 'NG',
       });
       expect(result.data)
-        .toEqual(jasmine.objectContaining({ subaccount_id: 'RS_xyz' }));
+        .toEqual(expect.objectContaining({ subaccount_id: 'RS_xyz' }));
       expect(result.error)
         .toBeNull();
     });
 
     it('propagates edge function errors', async () => {
       const fnError = { message: 'Bank code invalid' };
-      mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
+      mockClient.functions.invoke.mockReturnValue(Promise.resolve({ data: null, error: fnError }));
       const result = await service.createFlutterwaveSubaccount({
         bankCode: '000',
         accountNumber: '0000000000',

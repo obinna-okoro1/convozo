@@ -1,15 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
+
 import { App } from './app';
 import { SupabaseService } from './core/services/supabase.service';
 
 describe('App (root component)', () => {
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
 
   beforeEach(async () => {
-    supabaseSpy = jasmine.createSpyObj<SupabaseService>('SupabaseService', ['waitForSession']);
-    supabaseSpy.waitForSession.and.resolveTo(null);
+    supabaseSpy = createSpyObj<SupabaseService>(['waitForSession']);
+    supabaseSpy.waitForSession.mockResolvedValue(null);
 
     await TestBed.configureTestingModule({
       imports: [App],

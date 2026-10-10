@@ -4,7 +4,7 @@
  *         reset(), startCountdown(), stopCountdown(), joinCall(), completeCall(),
  *         loadBooking(), loadCallStatus().
  *
- * Uses jasmine.clock() for timer control (app is zoneless — no fakeAsync).
+ * Uses Vitest fake timers for timer control (app is zoneless — no fakeAsync).
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -12,6 +12,8 @@
 
 
 import { TestBed } from '@angular/core/testing';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { VideoCallService } from './video-call.service';
 import { CallBooking } from '../../../core/models';
@@ -66,30 +68,29 @@ function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
 
 describe('VideoCallService', () => {
   let service: VideoCallService;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
   let mockClient: any;
   let mockAuth: any;
   let mockFunctions: any;
 
   beforeEach(() => {
     mockAuth = {
-      refreshSession: jasmine
-        .createSpy('refreshSession')
-        .and.returnValue(Promise.resolve({ error: null })),
+      refreshSession: vi.fn()
+        .mockReturnValue(Promise.resolve({ error: null })),
     };
 
     mockFunctions = {
-      invoke: jasmine.createSpy('invoke'),
+      invoke: vi.fn(),
     };
 
     mockClient = {
-      from: jasmine.createSpy('from'),
-      rpc: jasmine.createSpy('rpc'),
+      from: vi.fn(),
+      rpc: vi.fn(),
       auth: mockAuth,
       functions: mockFunctions,
     };
 
-    supabaseSpy = jasmine.createSpyObj<SupabaseService>('SupabaseService', [], {
+    supabaseSpy = createSpyObj<SupabaseService>([], {
       client: mockClient,
     });
 
@@ -102,8 +103,7 @@ describe('VideoCallService', () => {
 
   afterEach(() => {
     service.reset();
-    jasmine.clock()
-      .uninstall();
+    vi.useRealTimers();
   });
 
   it('should be created', () => {
@@ -196,43 +196,43 @@ describe('VideoCallService', () => {
     it('is false when state is idle', () => {
       service.callState.set('idle');
       expect(service.isCallActive())
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('is false when state is joining', () => {
       service.callState.set('joining');
       expect(service.isCallActive())
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('is true when state is waiting', () => {
       service.callState.set('waiting');
       expect(service.isCallActive())
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('is true when state is in_progress', () => {
       service.callState.set('in_progress');
       expect(service.isCallActive())
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('is false when state is ending', () => {
       service.callState.set('ending');
       expect(service.isCallActive())
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('is false when state is completed', () => {
       service.callState.set('completed');
       expect(service.isCallActive())
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('is false when state is error', () => {
       service.callState.set('error');
       expect(service.isCallActive())
-        .toBeFalse();
+        .toBe(false);
     });
   });
 
@@ -267,8 +267,7 @@ describe('VideoCallService', () => {
     });
 
     it('stops the countdown timer on reset', () => {
-      jasmine.clock()
-        .install();
+      vi.useFakeTimers();
       service.callStartedAt.set(new Date());
       service.startCountdown(1); // 1 minute
       expect(service.remainingSeconds())
@@ -277,12 +276,10 @@ describe('VideoCallService', () => {
       service.reset();
 
       // Tick 2 seconds — counter should NOT decrement after reset
-      jasmine.clock()
-        .tick(2000);
+      vi.advanceTimersByTime(2000);
       expect(service.remainingSeconds())
         .toBe(0);
-      jasmine.clock()
-        .uninstall();
+      vi.useRealTimers();
     });
   });
 
@@ -290,44 +287,36 @@ describe('VideoCallService', () => {
 
   describe('startCountdown()', () => {
     it('sets remainingSeconds based on durationMinutes', () => {
-      jasmine.clock()
-        .install();
+      vi.useFakeTimers();
       service.callStartedAt.set(new Date());
       service.startCountdown(5); // 5 minutes = 300 seconds
       expect(service.remainingSeconds())
         .toBe(300);
-      jasmine.clock()
-        .uninstall();
+      vi.useRealTimers();
     });
 
     it('decrements remainingSeconds every second', () => {
-      jasmine.clock()
-        .install();
+      vi.useFakeTimers();
       service.callStartedAt.set(new Date());
       service.startCountdown(1); // 60 seconds
 
-      jasmine.clock()
-        .tick(3000); // 3 seconds
+      vi.advanceTimersByTime(3000); // 3 seconds
 
       expect(service.remainingSeconds())
         .toBe(57);
-      jasmine.clock()
-        .uninstall();
+      vi.useRealTimers();
     });
 
     it('stops decrementing at 0', () => {
-      jasmine.clock()
-        .install();
+      vi.useFakeTimers();
       service.callStartedAt.set(new Date());
       service.startCountdown(1); // 60 seconds
 
-      jasmine.clock()
-        .tick(65000); // Tick past the end
+      vi.advanceTimersByTime(65000); // Tick past the end
 
       expect(service.remainingSeconds())
         .toBe(0);
-      jasmine.clock()
-        .uninstall();
+      vi.useRealTimers();
     });
 
     it('does nothing when callStartedAt is null', () => {
@@ -338,46 +327,38 @@ describe('VideoCallService', () => {
     });
 
     it('accounts for elapsed time since call started', () => {
-      jasmine.clock()
-        .install();
+      vi.useFakeTimers();
       // Set a fixed base date so Date.now() is predictable
       const baseDate = new Date(2024, 0, 1, 12, 0, 0);
-      jasmine.clock()
-        .mockDate(baseDate);
+      vi.setSystemTime(baseDate);
       service.callStartedAt.set(new Date()); // records baseDate
 
-      jasmine.clock()
-        .tick(10000); // advance mock clock by 10 seconds
+      vi.advanceTimersByTime(10000); // advance mock clock by 10 seconds
       service.startCountdown(1); // 60 total seconds, 10 elapsed → 50 remaining
 
       expect(service.remainingSeconds())
         .toBe(50);
-      jasmine.clock()
-        .uninstall();
+      vi.useRealTimers();
     });
   });
 
   describe('stopCountdown()', () => {
     it('stops the countdown from decrementing', () => {
-      jasmine.clock()
-        .install();
+      vi.useFakeTimers();
       service.callStartedAt.set(new Date());
       service.startCountdown(1); // 60 seconds
 
-      jasmine.clock()
-        .tick(2000); // 2 seconds pass
+      vi.advanceTimersByTime(2000); // 2 seconds pass
       expect(service.remainingSeconds())
         .toBe(58);
 
       service.stopCountdown();
-      jasmine.clock()
-        .tick(5000); // 5 more seconds
+      vi.advanceTimersByTime(5000); // 5 more seconds
 
       // Should still be 58 — countdown stopped
       expect(service.remainingSeconds())
         .toBe(58);
-      jasmine.clock()
-        .uninstall();
+      vi.useRealTimers();
     });
 
     it('is safe to call when no countdown is running', () => {
@@ -393,7 +374,7 @@ describe('VideoCallService', () => {
     it('sets callState to joining before the request', async () => {
       let stateOnCall: string | null = null;
 
-      mockFunctions.invoke.and.callFake(() => {
+      mockFunctions.invoke.mockImplementation(() => {
         stateOnCall = service.callState();
 
         return Promise.resolve({ data: null, error: { message: 'test fail' } });
@@ -418,7 +399,7 @@ describe('VideoCallService', () => {
           call_started_at: null,
         },
       };
-      mockFunctions.invoke.and.returnValue(Promise.resolve({ data: response, error: null }));
+      mockFunctions.invoke.mockReturnValue(Promise.resolve({ data: response, error: null }));
 
       await service.joinCall('booking-1', 'fan');
 
@@ -445,7 +426,7 @@ describe('VideoCallService', () => {
           call_started_at: startedAt,
         },
       };
-      mockFunctions.invoke.and.returnValue(Promise.resolve({ data: response, error: null }));
+      mockFunctions.invoke.mockReturnValue(Promise.resolve({ data: response, error: null }));
 
       await service.joinCall('booking-1', 'fan');
 
@@ -454,7 +435,7 @@ describe('VideoCallService', () => {
     });
 
     it('sets callState to error on edge function failure', async () => {
-      mockFunctions.invoke.and.returnValue(
+      mockFunctions.invoke.mockReturnValue(
         Promise.resolve({ data: null, error: { message: 'Edge error' } }),
       );
 
@@ -469,7 +450,7 @@ describe('VideoCallService', () => {
     });
 
     it('refreshes session for creator role before invoking', async () => {
-      mockFunctions.invoke.and.returnValue(
+      mockFunctions.invoke.mockReturnValue(
         Promise.resolve({ data: null, error: { message: 'fail' } }),
       );
 
@@ -481,7 +462,7 @@ describe('VideoCallService', () => {
     });
 
     it('sets callState to error when session refresh fails (creator role)', async () => {
-      mockAuth.refreshSession.and.returnValue(
+      mockAuth.refreshSession.mockReturnValue(
         Promise.resolve({ error: new Error('Session expired') }),
       );
 
@@ -495,7 +476,7 @@ describe('VideoCallService', () => {
 
     it('clears error message before the request', async () => {
       service.errorMessage.set('old error');
-      mockFunctions.invoke.and.returnValue(
+      mockFunctions.invoke.mockReturnValue(
         Promise.resolve({ data: null, error: { message: 'new error' } }),
       );
 
@@ -510,7 +491,7 @@ describe('VideoCallService', () => {
 
   describe('completeCall()', () => {
     it('sets callState to completed on success', async () => {
-      mockFunctions.invoke.and.returnValue(
+      mockFunctions.invoke.mockReturnValue(
         Promise.resolve({ data: { success: true }, error: null }),
       );
 
@@ -521,7 +502,7 @@ describe('VideoCallService', () => {
     });
 
     it('sets callState to error on failure', async () => {
-      mockFunctions.invoke.and.returnValue(
+      mockFunctions.invoke.mockReturnValue(
         Promise.resolve({ data: null, error: { message: 'Complete failed' } }),
       );
 
@@ -534,7 +515,7 @@ describe('VideoCallService', () => {
     });
 
     it('treats 409 "already completed" as success', async () => {
-      mockFunctions.invoke.and.returnValue(
+      mockFunctions.invoke.mockReturnValue(
         Promise.resolve({ data: null, error: { message: '409 already completed' } }),
       );
 
@@ -547,7 +528,7 @@ describe('VideoCallService', () => {
 
     it('sets callState to ending before the request', async () => {
       let stateOnCall: string | null = null;
-      mockFunctions.invoke.and.callFake(() => {
+      mockFunctions.invoke.mockImplementation(() => {
         stateOnCall = service.callState();
 
         return Promise.resolve({ data: null, error: { message: 'fail' } });
@@ -566,15 +547,16 @@ describe('VideoCallService', () => {
     it('sets currentBooking and returns data', async () => {
       const booking = makeBooking();
       const chain: any = {
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        single: jasmine
-          .createSpy('single')
-          .and.returnValue(Promise.resolve({ data: booking, error: null })),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        single: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: booking, error: null })),
       };
-      chain.select.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.select.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       const result = await service.loadBooking('booking-1');
 
@@ -589,15 +571,16 @@ describe('VideoCallService', () => {
     it('does not set currentBooking on error', async () => {
       const dbError = { message: 'Not found', code: '404', details: '', hint: '' };
       const chain: any = {
-        select: jasmine.createSpy('select').and.returnValue(null as any),
-        eq: jasmine.createSpy('eq').and.returnValue(null as any),
-        single: jasmine
-          .createSpy('single')
-          .and.returnValue(Promise.resolve({ data: null, error: dbError })),
+        select: vi.fn()
+          .mockReturnValue(null as any),
+        eq: vi.fn()
+          .mockReturnValue(null as any),
+        single: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: null, error: dbError })),
       };
-      chain.select.and.returnValue(chain);
-      chain.eq.and.returnValue(chain);
-      mockClient.from.and.returnValue(chain);
+      chain.select.mockReturnValue(chain);
+      chain.eq.mockReturnValue(chain);
+      mockClient.from.mockReturnValue(chain);
 
       await service.loadBooking('booking-1');
 
@@ -610,7 +593,7 @@ describe('VideoCallService', () => {
 
   describe('loadCallStatus()', () => {
     it('calls rpc with get_call_status', async () => {
-      mockClient.rpc.and.returnValue(
+      mockClient.rpc.mockReturnValue(
         Promise.resolve({ data: [{ id: 'booking-1', status: 'confirmed' }], error: null }),
       );
 
@@ -624,7 +607,7 @@ describe('VideoCallService', () => {
 
     it('returns error when rpc fails', async () => {
       const rpcError = { message: 'RPC error', code: '500', details: '', hint: '' };
-      mockClient.rpc.and.returnValue(Promise.resolve({ data: null, error: rpcError }));
+      mockClient.rpc.mockReturnValue(Promise.resolve({ data: null, error: rpcError }));
 
       const result = await service.loadCallStatus('booking-1');
 
@@ -636,7 +619,7 @@ describe('VideoCallService', () => {
     it('merges status into currentBooking when result exists', async () => {
       const existing = makeBooking();
       service.currentBooking.set(existing);
-      mockClient.rpc.and.returnValue(
+      mockClient.rpc.mockReturnValue(
         Promise.resolve({ data: [{ status: 'in_progress' }], error: null }),
       );
 

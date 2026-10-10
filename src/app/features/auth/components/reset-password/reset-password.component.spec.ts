@@ -32,12 +32,14 @@
  *    19. updateConfirmPassword clears the error signal
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 
 
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { ResetPasswordComponent } from './reset-password.component';
 import { SupabaseService } from '../../../../core/services/supabase.service';
@@ -65,17 +67,15 @@ function makeSupabaseSpy(opts: { exchangeError?: Error | null } = {}) {
 
   const mockClient = {
     auth: {
-      exchangeCodeForSession: jasmine
-        .createSpy('exchangeCodeForSession')
-        .and.resolveTo(exchangeResult),
-      signOut: jasmine.createSpy('signOut').and.resolveTo(undefined),
+      exchangeCodeForSession: vi.fn()
+        .mockResolvedValue(exchangeResult),
+      signOut: vi.fn()
+        .mockResolvedValue(undefined),
     },
   };
 
-  return jasmine.createSpyObj<SupabaseService>(
-    'SupabaseService',
-    ['waitForSession', 'getCurrentUser'],
-    { client: mockClient as any },
+  return createSpyObj<SupabaseService>(['waitForSession', 'getCurrentUser'],
+    { client: mockClient },
   );
 }
 
@@ -84,8 +84,8 @@ function makeSupabaseSpy(opts: { exchangeError?: Error | null } = {}) {
 describe('ResetPasswordComponent', () => {
   let fixture: ComponentFixture<ResetPasswordComponent>;
   let component: ResetPasswordComponent;
-  let authSpy: jasmine.SpyObj<AuthService>;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let authSpy: SpyObj<AuthService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
 
   function configureWith(opts: {
     code?: string | null;
@@ -95,8 +95,8 @@ describe('ResetPasswordComponent', () => {
     const code = opts.code !== undefined ? opts.code : 'valid-code-123';
     const updateResult = opts.updateResult ?? { success: true };
 
-    authSpy = jasmine.createSpyObj<AuthService>('AuthService', ['updatePassword']);
-    authSpy.updatePassword.and.returnValue(Promise.resolve(updateResult));
+    authSpy = createSpyObj<AuthService>(['updatePassword']);
+    authSpy.updatePassword.mockReturnValue(Promise.resolve(updateResult));
 
     supabaseSpy = makeSupabaseSpy({ exchangeError: opts.exchangeError ?? null });
 
@@ -140,7 +140,7 @@ describe('ResetPasswordComponent', () => {
     await fixture.whenStable();
 
     expect((component as any).sessionLoading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('does NOT call exchangeCodeForSession when code is missing', async () => {
@@ -158,7 +158,7 @@ describe('ResetPasswordComponent', () => {
     await fixture.whenStable();
 
     expect(supabaseSpy.client.auth.exchangeCodeForSession)
-      .toHaveBeenCalledOnceWith(
+      .toHaveBeenCalledExactlyOnceWith(
         'valid-code-123',
       );
   });
@@ -182,7 +182,7 @@ describe('ResetPasswordComponent', () => {
     await fixture.whenStable();
 
     expect((component as any).sessionLoading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('clears sessionLoading after a successful exchange', async () => {
@@ -190,7 +190,7 @@ describe('ResetPasswordComponent', () => {
     await fixture.whenStable();
 
     expect((component as any).sessionLoading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('sets no sessionError after a successful exchange', async () => {
@@ -248,7 +248,7 @@ describe('ResetPasswordComponent', () => {
     await (component as any).handleResetPassword();
 
     expect(authSpy.updatePassword)
-      .toHaveBeenCalledOnceWith('securepass99');
+      .toHaveBeenCalledExactlyOnceWith('securepass99');
   });
 
   it('sets success to true after a successful update', async () => {
@@ -257,7 +257,7 @@ describe('ResetPasswordComponent', () => {
     await (component as any).handleResetPassword();
 
     expect((component as any).success())
-      .toBeTrue();
+      .toBe(true);
   });
 
   it('calls supabase signOut to clear the recovery session on success', async () => {
@@ -275,7 +275,7 @@ describe('ResetPasswordComponent', () => {
     await (component as any).handleResetPassword();
 
     expect((component as any).loading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   // ── handleResetPassword() — failure path ──────────────────────────────────
@@ -313,7 +313,7 @@ describe('ResetPasswordComponent', () => {
     await (component as any).handleResetPassword();
 
     expect((component as any).success())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('resets loading to false after a failed update', async () => {
@@ -325,7 +325,7 @@ describe('ResetPasswordComponent', () => {
     await (component as any).handleResetPassword();
 
     expect((component as any).loading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('does NOT call signOut when the update fails', async () => {

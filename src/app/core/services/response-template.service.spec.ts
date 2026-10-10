@@ -75,7 +75,7 @@ describe('ResponseTemplateService', () => {
       expect(favorites.length)
         .toBe(expected);
       expect(favorites.every((t) => t.is_favorite))
-        .toBeTrue();
+        .toBe(true);
     });
   });
 
@@ -165,7 +165,7 @@ describe('ResponseTemplateService', () => {
       const before = service.allTemplates().length;
       const result = service.deleteTemplate(id);
       expect(result)
-        .toBeTrue();
+        .toBe(true);
       expect(service.allTemplates().length)
         .toBe(before - 1);
       expect(service.allTemplates()
@@ -177,7 +177,7 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const result = service.deleteTemplate('ghost-id');
       expect(result)
-        .toBeFalse();
+        .toBe(false);
     });
   });
 
@@ -191,7 +191,7 @@ describe('ResponseTemplateService', () => {
       const toggled = service.allTemplates()
         .find((t) => t.id === favId);
       expect(toggled?.is_favorite)
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('flips a non-favorite template to favorite', () => {
@@ -199,16 +199,17 @@ describe('ResponseTemplateService', () => {
       const nonFav = service.allTemplates()
         .find((t) => !t.is_favorite);
 
-      if (!nonFav) {
-        pending('No non-favorite templates to test');
+      expect(nonFav)
+        .toBeDefined();
 
+      if (!nonFav) {
         return;
       }
       service.toggleFavorite(nonFav.id);
       const toggled = service.allTemplates()
         .find((t) => t.id === nonFav.id);
       expect(toggled?.is_favorite)
-        .toBeTrue();
+        .toBe(true);
     });
   });
 
@@ -250,7 +251,7 @@ describe('ResponseTemplateService', () => {
         const matchesCategory = t.category.toLowerCase()
           .includes('thank you');
         expect(matchesTitle || matchesContent || matchesCategory)
-          .toBeTrue();
+          .toBe(true);
       });
     });
 
@@ -270,7 +271,7 @@ describe('ResponseTemplateService', () => {
       const category = 'Business';
       const results = service.getTemplatesByCategory(category);
       expect(results.every((t) => t.category === category))
-        .toBeTrue();
+        .toBe(true);
     });
   });
 

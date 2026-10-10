@@ -17,11 +17,13 @@
  *   ✓ Error responses never leak internal details to caller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 
 import { TestBed } from '@angular/core/testing';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { EdgeFunctionService } from './edge-function.service';
 import { SupabaseService } from './supabase.service';
@@ -32,12 +34,13 @@ import { SupabaseService } from './supabase.service';
 function createMockSupabase(invokeResult: { data: any; error: any }) {
   const mockClient = {
     functions: {
-      invoke: jasmine.createSpy('invoke').and.returnValue(Promise.resolve(invokeResult)),
+      invoke: vi.fn()
+        .mockReturnValue(Promise.resolve(invokeResult)),
     },
   };
 
-  return jasmine.createSpyObj<SupabaseService>('SupabaseService', [], {
-    client: mockClient as any,
+  return createSpyObj<SupabaseService>([], {
+    client: mockClient,
   });
 }
 
@@ -45,7 +48,7 @@ function createMockSupabase(invokeResult: { data: any; error: any }) {
 
 describe('EdgeFunctionService', () => {
   let service: EdgeFunctionService;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
 
   // ── createCheckoutSession ─────────────────────────────────────────────────
 
@@ -141,7 +144,7 @@ describe('EdgeFunctionService', () => {
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
       expect(invokeCall)
-        .toHaveBeenCalledWith('create-checkout-session', jasmine.any(Object));
+        .toHaveBeenCalledWith('create-checkout-session', expect.any(Object));
     });
   });
 
@@ -179,7 +182,7 @@ describe('EdgeFunctionService', () => {
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
       expect(invokeCall)
         .toHaveBeenCalledWith('create-call-booking-session', {
-          body: jasmine.objectContaining({
+          body: expect.objectContaining({
             creator_slug: 'sarahjohnson',
             price: 5000,
             scheduled_at: '2026-04-01T14:00:00.000Z',
@@ -210,11 +213,11 @@ describe('EdgeFunctionService', () => {
       });
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
-      const passedBody = invokeCall.calls.mostRecent().args[1].body;
+      const passedBody = invokeCall.mock.lastCall[1].body;
       expect(passedBody.price)
         .toBe(10000);
       expect(Number.isInteger(passedBody.price))
-        .toBeTrue();
+        .toBe(true);
     });
   });
 
@@ -245,7 +248,7 @@ describe('EdgeFunctionService', () => {
         .toBe('cs_shop_1');
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
       expect(invokeCall)
-        .toHaveBeenCalledWith('create-shop-checkout', jasmine.any(Object));
+        .toHaveBeenCalledWith('create-shop-checkout', expect.any(Object));
     });
   });
 
@@ -331,11 +334,11 @@ describe('EdgeFunctionService', () => {
       const result = await service.verifyConnectAccount('acct_xxx');
 
       expect(result.data?.charges_enabled)
-        .toBeTrue();
+        .toBe(true);
       expect(result.data?.payouts_enabled)
-        .toBeTrue();
+        .toBe(true);
       expect(result.data?.onboarding_completed)
-        .toBeTrue();
+        .toBe(true);
     });
   });
 

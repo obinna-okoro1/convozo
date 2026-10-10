@@ -9,18 +9,19 @@
  * Tests verify: correct method delegation, argument forwarding, and result pass-through.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+
 
 
 import { TestBed } from '@angular/core/testing';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { ShopService } from './shop.service';
 import {
   EdgeFunctionResponse,
   ShopCheckoutPayload,
   ShopItem,
-  ShopItemType,
   ShopOrder,
 } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -101,10 +102,10 @@ function makeShopItemPayload(overrides: Partial<ShopItemPayload> = {}): ShopItem
 
 describe('ShopService', () => {
   let service: ShopService;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
 
   beforeEach(() => {
-    supabaseSpy = jasmine.createSpyObj<SupabaseService>('SupabaseService', [
+    supabaseSpy = createSpyObj<SupabaseService>([
       'getShopItems',
       'createShopItem',
       'updateShopItem',
@@ -134,7 +135,7 @@ describe('ShopService', () => {
   describe('getShopItems()', () => {
     it('delegates to supabaseService.getShopItems with the creatorId', async () => {
       const items = [makeShopItem(), makeShopItem({ id: 'item-2', is_active: false })];
-      supabaseSpy.getShopItems.and.returnValue(Promise.resolve({ data: items, error: null }));
+      supabaseSpy.getShopItems.mockReturnValue(Promise.resolve({ data: items, error: null }));
 
       const result = await service.getShopItems('creator-1');
 
@@ -149,18 +150,18 @@ describe('ShopService', () => {
 
     it('includes inactive items (creator-side view returns all)', async () => {
       const items = [makeShopItem({ is_active: false })];
-      supabaseSpy.getShopItems.and.returnValue(Promise.resolve({ data: items, error: null }));
+      supabaseSpy.getShopItems.mockReturnValue(Promise.resolve({ data: items, error: null }));
 
       const result = await service.getShopItems('creator-1');
 
       const data = result.data ?? [];
       expect(data.some((i) => !i.is_active))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('propagates error from supabaseService', async () => {
       const err = new Error('DB error');
-      supabaseSpy.getShopItems.and.returnValue(Promise.resolve({ data: null, error: err }));
+      supabaseSpy.getShopItems.mockReturnValue(Promise.resolve({ data: null, error: err }));
 
       const result = await service.getShopItems('creator-1');
 
@@ -176,7 +177,7 @@ describe('ShopService', () => {
   describe('getActiveShopItems()', () => {
     it('delegates to supabaseService.getActiveShopItems with the creatorId', async () => {
       const items = [makeShopItem({ is_active: true })];
-      supabaseSpy.getActiveShopItems.and.returnValue(Promise.resolve({ data: items, error: null }));
+      supabaseSpy.getActiveShopItems.mockReturnValue(Promise.resolve({ data: items, error: null }));
 
       const result = await service.getActiveShopItems('creator-1');
 
@@ -190,7 +191,7 @@ describe('ShopService', () => {
     });
 
     it('returns empty array when no active items exist', async () => {
-      supabaseSpy.getActiveShopItems.and.returnValue(Promise.resolve({ data: [], error: null }));
+      supabaseSpy.getActiveShopItems.mockReturnValue(Promise.resolve({ data: [], error: null }));
 
       const result = await service.getActiveShopItems('creator-1');
 
@@ -200,7 +201,7 @@ describe('ShopService', () => {
 
     it('propagates error on RLS or network failure', async () => {
       const err = new Error('RLS denied');
-      supabaseSpy.getActiveShopItems.and.returnValue(Promise.resolve({ data: null, error: err }));
+      supabaseSpy.getActiveShopItems.mockReturnValue(Promise.resolve({ data: null, error: err }));
 
       const result = await service.getActiveShopItems('creator-1');
 
@@ -217,7 +218,7 @@ describe('ShopService', () => {
     it('delegates to supabaseService.createShopItem with the full item payload', async () => {
       const payload = makeShopItemPayload();
       const created = makeShopItem();
-      supabaseSpy.createShopItem.and.returnValue(Promise.resolve({ data: created, error: null }));
+      supabaseSpy.createShopItem.mockReturnValue(Promise.resolve({ data: created, error: null }));
 
       const result = await service.createShopItem(payload);
 
@@ -236,7 +237,7 @@ describe('ShopService', () => {
         is_request_based: true,
         file_storage_path: null,
       });
-      supabaseSpy.createShopItem.and.returnValue(
+      supabaseSpy.createShopItem.mockReturnValue(
         Promise.resolve({
           data: { ...makeShopItem(), ...payload, id: 'item-shoutout' },
           error: null,
@@ -249,12 +250,12 @@ describe('ShopService', () => {
       expect(supabaseSpy.createShopItem)
         .toHaveBeenCalledWith(payload);
       expect(result.data?.is_request_based)
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('propagates error on insert failure', async () => {
       const err = new Error('Insert failed');
-      supabaseSpy.createShopItem.and.returnValue(Promise.resolve({ data: null, error: err }));
+      supabaseSpy.createShopItem.mockReturnValue(Promise.resolve({ data: null, error: err }));
 
       const result = await service.createShopItem(makeShopItemPayload());
 
@@ -271,7 +272,7 @@ describe('ShopService', () => {
     it('delegates to supabaseService.updateShopItem with id and updates object', async () => {
       const updates = { title: 'Updated Title', price: 1499 };
       const updated = makeShopItem({ title: 'Updated Title', price: 1499 });
-      supabaseSpy.updateShopItem.and.returnValue(Promise.resolve({ data: updated, error: null }));
+      supabaseSpy.updateShopItem.mockReturnValue(Promise.resolve({ data: updated, error: null }));
 
       const result = await service.updateShopItem('item-1', updates);
 
@@ -284,17 +285,17 @@ describe('ShopService', () => {
 
     it('can deactivate an item via is_active: false', async () => {
       const updated = makeShopItem({ is_active: false });
-      supabaseSpy.updateShopItem.and.returnValue(Promise.resolve({ data: updated, error: null }));
+      supabaseSpy.updateShopItem.mockReturnValue(Promise.resolve({ data: updated, error: null }));
 
       const result = await service.updateShopItem('item-1', { is_active: false });
 
       expect(result.data?.is_active)
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('propagates error on update failure', async () => {
       const err = new Error('Update failed');
-      supabaseSpy.updateShopItem.and.returnValue(Promise.resolve({ data: null, error: err }));
+      supabaseSpy.updateShopItem.mockReturnValue(Promise.resolve({ data: null, error: err }));
 
       const result = await service.updateShopItem('item-1', { is_active: false });
 
@@ -309,7 +310,7 @@ describe('ShopService', () => {
 
   describe('deleteShopItem()', () => {
     it('delegates to supabaseService.deleteShopItem with the item id', async () => {
-      supabaseSpy.deleteShopItem.and.returnValue(Promise.resolve({ error: null }));
+      supabaseSpy.deleteShopItem.mockReturnValue(Promise.resolve({ error: null }));
 
       const result = await service.deleteShopItem('item-1');
 
@@ -322,7 +323,7 @@ describe('ShopService', () => {
 
     it('propagates error on delete failure', async () => {
       const err = new Error('Delete failed');
-      supabaseSpy.deleteShopItem.and.returnValue(Promise.resolve({ error: err }));
+      supabaseSpy.deleteShopItem.mockReturnValue(Promise.resolve({ error: err }));
 
       const result = await service.deleteShopItem('item-1');
 
@@ -336,7 +337,7 @@ describe('ShopService', () => {
   describe('getShopOrders()', () => {
     it('delegates to supabaseService.getShopOrders with the creatorId', async () => {
       const orders = [makeShopOrder(), makeShopOrder({ id: 'order-2', status: 'pending' })];
-      supabaseSpy.getShopOrders.and.returnValue(Promise.resolve({ data: orders, error: null }));
+      supabaseSpy.getShopOrders.mockReturnValue(Promise.resolve({ data: orders, error: null }));
 
       const result = await service.getShopOrders('creator-1');
 
@@ -355,7 +356,7 @@ describe('ShopService', () => {
         makeShopOrder({ id: 'order-2', status: 'completed' }),
         makeShopOrder({ id: 'order-3', status: 'refunded' }),
       ];
-      supabaseSpy.getShopOrders.and.returnValue(Promise.resolve({ data: orders, error: null }));
+      supabaseSpy.getShopOrders.mockReturnValue(Promise.resolve({ data: orders, error: null }));
 
       const result = await service.getShopOrders('creator-1');
 
@@ -366,7 +367,7 @@ describe('ShopService', () => {
 
     it('propagates error on query failure', async () => {
       const err = new Error('Orders query failed');
-      supabaseSpy.getShopOrders.and.returnValue(Promise.resolve({ data: null, error: err }));
+      supabaseSpy.getShopOrders.mockReturnValue(Promise.resolve({ data: null, error: err }));
 
       const result = await service.getShopOrders('creator-1');
 
@@ -391,7 +392,7 @@ describe('ShopService', () => {
       const response: EdgeFunctionResponse<{ sessionId: string; url: string }> = {
         data: { sessionId: 'cs_test_xyz', url: 'https://checkout.stripe.com/xyz' },
       };
-      supabaseSpy.createShopCheckout.and.returnValue(Promise.resolve(response));
+      supabaseSpy.createShopCheckout.mockReturnValue(Promise.resolve(response));
 
       const result = await service.createShopCheckout(basePayload);
 
@@ -409,7 +410,7 @@ describe('ShopService', () => {
         ...basePayload,
         request_details: 'Please say happy birthday to Alex!',
       };
-      supabaseSpy.createShopCheckout.and.returnValue(
+      supabaseSpy.createShopCheckout.mockReturnValue(
         Promise.resolve({ data: { sessionId: 'cs_2', url: 'https://checkout.stripe.com/2' } }),
       );
 
@@ -421,7 +422,7 @@ describe('ShopService', () => {
     });
 
     it('propagates edge function error', async () => {
-      supabaseSpy.createShopCheckout.and.returnValue(
+      supabaseSpy.createShopCheckout.mockReturnValue(
         Promise.resolve({ error: { message: 'Creator not found' } }),
       );
 
@@ -439,7 +440,7 @@ describe('ShopService', () => {
   describe('uploadShopFile()', () => {
     it('delegates to supabaseService.uploadShopFile with creatorId and file', async () => {
       const file = new File(['content'], 'ebook.pdf', { type: 'application/pdf' });
-      supabaseSpy.uploadShopFile.and.returnValue(
+      supabaseSpy.uploadShopFile.mockReturnValue(
         Promise.resolve({ path: 'creator-1/123_ebook.pdf', error: null }),
       );
 
@@ -456,7 +457,7 @@ describe('ShopService', () => {
 
     it('returns the storage path (never a public URL)', async () => {
       const file = new File(['video content'], 'lesson.mp4', { type: 'video/mp4' });
-      supabaseSpy.uploadShopFile.and.returnValue(
+      supabaseSpy.uploadShopFile.mockReturnValue(
         Promise.resolve({ path: 'creator-1/456_lesson.mp4', error: null }),
       );
 
@@ -469,7 +470,7 @@ describe('ShopService', () => {
     it('propagates upload error with null path', async () => {
       const file = new File([''], 'bad.pdf', { type: 'application/pdf' });
       const err = new Error('Upload failed');
-      supabaseSpy.uploadShopFile.and.returnValue(Promise.resolve({ path: null, error: err }));
+      supabaseSpy.uploadShopFile.mockReturnValue(Promise.resolve({ path: null, error: err }));
 
       const result = await service.uploadShopFile('creator-1', file);
 
@@ -486,7 +487,7 @@ describe('ShopService', () => {
     it('delegates to supabaseService.uploadShopThumbnail and returns path + publicUrl', async () => {
       const file = new File(['img'], 'thumb.png', { type: 'image/png' });
       const publicUrl = 'https://cdn.example.com/shop-thumbnails/creator-1/123_thumb.png';
-      supabaseSpy.uploadShopThumbnail.and.returnValue(
+      supabaseSpy.uploadShopThumbnail.mockReturnValue(
         Promise.resolve({ path: 'creator-1/123_thumb.png', publicUrl, error: null }),
       );
 
@@ -507,7 +508,7 @@ describe('ShopService', () => {
       const file = new File(['img'], 'cover.jpg', { type: 'image/jpeg' });
       const publicUrl =
         'https://supabase.co/storage/v1/object/public/shop-thumbnails/creator-1/cover.jpg';
-      supabaseSpy.uploadShopThumbnail.and.returnValue(
+      supabaseSpy.uploadShopThumbnail.mockReturnValue(
         Promise.resolve({ path: 'creator-1/cover.jpg', publicUrl, error: null }),
       );
 
@@ -520,7 +521,7 @@ describe('ShopService', () => {
     it('propagates upload error with null path and null publicUrl', async () => {
       const file = new File([''], 'thumb.png', { type: 'image/png' });
       const err = new Error('Storage limit exceeded');
-      supabaseSpy.uploadShopThumbnail.and.returnValue(
+      supabaseSpy.uploadShopThumbnail.mockReturnValue(
         Promise.resolve({ path: null, publicUrl: null, error: err }),
       );
 
@@ -542,7 +543,7 @@ describe('ShopService', () => {
       const response: EdgeFunctionResponse<{ url: string; filename: string }> = {
         data: { url: 'https://storage.supabase.co/signed-url', filename: 'ebook.pdf' },
       };
-      supabaseSpy.getShopDownloadUrl.and.returnValue(Promise.resolve(response));
+      supabaseSpy.getShopDownloadUrl.mockReturnValue(Promise.resolve(response));
 
       const result = await service.getShopDownloadUrl('cs_test_abc');
 
@@ -556,7 +557,7 @@ describe('ShopService', () => {
     });
 
     it('returned URL is a signed short-lived URL (contains http)', async () => {
-      supabaseSpy.getShopDownloadUrl.and.returnValue(
+      supabaseSpy.getShopDownloadUrl.mockReturnValue(
         Promise.resolve({
           data: {
             url: 'https://storage.supabase.co/object/sign/shop-files/creator-1/file.pdf?token=xyz',
@@ -572,7 +573,7 @@ describe('ShopService', () => {
     });
 
     it('propagates edge function error when session is invalid', async () => {
-      supabaseSpy.getShopDownloadUrl.and.returnValue(
+      supabaseSpy.getShopDownloadUrl.mockReturnValue(
         Promise.resolve({ error: { message: 'Session not found' } }),
       );
 

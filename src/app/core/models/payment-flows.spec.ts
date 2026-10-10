@@ -153,11 +153,11 @@ describe('Payment Models & Financial Computations', () => {
       const booking = makeBooking();
       // These fields are set by stripe-webhook dispute handlers — null until a dispute arrives
       expect(Object.prototype.hasOwnProperty.call(booking, 'dispute_id'))
-        .toBeTrue();
+        .toBe(true);
       expect(Object.prototype.hasOwnProperty.call(booking, 'dispute_frozen_at'))
-        .toBeTrue();
+        .toBe(true);
       expect(Object.prototype.hasOwnProperty.call(booking, 'refund_id'))
-        .toBeTrue();
+        .toBe(true);
       expect(booking.dispute_id)
         .toBeNull();
       expect(booking.dispute_frozen_at)
@@ -181,7 +181,7 @@ describe('Payment Models & Financial Computations', () => {
     it('amount_paid is stored as integer cents', () => {
       const booking = makeBooking({ amount_paid: 5000 });
       expect(Number.isInteger(booking.amount_paid))
-        .toBeTrue();
+        .toBe(true);
       expect(booking.amount_paid)
         .toBe(5000); // $50.00
     });
@@ -199,9 +199,9 @@ describe('Payment Models & Financial Computations', () => {
       expect(response.status)
         .toBe('completed');
       expect(response.meets_threshold)
-        .toBeTrue();
+        .toBe(true);
       expect(response.payout_released)
-        .toBeFalse();
+        .toBe(false);
     });
   });
 
@@ -241,7 +241,7 @@ describe('Payment Models & Financial Computations', () => {
       amounts.forEach((a) => {
         const fee = computePlatformFee(a);
         expect(Number.isInteger(fee))
-          .toBeTrue();
+          .toBe(true);
         expect(fee)
           .toBeGreaterThanOrEqual(0);
       });
@@ -287,7 +287,7 @@ describe('Payment Models & Financial Computations', () => {
       const primes = [1, 3, 7, 11, 97, 101, 997, 10001];
       primes.forEach((p) => {
         expect(Number.isInteger(computeShortSessionFee(p)))
-          .toBeTrue();
+          .toBe(true);
       });
     });
   });
@@ -325,7 +325,7 @@ describe('Payment Models & Financial Computations', () => {
       const primes = [1, 3, 7, 11, 97, 101, 997, 10001];
       primes.forEach((p) => {
         expect(Number.isInteger(computeNoShowFee(p)))
-          .toBeTrue();
+          .toBe(true);
       });
     });
   });
@@ -335,42 +335,42 @@ describe('Payment Models & Financial Computations', () => {
   describe('Completion Threshold (30%)', () => {
     it('30-min booking: exactly 540s (30%) meets threshold', () => {
       expect(meetsThreshold(540, 1800))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('30-min booking: 539s does NOT meet threshold', () => {
       expect(meetsThreshold(539, 1800))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('60-min booking: exactly 1080s meets threshold', () => {
       expect(meetsThreshold(1080, 3600))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('60-min booking: 1079s does NOT meet threshold', () => {
       expect(meetsThreshold(1079, 3600))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('15-min booking: exactly 270s meets threshold', () => {
       expect(meetsThreshold(270, 900))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('0 seconds never meets threshold', () => {
       expect(meetsThreshold(0, 1800))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('full duration always meets threshold', () => {
       expect(meetsThreshold(1800, 1800))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('over-time still meets threshold', () => {
       expect(meetsThreshold(2700, 1800))
-        .toBeTrue();
+        .toBe(true);
     });
   });
 
@@ -437,7 +437,7 @@ describe('Payment Models & Financial Computations', () => {
       const bookedSeconds = booking.duration * 60;
 
       expect(meetsThreshold(actualSeconds, bookedSeconds))
-        .toBeTrue();
+        .toBe(true);
       expect(computePlatformFee(booking.amount_paid))
         .toBe(1100);
       expect(computeExpertAmount(booking.amount_paid))
@@ -452,7 +452,7 @@ describe('Payment Models & Financial Computations', () => {
       const bookedSeconds = booking.duration * 60;
 
       expect(meetsThreshold(actualSeconds, bookedSeconds))
-        .toBeFalse();
+        .toBe(false);
       expect(computeShortSessionFee(booking.amount_paid))
         .toBe(2500);
       // Platform fee on captured portion
@@ -515,11 +515,11 @@ describe('Payment Models & Financial Computations', () => {
       const primes = [1, 3, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 97, 101, 997, 1001, 9999];
       primes.forEach((p) => {
         expect(Number.isInteger(computeShortSessionFee(p)))
-          .toBeTrue();
+          .toBe(true);
         expect(Number.isInteger(computeNoShowFee(p)))
-          .toBeTrue();
+          .toBe(true);
         expect(Number.isInteger(computePlatformFee(p)))
-          .toBeTrue();
+          .toBe(true);
       });
     });
 
@@ -549,13 +549,13 @@ describe('Payment Models & Financial Computations', () => {
       const past = new Date(Date.now() - 24 * 60 * 60 * 1000)
         .toISOString(); // yesterday
       expect(isEligibleForRelease(past))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('release_at exactly equal to now is eligible (lte, not lt)', () => {
       const now = new Date();
       expect(isEligibleForRelease(now.toISOString(), now))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('release_at 1ms in future is NOT eligible', () => {
@@ -563,19 +563,19 @@ describe('Payment Models & Financial Computations', () => {
       const future = new Date(now.getTime() + 1)
         .toISOString();
       expect(isEligibleForRelease(future, now))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('release_at 7 days from now is NOT eligible (newly captured row)', () => {
       const now = new Date();
       const sevenDaysOut = new Date(now.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
       expect(isEligibleForRelease(sevenDaysOut.toISOString(), now))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('null release_at is never eligible', () => {
       expect(isEligibleForRelease(null))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('row captured exactly 7 days ago becomes eligible exactly now', () => {
@@ -583,7 +583,7 @@ describe('Payment Models & Financial Computations', () => {
       const captureTime = new Date(Date.now() - HOLD_MS);
       const releaseAt = new Date(captureTime.getTime() + HOLD_MS); // exactly now
       expect(isEligibleForRelease(releaseAt.toISOString(), releaseAt))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('row captured 6 days ago is still NOT eligible (hold not expired)', () => {
@@ -591,7 +591,7 @@ describe('Payment Models & Financial Computations', () => {
       const releaseAt = new Date(captureTime.getTime() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
       const now = new Date();
       expect(isEligibleForRelease(releaseAt.toISOString(), now))
-        .toBeFalse();
+        .toBe(false);
     });
   });
 
@@ -748,7 +748,7 @@ describe('Payment Models & Financial Computations', () => {
       // The release-payout cron only targets payout_status = 'pending_release'
       const isReleaseable = disputed.payout_status === 'pending_release';
       expect(isReleaseable)
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('disputed is distinct from refunded — a dispute can be won back', () => {
@@ -817,7 +817,7 @@ describe('Payment Models & Financial Computations', () => {
         expect(expertCents)
           .toBeGreaterThanOrEqual(0);
         expect(Number.isInteger(expertCents))
-          .toBeTrue();
+          .toBe(true);
       });
     });
   });

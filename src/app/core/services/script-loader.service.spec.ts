@@ -1,13 +1,14 @@
 import { DOCUMENT } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
+import type { Mock } from 'vitest';
 
 import { ScriptLoaderService } from './script-loader.service';
 
 describe('ScriptLoaderService', () => {
   let service: ScriptLoaderService;
   let fakeDocument: {
-    createElement: jasmine.Spy;
-    head: { appendChild: jasmine.Spy };
+    createElement: Mock;
+    head: { appendChild: Mock };
   };
   let fakeScript: {
     src: string;
@@ -19,8 +20,9 @@ describe('ScriptLoaderService', () => {
   beforeEach(() => {
     fakeScript = { src: '', async: false, onload: null, onerror: null };
     fakeDocument = {
-      createElement: jasmine.createSpy('createElement').and.returnValue(fakeScript),
-      head: { appendChild: jasmine.createSpy('appendChild') },
+      createElement: vi.fn()
+        .mockReturnValue(fakeScript),
+      head: { appendChild: vi.fn() },
     };
 
     TestBed.configureTestingModule({
@@ -45,23 +47,21 @@ describe('ScriptLoaderService', () => {
       expect(fakeScript.src)
         .toBe('https://js.stripe.com/v3/');
       expect(fakeScript.async)
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('resolves when the script fires its onload callback', async () => {
       const promise = service.load('https://js.stripe.com/v3/');
       fakeScript.onload?.();
-      await expectAsync(promise)
-        .toBeResolved();
+      await expect(promise).resolves.toBeUndefined();
     });
 
     it('rejects with a descriptive error when onerror fires', async () => {
       const promise = service.load('https://js.stripe.com/v3/');
       fakeScript.onerror?.();
-      await expectAsync(promise)
-        .toBeRejectedWithError(
-          '[ScriptLoader] Failed to load script: https://js.stripe.com/v3/',
-        );
+      await expect(promise).rejects.toThrow(
+        '[ScriptLoader] Failed to load script: https://js.stripe.com/v3/',
+      );
     });
 
     it('deduplicates — same URL returns the cached Promise without re-injecting', async () => {
@@ -86,7 +86,8 @@ describe('ScriptLoaderService', () => {
         onload: null as (() => void) | null,
         onerror: null,
       };
-      fakeDocument.createElement.and.returnValues(fakeScript, secondScript);
+      fakeDocument.createElement.mockReturnValueOnce(fakeScript)
+        .mockReturnValueOnce(secondScript);
 
       const p1 = service.load('https://js.stripe.com/v3/');
       const p2 = service.load('https://example.com/lib.js');
@@ -106,19 +107,19 @@ describe('ScriptLoaderService', () => {
   describe('isRequested()', () => {
     it('returns false before load() is called', () => {
       expect(service.isRequested('https://js.stripe.com/v3/'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns true immediately after load() is called (even before onload)', () => {
       void service.load('https://js.stripe.com/v3/');
       expect(service.isRequested('https://js.stripe.com/v3/'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns false for a different URL that has not been requested', () => {
       void service.load('https://js.stripe.com/v3/');
       expect(service.isRequested('https://example.com/other.js'))
-        .toBeFalse();
+        .toBe(false);
     });
   });
 });

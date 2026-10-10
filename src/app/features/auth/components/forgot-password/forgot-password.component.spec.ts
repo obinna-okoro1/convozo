@@ -23,12 +23,14 @@
  *    10. Calling updateEmail() clears any existing error signal
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 
 
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { ForgotPasswordComponent } from './forgot-password.component';
 import { AuthService } from '../../services/auth.service';
@@ -38,11 +40,11 @@ import { AuthService } from '../../services/auth.service';
 describe('ForgotPasswordComponent', () => {
   let fixture: ComponentFixture<ForgotPasswordComponent>;
   let component: ForgotPasswordComponent;
-  let authSpy: jasmine.SpyObj<AuthService>;
+  let authSpy: SpyObj<AuthService>;
 
   function configureWith(result: { success: boolean; error?: string }): void {
-    authSpy = jasmine.createSpyObj<AuthService>('AuthService', ['sendPasswordResetEmail']);
-    authSpy.sendPasswordResetEmail.and.returnValue(Promise.resolve(result));
+    authSpy = createSpyObj<AuthService>(['sendPasswordResetEmail']);
+    authSpy.sendPasswordResetEmail.mockReturnValue(Promise.resolve(result));
 
     TestBed.configureTestingModule({
       imports: [ForgotPasswordComponent],
@@ -135,7 +137,7 @@ describe('ForgotPasswordComponent', () => {
     await (component as any).handleSubmit();
 
     expect(authSpy.sendPasswordResetEmail)
-      .toHaveBeenCalledOnceWith('user@example.com');
+      .toHaveBeenCalledExactlyOnceWith('user@example.com');
   });
 
   it('sets success to true after a successful call', async () => {
@@ -143,7 +145,7 @@ describe('ForgotPasswordComponent', () => {
     await (component as any).handleSubmit();
 
     expect((component as any).success())
-      .toBeTrue();
+      .toBe(true);
   });
 
   it('resets loading to false after a successful call', async () => {
@@ -151,7 +153,7 @@ describe('ForgotPasswordComponent', () => {
     await (component as any).handleSubmit();
 
     expect((component as any).loading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('clears the error signal before calling the service', async () => {
@@ -199,7 +201,7 @@ describe('ForgotPasswordComponent', () => {
     await (component as any).handleSubmit();
 
     expect((component as any).success())
-      .toBeFalse();
+      .toBe(false);
   });
 
   it('resets loading to false after a failed call', async () => {
@@ -210,7 +212,7 @@ describe('ForgotPasswordComponent', () => {
     await (component as any).handleSubmit();
 
     expect((component as any).loading())
-      .toBeFalse();
+      .toBe(false);
   });
 
   // ── updateEmail() ─────────────────────────────────────────────────────────

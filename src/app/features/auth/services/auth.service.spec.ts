@@ -15,12 +15,15 @@
  *     4. Supabase returns ok → returns { success: true }
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+
 
 
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import type { Mock } from 'vitest';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { AuthService } from './auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -33,24 +36,26 @@ import { SupabaseService } from '../../../core/services/supabase.service';
  */
 function makeAuthClient(
   overrides: Partial<{
-    resetPasswordForEmail: jasmine.Spy;
-    updateUser: jasmine.Spy;
+    resetPasswordForEmail: Mock;
+    updateUser: Mock;
   }> = {},
 ) {
   return {
     auth: {
-      signInWithPassword: jasmine.createSpy('signInWithPassword'),
-      signUp: jasmine.createSpy('signUp'),
-      signInWithOtp: jasmine.createSpy('signInWithOtp'),
-      signInWithOAuth: jasmine.createSpy('signInWithOAuth'),
-      getSession: jasmine.createSpy('getSession'),
-      signOut: jasmine.createSpy('signOut'),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signInWithOtp: vi.fn(),
+      signInWithOAuth: vi.fn(),
+      getSession: vi.fn(),
+      signOut: vi.fn(),
       resetPasswordForEmail:
         overrides.resetPasswordForEmail ??
-        jasmine.createSpy('resetPasswordForEmail').and.resolveTo({ error: null }),
+        vi.fn()
+          .mockResolvedValue({ error: null }),
       updateUser:
         overrides.updateUser ??
-        jasmine.createSpy('updateUser').and.resolveTo({ data: {}, error: null }),
+        vi.fn()
+          .mockResolvedValue({ data: {}, error: null }),
     },
   };
 }
@@ -60,15 +65,13 @@ function makeAuthClient(
 describe('AuthService', () => {
   let service: AuthService;
   let mockClient: ReturnType<typeof makeAuthClient>;
-  let supabaseSpy: jasmine.SpyObj<SupabaseService>;
+  let supabaseSpy: SpyObj<SupabaseService>;
 
   /** Re-configure TestBed with a fresh client. Call inside beforeEach or a test. */
   function configureWith(clientOverrides: Parameters<typeof makeAuthClient>[0] = {}) {
     mockClient = makeAuthClient(clientOverrides);
-    supabaseSpy = jasmine.createSpyObj<SupabaseService>(
-      'SupabaseService',
-      ['getCreatorByUserId', 'waitForSession', 'getCurrentUser'],
-      { client: mockClient as any },
+    supabaseSpy = createSpyObj<SupabaseService>(['getCreatorByUserId', 'waitForSession', 'getCurrentUser'],
+      { client: mockClient },
     );
     // Prevent real navigation; router is provided via provideRouter([])
     TestBed.configureTestingModule({
@@ -92,7 +95,7 @@ describe('AuthService', () => {
       const result = await service.sendPasswordResetEmail('');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toBeTruthy();
       expect(mockClient.auth.resetPasswordForEmail).not.toHaveBeenCalled();
@@ -102,7 +105,7 @@ describe('AuthService', () => {
       const result = await service.sendPasswordResetEmail('not-an-email');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(mockClient.auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 
@@ -110,7 +113,7 @@ describe('AuthService', () => {
       const result = await service.sendPasswordResetEmail('user@nodomain');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(mockClient.auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 
@@ -118,16 +121,16 @@ describe('AuthService', () => {
       await service.sendPasswordResetEmail('user@example.com');
 
       expect(mockClient.auth.resetPasswordForEmail)
-        .toHaveBeenCalledOnceWith(
+        .toHaveBeenCalledExactlyOnceWith(
           'user@example.com',
-          jasmine.any(Object),
+          expect.any(Object),
         );
     });
 
     it('passes a redirectTo URL ending in /auth/reset-password', async () => {
       await service.sendPasswordResetEmail('user@example.com');
 
-      const args = mockClient.auth.resetPasswordForEmail.calls.first().args as [
+      const args = mockClient.auth.resetPasswordForEmail.mock.calls[0] as [
         string,
         { redirectTo: string },
       ];
@@ -140,7 +143,7 @@ describe('AuthService', () => {
       const result = await service.sendPasswordResetEmail('user@example.com');
 
       expect(result.success)
-        .toBeTrue();
+        .toBe(true);
       expect(result.error)
         .toBeUndefined();
     });
@@ -148,15 +151,14 @@ describe('AuthService', () => {
     it('returns { success: false, error } when Supabase returns an error', async () => {
       TestBed.resetTestingModule();
       configureWith({
-        resetPasswordForEmail: jasmine
-          .createSpy('resetPasswordForEmail')
-          .and.resolveTo({ error: new Error('Rate limit exceeded') }),
+        resetPasswordForEmail: vi.fn()
+          .mockResolvedValue({ error: new Error('Rate limit exceeded') }),
       });
 
       const result = await service.sendPasswordResetEmail('user@example.com');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toBe('Rate limit exceeded');
     });
@@ -164,15 +166,14 @@ describe('AuthService', () => {
     it('returns a fallback error string when the thrown value is not an Error instance', async () => {
       TestBed.resetTestingModule();
       configureWith({
-        resetPasswordForEmail: jasmine
-          .createSpy('resetPasswordForEmail')
-          .and.rejectWith('string rejection'),
+        resetPasswordForEmail: vi.fn()
+          .mockRejectedValue('string rejection'),
       });
 
       const result = await service.sendPasswordResetEmail('user@example.com');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toBe('Failed to send reset email');
     });
@@ -185,7 +186,7 @@ describe('AuthService', () => {
       const result = await service.updatePassword('short');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toContain('8 characters');
       expect(mockClient.auth.updateUser).not.toHaveBeenCalled();
@@ -195,7 +196,7 @@ describe('AuthService', () => {
       const result = await service.updatePassword('1234567');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(mockClient.auth.updateUser).not.toHaveBeenCalled();
     });
 
@@ -203,21 +204,21 @@ describe('AuthService', () => {
       const result = await service.updatePassword('12345678');
 
       expect(result.success)
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('calls supabase.auth.updateUser with the password', async () => {
       await service.updatePassword('securepassword');
 
       expect(mockClient.auth.updateUser)
-        .toHaveBeenCalledOnceWith({ password: 'securepassword' });
+        .toHaveBeenCalledExactlyOnceWith({ password: 'securepassword' });
     });
 
     it('returns { success: true } when Supabase returns no error', async () => {
       const result = await service.updatePassword('securepassword');
 
       expect(result.success)
-        .toBeTrue();
+        .toBe(true);
       expect(result.error)
         .toBeUndefined();
     });
@@ -225,15 +226,14 @@ describe('AuthService', () => {
     it('returns { success: false, error } when Supabase returns an error', async () => {
       TestBed.resetTestingModule();
       configureWith({
-        updateUser: jasmine
-          .createSpy('updateUser')
-          .and.resolveTo({ data: null, error: new Error('Expired recovery session') }),
+        updateUser: vi.fn()
+          .mockResolvedValue({ data: null, error: new Error('Expired recovery session') }),
       });
 
       const result = await service.updatePassword('securepassword');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toBe('Expired recovery session');
     });
@@ -241,13 +241,14 @@ describe('AuthService', () => {
     it('returns a fallback error string when the thrown value is not an Error instance', async () => {
       TestBed.resetTestingModule();
       configureWith({
-        updateUser: jasmine.createSpy('updateUser').and.rejectWith({ code: 42 }), // non-Error object
+        updateUser: vi.fn()
+          .mockRejectedValue({ code: 42 }), // non-Error object
       });
 
       const result = await service.updatePassword('securepassword');
 
       expect(result.success)
-        .toBeFalse();
+        .toBe(false);
       expect(result.error)
         .toBe('Failed to update password');
     });

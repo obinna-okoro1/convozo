@@ -4,7 +4,7 @@
  * Covers: email validation, message length, isEmpty, generateSlug, sanitizeSlug, isValidSlug.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 
 
 import { FormValidators } from './form-validators';
@@ -15,37 +15,37 @@ describe('FormValidators', () => {
   describe('isValidEmail()', () => {
     it('returns true for a standard email', () => {
       expect(FormValidators.isValidEmail('user@example.com'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns true for email with subdomain', () => {
       expect(FormValidators.isValidEmail('user@mail.example.co.uk'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns true for email with plus tag', () => {
       expect(FormValidators.isValidEmail('user+tag@example.com'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns false for missing @', () => {
       expect(FormValidators.isValidEmail('userexample.com'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for missing domain', () => {
       expect(FormValidators.isValidEmail('user@'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for empty string', () => {
       expect(FormValidators.isValidEmail(''))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for only whitespace', () => {
       expect(FormValidators.isValidEmail('   '))
-        .toBeFalse();
+        .toBe(false);
     });
   });
 
@@ -54,22 +54,22 @@ describe('FormValidators', () => {
   describe('isValidMessageLength()', () => {
     it('returns true for a short valid message', () => {
       expect(FormValidators.isValidMessageLength('Hello world'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns true for exactly 1000 characters', () => {
       expect(FormValidators.isValidMessageLength('a'.repeat(1000)))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns false for empty string', () => {
       expect(FormValidators.isValidMessageLength(''))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for 1001 characters', () => {
       expect(FormValidators.isValidMessageLength('a'.repeat(1001)))
-        .toBeFalse();
+        .toBe(false);
     });
   });
 
@@ -78,22 +78,22 @@ describe('FormValidators', () => {
   describe('isNotEmpty()', () => {
     it('returns true for a non-empty string', () => {
       expect(FormValidators.isNotEmpty('hello'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns false for empty string', () => {
       expect(FormValidators.isNotEmpty(''))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for whitespace-only string', () => {
       expect(FormValidators.isNotEmpty('   '))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns true for string with leading/trailing spaces', () => {
       expect(FormValidators.isNotEmpty('  hi  '))
-        .toBeTrue();
+        .toBe(true);
     });
   });
 
@@ -181,57 +181,57 @@ describe('FormValidators', () => {
   describe('isValidSlug()', () => {
     it('returns true for a valid slug of exactly 3 chars', () => {
       expect(FormValidators.isValidSlug('abc'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns true for a valid slug of 30 chars', () => {
       expect(FormValidators.isValidSlug('a'.repeat(30)))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns true for a slug with hyphens and underscores', () => {
       expect(FormValidators.isValidSlug('my-creator_slug'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns true for a slug with numbers', () => {
       expect(FormValidators.isValidSlug('creator123'))
-        .toBeTrue();
+        .toBe(true);
     });
 
     it('returns false for a 2-character slug (too short)', () => {
       expect(FormValidators.isValidSlug('ab'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for a 31-character slug (too long)', () => {
       expect(FormValidators.isValidSlug('a'.repeat(31)))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for a slug starting with a hyphen', () => {
       expect(FormValidators.isValidSlug('-hello'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for a slug starting with an underscore', () => {
       expect(FormValidators.isValidSlug('_hello'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for uppercase letters', () => {
       expect(FormValidators.isValidSlug('Hello'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for slugs with spaces', () => {
       expect(FormValidators.isValidSlug('hello world'))
-        .toBeFalse();
+        .toBe(false);
     });
 
     it('returns false for an empty string', () => {
       expect(FormValidators.isValidSlug(''))
-        .toBeFalse();
+        .toBe(false);
     });
   });
 });

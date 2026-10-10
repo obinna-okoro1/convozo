@@ -37,6 +37,9 @@
 
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import type { Mock } from 'vitest';
+
+import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { SettingsStateService } from './settings-state.service';
 import { Creator, FlutterwaveBank, FlutterwaveSubaccount } from '../../../../core/models';
@@ -106,11 +109,11 @@ function makeFlutterwaveBank(overrides: Partial<FlutterwaveBank> = {}): Flutterw
 
 describe('SettingsStateService', () => {
   let service: SettingsStateService;
-  let creatorServiceSpy: jasmine.SpyObj<CreatorService>;
+  let creatorServiceSpy: SpyObj<CreatorService>;
   let mockClient: any;
 
   beforeEach(() => {
-    creatorServiceSpy = jasmine.createSpyObj<CreatorService>('CreatorService', [
+    creatorServiceSpy = createSpyObj<CreatorService>([
       'getCurrentCreator',
       'getCreatorSettings',
       'getFlutterwaveSubaccount',
@@ -126,22 +129,19 @@ describe('SettingsStateService', () => {
     ]);
 
     mockClient = {
-      from: jasmine.createSpy('from'),
+      from: vi.fn(),
       auth: {
-        getUser: jasmine
-          .createSpy('getUser')
-          .and.returnValue(Promise.resolve({ data: { user: { email: 'creator@example.com' } } })),
+        getUser: vi.fn()
+          .mockReturnValue(Promise.resolve({ data: { user: { email: 'creator@example.com' } } })),
       },
-      functions: { invoke: jasmine.createSpy('invoke') },
+      functions: { invoke: vi.fn() },
     };
 
-    const supabaseSpy = jasmine.createSpyObj<SupabaseService>(
-      'SupabaseService',
-      ['getStripeAccount'],
+    const supabaseSpy = createSpyObj<SupabaseService>(['getStripeAccount'],
       { client: mockClient },
     );
 
-    const routerSpy = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    const routerSpy = createSpyObj<Router>(['navigate']);
 
     TestBed.configureTestingModule({
       providers: [
@@ -233,7 +233,7 @@ describe('SettingsStateService', () => {
 
     it('sets flutterwaveBanks from the { banks: [...] } edge function response', async () => {
       const banks = [makeFlutterwaveBank(), makeFlutterwaveBank({ name: 'GTBank', code: '058' })];
-      creatorServiceSpy.getFlutterwaveBanks.and.returnValue(
+      creatorServiceSpy.getFlutterwaveBanks.mockReturnValue(
         Promise.resolve({ data: { banks } as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
@@ -243,7 +243,7 @@ describe('SettingsStateService', () => {
 
     it('sets flutterwaveBanks from a flat array response', async () => {
       const banks = [makeFlutterwaveBank()];
-      creatorServiceSpy.getFlutterwaveBanks.and.returnValue(
+      creatorServiceSpy.getFlutterwaveBanks.mockReturnValue(
         Promise.resolve({ data: banks as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
@@ -254,7 +254,7 @@ describe('SettingsStateService', () => {
     it('sets flutterwaveBanksLoading to true while loading and false after', async () => {
       const loadingStates: boolean[] = [];
       let resolvePromise!: (value: any) => void;
-      (creatorServiceSpy.getFlutterwaveBanks as unknown as jasmine.Spy).and.returnValue(
+      (creatorServiceSpy.getFlutterwaveBanks as unknown as Mock).mockReturnValue(
         new Promise((resolve) => {
           resolvePromise = resolve;
         }),
@@ -273,7 +273,7 @@ describe('SettingsStateService', () => {
     });
 
     it('returns early without calling the edge function when creator has no country', async () => {
-      service.creator.set(makeCreator({ country: '' }) as any);
+      service.creator.set(makeCreator({ country: '' }));
       await service.loadFlutterwaveBanks();
       expect(creatorServiceSpy.getFlutterwaveBanks).not.toHaveBeenCalled();
     });
@@ -285,7 +285,7 @@ describe('SettingsStateService', () => {
     });
 
     it('sets error message when the edge function returns an error', async () => {
-      creatorServiceSpy.getFlutterwaveBanks.and.returnValue(
+      creatorServiceSpy.getFlutterwaveBanks.mockReturnValue(
         Promise.resolve({ data: undefined, error: { message: 'Service unavailable' } }),
       );
       await service.loadFlutterwaveBanks();
@@ -294,7 +294,7 @@ describe('SettingsStateService', () => {
     });
 
     it('always clears flutterwaveBanksLoading even when an error occurs', async () => {
-      creatorServiceSpy.getFlutterwaveBanks.and.returnValue(
+      creatorServiceSpy.getFlutterwaveBanks.mockReturnValue(
         Promise.resolve({ data: undefined, error: { message: 'error' } }),
       );
       await service.loadFlutterwaveBanks();
@@ -303,7 +303,7 @@ describe('SettingsStateService', () => {
     });
 
     it('calls the edge function with the creator country', async () => {
-      creatorServiceSpy.getFlutterwaveBanks.and.returnValue(
+      creatorServiceSpy.getFlutterwaveBanks.mockReturnValue(
         Promise.resolve({ data: { banks: [] } as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
@@ -312,8 +312,8 @@ describe('SettingsStateService', () => {
     });
 
     it('uses ZA country when creator is in South Africa', async () => {
-      service.creator.set(makeCreator({ country: 'ZA' }) as any);
-      creatorServiceSpy.getFlutterwaveBanks.and.returnValue(
+      service.creator.set(makeCreator({ country: 'ZA' }));
+      creatorServiceSpy.getFlutterwaveBanks.mockReturnValue(
         Promise.resolve({ data: { banks: [] } as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
@@ -328,12 +328,12 @@ describe('SettingsStateService', () => {
     const params = { bankCode: '044', accountNumber: '1234567890', businessName: 'Test' };
 
     beforeEach(() => {
-      service.creator.set(makeCreator({ country: 'NG' }) as any);
+      service.creator.set(makeCreator({ country: 'NG' }));
     });
 
     it('sets flutterwaveSubaccount signal on success', async () => {
       const subaccount = makeFlutterwaveSubaccount();
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: subaccount as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
@@ -343,7 +343,7 @@ describe('SettingsStateService', () => {
 
     it('sets success signal to true after connecting', async () => {
       const subaccount = makeFlutterwaveSubaccount();
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: subaccount as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
@@ -352,7 +352,7 @@ describe('SettingsStateService', () => {
     });
 
     it('clears flutterwaveConnecting after a successful connection', async () => {
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: makeFlutterwaveSubaccount() as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
@@ -361,7 +361,7 @@ describe('SettingsStateService', () => {
     });
 
     it('sets error message when the edge function returns an error', async () => {
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: undefined, error: { message: 'Invalid bank account' } }),
       );
       await service.connectFlutterwave(params);
@@ -370,7 +370,7 @@ describe('SettingsStateService', () => {
     });
 
     it('clears flutterwaveConnecting after a failed connection', async () => {
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: undefined, error: { message: 'Failed' } }),
       );
       await service.connectFlutterwave(params);
@@ -379,7 +379,7 @@ describe('SettingsStateService', () => {
     });
 
     it('sets generic error message when error has no message', async () => {
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: undefined, error: {} as any }),
       );
       await service.connectFlutterwave(params);
@@ -388,7 +388,7 @@ describe('SettingsStateService', () => {
     });
 
     it('sets generic error message when an exception is thrown', async () => {
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.reject(new Error('Network error')),
       );
       await service.connectFlutterwave(params);
@@ -405,7 +405,7 @@ describe('SettingsStateService', () => {
     });
 
     it('passes all bank params and country to the edge function', async () => {
-      creatorServiceSpy.createFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.createFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: makeFlutterwaveSubaccount() as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
@@ -423,7 +423,7 @@ describe('SettingsStateService', () => {
 
   describe('resolveFlutterwaveAccount()', () => {
     it('returns accountName when resolution succeeds', async () => {
-      creatorServiceSpy.resolveFlutterwaveAccount.and.returnValue(
+      creatorServiceSpy.resolveFlutterwaveAccount.mockReturnValue(
         Promise.resolve({ data: { account_name: 'ADEWALE OSEI' } as any, error: undefined }),
       );
       const result = await service.resolveFlutterwaveAccount('1234567890', '044');
@@ -434,7 +434,7 @@ describe('SettingsStateService', () => {
     });
 
     it('returns error message when the edge function returns an error', async () => {
-      creatorServiceSpy.resolveFlutterwaveAccount.and.returnValue(
+      creatorServiceSpy.resolveFlutterwaveAccount.mockReturnValue(
         Promise.resolve({ data: undefined, error: { message: 'Not found' } }),
       );
       const result = await service.resolveFlutterwaveAccount('0000000000', '044');
@@ -445,7 +445,7 @@ describe('SettingsStateService', () => {
     });
 
     it('returns generic error message when an exception is thrown', async () => {
-      creatorServiceSpy.resolveFlutterwaveAccount.and.returnValue(
+      creatorServiceSpy.resolveFlutterwaveAccount.mockReturnValue(
         Promise.reject(new Error('Network error')),
       );
       const result = await service.resolveFlutterwaveAccount('1234567890', '044');
@@ -456,7 +456,7 @@ describe('SettingsStateService', () => {
     });
 
     it('returns null accountName when data has no account_name field', async () => {
-      creatorServiceSpy.resolveFlutterwaveAccount.and.returnValue(
+      creatorServiceSpy.resolveFlutterwaveAccount.mockReturnValue(
         Promise.resolve({ data: {} as any, error: undefined }),
       );
       const result = await service.resolveFlutterwaveAccount('1234567890', '044');
@@ -493,11 +493,11 @@ describe('SettingsStateService', () => {
       const creator = makeCreator({ payment_provider: 'flutterwave' });
       const subaccount = makeFlutterwaveSubaccount();
 
-      creatorServiceSpy.getCurrentCreator.and.returnValue(Promise.resolve(creator) as any);
-      creatorServiceSpy.getCreatorSettings.and.returnValue(
+      creatorServiceSpy.getCurrentCreator.mockReturnValue(Promise.resolve(creator));
+      creatorServiceSpy.getCreatorSettings.mockReturnValue(
         Promise.resolve({ data: mockSettings as any, error: null }),
       );
-      creatorServiceSpy.getFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.getFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: subaccount, error: null }),
       );
 
@@ -513,11 +513,11 @@ describe('SettingsStateService', () => {
       const creator = makeCreator({ payment_provider: 'flutterwave' });
       const subaccount = makeFlutterwaveSubaccount();
 
-      creatorServiceSpy.getCurrentCreator.and.returnValue(Promise.resolve(creator) as any);
-      creatorServiceSpy.getCreatorSettings.and.returnValue(
+      creatorServiceSpy.getCurrentCreator.mockReturnValue(Promise.resolve(creator));
+      creatorServiceSpy.getCreatorSettings.mockReturnValue(
         Promise.resolve({ data: mockSettings as any, error: null }),
       );
-      creatorServiceSpy.getFlutterwaveSubaccount.and.returnValue(
+      creatorServiceSpy.getFlutterwaveSubaccount.mockReturnValue(
         Promise.resolve({ data: subaccount, error: null }),
       );
 
@@ -530,14 +530,13 @@ describe('SettingsStateService', () => {
     it('does not call getFlutterwaveSubaccount for a stripe creator', async () => {
       const creator = makeCreator({ payment_provider: 'stripe', country: 'US' });
 
-      creatorServiceSpy.getCurrentCreator.and.returnValue(Promise.resolve(creator) as any);
-      creatorServiceSpy.getCreatorSettings.and.returnValue(
+      creatorServiceSpy.getCurrentCreator.mockReturnValue(Promise.resolve(creator));
+      creatorServiceSpy.getCreatorSettings.mockReturnValue(
         Promise.resolve({ data: mockSettings as any, error: null }),
       );
       // Supabase getStripeAccount used by the private loadPaymentAccount path
-      (TestBed.inject(SupabaseService) as any).getStripeAccount = jasmine
-        .createSpy('getStripeAccount')
-        .and.returnValue(Promise.resolve({ data: null, error: null }) as any);
+      (TestBed.inject(SupabaseService) as any).getStripeAccount = vi.fn()
+        .mockReturnValue(Promise.resolve({ data: null, error: null }) as any);
 
       await service.loadCreatorData();
 
@@ -545,7 +544,7 @@ describe('SettingsStateService', () => {
     });
 
     it('clears loading after loadCreatorData completes', async () => {
-      creatorServiceSpy.getCurrentCreator.and.returnValue(Promise.resolve(null) as any);
+      creatorServiceSpy.getCurrentCreator.mockReturnValue(Promise.resolve(null));
       await service.loadCreatorData();
       expect(service.loading())
         .toBe(false);
@@ -553,7 +552,7 @@ describe('SettingsStateService', () => {
 
     it('sets loading to true during loadCreatorData', async () => {
       let wasLoading = false;
-      creatorServiceSpy.getCurrentCreator.and.callFake(() => {
+      creatorServiceSpy.getCurrentCreator.mockImplementation(() => {
         wasLoading = service.loading();
 
         return Promise.resolve(null);
