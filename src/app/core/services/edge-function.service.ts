@@ -9,8 +9,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { FunctionsHttpError } from '@supabase/functions-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { FunctionsHttpError, type SupabaseClient } from '@supabase/supabase-js';
 
 import { environment } from 'environments/environment';
 
