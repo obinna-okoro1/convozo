@@ -6,9 +6,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { MessageService } from './message.service';
 import { Message } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -16,7 +17,9 @@ import { SupabaseService } from '../../../core/services/supabase.service';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeMessage(overrides: Partial<Message> = {}): Message {
-  const now = new Date().toISOString();
+  const now = new Date()
+    .toISOString();
+
   return {
     id: 'msg-1',
     creator_id: 'creator-1',
@@ -85,7 +88,8 @@ describe('MessageService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── calculateStats ────────────────────────────────────────────────────────
@@ -93,15 +97,20 @@ describe('MessageService', () => {
   describe('calculateStats()', () => {
     it('returns zeros for an empty array', () => {
       const stats = service.calculateStats([]);
-      expect(stats.total).toBe(0);
-      expect(stats.handled).toBe(0);
-      expect(stats.unhandled).toBe(0);
-      expect(stats.totalRevenue).toBe(0);
+      expect(stats.total)
+        .toBe(0);
+      expect(stats.handled)
+        .toBe(0);
+      expect(stats.unhandled)
+        .toBe(0);
+      expect(stats.totalRevenue)
+        .toBe(0);
     });
 
     it('counts total messages', () => {
       const messages = [makeMessage(), makeMessage({ id: 'msg-2' })];
-      expect(service.calculateStats(messages).total).toBe(2);
+      expect(service.calculateStats(messages).total)
+        .toBe(2);
     });
 
     it('correctly splits handled and unhandled counts', () => {
@@ -111,8 +120,10 @@ describe('MessageService', () => {
         makeMessage({ id: 'msg-3', is_handled: false }),
       ];
       const stats = service.calculateStats(messages);
-      expect(stats.handled).toBe(1);
-      expect(stats.unhandled).toBe(2);
+      expect(stats.handled)
+        .toBe(1);
+      expect(stats.unhandled)
+        .toBe(2);
     });
 
     it('converts revenue from cents to dollars', () => {
@@ -120,12 +131,14 @@ describe('MessageService', () => {
         makeMessage({ amount_paid: 1000 }), // $10.00
         makeMessage({ id: 'msg-2', amount_paid: 2500 }), // $25.00
       ];
-      expect(service.calculateStats(messages).totalRevenue).toBeCloseTo(35.0);
+      expect(service.calculateStats(messages).totalRevenue)
+        .toBeCloseTo(35.0);
     });
 
     it('handles null amount_paid as zero', () => {
       const messages = [makeMessage({ amount_paid: null as unknown as number })];
-      expect(service.calculateStats(messages).totalRevenue).toBe(0);
+      expect(service.calculateStats(messages).totalRevenue)
+        .toBe(0);
     });
   });
 
@@ -139,9 +152,12 @@ describe('MessageService', () => {
 
       const result = await service.getMessages('creator-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('messages');
-      expect(result.data).toEqual(messages);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('messages');
+      expect(result.data)
+        .toEqual(messages);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when supabase call fails', async () => {
@@ -151,7 +167,8 @@ describe('MessageService', () => {
 
       const result = await service.getMessages('creator-1');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
 
@@ -161,7 +178,8 @@ describe('MessageService', () => {
 
       await service.getMessages('creator-1');
 
-      expect(chain.neq).toHaveBeenCalledWith('message_type', 'call');
+      expect(chain.neq)
+        .toHaveBeenCalledWith('message_type', 'call');
     });
 
     it('orders by created_at descending', async () => {
@@ -170,7 +188,8 @@ describe('MessageService', () => {
 
       await service.getMessages('creator-1');
 
-      expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(chain.order)
+        .toHaveBeenCalledWith('created_at', { ascending: false });
     });
   });
 
@@ -184,8 +203,10 @@ describe('MessageService', () => {
 
       const result = await service.replyToMessage('msg-1', 'Thanks!', 'user@test.com');
 
-      expect(result.success).toBeTrue();
-      expect(result.error).toBeUndefined();
+      expect(result.success)
+        .toBeTrue();
+      expect(result.error)
+        .toBeUndefined();
     });
 
     it('calls sendReplyEmail with messageId and reply content', async () => {
@@ -195,8 +216,9 @@ describe('MessageService', () => {
 
       await service.replyToMessage('msg-1', 'Thanks!', 'user@test.com');
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.sendReplyEmail).toHaveBeenCalledWith('msg-1', 'Thanks!');
+
+      expect(supabaseSpy.sendReplyEmail)
+        .toHaveBeenCalledWith('msg-1', 'Thanks!');
     });
 
     it('returns failure when sendReplyEmail returns an error', async () => {
@@ -207,8 +229,10 @@ describe('MessageService', () => {
 
       const result = await service.replyToMessage('msg-1', 'reply', 'user@test.com');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBeTruthy();
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBeTruthy();
     });
 
     it('returns failure when sendReplyEmail throws', async () => {
@@ -216,8 +240,10 @@ describe('MessageService', () => {
 
       const result = await service.replyToMessage('msg-1', 'reply', 'user@test.com');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toContain('Network error');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toContain('Network error');
     });
   });
 
@@ -234,10 +260,14 @@ describe('MessageService', () => {
 
       const result = await service.markAsHandled('msg-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('messages');
-      expect(chain.update).toHaveBeenCalledWith({ is_handled: true });
-      expect(chain.eq).toHaveBeenCalledWith('id', 'msg-1');
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('messages');
+      expect(chain.update)
+        .toHaveBeenCalledWith({ is_handled: true });
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'msg-1');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when update fails', async () => {
@@ -268,10 +298,14 @@ describe('MessageService', () => {
 
       const result = await service.deleteMessage('msg-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('messages');
-      expect(chain.delete).toHaveBeenCalled();
-      expect(chain.eq).toHaveBeenCalledWith('id', 'msg-1');
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('messages');
+      expect(chain.delete)
+        .toHaveBeenCalled();
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'msg-1');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when delete fails', async () => {
@@ -294,16 +328,20 @@ describe('MessageService', () => {
   describe('getReplies()', () => {
     it('fetches replies for a message from supabase on success', async () => {
       const replies = [
-        { id: 'r-1', message_id: 'msg-1', sender_type: 'expert' as const, content: 'Hi back', created_at: new Date().toISOString() },
+        { id: 'r-1', message_id: 'msg-1', sender_type: 'expert' as const, content: 'Hi back', created_at: new Date()
+          .toISOString() },
       ];
       const chain = makeQueryChain({ data: replies, error: null });
       mockClient.from.and.returnValue(chain);
 
       const result = await service.getReplies('msg-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('message_replies');
-      expect(result.data).toEqual(replies);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('message_replies');
+      expect(result.data)
+        .toEqual(replies);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when supabase call fails', async () => {
@@ -313,7 +351,8 @@ describe('MessageService', () => {
 
       const result = await service.getReplies('msg-1');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
 
@@ -323,7 +362,8 @@ describe('MessageService', () => {
 
       await service.getReplies('msg-abc');
 
-      expect(chain.eq).toHaveBeenCalledWith('message_id', 'msg-abc');
+      expect(chain.eq)
+        .toHaveBeenCalledWith('message_id', 'msg-abc');
     });
 
     it('orders replies ascending (chronological)', async () => {
@@ -332,7 +372,8 @@ describe('MessageService', () => {
 
       await service.getReplies('msg-1');
 
-      expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: true });
+      expect(chain.order)
+        .toHaveBeenCalledWith('created_at', { ascending: true });
     });
   });
 
@@ -349,7 +390,8 @@ describe('MessageService', () => {
 
       service.subscribeToReplies('msg-1', jasmine.createSpy());
 
-      expect(mockClient.channel).toHaveBeenCalledWith('replies:msg-1');
+      expect(mockClient.channel)
+        .toHaveBeenCalledWith('replies:msg-1');
     });
 
     it('subscribes to INSERT events on message_replies', () => {
@@ -364,10 +406,14 @@ describe('MessageService', () => {
 
       const callArgs = mockChannel.on.calls.first().args as [string, object, ...unknown[]];
       const filterArg = callArgs[1] as { event: string; table: string; filter: string };
-      expect(callArgs[0]).toBe('postgres_changes');
-      expect(filterArg.event).toBe('INSERT');
-      expect(filterArg.table).toBe('message_replies');
-      expect(filterArg.filter).toBe('message_id=eq.msg-1');
+      expect(callArgs[0])
+        .toBe('postgres_changes');
+      expect(filterArg.event)
+        .toBe('INSERT');
+      expect(filterArg.table)
+        .toBe('message_replies');
+      expect(filterArg.filter)
+        .toBe('message_id=eq.msg-1');
     });
 
     it('calls subscribe() on the channel', () => {
@@ -380,7 +426,8 @@ describe('MessageService', () => {
 
       service.subscribeToReplies('msg-1', jasmine.createSpy());
 
-      expect(mockChannel.subscribe).toHaveBeenCalled();
+      expect(mockChannel.subscribe)
+        .toHaveBeenCalled();
     });
   });
 
@@ -390,7 +437,8 @@ describe('MessageService', () => {
     it('calls removeChannel with the provided channel', () => {
       const mockChannel = {} as any;
       service.unsubscribeFromReplies(mockChannel);
-      expect(mockClient.removeChannel).toHaveBeenCalledWith(mockChannel);
+      expect(mockClient.removeChannel)
+        .toHaveBeenCalledWith(mockChannel);
     });
   });
 
@@ -407,9 +455,12 @@ describe('MessageService', () => {
 
       service.subscribeToMessages('creator-1', jasmine.createSpy());
 
-      expect(mockClient.channel).toHaveBeenCalledWith('messages:creator-1');
-      expect(mockChannel.on).toHaveBeenCalled();
-      expect(mockChannel.subscribe).toHaveBeenCalled();
+      expect(mockClient.channel)
+        .toHaveBeenCalledWith('messages:creator-1');
+      expect(mockChannel.on)
+        .toHaveBeenCalled();
+      expect(mockChannel.subscribe)
+        .toHaveBeenCalled();
     });
   });
 
@@ -419,7 +470,8 @@ describe('MessageService', () => {
     it('calls removeChannel with the provided channel', () => {
       const mockChannel = {} as any;
       service.unsubscribeFromMessages(mockChannel);
-      expect(mockClient.removeChannel).toHaveBeenCalledWith(mockChannel);
+      expect(mockClient.removeChannel)
+        .toHaveBeenCalledWith(mockChannel);
     });
   });
 });

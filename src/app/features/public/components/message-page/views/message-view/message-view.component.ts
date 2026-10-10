@@ -4,11 +4,12 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MessagePageStateService } from '../../message-page-state.service';
 import {
   MessageFormComponent,
   MessageFormData,
-} from '@features/public/components/message-form/message-form.component';
+} from 'app/features/public/components/message-form/message-form.component';
+
+import { MessagePageStateService } from '../../message-page-state.service';
 
 @Component({
   selector: 'app-message-view',

@@ -7,7 +7,8 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ERROR_MESSAGES } from '@core/constants';
+import { ERROR_MESSAGES } from 'app/core/constants';
+
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -55,16 +56,20 @@ export class LoginComponent {
    * Handle login form submission
    */
   protected async handleLogin(): Promise<void> {
-    const emailValue = this.email().trim();
-    const passwordValue = this.password().trim();
+    const emailValue = this.email()
+      .trim();
+    const passwordValue = this.password()
+      .trim();
 
     if (!emailValue) {
       this.error.set(ERROR_MESSAGES.AUTH.EMAIL_REQUIRED);
+
       return;
     }
 
     if (this.usePassword() && !passwordValue) {
       this.error.set('Password is required');
+
       return;
     }
 

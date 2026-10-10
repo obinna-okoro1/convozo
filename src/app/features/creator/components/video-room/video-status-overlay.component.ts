@@ -5,7 +5,7 @@
  * Consolidates four simple overlay states into a single reusable component.
  */
 
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 export type VideoOverlayStatus = 'loading' | 'connecting' | 'ending' | 'error';
 

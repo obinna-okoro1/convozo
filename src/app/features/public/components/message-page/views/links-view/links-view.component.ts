@@ -9,25 +9,26 @@
 
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MessagePageStateService } from '../../message-page-state.service';
-import { ProfileOwnerService } from '../../services/profile-owner.service';
-import { SupabaseService } from '@core/services/supabase.service';
-import { ToastService } from '@shared/services/toast.service';
-import { CreatorLink, CreatorPost } from '@core/models';
+import { CreatorLink, CreatorPost } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { LinkFormModalComponent } from 'app/features/link-in-bio/components/link-form-modal/link-form-modal.component';
+import { LinkService } from 'app/features/link-in-bio/services/link.service';
 import {
-  getBrandByKey,
   BrandInfo,
-} from '@features/link-in-bio/utils/brand-detection';
-import { LinkFormModalComponent } from '@features/link-in-bio/components/link-form-modal/link-form-modal.component';
-import { LinkService } from '@features/link-in-bio/services/link.service';
+  getBrandByKey,
+} from 'app/features/link-in-bio/utils/brand-detection';
 import {
   CallBookingFormComponent,
   CallBookingFormData,
-} from '@features/public/components/call-booking-form/call-booking-form.component';
+} from 'app/features/public/components/call-booking-form/call-booking-form.component';
 import {
   MessageFormComponent,
   MessageFormData,
-} from '@features/public/components/message-form/message-form.component';
+} from 'app/features/public/components/message-form/message-form.component';
+import { ToastService } from 'app/shared/services/toast.service';
+
+import { MessagePageStateService } from '../../message-page-state.service';
+import { ProfileOwnerService } from '../../services/profile-owner.service';
 
 /** Max words per post — must match the dashboard posts view */
 const MAX_POST_WORDS = 500;
@@ -74,21 +75,29 @@ export class LinksViewComponent {
   protected readonly postSubmitting = signal(false);
 
   protected readonly wordCount = computed<number>(() => {
-    const text = this.draft().trim();
+    const text = this.draft()
+      .trim();
+
     return text ? text.split(/\s+/).length : 0;
   });
+
   protected readonly wordsRemaining = computed(() => MAX_POST_WORDS - this.wordCount());
   protected readonly canPost = computed(
     () =>
-      this.draftTitle().trim().length > 0 &&
+      this.draftTitle()
+        .trim().length > 0 &&
       this.wordCount() > 0 &&
       this.wordCount() <= MAX_POST_WORDS &&
       !this.postSubmitting(),
   );
+
   protected readonly wordCountClass = computed(() => {
     const rem = this.wordsRemaining();
-    if (rem < 0) return 'text-system-red font-bold';
-    if (rem <= 50) return 'text-yellow-400';
+
+    if (rem < 0) {return 'text-system-red font-bold';}
+
+    if (rem <= 50) {return 'text-yellow-400';}
+
     return 'text-content-tertiary';
   });
 
@@ -107,15 +116,22 @@ export class LinksViewComponent {
   }
 
   protected relativeTime(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff = Date.now() - new Date(dateStr)
+      .getTime();
     const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m`;
+
+    if (mins < 1) {return 'Just now';}
+
+    if (mins < 60) {return `${mins}m`;}
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h`;
+
+    if (hrs < 24) {return `${hrs}h`;}
     const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d`;
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    if (days < 7) {return `${days}d`;}
+
+    return new Date(dateStr)
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   // ── Link context menu (⋮ button — works on mobile and desktop) ───────
@@ -149,6 +165,7 @@ export class LinksViewComponent {
     this.editingLink.set(null);
     // Reload the public links list so changes appear immediately
     const creatorId = this.ownerState.creatorId();
+
     if (creatorId) {
       void this.state.reloadLinks(creatorId);
     }
@@ -172,6 +189,7 @@ export class LinksViewComponent {
   protected async executeDelete(link: CreatorLink): Promise<void> {
     this.deletePendingId.set(null);
     const { error } = await this.linkService.deleteLink(link.id);
+
     if (error) {
       this.toast.error('Failed to delete link');
     } else {
@@ -179,6 +197,7 @@ export class LinksViewComponent {
       // Remove from local list immediately, then sync from DB
       this.state.creatorLinks.update((list) => list.filter((l) => l.id !== link.id));
       const creatorId = this.ownerState.creatorId();
+
       if (creatorId) {
         void this.state.reloadLinks(creatorId);
       }
@@ -202,9 +221,10 @@ export class LinksViewComponent {
   }
 
   protected async submitPost(): Promise<void> {
-    if (!this.canPost() || this.postSubmitting()) return;
+    if (!this.canPost() || this.postSubmitting()) {return;}
     const creatorId = this.ownerState.creatorId();
-    if (!creatorId) return;
+
+    if (!creatorId) {return;}
 
     this.postSubmitting.set(true);
     try {
@@ -212,13 +232,15 @@ export class LinksViewComponent {
         .from('creator_posts')
         .insert({
           creator_id: creatorId,
-          title: this.draftTitle().trim(),
-          content: this.draft().trim(),
+          title: this.draftTitle()
+            .trim(),
+          content: this.draft()
+            .trim(),
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       if (data) {
         // Prepend to the public feed immediately so the owner sees it

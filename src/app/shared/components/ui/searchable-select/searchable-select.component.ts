@@ -23,12 +23,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   ElementRef,
   HostListener,
+  OnDestroy,
+  computed,
   input,
   model,
-  OnDestroy,
   signal,
   viewChild,
 } from '@angular/core';
@@ -74,16 +74,23 @@ export class SearchableSelectComponent implements OnDestroy {
 
   /** Filtered options based on search term. */
   protected readonly filteredOptions = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
+    const term = this.searchTerm()
+      .toLowerCase()
+      .trim();
     const opts = this.options();
-    if (!term) return opts;
-    return opts.filter((o) => o.label.toLowerCase().includes(term));
+
+    if (!term) {return opts;}
+
+    return opts.filter((o) => o.label.toLowerCase()
+      .includes(term));
   });
 
   /** The label of the currently selected option. */
   protected readonly selectedLabel = computed(() => {
     const v = this.value();
-    const match = this.options().find((o) => o.value === v);
+    const match = this.options()
+      .find((o) => o.value === v);
+
     return match ? match.label : '';
   });
 
@@ -97,8 +104,9 @@ export class SearchableSelectComponent implements OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.isOpen()) return;
+    if (!this.isOpen()) {return;}
     const el = this.elementRef.nativeElement as HTMLElement;
+
     if (!el.contains(event.target as Node)) {
       this.close();
     }
@@ -109,7 +117,8 @@ export class SearchableSelectComponent implements OnDestroy {
   /* ─── Public actions ─── */
 
   protected toggle(): void {
-    if (this.disabled()) return;
+    if (this.disabled()) {return;}
+
     if (this.isOpen()) {
       this.close();
     } else {
@@ -118,11 +127,12 @@ export class SearchableSelectComponent implements OnDestroy {
   }
 
   protected open(): void {
-    if (this.disabled()) return;
+    if (this.disabled()) {return;}
     this.isOpen.set(true);
     this.searchTerm.set('');
     // Pre-highlight the currently selected option
-    const idx = this.filteredOptions().findIndex((o) => o.value === this.value());
+    const idx = this.filteredOptions()
+      .findIndex((o) => o.value === this.value());
     this.highlightedIndex.set(idx >= 0 ? idx : 0);
     // Focus the search input after render
     setTimeout(() => this.searchInput()?.nativeElement.focus(), 0);
@@ -135,7 +145,7 @@ export class SearchableSelectComponent implements OnDestroy {
   }
 
   protected selectOption(option: SelectOption): void {
-    if (option.disabled) return;
+    if (option.disabled) {return;}
     this.value.set(option.value);
     this.close();
   }
@@ -151,7 +161,8 @@ export class SearchableSelectComponent implements OnDestroy {
   protected onKeydown(event: KeyboardEvent): void {
     const opts = this.filteredOptions();
     const len = opts.length;
-    if (!len) return;
+
+    if (!len) {return;}
 
     switch (event.key) {
       case 'ArrowDown':
@@ -166,6 +177,7 @@ export class SearchableSelectComponent implements OnDestroy {
         break;
       case 'Enter':
         event.preventDefault();
+
         if (this.highlightedIndex() >= 0 && this.highlightedIndex() < len) {
           this.selectOption(opts[this.highlightedIndex()]);
         }

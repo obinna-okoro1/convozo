@@ -1,20 +1,21 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { ERROR_MESSAGES } from '@core/constants';
+import { Injectable, computed, signal } from '@angular/core';
+import { ERROR_MESSAGES } from 'app/core/constants';
 import {
-  CreatorProfile,
-  CreatorLink,
-  CreatorPost,
   AvailabilitySlot,
   CheckoutSessionPayload,
+  CreatorLink,
+  CreatorPost,
+  CreatorProfile,
   ShopCheckoutPayload,
-} from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
-import { FormValidators } from '@core/validators/form-validators';
-import { ToastService } from '@shared/services/toast.service';
-import { errorMessage } from '@shared/utils/error.utils';
-import { LinkService } from '@features/link-in-bio/services/link.service';
-import { MessageFormData } from '../message-form/message-form.component';
+} from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { FormValidators } from 'app/core/validators/form-validators';
+import { LinkService } from 'app/features/link-in-bio/services/link.service';
+import { ToastService } from 'app/shared/services/toast.service';
+import { errorMessage } from 'app/shared/utils/error.utils';
+
 import { CallBookingFormData } from '../call-booking-form/call-booking-form.component';
+import { MessageFormData } from '../message-form/message-form.component';
 import { SupportFormData } from './views/support-view/support-view.component';
 
 @Injectable()
@@ -61,17 +62,22 @@ export class MessagePageStateService {
    * 'call' takes priority over 'message' since sessions are higher-value.
    */
   readonly primaryBookingType = computed((): 'call' | 'message' | null => {
-    if (this.callsEnabled()) return 'call';
-    if (this.messagesEnabled()) return 'message';
+    if (this.callsEnabled()) {return 'call';}
+
+    if (this.messagesEnabled()) {return 'message';}
+
     return null;
   });
+
   readonly responseExpectation = computed(
     () => this.settings()?.response_expectation ?? '24-48 hours',
   );
+
   /** Controls public-facing copy: 'consultant' = advisory language; 'practitioner' = appointment language. */
   readonly profileType = computed(
     (): 'consultant' | 'practitioner' => this.creator()?.profile_type ?? 'consultant',
   );
+
   /** Dead time in minutes between consecutive call bookings — fed to the slot generator. */
   readonly bufferMinutes = computed(() => this.settings()?.buffer_minutes ?? 0);
 
@@ -121,14 +127,19 @@ export class MessagePageStateService {
   async onSupportSubmit(formData: SupportFormData): Promise<void> {
     if (!FormValidators.isNotEmpty(formData.senderName)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+
       return;
     }
+
     if (!FormValidators.isValidEmail(formData.senderEmail)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+
       return;
     }
+
     if (formData.amountCents < 100) {
       this.toast.error('Minimum support amount is $1.00');
+
       return;
     }
     await this.processSupportCheckout(formData);
@@ -141,14 +152,18 @@ export class MessagePageStateService {
     requestDetails?: string,
   ): Promise<void> {
     const creatorData = this.creator();
-    if (!creatorData) return;
+
+    if (!creatorData) {return;}
 
     if (!FormValidators.isNotEmpty(buyerName)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+
       return;
     }
+
     if (!FormValidators.isValidEmail(buyerEmail)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+
       return;
     }
 
@@ -160,6 +175,7 @@ export class MessagePageStateService {
         buyer_name: buyerName,
         buyer_email: buyerEmail,
       };
+
       if (requestDetails?.trim()) {
         payload.request_details = requestDetails.trim();
       }
@@ -179,6 +195,7 @@ export class MessagePageStateService {
 
   onLinkClicked(link: CreatorLink): void {
     const creatorData = this.creator();
+
     if (creatorData) {
       void this.linkService.trackClick(link.id, creatorData.id, document.referrer || null);
     }
@@ -200,12 +217,14 @@ export class MessagePageStateService {
 
       if (error || !data) {
         this.error.set('Creator not found');
+
         return;
       }
 
       this.creator.set(data as CreatorProfile);
 
       const settings = (data as CreatorProfile).creator_settings;
+
       if (settings != null) {
         this.creatorSettings.set(settings);
       }
@@ -249,7 +268,8 @@ export class MessagePageStateService {
    */
   private async loadConfirmedBookings(creatorId: string): Promise<void> {
     try {
-      const now = new Date().toISOString();
+      const now = new Date()
+        .toISOString();
       const { data, error } = await this.supabaseService.client
         .rpc('get_creator_booked_slots', {
           p_creator_id: creatorId,
@@ -259,7 +279,8 @@ export class MessagePageStateService {
       if (error == null && data != null) {
         this.bookedIsos.set(
           (data as { scheduled_at: string }[])
-            .map((b) => new Date(b.scheduled_at).toISOString()),
+            .map((b) => new Date(b.scheduled_at)
+              .toISOString()),
         );
       }
     } catch (err) {
@@ -270,6 +291,7 @@ export class MessagePageStateService {
   private async loadCreatorLinks(creatorId: string): Promise<void> {
     try {
       const { data } = await this.linkService.getActiveLinks(creatorId);
+
       if (data) {
         this.creatorLinks.set(data);
       }
@@ -299,36 +321,50 @@ export class MessagePageStateService {
   private validateMessageForm(data: MessageFormData): boolean {
     if (!FormValidators.isNotEmpty(data.senderName)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+
       return false;
     }
+
     if (!FormValidators.isValidEmail(data.senderEmail)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+
       return false;
     }
+
     if (!FormValidators.isNotEmpty(data.messageContent)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.CONTENT_REQUIRED);
+
       return false;
     }
+
     if (!FormValidators.isValidMessageLength(data.messageContent)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.CONTENT_TOO_LONG);
+
       return false;
     }
+
     return true;
   }
 
   private validateCallForm(data: CallBookingFormData): boolean {
     if (!FormValidators.isNotEmpty(data.senderName)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
+
       return false;
     }
+
     if (!FormValidators.isValidEmail(data.senderEmail)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.EMAIL_REQUIRED);
+
       return false;
     }
+
     if (!data.scheduledAt) {
       this.toast.error('Please select a time slot for your call');
+
       return false;
     }
+
     return true;
   }
 
@@ -338,6 +374,7 @@ export class MessagePageStateService {
     messageContent: string,
   ): Promise<void> {
     const creatorData = this.creator();
+
     if (!creatorData) {
       return;
     }
@@ -370,6 +407,7 @@ export class MessagePageStateService {
 
   private async processCallCheckout(formData: CallBookingFormData): Promise<void> {
     const creatorData = this.creator();
+
     if (!creatorData) {
       return;
     }
@@ -400,6 +438,7 @@ export class MessagePageStateService {
 
   private async processSupportCheckout(formData: SupportFormData): Promise<void> {
     const creatorData = this.creator();
+
     if (!creatorData) {
       return;
     }

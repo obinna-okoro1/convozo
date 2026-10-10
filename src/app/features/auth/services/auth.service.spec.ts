@@ -17,10 +17,11 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+
 import { AuthService } from './auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
@@ -90,32 +91,37 @@ describe('AuthService', () => {
     it('returns { success: false } for an empty email without calling Supabase', async () => {
       const result = await service.sendPasswordResetEmail('');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBeTruthy();
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBeTruthy();
       expect(mockClient.auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 
     it('returns { success: false } for a plainly invalid email', async () => {
       const result = await service.sendPasswordResetEmail('not-an-email');
 
-      expect(result.success).toBeFalse();
+      expect(result.success)
+        .toBeFalse();
       expect(mockClient.auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 
     it('returns { success: false } for an email missing TLD', async () => {
       const result = await service.sendPasswordResetEmail('user@nodomain');
 
-      expect(result.success).toBeFalse();
+      expect(result.success)
+        .toBeFalse();
       expect(mockClient.auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 
     it('calls resetPasswordForEmail with the correct email for a valid address', async () => {
       await service.sendPasswordResetEmail('user@example.com');
 
-      expect(mockClient.auth.resetPasswordForEmail).toHaveBeenCalledOnceWith(
-        'user@example.com',
-        jasmine.any(Object),
-      );
+      expect(mockClient.auth.resetPasswordForEmail)
+        .toHaveBeenCalledOnceWith(
+          'user@example.com',
+          jasmine.any(Object),
+        );
     });
 
     it('passes a redirectTo URL ending in /auth/reset-password', async () => {
@@ -126,14 +132,17 @@ describe('AuthService', () => {
         { redirectTo: string },
       ];
       const [, opts] = args;
-      expect(opts.redirectTo).toContain('/auth/reset-password');
+      expect(opts.redirectTo)
+        .toContain('/auth/reset-password');
     });
 
     it('returns { success: true } when Supabase returns no error', async () => {
       const result = await service.sendPasswordResetEmail('user@example.com');
 
-      expect(result.success).toBeTrue();
-      expect(result.error).toBeUndefined();
+      expect(result.success)
+        .toBeTrue();
+      expect(result.error)
+        .toBeUndefined();
     });
 
     it('returns { success: false, error } when Supabase returns an error', async () => {
@@ -146,8 +155,10 @@ describe('AuthService', () => {
 
       const result = await service.sendPasswordResetEmail('user@example.com');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBe('Rate limit exceeded');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBe('Rate limit exceeded');
     });
 
     it('returns a fallback error string when the thrown value is not an Error instance', async () => {
@@ -160,8 +171,10 @@ describe('AuthService', () => {
 
       const result = await service.sendPasswordResetEmail('user@example.com');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBe('Failed to send reset email');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBe('Failed to send reset email');
     });
   });
 
@@ -171,35 +184,42 @@ describe('AuthService', () => {
     it('returns { success: false } for a password shorter than 8 characters', async () => {
       const result = await service.updatePassword('short');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toContain('8 characters');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toContain('8 characters');
       expect(mockClient.auth.updateUser).not.toHaveBeenCalled();
     });
 
     it('returns { success: false } for exactly 7 characters', async () => {
       const result = await service.updatePassword('1234567');
 
-      expect(result.success).toBeFalse();
+      expect(result.success)
+        .toBeFalse();
       expect(mockClient.auth.updateUser).not.toHaveBeenCalled();
     });
 
     it('accepts a password of exactly 8 characters', async () => {
       const result = await service.updatePassword('12345678');
 
-      expect(result.success).toBeTrue();
+      expect(result.success)
+        .toBeTrue();
     });
 
     it('calls supabase.auth.updateUser with the password', async () => {
       await service.updatePassword('securepassword');
 
-      expect(mockClient.auth.updateUser).toHaveBeenCalledOnceWith({ password: 'securepassword' });
+      expect(mockClient.auth.updateUser)
+        .toHaveBeenCalledOnceWith({ password: 'securepassword' });
     });
 
     it('returns { success: true } when Supabase returns no error', async () => {
       const result = await service.updatePassword('securepassword');
 
-      expect(result.success).toBeTrue();
-      expect(result.error).toBeUndefined();
+      expect(result.success)
+        .toBeTrue();
+      expect(result.error)
+        .toBeUndefined();
     });
 
     it('returns { success: false, error } when Supabase returns an error', async () => {
@@ -212,8 +232,10 @@ describe('AuthService', () => {
 
       const result = await service.updatePassword('securepassword');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBe('Expired recovery session');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBe('Expired recovery session');
     });
 
     it('returns a fallback error string when the thrown value is not an Error instance', async () => {
@@ -224,8 +246,10 @@ describe('AuthService', () => {
 
       const result = await service.updatePassword('securepassword');
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBe('Failed to update password');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBe('Failed to update password');
     });
 
     it('does NOT call updateUser for an empty string', async () => {

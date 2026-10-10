@@ -3,10 +3,11 @@
  * Accessed via /:slug/posts. Shows full chronological feed.
  */
 
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
-import { CreatorPost } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
-import { ToastService } from '@shared/services/toast.service';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { CreatorPost } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { ToastService } from 'app/shared/services/toast.service';
+
 import { MessagePageStateService } from '../../message-page-state.service';
 import { ProfileOwnerService } from '../../services/profile-owner.service';
 
@@ -44,6 +45,7 @@ export class PostsViewComponent implements OnInit {
 
   public ngOnInit(): void {
     const creatorId = this.state.creator()?.id;
+
     if (creatorId) {
       void this.loadAllPosts(creatorId);
     } else {
@@ -80,6 +82,7 @@ export class PostsViewComponent implements OnInit {
   protected togglePostMenu(id: string, event: Event): void {
     event.stopPropagation();
     this.activePostMenuId.set(this.activePostMenuId() === id ? null : id);
+
     if (this.deletePendingPostId() !== id) {
       this.deletePendingPostId.set(null);
     }
@@ -107,15 +110,19 @@ export class PostsViewComponent implements OnInit {
   }
 
   protected async saveEditPost(post: CreatorPost): Promise<void> {
-    if (this.savingPostId()) return;
+    if (this.savingPostId()) {return;}
 
-    const content = this.editContent().trim();
+    const content = this.editContent()
+      .trim();
+
     if (!content) {
       this.toast.error('Post content cannot be empty');
+
       return;
     }
 
-    const title = this.editTitle().trim() || null;
+    const title = this.editTitle()
+      .trim() || null;
     this.savingPostId.set(post.id);
     try {
       const { error } = await this.supabase.client
@@ -124,7 +131,7 @@ export class PostsViewComponent implements OnInit {
         .eq('id', post.id)
         .eq('creator_id', this.ownerState.creatorId()!);
 
-      if (error != null) throw error;
+      if (error != null) {throw error;}
 
       // Update local list
       this.posts.update((list) =>
@@ -150,7 +157,7 @@ export class PostsViewComponent implements OnInit {
   }
 
   protected async executeDeletePost(postId: string): Promise<void> {
-    if (this.deletingPostId()) return;
+    if (this.deletingPostId()) {return;}
 
     this.deletePendingPostId.set(null);
     this.activePostMenuId.set(null);
@@ -162,7 +169,7 @@ export class PostsViewComponent implements OnInit {
         .eq('id', postId)
         .eq('creator_id', this.ownerState.creatorId()!);
 
-      if (error != null) throw error;
+      if (error != null) {throw error;}
 
       this.posts.update((list) => list.filter((p) => p.id !== postId));
       this.toast.success('Post deleted');
@@ -174,18 +181,25 @@ export class PostsViewComponent implements OnInit {
   }
 
   protected relativeTime(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff = Date.now() - new Date(dateStr)
+      .getTime();
     const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m`;
+
+    if (mins < 1) {return 'Just now';}
+
+    if (mins < 60) {return `${mins}m`;}
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h`;
+
+    if (hrs < 24) {return `${hrs}h`;}
     const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d`;
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+
+    if (days < 7) {return `${days}d`;}
+
+    return new Date(dateStr)
+      .toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
   }
 }

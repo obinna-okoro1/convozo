@@ -7,8 +7,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { ShopItem, ShopOrder, ShopCheckoutPayload, EdgeFunctionResponse } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
+import { EdgeFunctionResponse, ShopCheckoutPayload, ShopItem, ShopOrder } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -115,8 +115,10 @@ export class ShopService {
       const { data } = this.supabaseService.client.storage
         .from('shop-thumbnails')
         .getPublicUrl(item.thumbnail_storage_path);
+
       return data.publicUrl ?? null;
     }
+
     return item.thumbnail_url ?? null;
   }
 

@@ -4,10 +4,10 @@
  * Contains pricing card, sender fields, message textarea, and submit button.
  */
 
-import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { APP_CONSTANTS } from '@core/constants';
+import { RouterLink } from '@angular/router';
+import { APP_CONSTANTS } from 'app/core/constants';
 
 export interface MessageFormData {
   senderName: string;

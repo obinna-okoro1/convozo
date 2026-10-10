@@ -24,11 +24,12 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/unbound-method */
+
+
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+
 import { ForgotPasswordComponent } from './forgot-password.component';
 import { AuthService } from '../../services/auth.service';
 
@@ -62,14 +63,16 @@ describe('ForgotPasswordComponent', () => {
     const input = fixture.nativeElement.querySelector(
       'input[type="email"]',
     ) as HTMLInputElement | null;
-    expect(input).toBeTruthy();
+    expect(input)
+      .toBeTruthy();
   });
 
   it('renders the submit button on initial load', () => {
     const btn = fixture.nativeElement.querySelector(
       'button[type="submit"]',
     ) as HTMLButtonElement | null;
-    expect(btn).toBeTruthy();
+    expect(btn)
+      .toBeTruthy();
   });
 
   it('hides the form and shows the success message after a successful submission', async () => {
@@ -79,11 +82,13 @@ describe('ForgotPasswordComponent', () => {
     fixture.detectChanges();
 
     const form = fixture.nativeElement.querySelector('form') as HTMLElement | null;
-    expect(form).toBeNull(); // @if success hides the form
+    expect(form)
+      .toBeNull(); // @if success hides the form
 
     const heading = fixture.nativeElement.querySelector('h2') as HTMLElement;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    expect((heading.textContent ?? '').toLowerCase()).toContain('email');
+
+    expect((heading.textContent ?? '').toLowerCase())
+      .toContain('email');
   });
 
   it('shows an error message when the error signal is truthy', async () => {
@@ -95,7 +100,8 @@ describe('ForgotPasswordComponent', () => {
     fixture.detectChanges();
 
     const nativeEl = fixture.nativeElement as HTMLElement;
-    expect(nativeEl.textContent).toContain('User not found');
+    expect(nativeEl.textContent)
+      .toContain('User not found');
   });
 
   // ── handleSubmit() — empty email ──────────────────────────────────────────
@@ -111,7 +117,8 @@ describe('ForgotPasswordComponent', () => {
     (component as any).email.set('');
     await (component as any).handleSubmit();
 
-    expect((component as any).error()).toBeTruthy();
+    expect((component as any).error())
+      .toBeTruthy();
   });
 
   it('does not call authService when email is only whitespace', async () => {
@@ -127,21 +134,24 @@ describe('ForgotPasswordComponent', () => {
     (component as any).email.set('  user@example.com  ');
     await (component as any).handleSubmit();
 
-    expect(authSpy.sendPasswordResetEmail).toHaveBeenCalledOnceWith('user@example.com');
+    expect(authSpy.sendPasswordResetEmail)
+      .toHaveBeenCalledOnceWith('user@example.com');
   });
 
   it('sets success to true after a successful call', async () => {
     (component as any).email.set('user@example.com');
     await (component as any).handleSubmit();
 
-    expect((component as any).success()).toBeTrue();
+    expect((component as any).success())
+      .toBeTrue();
   });
 
   it('resets loading to false after a successful call', async () => {
     (component as any).email.set('user@example.com');
     await (component as any).handleSubmit();
 
-    expect((component as any).loading()).toBeFalse();
+    expect((component as any).loading())
+      .toBeFalse();
   });
 
   it('clears the error signal before calling the service', async () => {
@@ -151,7 +161,8 @@ describe('ForgotPasswordComponent', () => {
 
     const promise = (component as any).handleSubmit() as Promise<void>;
     // Error is cleared synchronously before the async Supabase call resolves
-    expect((component as any).error()).toBeNull();
+    expect((component as any).error())
+      .toBeNull();
     await promise;
   });
 
@@ -164,7 +175,8 @@ describe('ForgotPasswordComponent', () => {
     (component as any).email.set('user@example.com');
     await (component as any).handleSubmit();
 
-    expect((component as any).error()).toBe('Too many requests');
+    expect((component as any).error())
+      .toBe('Too many requests');
   });
 
   it('falls back to a default error string when service returns no message', async () => {
@@ -175,7 +187,8 @@ describe('ForgotPasswordComponent', () => {
     (component as any).email.set('user@example.com');
     await (component as any).handleSubmit();
 
-    expect((component as any).error()).toBeTruthy();
+    expect((component as any).error())
+      .toBeTruthy();
   });
 
   it('keeps success as false on a failed call', async () => {
@@ -185,7 +198,8 @@ describe('ForgotPasswordComponent', () => {
     (component as any).email.set('user@example.com');
     await (component as any).handleSubmit();
 
-    expect((component as any).success()).toBeFalse();
+    expect((component as any).success())
+      .toBeFalse();
   });
 
   it('resets loading to false after a failed call', async () => {
@@ -195,7 +209,8 @@ describe('ForgotPasswordComponent', () => {
     (component as any).email.set('user@example.com');
     await (component as any).handleSubmit();
 
-    expect((component as any).loading()).toBeFalse();
+    expect((component as any).loading())
+      .toBeFalse();
   });
 
   // ── updateEmail() ─────────────────────────────────────────────────────────
@@ -204,11 +219,13 @@ describe('ForgotPasswordComponent', () => {
     (component as any).error.set('Some previous error');
     (component as any).updateEmail('user@example.com');
 
-    expect((component as any).error()).toBeNull();
+    expect((component as any).error())
+      .toBeNull();
   });
 
   it('updates the email signal with the provided value', () => {
     (component as any).updateEmail('new@email.com');
-    expect((component as any).email()).toBe('new@email.com');
+    expect((component as any).email())
+      .toBe('new@email.com');
   });
 });

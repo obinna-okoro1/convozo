@@ -1,11 +1,11 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { SupabaseService } from '@core/services/supabase.service';
+import { Injectable, computed, signal } from '@angular/core';
 import {
   CallBooking,
-  JoinCallResponse,
   CompleteCallResponse,
+  JoinCallResponse,
   SupabaseResponse,
-} from '@core/models';
+} from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 export type VideoCallState =
   | 'idle'
   | 'joining'
@@ -34,10 +34,14 @@ export class VideoCallService {
   // Computed: formatted time remaining (MM:SS)
   readonly formattedTimeRemaining = computed(() => {
     const total = this.remainingSeconds();
-    if (total <= 0) return '00:00';
+
+    if (total <= 0) {return '00:00';}
     const minutes = Math.floor(total / 60);
     const seconds = total % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    return `${minutes.toString()
+      .padStart(2, '0')}:${seconds.toString()
+      .padStart(2, '0')}`;
   });
 
   readonly isCallActive = computed(() =>
@@ -59,9 +63,11 @@ export class VideoCallService {
       // any expired access token is swapped for a fresh one before invoking the Edge Function.
       if (role === 'creator') {
         const { error: refreshErr } = await this.supabaseService.client.auth.refreshSession();
+
         if (refreshErr) {
           this.callState.set('error');
           this.errorMessage.set('Session expired — please log in again');
+
           return null;
         }
       }
@@ -77,6 +83,7 @@ export class VideoCallService {
       if (error) {
         this.callState.set('error');
         this.errorMessage.set(error.message || 'Failed to join call');
+
         return null;
       }
 
@@ -110,6 +117,7 @@ export class VideoCallService {
     } catch (err) {
       this.callState.set('error');
       this.errorMessage.set((err as Error).message || 'Failed to join call');
+
       return null;
     }
   }
@@ -135,18 +143,22 @@ export class VideoCallService {
         // Show the completed screen without treating it as an error.
         if (error.message?.includes('409') || error.message?.includes('already')) {
           this.callState.set('completed');
+
           return null;
         }
         this.callState.set('error');
         this.errorMessage.set(error.message || 'Failed to complete call');
+
         return null;
       }
 
       this.callState.set('completed');
+
       return data as CompleteCallResponse;
     } catch (err) {
       this.callState.set('error');
       this.errorMessage.set((err as Error).message || 'Failed to complete call');
+
       return null;
     }
   }
@@ -167,7 +179,7 @@ export class VideoCallService {
       this.currentBooking.set(data as CallBooking);
     }
 
-    return { data: data as CallBooking | null, error };
+    return { data: data, error };
   }
 
   /**
@@ -180,24 +192,26 @@ export class VideoCallService {
     const { data, error } = await this.supabaseService.client
       .rpc('get_call_status', { p_booking_id: bookingId });
 
-    if (error) return { data: null, error };
+    if (error) {return { data: null, error };}
 
     // rpc returns an array; take the first row (there will be 0 or 1 result)
     const row = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
+
     if (row) {
       // Merge into currentBooking without overwriting sensitive creator fields
       const current = this.currentBooking();
       this.currentBooking.set({ ...current, ...row } as CallBooking);
     }
 
-    return { data: row as Partial<CallBooking> | null, error: null };
+    return { data: row, error: null };
   }
 
   startCountdown(durationMinutes: number): void {
     this.stopCountdown(); // Clear any existing timer
 
     const startedAt = this.callStartedAt();
-    if (!startedAt) return;
+
+    if (!startedAt) {return;}
 
     const totalSeconds = durationMinutes * 60;
     const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
@@ -205,8 +219,10 @@ export class VideoCallService {
 
     this.countdownInterval = setInterval(() => {
       const current = this.remainingSeconds();
+
       if (current <= 0) {
         this.stopCountdown();
+
         return;
       }
       this.remainingSeconds.set(current - 1);

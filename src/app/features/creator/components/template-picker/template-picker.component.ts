@@ -7,21 +7,21 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   OnInit,
+  computed,
   output,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  ResponseTemplateService,
   ResponseTemplate,
+  ResponseTemplateService,
   TemplateCategory,
-} from '@core/services/response-template.service';
+} from 'app/core/services/response-template.service';
 import {
   SearchableSelectComponent,
   SelectOption,
-} from '@shared/components/ui/searchable-select/searchable-select.component';
+} from 'app/shared/components/ui/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-template-picker',
@@ -86,6 +86,7 @@ export class TemplatePickerComponent implements OnInit {
 
   public ngOnInit(): void {
     const creatorId = this.templateService.currentCreatorId();
+
     if (creatorId) {
       this.templateService.initializeTemplates(creatorId);
     }

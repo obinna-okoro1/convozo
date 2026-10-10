@@ -11,30 +11,33 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { ShopService } from './shop.service';
 import {
-  ShopItem,
-  ShopOrder,
-  ShopCheckoutPayload,
   EdgeFunctionResponse,
+  ShopCheckoutPayload,
+  ShopItem,
   ShopItemType,
+  ShopOrder,
 } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
 // ── Fixture factories ─────────────────────────────────────────────────────────
 
 function makeShopItem(overrides: Partial<ShopItem> = {}): ShopItem {
-  const now = new Date().toISOString();
+  const now = new Date()
+    .toISOString();
+
   return {
     id: 'item-1',
     creator_id: 'creator-1',
     title: 'My eBook',
     description: 'A great read',
     price: 999,
-    item_type: 'pdf' as ShopItemType,
+    item_type: 'pdf',
     file_storage_path: 'creator-1/123_ebook.pdf',
     thumbnail_storage_path: null,
     file_url: null,
@@ -51,7 +54,9 @@ function makeShopItem(overrides: Partial<ShopItem> = {}): ShopItem {
 }
 
 function makeShopOrder(overrides: Partial<ShopOrder> = {}): ShopOrder {
-  const now = new Date().toISOString();
+  const now = new Date()
+    .toISOString();
+
   return {
     id: 'order-1',
     item_id: 'item-1',
@@ -78,7 +83,7 @@ function makeShopItemPayload(overrides: Partial<ShopItemPayload> = {}): ShopItem
     title: 'My eBook',
     description: 'A great read',
     price: 999,
-    item_type: 'pdf' as ShopItemType,
+    item_type: 'pdf',
     file_storage_path: 'creator-1/123_ebook.pdf',
     thumbnail_storage_path: null,
     file_url: null,
@@ -120,7 +125,8 @@ describe('ShopService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── getShopItems ──────────────────────────────────────────────────────────
@@ -132,10 +138,13 @@ describe('ShopService', () => {
 
       const result = await service.getShopItems('creator-1');
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.getShopItems).toHaveBeenCalledWith('creator-1');
-      expect(result.data).toEqual(items);
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.getShopItems)
+        .toHaveBeenCalledWith('creator-1');
+      expect(result.data)
+        .toEqual(items);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('includes inactive items (creator-side view returns all)', async () => {
@@ -145,7 +154,8 @@ describe('ShopService', () => {
       const result = await service.getShopItems('creator-1');
 
       const data = result.data ?? [];
-      expect(data.some((i) => !i.is_active)).toBeTrue();
+      expect(data.some((i) => !i.is_active))
+        .toBeTrue();
     });
 
     it('propagates error from supabaseService', async () => {
@@ -154,8 +164,10 @@ describe('ShopService', () => {
 
       const result = await service.getShopItems('creator-1');
 
-      expect(result.data).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.data)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -168,10 +180,13 @@ describe('ShopService', () => {
 
       const result = await service.getActiveShopItems('creator-1');
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.getActiveShopItems).toHaveBeenCalledWith('creator-1');
-      expect(result.data).toEqual(items);
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.getActiveShopItems)
+        .toHaveBeenCalledWith('creator-1');
+      expect(result.data)
+        .toEqual(items);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns empty array when no active items exist', async () => {
@@ -179,7 +194,8 @@ describe('ShopService', () => {
 
       const result = await service.getActiveShopItems('creator-1');
 
-      expect(result.data).toEqual([]);
+      expect(result.data)
+        .toEqual([]);
     });
 
     it('propagates error on RLS or network failure', async () => {
@@ -188,8 +204,10 @@ describe('ShopService', () => {
 
       const result = await service.getActiveShopItems('creator-1');
 
-      expect(result.data).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.data)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -203,10 +221,13 @@ describe('ShopService', () => {
 
       const result = await service.createShopItem(payload);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.createShopItem).toHaveBeenCalledWith(payload);
-      expect(result.data).toEqual(created);
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.createShopItem)
+        .toHaveBeenCalledWith(payload);
+      expect(result.data)
+        .toEqual(created);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('creates a request-based shoutout item correctly', async () => {
@@ -224,9 +245,11 @@ describe('ShopService', () => {
 
       const result = await service.createShopItem(payload);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.createShopItem).toHaveBeenCalledWith(payload);
-      expect(result.data?.is_request_based).toBeTrue();
+
+      expect(supabaseSpy.createShopItem)
+        .toHaveBeenCalledWith(payload);
+      expect(result.data?.is_request_based)
+        .toBeTrue();
     });
 
     it('propagates error on insert failure', async () => {
@@ -235,8 +258,10 @@ describe('ShopService', () => {
 
       const result = await service.createShopItem(makeShopItemPayload());
 
-      expect(result.data).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.data)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -250,9 +275,11 @@ describe('ShopService', () => {
 
       const result = await service.updateShopItem('item-1', updates);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.updateShopItem).toHaveBeenCalledWith('item-1', updates);
-      expect(result.data).toEqual(updated);
+
+      expect(supabaseSpy.updateShopItem)
+        .toHaveBeenCalledWith('item-1', updates);
+      expect(result.data)
+        .toEqual(updated);
     });
 
     it('can deactivate an item via is_active: false', async () => {
@@ -261,7 +288,8 @@ describe('ShopService', () => {
 
       const result = await service.updateShopItem('item-1', { is_active: false });
 
-      expect(result.data?.is_active).toBeFalse();
+      expect(result.data?.is_active)
+        .toBeFalse();
     });
 
     it('propagates error on update failure', async () => {
@@ -270,8 +298,10 @@ describe('ShopService', () => {
 
       const result = await service.updateShopItem('item-1', { is_active: false });
 
-      expect(result.data).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.data)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -283,9 +313,11 @@ describe('ShopService', () => {
 
       const result = await service.deleteShopItem('item-1');
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.deleteShopItem).toHaveBeenCalledWith('item-1');
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.deleteShopItem)
+        .toHaveBeenCalledWith('item-1');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('propagates error on delete failure', async () => {
@@ -294,7 +326,8 @@ describe('ShopService', () => {
 
       const result = await service.deleteShopItem('item-1');
 
-      expect(result.error).toBe(err);
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -307,10 +340,13 @@ describe('ShopService', () => {
 
       const result = await service.getShopOrders('creator-1');
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.getShopOrders).toHaveBeenCalledWith('creator-1');
-      expect(result.data).toEqual(orders);
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.getShopOrders)
+        .toHaveBeenCalledWith('creator-1');
+      expect(result.data)
+        .toEqual(orders);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns all order statuses (pending, completed, refunded)', async () => {
@@ -324,7 +360,8 @@ describe('ShopService', () => {
       const result = await service.getShopOrders('creator-1');
 
       const data = result.data ?? [];
-      expect(data.length).toBe(3);
+      expect(data.length)
+        .toBe(3);
     });
 
     it('propagates error on query failure', async () => {
@@ -333,8 +370,10 @@ describe('ShopService', () => {
 
       const result = await service.getShopOrders('creator-1');
 
-      expect(result.data).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.data)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -356,10 +395,13 @@ describe('ShopService', () => {
 
       const result = await service.createShopCheckout(basePayload);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.createShopCheckout).toHaveBeenCalledWith(basePayload);
-      expect(result.data?.sessionId).toBe('cs_test_xyz');
-      expect(result.data?.url).toBe('https://checkout.stripe.com/xyz');
+
+      expect(supabaseSpy.createShopCheckout)
+        .toHaveBeenCalledWith(basePayload);
+      expect(result.data?.sessionId)
+        .toBe('cs_test_xyz');
+      expect(result.data?.url)
+        .toBe('https://checkout.stripe.com/xyz');
     });
 
     it('forwards optional request_details for shoutout purchases', async () => {
@@ -373,8 +415,9 @@ describe('ShopService', () => {
 
       await service.createShopCheckout(payloadWithDetails);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.createShopCheckout).toHaveBeenCalledWith(payloadWithDetails);
+
+      expect(supabaseSpy.createShopCheckout)
+        .toHaveBeenCalledWith(payloadWithDetails);
     });
 
     it('propagates edge function error', async () => {
@@ -384,8 +427,10 @@ describe('ShopService', () => {
 
       const result = await service.createShopCheckout(basePayload);
 
-      expect(result.error?.message).toBe('Creator not found');
-      expect(result.data).toBeUndefined();
+      expect(result.error?.message)
+        .toBe('Creator not found');
+      expect(result.data)
+        .toBeUndefined();
     });
   });
 
@@ -400,10 +445,13 @@ describe('ShopService', () => {
 
       const result = await service.uploadShopFile('creator-1', file);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.uploadShopFile).toHaveBeenCalledWith('creator-1', file);
-      expect(result.path).toBe('creator-1/123_ebook.pdf');
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.uploadShopFile)
+        .toHaveBeenCalledWith('creator-1', file);
+      expect(result.path)
+        .toBe('creator-1/123_ebook.pdf');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns the storage path (never a public URL)', async () => {
@@ -425,8 +473,10 @@ describe('ShopService', () => {
 
       const result = await service.uploadShopFile('creator-1', file);
 
-      expect(result.path).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.path)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -442,11 +492,15 @@ describe('ShopService', () => {
 
       const result = await service.uploadShopThumbnail('creator-1', file);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.uploadShopThumbnail).toHaveBeenCalledWith('creator-1', file);
-      expect(result.path).toBe('creator-1/123_thumb.png');
-      expect(result.publicUrl).toBe(publicUrl);
-      expect(result.error).toBeNull();
+
+      expect(supabaseSpy.uploadShopThumbnail)
+        .toHaveBeenCalledWith('creator-1', file);
+      expect(result.path)
+        .toBe('creator-1/123_thumb.png');
+      expect(result.publicUrl)
+        .toBe(publicUrl);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('publicUrl is a fully-qualified HTTPS URL for use in <img> tags', async () => {
@@ -459,7 +513,8 @@ describe('ShopService', () => {
 
       const result = await service.uploadShopThumbnail('creator-1', file);
 
-      expect(result.publicUrl).toMatch(/^https:\/\//);
+      expect(result.publicUrl)
+        .toMatch(/^https:\/\//);
     });
 
     it('propagates upload error with null path and null publicUrl', async () => {
@@ -471,9 +526,12 @@ describe('ShopService', () => {
 
       const result = await service.uploadShopThumbnail('creator-1', file);
 
-      expect(result.path).toBeNull();
-      expect(result.publicUrl).toBeNull();
-      expect(result.error).toBe(err);
+      expect(result.path)
+        .toBeNull();
+      expect(result.publicUrl)
+        .toBeNull();
+      expect(result.error)
+        .toBe(err);
     });
   });
 
@@ -488,10 +546,13 @@ describe('ShopService', () => {
 
       const result = await service.getShopDownloadUrl('cs_test_abc');
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(supabaseSpy.getShopDownloadUrl).toHaveBeenCalledWith('cs_test_abc');
-      expect(result.data?.url).toBe('https://storage.supabase.co/signed-url');
-      expect(result.data?.filename).toBe('ebook.pdf');
+
+      expect(supabaseSpy.getShopDownloadUrl)
+        .toHaveBeenCalledWith('cs_test_abc');
+      expect(result.data?.url)
+        .toBe('https://storage.supabase.co/signed-url');
+      expect(result.data?.filename)
+        .toBe('ebook.pdf');
     });
 
     it('returned URL is a signed short-lived URL (contains http)', async () => {
@@ -506,7 +567,8 @@ describe('ShopService', () => {
 
       const result = await service.getShopDownloadUrl('cs_test_abc');
 
-      expect(result.data?.url).toMatch(/^https:\/\//);
+      expect(result.data?.url)
+        .toMatch(/^https:\/\//);
     });
 
     it('propagates edge function error when session is invalid', async () => {
@@ -516,8 +578,10 @@ describe('ShopService', () => {
 
       const result = await service.getShopDownloadUrl('invalid-session');
 
-      expect(result.error?.message).toBe('Session not found');
-      expect(result.data).toBeUndefined();
+      expect(result.error?.message)
+        .toBe('Session not found');
+      expect(result.data)
+        .toBeUndefined();
     });
   });
 });

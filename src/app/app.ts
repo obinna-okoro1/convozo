@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
 import { SupabaseService } from './core/services/supabase.service';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 
@@ -10,7 +11,7 @@ import { ToastContainerComponent } from './shared/components/toast-container/toa
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
+
 export class App implements OnInit {
   protected readonly title = 'Convozo';
 

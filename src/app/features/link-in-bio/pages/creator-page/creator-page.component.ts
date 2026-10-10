@@ -4,10 +4,11 @@
  * Shows creator profile header, their links, and CTAs for messaging/booking.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CreatorLink } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
+import { CreatorLink } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
+
 import { CreatorHeaderComponent } from '../../components/creator-header/creator-header.component';
 import { LinkListComponent } from '../../components/link-list/link-list.component';
 import { LinkService } from '../../services/link.service';
@@ -43,6 +44,7 @@ export class CreatorPageComponent implements OnInit {
   protected readonly themeColor = computed(() => this.creator()?.theme_color || '#7c3aed');
   protected readonly bgGradient = computed(() => {
     const color = this.themeColor();
+
     return `linear-gradient(to bottom right, #f5f5f7, ${color}08, #f5f5f7)`;
   });
 
@@ -59,6 +61,7 @@ export class CreatorPageComponent implements OnInit {
   protected onLinkClicked(link: CreatorLink): void {
     // Track the click in the background
     const creator = this.creator();
+
     if (creator != null) {
       const referrer = document.referrer !== '' ? document.referrer : null;
       void this.linkService.trackClick(link.id, creator.id, referrer);
@@ -69,9 +72,11 @@ export class CreatorPageComponent implements OnInit {
 
   private async initialize(): Promise<void> {
     const slug = this.route.snapshot.paramMap.get('slug');
+
     if (!slug) {
       this.error.set('Creator not found.');
       this.loading.set(false);
+
       return;
     }
 
@@ -95,6 +100,7 @@ export class CreatorPageComponent implements OnInit {
       if (creatorErr != null || creator == null) {
         this.error.set('This creator page does not exist.');
         this.loading.set(false);
+
         return;
       }
 

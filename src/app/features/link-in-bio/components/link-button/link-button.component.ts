@@ -4,9 +4,10 @@
  * Fires a click event for tracking before navigating.
  */
 
-import { ChangeDetectionStrategy, Component, input, output, OnInit } from '@angular/core';
-import { CreatorLink } from '@core/models';
-import { getBrandByKey, BrandInfo } from '../../utils/brand-detection';
+import { ChangeDetectionStrategy, Component, OnInit, input, output } from '@angular/core';
+import { CreatorLink } from 'app/core/models';
+
+import { BrandInfo, getBrandByKey } from '../../utils/brand-detection';
 
 @Component({
   selector: 'app-link-button',
@@ -24,6 +25,7 @@ export class LinkButtonComponent implements OnInit {
 
   public ngOnInit(): void {
     const icon = this.link().icon;
+
     if (icon) {
       this.brandInfo = getBrandByKey(icon);
     }

@@ -6,10 +6,11 @@
 
 import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CreatorLink } from '@core/models';
-import { ToastService } from '@shared/services/toast.service';
+import { CreatorLink } from 'app/core/models';
+import { ToastService } from 'app/shared/services/toast.service';
+
 import { LinkService } from '../../services/link.service';
-import { detectBrandKey, getBrandByKey, BrandInfo } from '../../utils/brand-detection';
+import { BrandInfo, detectBrandKey, getBrandByKey } from '../../utils/brand-detection';
 
 @Component({
   selector: 'app-link-form-modal',
@@ -37,10 +38,10 @@ export class LinkFormModalComponent {
   // Form fields
   protected formUrl = '';
   protected formTitle = '';
-  protected detectedBrand = signal<BrandInfo | null>(null);
+  protected readonly detectedBrand = signal<BrandInfo | null>(null);
 
   // UI state
-  protected saving = signal(false);
+  protected readonly saving = signal(false);
   private brandCache = new Map<string, BrandInfo | null>();
 
   constructor(
@@ -50,6 +51,7 @@ export class LinkFormModalComponent {
     // Pre-fill form fields when the modal opens in edit mode
     effect(() => {
       const link = this.editingLink();
+
       if (link) {
         this.formUrl = link.url;
         this.formTitle = link.title;
@@ -64,12 +66,15 @@ export class LinkFormModalComponent {
   protected onUrlChange(url: string): void {
     if (!url.trim()) {
       this.detectedBrand.set(null);
+
       return;
     }
 
     const brandKey = detectBrandKey(url);
+
     if (brandKey) {
       let brand = this.brandCache.get(brandKey);
+
       if (!brand) {
         brand = getBrandByKey(brandKey) ?? null;
         this.brandCache.set(brandKey, brand);
@@ -84,11 +89,13 @@ export class LinkFormModalComponent {
    * Saves the link (create or update)
    */
   protected async saveLink(): Promise<void> {
-    if (this.saving()) return;
+    if (this.saving()) {return;}
 
     const rawUrl = this.formUrl.trim();
+
     if (!rawUrl || !this.formTitle.trim()) {
       this.toast.error('Please fill in all fields');
+
       return;
     }
     // Ensure the URL has a protocol so it opens as an external link, not a relative route.
@@ -106,6 +113,7 @@ export class LinkFormModalComponent {
           url,
           icon: this.detectedBrand()?.key ?? null,
         });
+
         if (error) {
           this.toast.error('Failed to update link');
         } else {
@@ -122,6 +130,7 @@ export class LinkFormModalComponent {
           icon: brandKey,
           position,
         });
+
         if (error) {
           this.toast.error('Failed to add link');
         } else {

@@ -15,9 +15,9 @@
 
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
-import { SupabaseService } from '@core/services/supabase.service';
-import { compressImage } from '@shared/utils/image.utils';
-import { errorMessage } from '@shared/utils/error.utils';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { errorMessage } from 'app/shared/utils/error.utils';
+import { compressImage } from 'app/shared/utils/image.utils';
 
 /** Emitted when the image URL changes (new upload or removal). */
 export interface ImageChangeEvent {
@@ -86,12 +86,14 @@ export class ImageUploadComponent {
   protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     if (!file) {
       return;
     }
 
     if (!file.type.startsWith('image/')) {
       this.uploadError.emit('Please upload an image file');
+
       return;
     }
 
@@ -108,6 +110,7 @@ export class ImageUploadComponent {
       reader.readAsDataURL(compressed);
 
       const userId = this.supabaseService.getCurrentUser()?.id;
+
       if (!userId) {
         throw new Error('User not authenticated');
       }
@@ -116,6 +119,7 @@ export class ImageUploadComponent {
       const filePath = `${this.folder()}/${userId}/${fileName}`;
 
       const { data, error } = await this.supabaseService.uploadFile('public', filePath, compressed);
+
       if (error) {
         throw error;
       }

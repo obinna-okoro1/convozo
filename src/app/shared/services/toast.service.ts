@@ -4,7 +4,7 @@
  * Manages a stack of toast messages with auto-dismiss.
  */
 
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 

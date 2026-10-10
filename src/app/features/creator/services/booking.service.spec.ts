@@ -6,9 +6,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { BookingService } from './booking.service';
 import { CallBooking } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -16,7 +17,9 @@ import { SupabaseService } from '../../../core/services/supabase.service';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
-  const now = new Date().toISOString();
+  const now = new Date()
+    .toISOString();
+
   return {
     id: 'booking-1',
     creator_id: 'creator-1',
@@ -81,7 +84,8 @@ describe('BookingService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── getCallBookings ───────────────────────────────────────────────────────
@@ -102,10 +106,14 @@ describe('BookingService', () => {
 
       const result = await service.getCallBookings('creator-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('call_bookings');
-      expect(chain.eq).toHaveBeenCalledWith('creator_id', 'creator-1');
-      expect(result.data).toEqual(bookings);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('call_bookings');
+      expect(chain.eq)
+        .toHaveBeenCalledWith('creator_id', 'creator-1');
+      expect(result.data)
+        .toEqual(bookings);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('orders results by created_at descending', async () => {
@@ -122,7 +130,8 @@ describe('BookingService', () => {
 
       await service.getCallBookings('creator-1');
 
-      expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(chain.order)
+        .toHaveBeenCalledWith('created_at', { ascending: false });
     });
 
     it('returns error on failure', async () => {
@@ -140,7 +149,8 @@ describe('BookingService', () => {
 
       const result = await service.getCallBookings('creator-1');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
   });
@@ -165,11 +175,16 @@ describe('BookingService', () => {
 
       const result = await service.updateBookingStatus('booking-1', 'completed');
 
-      expect(mockClient.from).toHaveBeenCalledWith('call_bookings');
-      expect(chain.update).toHaveBeenCalledWith({ status: 'completed' });
-      expect(chain.eq).toHaveBeenCalledWith('id', 'booking-1');
-      expect(result.data).toEqual(updated);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('call_bookings');
+      expect(chain.update)
+        .toHaveBeenCalledWith({ status: 'completed' });
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'booking-1');
+      expect(result.data)
+        .toEqual(updated);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when update fails', async () => {
@@ -189,7 +204,8 @@ describe('BookingService', () => {
 
       const result = await service.updateBookingStatus('booking-1', 'cancelled');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
   });
@@ -207,10 +223,14 @@ describe('BookingService', () => {
 
       const result = await service.deleteCallBooking('booking-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('call_bookings');
-      expect(chain.delete).toHaveBeenCalled();
-      expect(chain.eq).toHaveBeenCalledWith('id', 'booking-1');
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('call_bookings');
+      expect(chain.delete)
+        .toHaveBeenCalled();
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'booking-1');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when delete fails', async () => {
@@ -241,9 +261,12 @@ describe('BookingService', () => {
 
       service.subscribeToCallBookings('creator-1', jasmine.createSpy());
 
-      expect(mockClient.channel).toHaveBeenCalledWith('call_bookings:creator-1');
-      expect(mockChannel.on).toHaveBeenCalled();
-      expect(mockChannel.subscribe).toHaveBeenCalled();
+      expect(mockClient.channel)
+        .toHaveBeenCalledWith('call_bookings:creator-1');
+      expect(mockChannel.on)
+        .toHaveBeenCalled();
+      expect(mockChannel.subscribe)
+        .toHaveBeenCalled();
     });
   });
 
@@ -253,7 +276,8 @@ describe('BookingService', () => {
     it('calls removeChannel with the provided channel', () => {
       const mockChannel = {} as any;
       service.unsubscribeFromCallBookings(mockChannel);
-      expect(mockClient.removeChannel).toHaveBeenCalledWith(mockChannel);
+      expect(mockClient.removeChannel)
+        .toHaveBeenCalledWith(mockChannel);
     });
   });
 });

@@ -13,13 +13,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  inject,
   OnInit,
+  inject,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ShopItem } from '@core/models';
-import { ShopService } from '@features/creator/services/shop.service';
+import { ShopItem } from 'app/core/models';
+import { ShopService } from 'app/features/creator/services/shop.service';
+
 import { MessagePageStateService } from '../../message-page-state.service';
 
 const TYPE_EMOJI: Record<string, string> = {
@@ -91,7 +92,8 @@ export class ShopViewComponent implements OnInit {
 
   private async loadItems(): Promise<void> {
     const creator = this.state.creator();
-    if (!creator) return;
+
+    if (!creator) {return;}
 
     this.loadingItems.set(true);
     const result = await this.shopService.getActiveShopItems(creator.id);

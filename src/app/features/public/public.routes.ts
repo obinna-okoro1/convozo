@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+
 import { MessagePageStateService } from './components/message-page/message-page-state.service';
 
 export const PUBLIC_ROUTES: Routes = [

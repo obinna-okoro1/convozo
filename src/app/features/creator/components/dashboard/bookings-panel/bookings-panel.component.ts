@@ -9,6 +9,7 @@
  * Outputs: markCompleted, cancelBooking, confirmDelete, joinCall
  */
 
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -17,8 +18,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { CallBooking } from '@core/models';
+import { CallBooking } from 'app/core/models';
 
 interface FilterTab {
   readonly value: string;
@@ -53,11 +53,13 @@ export class BookingsPanelComponent {
     const totalRevenue =
       Math.round((bookings.reduce((sum, b) => sum + (b.amount_paid ?? 0), 0) / 100) * 100) / 100;
     const past = completed + cancelled + noShow;
+
     return { total: bookings.length, upcoming, inProgress, completed, cancelled, noShow, totalRevenue, past };
   });
 
   protected readonly filterTabs = computed<FilterTab[]>(() => {
     const s = this.bookingStats();
+
     return [
       { value: 'all', label: `All (${s.total})` },
       { value: 'upcoming', label: `Upcoming (${s.upcoming})` },
@@ -74,28 +76,41 @@ export class BookingsPanelComponent {
       b.status === 'confirmed' || b.status === 'in_progress';
 
     const sortAsc = (a: CallBooking, b: CallBooking): number => {
-      const da = a.scheduled_at ? new Date(a.scheduled_at).getTime() : 0;
-      const db = b.scheduled_at ? new Date(b.scheduled_at).getTime() : 0;
+      const da = a.scheduled_at ? new Date(a.scheduled_at)
+        .getTime() : 0;
+      const db = b.scheduled_at ? new Date(b.scheduled_at)
+        .getTime() : 0;
+
       return da - db;
     };
 
     const sortDesc = (a: CallBooking, b: CallBooking): number => {
       const da = a.scheduled_at
-        ? new Date(a.scheduled_at).getTime()
-        : new Date(a.created_at).getTime();
+        ? new Date(a.scheduled_at)
+          .getTime()
+        : new Date(a.created_at)
+          .getTime();
       const db = b.scheduled_at
-        ? new Date(b.scheduled_at).getTime()
-        : new Date(b.created_at).getTime();
+        ? new Date(b.scheduled_at)
+          .getTime()
+        : new Date(b.created_at)
+          .getTime();
+
       return db - da;
     };
 
-    if (filter === 'upcoming') return bookings.filter(isUpcoming).sort(sortAsc);
-    if (filter === 'past') return bookings.filter((b) => !isUpcoming(b)).sort(sortDesc);
+    if (filter === 'upcoming') {return bookings.filter(isUpcoming)
+      .sort(sortAsc);}
+
+    if (filter === 'past') {return bookings.filter((b) => !isUpcoming(b))
+      .sort(sortDesc);}
 
     // All: upcoming first (soonest → latest), then past (newest → oldest)
     return [
-      ...bookings.filter(isUpcoming).sort(sortAsc),
-      ...bookings.filter((b) => !isUpcoming(b)).sort(sortDesc),
+      ...bookings.filter(isUpcoming)
+        .sort(sortAsc),
+      ...bookings.filter((b) => !isUpcoming(b))
+        .sort(sortDesc),
     ];
   });
 

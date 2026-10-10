@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -76,16 +77,19 @@ export class SignupComponent {
     // Validation
     if (!this.email() || !this.password() || !this.fullName()) {
       this.error.set('Please fill in all required fields');
+
       return;
     }
 
     if (this.password().length < 8) {
       this.error.set('Password must be at least 8 characters');
+
       return;
     }
 
     if (this.password() !== this.confirmPassword()) {
       this.error.set('Passwords do not match');
+
       return;
     }
 

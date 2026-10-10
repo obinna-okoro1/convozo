@@ -9,5 +9,6 @@ import { RouterLink } from '@angular/router';
 })
 export class TermsOfServiceComponent {
   protected readonly lastUpdated = 'April 2, 2026';
-  protected readonly currentYear = new Date().getFullYear();
+  protected readonly currentYear = new Date()
+    .getFullYear();
 }

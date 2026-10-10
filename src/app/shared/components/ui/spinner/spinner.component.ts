@@ -19,6 +19,7 @@ export class SpinnerComponent {
     const centerClass = this.center
       ? 'flex items-center justify-center min-h-[12.5rem]'
       : 'inline-flex items-center';
+
     return centerClass;
   }
 

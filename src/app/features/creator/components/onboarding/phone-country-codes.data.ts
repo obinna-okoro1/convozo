@@ -168,14 +168,18 @@ export const TIMEZONE_TO_COUNTRY: Record<string, string> = {
  */
 export function detectCountryIndex(): number {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tz = Intl.DateTimeFormat()
+      .resolvedOptions().timeZone;
     const iso = TIMEZONE_TO_COUNTRY[tz];
+
     if (iso) {
       const idx = COUNTRY_CODES.findIndex((c) => c.iso === iso);
-      if (idx >= 0) return idx;
+
+      if (idx >= 0) {return idx;}
     }
   } catch {
     // Fallback: default to US (index 0)
   }
+
   return 0;
 }

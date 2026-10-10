@@ -19,16 +19,17 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnInit,
   Output,
   computed,
   inject,
-  OnInit,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ShopItem, ShopItemType } from '@core/models';
-import { ShopService } from '@features/creator/services/shop.service';
+import { ShopItem, ShopItemType } from 'app/core/models';
+import { ShopService } from 'app/features/creator/services/shop.service';
+
 import { SettingsStateService } from '../../settings-state.service';
 
 interface ItemFormState {
@@ -139,11 +140,13 @@ export class ShopViewComponent implements OnInit {
   protected readonly typeMeta = TYPE_META;
   protected readonly itemTypes = Object.keys(TYPE_META) as ShopItemType[];
 
-  protected readonly activeCount = computed(() => this.items().filter((i) => i.is_active).length);
+  protected readonly activeCount = computed(() => this.items()
+    .filter((i) => i.is_active).length);
 
   protected readonly canSaveItem = computed(() => {
     const f = this.form();
     const hasFile = f.isRequestBased || f.fileStoragePath !== null;
+
     return (
       f.title.trim().length > 0 &&
       f.title.length <= 100 &&
@@ -185,6 +188,7 @@ export class ShopViewComponent implements OnInit {
   protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     if (!file) {
       return;
     }
@@ -192,10 +196,12 @@ export class ShopViewComponent implements OnInit {
     if (file.size > MAX_FILE_SIZE) {
       this.fileUploadError.set('File is too large. Maximum size is 500 MB.');
       input.value = '';
+
       return;
     }
 
     const creator = this.state.creator();
+
     if (!creator) {
       return;
     }
@@ -209,6 +215,7 @@ export class ShopViewComponent implements OnInit {
     if (result.error || !result.path) {
       this.fileUploadError.set('Upload failed. Please try again.');
       input.value = '';
+
       return;
     }
 
@@ -224,6 +231,7 @@ export class ShopViewComponent implements OnInit {
   protected async onThumbnailSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     if (!file) {
       return;
     }
@@ -231,10 +239,12 @@ export class ShopViewComponent implements OnInit {
     if (file.size > MAX_THUMBNAIL_SIZE) {
       this.thumbnailUploadError.set('Image is too large. Maximum size is 10 MB.');
       input.value = '';
+
       return;
     }
 
     const creator = this.state.creator();
+
     if (!creator) {
       return;
     }
@@ -248,6 +258,7 @@ export class ShopViewComponent implements OnInit {
     if (result.error || !result.path) {
       this.thumbnailUploadError.set('Thumbnail upload failed. Please try again.');
       input.value = '';
+
       return;
     }
 
@@ -290,7 +301,9 @@ export class ShopViewComponent implements OnInit {
       itemType: item.item_type,
       fileStoragePath: item.file_storage_path ?? null,
       fileDisplayName: item.file_storage_path
-        ? (item.file_storage_path.split('/').pop()?.replace(/^\d+_/, '') ?? 'Uploaded file')
+        ? (item.file_storage_path.split('/')
+          .pop()
+          ?.replace(/^\d+_/, '') ?? 'Uploaded file')
         : null,
       thumbnailStoragePath: item.thumbnail_storage_path ?? null,
       // Derive the public URL immediately so the preview shows in edit mode
@@ -333,6 +346,7 @@ export class ShopViewComponent implements OnInit {
       return;
     }
     const creator = this.state.creator();
+
     if (!creator) {
       return;
     }
@@ -363,19 +377,24 @@ export class ShopViewComponent implements OnInit {
     this.shopError.set(null);
 
     const editId = this.editingId();
+
     if (editId) {
       const result = await this.shopService.updateShopItem(editId, payload);
       this.savingItem.set(false);
+
       if (result.error || !result.data) {
         this.shopError.set('Failed to update item. Please try again.');
+
         return;
       }
       this.items.update((list) => list.map((i) => (i.id === editId ? result.data! : i)));
     } else {
       const result = await this.shopService.createShopItem(payload);
       this.savingItem.set(false);
+
       if (result.error || !result.data) {
         this.shopError.set('Failed to create item. Please try again.');
+
         return;
       }
       this.items.update((list) => [result.data!, ...list]);
@@ -388,6 +407,7 @@ export class ShopViewComponent implements OnInit {
 
   protected async toggleItemActive(item: ShopItem): Promise<void> {
     const result = await this.shopService.updateShopItem(item.id, { is_active: !item.is_active });
+
     if (result.error || !result.data) {
       return;
     }
@@ -398,8 +418,10 @@ export class ShopViewComponent implements OnInit {
     this.deletingId.set(id);
     const result = await this.shopService.deleteShopItem(id);
     this.deletingId.set(null);
+
     if (result.error) {
       this.shopError.set('Failed to delete item. Please try again.');
+
       return;
     }
     this.items.update((list) => list.filter((i) => i.id !== id));
@@ -430,6 +452,7 @@ export class ShopViewComponent implements OnInit {
 
   private async loadItems(): Promise<void> {
     const creator = this.state.creator();
+
     if (!creator) {
       return;
     }
@@ -440,6 +463,7 @@ export class ShopViewComponent implements OnInit {
 
     if (result.error) {
       this.shopError.set('Failed to load shop items.');
+
       return;
     }
     this.items.set(result.data ?? []);

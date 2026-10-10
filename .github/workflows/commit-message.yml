@@ -1,0 +1,15 @@
+name: Commit message
+
+on:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate commit messages
+        run: |
+          git log --format=%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -E '^((feat|fix|ci|chore|docs|test|style|refactor|config|hotfix): .+|Merge branch .+)$'

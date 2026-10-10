@@ -5,16 +5,17 @@
  */
 
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
-  computed,
   ElementRef,
+  afterNextRender,
+  computed,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+
 import { MessagePageStateService } from '../message-page-state.service';
 
 interface Tab {
@@ -48,7 +49,8 @@ export class MessagePageTabsComponent {
 
   private updateScrollIndicators(): void {
     const el = this.scrollContainer()?.nativeElement;
-    if (!el) return;
+
+    if (!el) {return;}
     this.canScrollLeft.set(el.scrollLeft > 0);
     this.canScrollRight.set(
       el.scrollLeft + el.clientWidth < el.scrollWidth - 1,

@@ -5,8 +5,9 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
 import { SettingsStateService } from './settings-state.service';
 import { SettingsTabsComponent } from './settings-tabs/settings-tabs.component';
 

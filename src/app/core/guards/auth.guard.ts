@@ -4,7 +4,8 @@
  */
 
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
+
 import { SupabaseService } from '../services/supabase.service';
 
 /**
@@ -20,6 +21,7 @@ export const authGuard: CanActivateFn = async () => {
 
   if (!user) {
     void router.navigate(['/auth/login']);
+
     return false;
   }
 

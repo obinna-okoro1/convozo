@@ -1,5 +1,5 @@
-import { inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import { Injectable, inject } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ScriptLoaderService {
@@ -10,7 +10,8 @@ export class ScriptLoaderService {
 
   load(src: string): Promise<void> {
     const cached = this.registry.get(src);
-    if (cached) return cached;
+
+    if (cached) {return cached;}
 
     const promise = new Promise<void>((resolve, reject) => {
       const script = this.document.createElement('script');
@@ -25,6 +26,7 @@ export class ScriptLoaderService {
     });
 
     this.registry.set(src, promise);
+
     return promise;
   }
 

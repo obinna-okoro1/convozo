@@ -11,14 +11,14 @@ import { Injectable } from '@angular/core';
 import {
   Creator,
   CreatorSettings,
-  FlutterwaveSubaccount,
-  FlutterwaveBank,
-  SupabaseResponse,
   EdgeFunctionResponse,
-  StripeConnectResponse,
+  FlutterwaveBank,
+  FlutterwaveSubaccount,
   StripeAccountStatus,
-} from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
+  StripeConnectResponse,
+  SupabaseResponse,
+} from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -32,8 +32,10 @@ export class CreatorService {
 
   public async getCurrentCreator(): Promise<Creator | null> {
     const user = this.supabaseService.getCurrentUser();
-    if (!user) return null;
+
+    if (!user) {return null;}
     const { data } = await this.supabaseService.getCreatorByUserId(user.id);
+
     return data;
   }
 
@@ -89,7 +91,8 @@ export class CreatorService {
       })
       .select()
       .single();
-    return { data: creator as Creator | null, error };
+
+    return { data: creator, error };
   }
 
   public async updateCreatorProfile(data: {
@@ -127,7 +130,8 @@ export class CreatorService {
       .eq('id', data.creatorId)
       .select()
       .single();
-    return { data: creator as Creator | null, error };
+
+    return { data: creator, error };
   }
 
   public async getCreatorSettings(creatorId: string): Promise<SupabaseResponse<CreatorSettings>> {
@@ -136,7 +140,8 @@ export class CreatorService {
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    return { data: data as CreatorSettings | null, error };
+
+    return { data: data, error };
   }
 
   public async createCreatorSettings(data: {
@@ -163,7 +168,8 @@ export class CreatorService {
       })
       .select()
       .single();
-    return { data: settings as CreatorSettings | null, error };
+
+    return { data: settings, error };
   }
 
   public async updateCreatorSettings(data: {
@@ -210,7 +216,8 @@ export class CreatorService {
       .eq('id', data.settingsId)
       .select()
       .single();
-    return { data: settings as CreatorSettings | null, error };
+
+    return { data: settings, error };
   }
 
   public async checkSlugAvailability(
@@ -222,13 +229,16 @@ export class CreatorService {
         .from('creators')
         .select('id', { count: 'exact', head: true })
         .eq('slug', slug);
+
       if (excludeCreatorId) {
         query = query.neq('id', excludeCreatorId);
       }
       const { count, error } = await query;
+
       if (error) {
         return { available: false, error: error.message };
       }
+
       return { available: (count ?? 0) === 0 };
     } catch {
       return { available: false, error: 'Failed to check slug availability' };
@@ -267,7 +277,8 @@ export class CreatorService {
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
-    return { data: data as FlutterwaveSubaccount | null, error };
+
+    return { data: data, error };
   }
 
   /**
@@ -281,6 +292,7 @@ export class CreatorService {
       'get-flutterwave-banks',
       { body: { country } },
     );
+
     return { data: data as FlutterwaveBank[] | undefined, error };
   }
 
@@ -296,6 +308,7 @@ export class CreatorService {
       'get-flutterwave-banks',
       { body: { resolve: true, account_number: accountNumber, bank_code: bankCode } },
     );
+
     return { data: data as { account_name: string } | undefined, error };
   }
 
@@ -320,6 +333,7 @@ export class CreatorService {
         },
       },
     );
-    return { data: data as FlutterwaveSubaccount | undefined, error };
+
+    return { data: data, error };
   }
 }

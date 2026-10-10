@@ -5,7 +5,8 @@
  */
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ToastService, Toast } from '../../services/toast.service';
+
+import { Toast, ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-toast-container',

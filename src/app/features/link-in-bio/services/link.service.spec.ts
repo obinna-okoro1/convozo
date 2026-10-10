@@ -7,9 +7,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { LinkService } from './link.service';
 import { CreatorLink } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -26,8 +27,10 @@ function makeLink(overrides: Partial<CreatorLink> = {}): CreatorLink {
     position: 0,
     is_active: true,
     click_count: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: new Date()
+      .toISOString(),
+    updated_at: new Date()
+      .toISOString(),
     ...overrides,
   };
 }
@@ -50,6 +53,7 @@ function makeChain(finalResult: { data: unknown; error: unknown }): any {
   chain.insert.and.returnValue(chain);
   chain.update.and.returnValue(chain);
   chain.delete.and.returnValue(chain);
+
   return chain;
 }
 
@@ -78,7 +82,8 @@ describe('LinkService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── getActiveLinks ────────────────────────────────────────────────────────
@@ -91,11 +96,16 @@ describe('LinkService', () => {
 
       const result = await service.getActiveLinks('creator-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('creator_links');
-      expect(chain.eq).toHaveBeenCalledWith('creator_id', 'creator-1');
-      expect(chain.eq).toHaveBeenCalledWith('is_active', true);
-      expect(result.data).toEqual(links);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('creator_links');
+      expect(chain.eq)
+        .toHaveBeenCalledWith('creator_id', 'creator-1');
+      expect(chain.eq)
+        .toHaveBeenCalledWith('is_active', true);
+      expect(result.data)
+        .toEqual(links);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('orders by position ascending', async () => {
@@ -104,7 +114,8 @@ describe('LinkService', () => {
 
       await service.getActiveLinks('creator-1');
 
-      expect(chain.order).toHaveBeenCalledWith('position', { ascending: true });
+      expect(chain.order)
+        .toHaveBeenCalledWith('position', { ascending: true });
     });
 
     it('returns null data on error', async () => {
@@ -114,7 +125,8 @@ describe('LinkService', () => {
 
       const result = await service.getActiveLinks('creator-1');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
   });
@@ -131,7 +143,8 @@ describe('LinkService', () => {
 
       // Should NOT filter by is_active
       expect(chain.eq).not.toHaveBeenCalledWith('is_active', jasmine.anything());
-      expect(result.data).toEqual(links);
+      expect(result.data)
+        .toEqual(links);
     });
   });
 
@@ -151,10 +164,14 @@ describe('LinkService', () => {
       };
       const result = await service.createLink('creator-1', payload);
 
-      expect(mockClient.from).toHaveBeenCalledWith('creator_links');
-      expect(chain.insert).toHaveBeenCalled();
-      expect(result.data).toEqual(newLink);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('creator_links');
+      expect(chain.insert)
+        .toHaveBeenCalled();
+      expect(result.data)
+        .toEqual(newLink);
+      expect(result.error)
+        .toBeNull();
     });
   });
 
@@ -168,9 +185,12 @@ describe('LinkService', () => {
 
       const result = await service.updateLink('link-1', { title: 'New Title' });
 
-      expect(chain.update).toHaveBeenCalledWith({ title: 'New Title' });
-      expect(chain.eq).toHaveBeenCalledWith('id', 'link-1');
-      expect(result.data).toEqual(updated);
+      expect(chain.update)
+        .toHaveBeenCalledWith({ title: 'New Title' });
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'link-1');
+      expect(result.data)
+        .toEqual(updated);
     });
 
     it('can update is_active to deactivate a link', async () => {
@@ -180,7 +200,8 @@ describe('LinkService', () => {
 
       await service.updateLink('link-1', { is_active: false });
 
-      expect(chain.update).toHaveBeenCalledWith({ is_active: false });
+      expect(chain.update)
+        .toHaveBeenCalledWith({ is_active: false });
     });
   });
 
@@ -197,9 +218,12 @@ describe('LinkService', () => {
 
       const result = await service.deleteLink('link-1');
 
-      expect(chain.delete).toHaveBeenCalled();
-      expect(chain.eq).toHaveBeenCalledWith('id', 'link-1');
-      expect(result.error).toBeNull();
+      expect(chain.delete)
+        .toHaveBeenCalled();
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'link-1');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error on failure', async () => {
@@ -233,8 +257,10 @@ describe('LinkService', () => {
         { id: 'link-2', position: 1 },
       ]);
 
-      expect(result.error).toBeNull();
-      expect(mockClient.from).toHaveBeenCalledTimes(2);
+      expect(result.error)
+        .toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledTimes(2);
     });
 
     it('returns error immediately when an update fails', async () => {
@@ -253,12 +279,14 @@ describe('LinkService', () => {
 
       expect(result.error).not.toBeNull();
       // Should stop after first failure
-      expect(mockClient.from).toHaveBeenCalledTimes(1);
+      expect(mockClient.from)
+        .toHaveBeenCalledTimes(1);
     });
 
     it('returns success for empty links array', async () => {
       const result = await service.reorderLinks([]);
-      expect(result.error).toBeNull();
+      expect(result.error)
+        .toBeNull();
       expect(mockClient.from).not.toHaveBeenCalled();
     });
   });
@@ -274,6 +302,7 @@ describe('LinkService', () => {
       };
       ch.select.and.returnValue(ch);
       ch.eq.and.returnValue(ch);
+
       return ch;
     }
 
@@ -283,12 +312,15 @@ describe('LinkService', () => {
 
       const result = await service.getClickStats('creator-1');
 
-      expect(result.data).toBeTruthy();
+      expect(result.data)
+        .toBeTruthy();
       const data = result.data ?? [];
       const link1 = data.find((r) => r.link_id === 'link-1');
       const link2 = data.find((r) => r.link_id === 'link-2');
-      expect(link1?.count).toBe(2);
-      expect(link2?.count).toBe(1);
+      expect(link1?.count)
+        .toBe(2);
+      expect(link2?.count)
+        .toBe(1);
     });
 
     it('returns empty array when no clicks exist', async () => {
@@ -296,7 +328,8 @@ describe('LinkService', () => {
 
       const result = await service.getClickStats('creator-1');
 
-      expect(result.data).toEqual([]);
+      expect(result.data)
+        .toEqual([]);
     });
 
     it('returns error when query fails', async () => {
@@ -314,7 +347,8 @@ describe('LinkService', () => {
 
       const result = await service.getClickStats('creator-1');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
   });

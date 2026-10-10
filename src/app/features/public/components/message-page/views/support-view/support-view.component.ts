@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { MessagePageStateService } from '../../message-page-state.service';
 
 export interface SupportFormData {
@@ -31,6 +32,7 @@ export class SupportViewComponent {
 
   protected onSubmit(): void {
     const amountCents = Math.round(this.amountDollars * 100);
+
     if (amountCents < 100) {
       return;
     }

@@ -5,10 +5,10 @@
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { ERROR_MESSAGES, ROUTES } from 'app/core/constants';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { FormValidators } from 'app/core/validators/form-validators';
 import { User } from '@supabase/supabase-js';
-import { ROUTES, ERROR_MESSAGES } from '@core/constants';
-import { SupabaseService } from '@core/services/supabase.service';
-import { FormValidators } from '@core/validators/form-validators';
 
 export interface OAuthUserData {
   id: string;
@@ -64,6 +64,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : ERROR_MESSAGES.AUTH.LOGIN_FAILED;
+
       return { success: false, error: message };
     }
   }
@@ -103,6 +104,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create account';
+
       return { success: false, error: message };
     }
   }
@@ -130,6 +132,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : ERROR_MESSAGES.AUTH.LOGIN_FAILED;
+
       return { success: false, error: message };
     }
   }
@@ -157,6 +160,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to send reset email';
+
       return { success: false, error: message };
     }
   }
@@ -182,6 +186,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update password';
+
       return { success: false, error: message };
     }
   }
@@ -213,6 +218,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'OAuth authentication failed';
+
       return { success: false, error: message };
     }
   }
@@ -227,6 +233,7 @@ export class AuthService {
 
     if (sessionError) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
+
       return;
     }
 
@@ -234,6 +241,7 @@ export class AuthService {
 
     if (!user) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
+
       return;
     }
 
@@ -263,6 +271,7 @@ export class AuthService {
    */
   public getStoredOAuthData(): OAuthUserData | null {
     const stored = sessionStorage.getItem('oauth_user_data');
+
     if (!stored) {
       return null;
     }
