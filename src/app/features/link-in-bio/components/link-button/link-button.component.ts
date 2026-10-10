@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, OnInit, input, output } from '@angu
 
 import { CreatorLink } from 'app/core/models';
 
-import { BrandInfo, getBrandByKey } from '../../utils/brand-detection';
+import { BrandInfo, getBrandByKey } from 'app/shared/domain/links/brand-detection';
 
 @Component({
   selector: 'app-link-button',

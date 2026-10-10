@@ -22,7 +22,7 @@ import { FormValidators } from 'app/core/validators/form-validators';
 import type { SelectOption } from 'app/shared/components/ui/searchable-select/searchable-select.component';
 import { errorMessage } from 'app/shared/utils/error.utils';
 
-import { CreatorService } from '../../services/creator.service';
+import { CreatorService } from '../creator/creator.service';
 
 @Injectable()
 export class SettingsStateService {

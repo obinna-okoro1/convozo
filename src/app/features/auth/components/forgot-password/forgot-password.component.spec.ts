@@ -33,7 +33,7 @@ import { provideRouter } from '@angular/router';
 import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { ForgotPasswordComponent } from './forgot-password.component';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -9,9 +9,10 @@ import {
   CreatorProfile,
   ShopCheckoutPayload,
 } from 'app/core/models';
+import { EdgeFunctionService } from 'app/core/services/edge-function.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { FormValidators } from 'app/core/validators/form-validators';
-import { LinkService } from 'app/features/link-in-bio/services/link.service';
+import { LinkService } from 'app/shared/domain/links/link.service';
 import { ToastService } from 'app/shared/services/toast.service';
 import { errorMessage } from 'app/shared/utils/error.utils';
 
@@ -22,6 +23,7 @@ import { SupportFormData } from './views/support-view/support-view.component';
 @Injectable()
 export class MessagePageStateService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly edgeFunctions = inject(EdgeFunctionService);
   private readonly toast = inject(ToastService);
   private readonly linkService = inject(LinkService);
 
@@ -179,7 +181,7 @@ export class MessagePageStateService {
         payload.request_details = requestDetails.trim();
       }
 
-      const { data, error } = await this.supabaseService.createShopCheckout(payload);
+      const { data, error } = await this.edgeFunctions.createShopCheckout(payload);
 
       if (error || !data?.url) {
         throw new Error(error?.message ?? 'Failed to create checkout session');
@@ -389,7 +391,7 @@ export class MessagePageStateService {
         price: priceCents,
       };
 
-      const { data, error } = await this.supabaseService.createCheckoutSession(payload);
+      const { data, error } = await this.edgeFunctions.createCheckoutSession(payload);
 
       if (error || !data?.url) {
         throw new Error(error?.message || 'Failed to create checkout session');
@@ -411,7 +413,7 @@ export class MessagePageStateService {
 
     this.submitting.set(true);
     try {
-      const { data, error } = await this.supabaseService.createCallBookingSession({
+      const { data, error } = await this.edgeFunctions.createCallBookingSession({
         creator_slug: creatorData.slug,
         booker_name: formData.senderName,
         booker_email: formData.senderEmail,
@@ -451,7 +453,7 @@ export class MessagePageStateService {
         price: formData.amountCents,
       };
 
-      const { data, error } = await this.supabaseService.createCheckoutSession(payload);
+      const { data, error } = await this.edgeFunctions.createCheckoutSession(payload);
 
       if (error || !data?.url) {
         throw new Error(error?.message || 'Failed to create checkout session');

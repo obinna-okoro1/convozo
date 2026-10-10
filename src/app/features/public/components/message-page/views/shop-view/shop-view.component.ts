@@ -20,7 +20,7 @@ import {
 import { FormsModule } from '@angular/forms';
 
 import { ShopItem } from 'app/core/models';
-import { ShopService } from 'app/features/creator/services/shop.service';
+import { ShopService } from 'app/shared/domain/shop/shop.service';
 
 import { MessagePageStateService } from '../../message-page-state.service';
 

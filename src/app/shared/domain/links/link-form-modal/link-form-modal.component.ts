@@ -18,8 +18,8 @@ import { FormsModule } from '@angular/forms';
 import { CreatorLink } from 'app/core/models';
 import { ToastService } from 'app/shared/services/toast.service';
 
-import { LinkService } from '../../services/link.service';
-import { BrandInfo, detectBrandKey, getBrandByKey } from '../../utils/brand-detection';
+import { BrandInfo, detectBrandKey, getBrandByKey } from '../brand-detection';
+import { LinkService } from '../link.service';
 
 @Component({
   selector: 'app-link-form-modal',

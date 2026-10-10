@@ -9,6 +9,8 @@
 import { Injectable, inject } from '@angular/core';
 
 import { EdgeFunctionResponse, ShopCheckoutPayload, ShopItem, ShopOrder } from 'app/core/models';
+import { EdgeFunctionService } from 'app/core/services/edge-function.service';
+import { StorageService } from 'app/core/services/storage.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
@@ -16,6 +18,8 @@ import { SupabaseService } from 'app/core/services/supabase.service';
 })
 export class ShopService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly edgeFunctions = inject(EdgeFunctionService);
+  private readonly storage = inject(StorageService);
 
   // ── Creator-side (authenticated) ──────────────────────────────────────────
 
@@ -85,7 +89,7 @@ export class ShopService {
   public async createShopCheckout(
     payload: ShopCheckoutPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    return this.supabaseService.createShopCheckout(payload);
+    return this.edgeFunctions.createShopCheckout(payload);
   }
 
   // ── File storage ──────────────────────────────────────────────────────────
@@ -98,7 +102,7 @@ export class ShopService {
     creatorId: string,
     file: File,
   ): Promise<{ path: string | null; error: Error | null }> {
-    return this.supabaseService.uploadShopFile(creatorId, file);
+    return this.storage.uploadShopFile(creatorId, file);
   }
 
   /**
@@ -109,7 +113,7 @@ export class ShopService {
     creatorId: string,
     file: File,
   ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
-    return this.supabaseService.uploadShopThumbnail(creatorId, file);
+    return this.storage.uploadShopThumbnail(creatorId, file);
   }
 
   /**
@@ -136,6 +140,6 @@ export class ShopService {
   public async getShopDownloadUrl(
     sessionId: string,
   ): Promise<EdgeFunctionResponse<{ url: string; filename: string }>> {
-    return this.supabaseService.getShopDownloadUrl(sessionId);
+    return this.edgeFunctions.getShopDownloadUrl(sessionId);
   }
 }

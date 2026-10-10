@@ -43,7 +43,7 @@ import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { ResetPasswordComponent } from './reset-password.component';
 import { SupabaseService } from '../../../../core/services/supabase.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

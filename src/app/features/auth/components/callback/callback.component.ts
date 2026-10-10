@@ -6,7 +6,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 @Component({
   selector: 'app-callback',

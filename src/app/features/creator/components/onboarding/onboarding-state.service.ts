@@ -20,12 +20,12 @@ import { APP_CONSTANTS, ERROR_MESSAGES, ROUTES } from 'app/core/constants';
 import { EXPERT_CATEGORIES, type ExpertSubcategory, getCategoryById } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { FormValidators } from 'app/core/validators/form-validators';
-import { AuthService } from 'app/features/auth/services/auth.service';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 import type { SelectOption } from 'app/shared/components/ui/searchable-select/searchable-select.component';
 import { errorMessage } from 'app/shared/utils/error.utils';
 
 import { COUNTRY_CODES, detectCountryIndex } from './phone-country-codes.data';
-import { CreatorService } from '../../services/creator.service';
+import { CreatorService } from 'app/shared/domain/creator/creator.service';
 
 @Injectable()
 export class OnboardingStateService implements OnDestroy {

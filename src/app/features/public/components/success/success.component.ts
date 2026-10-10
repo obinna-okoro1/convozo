@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { ShopService } from 'app/features/creator/services/shop.service';
+import { ShopService } from 'app/shared/domain/shop/shop.service';
 
 @Component({
   selector: 'app-success',

@@ -26,10 +26,10 @@ import {
 } from 'app/core/models';
 import { EdgeFunctionService } from 'app/core/services/edge-function.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
-import { AuthService } from 'app/features/auth/services/auth.service';
-import { BookingService } from 'app/features/creator/services/booking.service';
-import { CreatorService } from 'app/features/creator/services/creator.service';
-import { MessageService } from 'app/features/creator/services/message.service';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
+import { BookingService } from 'app/shared/domain/bookings/booking.service';
+import { CreatorService } from 'app/shared/domain/creator/creator.service';
+import { MessageService } from 'app/shared/domain/messages/message.service';
 import { ToastService } from 'app/shared/services/toast.service';
 import { errorMessage } from 'app/shared/utils/error.utils';
 

@@ -11,6 +11,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { type SpyObj, createSpyObj } from '@testing/test-utils';
+import { EdgeFunctionService } from 'app/core/services/edge-function.service';
 
 import { MessageService } from './message.service';
 import { Message } from '../../../core/models';
@@ -76,6 +77,7 @@ function makeQueryChain(result: { data: unknown; error: unknown }) {
 describe('MessageService', () => {
   let service: MessageService;
   let supabaseSpy: SpyObj<SupabaseService>;
+  let edgeFunctionsSpy: SpyObj<EdgeFunctionService>;
   let mockClient: any;
 
   beforeEach(() => {
@@ -86,12 +88,17 @@ describe('MessageService', () => {
         .mockReturnValue(Promise.resolve()),
     };
 
-    supabaseSpy = createSpyObj<SupabaseService>(['sendReplyEmail'], {
+    supabaseSpy = createSpyObj<SupabaseService>([], {
       client: mockClient,
     });
+    edgeFunctionsSpy = createSpyObj<EdgeFunctionService>(['sendReplyEmail']);
 
     TestBed.configureTestingModule({
-      providers: [MessageService, { provide: SupabaseService, useValue: supabaseSpy }],
+      providers: [
+        MessageService,
+        { provide: SupabaseService, useValue: supabaseSpy },
+        { provide: EdgeFunctionService, useValue: edgeFunctionsSpy },
+      ],
     });
 
     service = TestBed.inject(MessageService);
@@ -207,7 +214,7 @@ describe('MessageService', () => {
 
   describe('replyToMessage()', () => {
     it('returns success when sendReplyEmail resolves without error', async () => {
-      supabaseSpy.sendReplyEmail.mockReturnValue(
+      edgeFunctionsSpy.sendReplyEmail.mockReturnValue(
         Promise.resolve({ data: undefined, error: undefined }),
       );
 
@@ -220,20 +227,20 @@ describe('MessageService', () => {
     });
 
     it('calls sendReplyEmail with messageId and reply content', async () => {
-      supabaseSpy.sendReplyEmail.mockReturnValue(
+      edgeFunctionsSpy.sendReplyEmail.mockReturnValue(
         Promise.resolve({ data: undefined, error: undefined }),
       );
 
       await service.replyToMessage('msg-1', 'Thanks!', 'user@test.com');
 
 
-      expect(supabaseSpy.sendReplyEmail)
+      expect(edgeFunctionsSpy.sendReplyEmail)
         .toHaveBeenCalledWith('msg-1', 'Thanks!');
     });
 
     it('returns failure when sendReplyEmail returns an error', async () => {
       const edgeError = { message: 'Edge function failed' };
-      supabaseSpy.sendReplyEmail.mockReturnValue(
+      edgeFunctionsSpy.sendReplyEmail.mockReturnValue(
         Promise.resolve({ data: undefined, error: edgeError }),
       );
 
@@ -246,7 +253,7 @@ describe('MessageService', () => {
     });
 
     it('returns failure when sendReplyEmail throws', async () => {
-      supabaseSpy.sendReplyEmail.mockReturnValue(Promise.reject(new Error('Network error')));
+      edgeFunctionsSpy.sendReplyEmail.mockReturnValue(Promise.reject(new Error('Network error')));
 
       const result = await service.replyToMessage('msg-1', 'reply', 'user@test.com');
 

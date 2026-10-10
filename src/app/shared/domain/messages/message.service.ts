@@ -13,6 +13,7 @@ import { Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { Message, MessageReply, MessageStats, SupabaseResponse } from 'app/core/models';
+import { EdgeFunctionService } from 'app/core/services/edge-function.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
@@ -20,6 +21,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
 })
 export class MessageService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly edgeFunctions = inject(EdgeFunctionService);
 
   /**
    * Load messages for a creator (excludes call-type messages)
@@ -83,7 +85,7 @@ export class MessageService {
     _senderEmail: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error: functionError } = await this.supabaseService.sendReplyEmail(
+      const { error: functionError } = await this.edgeFunctions.sendReplyEmail(
         messageId,
         replyContent,
       );

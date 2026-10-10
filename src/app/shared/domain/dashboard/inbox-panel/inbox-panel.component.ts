@@ -14,11 +14,11 @@ import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { FilterStatus, Message, MessageReply, MessageStats } from 'app/core/models';
-import { MessageService } from 'app/features/creator/services/message.service';
 import {
   SearchableSelectComponent,
   SelectOption,
 } from 'app/shared/components/ui/searchable-select/searchable-select.component';
+import { MessageService } from 'app/shared/domain/messages/message.service';
 import { ToastService } from 'app/shared/services/toast.service';
 
 @Component({

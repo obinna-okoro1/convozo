@@ -12,12 +12,6 @@ import { RouterLink } from '@angular/router';
 
 import { CreatorLink, CreatorPost } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
-import { LinkFormModalComponent } from 'app/features/link-in-bio/components/link-form-modal/link-form-modal.component';
-import { LinkService } from 'app/features/link-in-bio/services/link.service';
-import {
-  BrandInfo,
-  getBrandByKey,
-} from 'app/features/link-in-bio/utils/brand-detection';
 import {
   CallBookingFormComponent,
   CallBookingFormData,
@@ -26,6 +20,12 @@ import {
   MessageFormComponent,
   MessageFormData,
 } from 'app/features/public/components/message-form/message-form.component';
+import {
+  BrandInfo,
+  getBrandByKey,
+} from 'app/shared/domain/links/brand-detection';
+import { LinkFormModalComponent } from 'app/shared/domain/links/link-form-modal/link-form-modal.component';
+import { LinkService } from 'app/shared/domain/links/link.service';
 import { ToastService } from 'app/shared/services/toast.service';
 
 import { MessagePageStateService } from '../../message-page-state.service';

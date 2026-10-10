@@ -42,9 +42,9 @@ import type { Mock } from 'vitest';
 import { type SpyObj, createSpyObj } from '@testing/test-utils';
 
 import { SettingsStateService } from './settings-state.service';
-import { Creator, FlutterwaveBank, FlutterwaveSubaccount } from '../../../../core/models';
-import { SupabaseService } from '../../../../core/services/supabase.service';
-import { CreatorService } from '../../services/creator.service';
+import { Creator, FlutterwaveBank, FlutterwaveSubaccount } from '../../../core/models';
+import { SupabaseService } from '../../../core/services/supabase.service';
+import { CreatorService } from '../creator/creator.service';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 

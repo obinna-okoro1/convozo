@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { AvailabilityManagerComponent } from 'app/features/creator/components/availability-manager/availability-manager.component';
+import { AvailabilityManagerComponent } from 'app/shared/domain/bookings/availability-manager/availability-manager.component';
 
 import { SettingsStateService } from '../../settings-state.service';
 

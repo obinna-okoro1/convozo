@@ -16,7 +16,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 
 import { type SpyObj, createSpyObj } from '@testing/test-utils';
-import { ShopService } from 'app/features/creator/services/shop.service';
+import { ShopService } from 'app/shared/domain/shop/shop.service';
 
 import { SuccessComponent } from './success.component';
 

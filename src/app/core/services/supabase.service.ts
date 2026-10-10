@@ -1,4 +1,4 @@
-import { Injectable, Injector, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { PostgrestError, SupabaseClient, User, createClient } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -46,7 +46,6 @@ export class SupabaseService {
   public readonly client: SupabaseClient;
   public readonly currentUser$: Observable<User | null>;
 
-  private readonly injector = inject(Injector);
   private readonly currentUserSubject: BehaviorSubject<User | null>;
   private sessionInitialized = false;
   private sessionInitPromise: Promise<void> | null = null;
@@ -299,129 +298,6 @@ export class SupabaseService {
       .order('month', { ascending: false });
 
     return { data: data as CreatorMonthlyAnalytics[] | null, error };
-  }
-
-  // ── Edge Functions (backward-compat — prefer EdgeFunctionService) ──
-  // These methods delegate to EdgeFunctionService internally for consumers
-  // that haven't migrated yet. New code should inject EdgeFunctionService directly.
-
-  /** @deprecated Use EdgeFunctionService.createCheckoutSession() */
-  public async createCheckoutSession(
-    payload: import('../models').CheckoutSessionPayload,
-  ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    // Dynamic import — not ideal but preserves backward compat without circular deps
-    // TODO: migrate all callers to EdgeFunctionService directly
-    return this.injector.get(EdgeFunctionService)
-      .createCheckoutSession(payload);
-  }
-
-  /** @deprecated Use EdgeFunctionService.createCallBookingSession() */
-  public async createCallBookingSession(
-    payload: import('../models').CallBookingPayload,
-  ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    return this.injector.get(EdgeFunctionService)
-      .createCallBookingSession(payload);
-  }
-
-  /** @deprecated Use EdgeFunctionService.sendReplyEmail() */
-  public async sendReplyEmail(
-    messageId: string,
-    replyContent: string,
-  ): Promise<import('../models').EdgeFunctionResponse<void>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    return this.injector.get(EdgeFunctionService)
-      .sendReplyEmail(messageId, replyContent);
-  }
-
-  /** @deprecated Use EdgeFunctionService.createConnectAccount() */
-  public async createConnectAccount(
-    creatorId: string,
-    email: string,
-    displayName: string,
-  ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeConnectResponse>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    return this.injector.get(EdgeFunctionService)
-      .createConnectAccount(creatorId, email, displayName);
-  }
-
-  /** @deprecated Use EdgeFunctionService.verifyConnectAccount() */
-  public async verifyConnectAccount(
-    accountId: string,
-  ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeAccountStatus>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    return this.injector.get(EdgeFunctionService)
-      .verifyConnectAccount(accountId);
-  }
-
-  /** @deprecated Use EdgeFunctionService.getShopDownloadUrl() */
-  public async getShopDownloadUrl(
-    sessionId: string,
-  ): Promise<import('../models').EdgeFunctionResponse<{ url: string; filename: string }>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    return this.injector.get(EdgeFunctionService)
-      .getShopDownloadUrl(sessionId);
-  }
-
-  /** @deprecated Use EdgeFunctionService.createShopCheckout() */
-  public async createShopCheckout(
-    payload: import('../models').ShopCheckoutPayload,
-  ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
-    const { EdgeFunctionService } = await import('./edge-function.service');
-
-    return this.injector.get(EdgeFunctionService)
-      .createShopCheckout(payload);
-  }
-
-  // ── Storage (backward-compat — prefer StorageService) ──────────────
-
-  /** @deprecated Use StorageService.uploadPublicFile() */
-  public async uploadFile(
-    bucket: string,
-    path: string,
-    file: File,
-  ): Promise<{ data: { path: string; publicUrl: string } | null; error: Error | null }> {
-    const { StorageService } = await import('./storage.service');
-
-    return this.injector.get(StorageService)
-      .uploadPublicFile(bucket, path, file);
-  }
-
-  /** @deprecated Use StorageService.deleteFile() */
-  public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
-    const { StorageService } = await import('./storage.service');
-
-    return this.injector.get(StorageService)
-      .deleteFile(bucket, path);
-  }
-
-  /** @deprecated Use StorageService.uploadShopFile() */
-  public async uploadShopFile(
-    creatorId: string,
-    file: File,
-  ): Promise<{ path: string | null; error: Error | null }> {
-    const { StorageService } = await import('./storage.service');
-
-    return this.injector.get(StorageService)
-      .uploadShopFile(creatorId, file);
-  }
-
-  /** @deprecated Use StorageService.uploadShopThumbnail() */
-  public async uploadShopThumbnail(
-    creatorId: string,
-    file: File,
-  ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
-    const { StorageService } = await import('./storage.service');
-
-    return this.injector.get(StorageService)
-      .uploadShopThumbnail(creatorId, file);
   }
 
   // ── Private ────────────────────────────────────────────────────────

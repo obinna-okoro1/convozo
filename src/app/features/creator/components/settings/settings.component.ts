@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { SettingsStateService } from './settings-state.service';
+import { SettingsStateService } from 'app/shared/domain/creator-settings/settings-state.service';
 import { SettingsTabsComponent } from './settings-tabs/settings-tabs.component';
 
 @Component({

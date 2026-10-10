@@ -19,6 +19,7 @@ import {
   StripeConnectResponse,
   SupabaseResponse,
 } from 'app/core/models';
+import { EdgeFunctionService } from 'app/core/services/edge-function.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
@@ -26,6 +27,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
 })
 export class CreatorService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly edgeFunctions = inject(EdgeFunctionService);
 
   public async getCreatorByUserId(userId: string): Promise<SupabaseResponse<Creator>> {
     return this.supabaseService.getCreatorByUserId(userId);
@@ -266,13 +268,13 @@ export class CreatorService {
     email: string,
     displayName: string,
   ): Promise<EdgeFunctionResponse<StripeConnectResponse>> {
-    return this.supabaseService.createConnectAccount(creatorId, email, displayName);
+    return this.edgeFunctions.createConnectAccount(creatorId, email, displayName);
   }
 
   public async verifyStripeAccount(
     accountId: string,
   ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
-    return this.supabaseService.verifyConnectAccount(accountId);
+    return this.edgeFunctions.verifyConnectAccount(accountId);
   }
 
   // ── Flutterwave ───────────────────────────────────────────────────────────────

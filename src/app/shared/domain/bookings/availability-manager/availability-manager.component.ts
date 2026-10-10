@@ -22,7 +22,7 @@ import {
   SelectOption,
 } from 'app/shared/components/ui/searchable-select/searchable-select.component';
 
-import { AvailabilityService } from '../../services/availability.service';
+import { AvailabilityService } from '../availability.service';
 
 interface DaySchedule {
   day: DayOfWeek;

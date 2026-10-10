@@ -19,7 +19,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
 
 import { CreatorHeaderComponent } from '../../components/creator-header/creator-header.component';
 import { LinkListComponent } from '../../components/link-list/link-list.component';
-import { LinkService } from '../../services/link.service';
+import { LinkService } from 'app/shared/domain/links/link.service';
 
 interface CreatorProfile {
   id: string;

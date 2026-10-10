@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 @Component({
   selector: 'app-signup',

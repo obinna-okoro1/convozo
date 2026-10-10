@@ -16,6 +16,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 
+import { StorageService } from 'app/core/services/storage.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { errorMessage } from 'app/shared/utils/error.utils';
 import { compressImage } from 'app/shared/utils/image.utils';
@@ -35,6 +36,7 @@ export interface ImageChangeEvent {
 })
 export class ImageUploadComponent {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly storage = inject(StorageService);
 
   /**
    * Current image URL – drives the preview.
@@ -119,7 +121,7 @@ export class ImageUploadComponent {
       const fileName = `${userId}-${String(Date.now())}.jpg`;
       const filePath = `${this.folder()}/${userId}/${fileName}`;
 
-      const { data, error } = await this.supabaseService.uploadFile('public', filePath, compressed);
+      const { data, error } = await this.storage.uploadPublicFile('public', filePath, compressed);
 
       if (error) {
         throw error;

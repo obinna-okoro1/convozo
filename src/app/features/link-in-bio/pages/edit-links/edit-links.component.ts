@@ -10,9 +10,9 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } fro
 import { CreatorLink } from 'app/core/models';
 import { ToastService } from 'app/shared/services/toast.service';
 
-import { LinkFormModalComponent } from '../../components/link-form-modal/link-form-modal.component';
-import { LinkService } from '../../services/link.service';
-import { BrandInfo, getBrandByKey } from '../../utils/brand-detection';
+import { LinkFormModalComponent } from 'app/shared/domain/links/link-form-modal/link-form-modal.component';
+import { LinkService } from 'app/shared/domain/links/link.service';
+import { BrandInfo, getBrandByKey } from 'app/shared/domain/links/brand-detection';
 
 @Component({
   selector: 'app-edit-links',
