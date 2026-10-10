@@ -81,12 +81,12 @@ import { CompleteCallResponse } from 'app/core/models';
   `,
 })
 export class VideoCompletedOverlayComponent {
-  readonly completionResult = input<CompleteCallResponse | null>(null);
-  readonly isCreator = input.required<boolean>();
+  public readonly completionResult = input<CompleteCallResponse | null>(null);
+  public readonly isCreator = input.required<boolean>();
 
-  readonly goBackClicked = output();
+  public readonly goBackClicked = output();
 
-  formatDuration(seconds: number): string {
+  public formatDuration(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
 

@@ -64,8 +64,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   `,
 })
 export class VideoWaitingOverlayComponent {
-  readonly otherParticipantName = input.required<string>();
-  readonly callDuration = input<number | undefined>();
+  public readonly otherParticipantName = input.required<string>();
+  public readonly callDuration = input<number | undefined>();
 
-  readonly leaveClicked = output();
+  public readonly leaveClicked = output();
 }

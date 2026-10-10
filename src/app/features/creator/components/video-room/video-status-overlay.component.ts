@@ -114,8 +114,8 @@ export type VideoOverlayStatus = 'loading' | 'connecting' | 'ending' | 'error';
   `,
 })
 export class VideoStatusOverlayComponent {
-  readonly status = input.required<VideoOverlayStatus>();
-  readonly errorMessage = input<string | null>();
+  public readonly status = input.required<VideoOverlayStatus>();
+  public readonly errorMessage = input<string | null>();
 
-  readonly actionClicked = output();
+  public readonly actionClicked = output();
 }

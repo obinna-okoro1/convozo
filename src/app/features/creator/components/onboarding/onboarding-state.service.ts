@@ -35,43 +35,43 @@ export class OnboardingStateService implements OnDestroy {
   private readonly supabaseService = inject(SupabaseService);
 
   // ── Step management ────────────────────────────────────────────────
-  readonly currentStep = signal<number>(1);
-  readonly loading = signal<boolean>(false);
-  readonly error = signal<string | null>(null);
-  readonly TOTAL_STEPS = 4;
+  public readonly currentStep = signal<number>(1);
+  public readonly loading = signal<boolean>(false);
+  public readonly error = signal<string | null>(null);
+  public readonly TOTAL_STEPS = 4;
 
   // ── Profile fields ─────────────────────────────────────────────────
-  readonly displayName = signal<string>('');
-  readonly bio = signal<string>('');
-  readonly slug = signal<string>('');
-  readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
-  readonly slugManuallyEdited = signal<boolean>(false);
-  readonly profileImageUrl = signal<string>('');
+  public readonly displayName = signal<string>('');
+  public readonly bio = signal<string>('');
+  public readonly slug = signal<string>('');
+  public readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  public readonly slugManuallyEdited = signal<boolean>(false);
+  public readonly profileImageUrl = signal<string>('');
 
   // ── Expertise fields (step 2) ─────────────────────────────────────
-  readonly expertCategory = signal<string>('');
-  readonly expertSubcategory = signal<string>('');
-  readonly professionTitle = signal<string>('');
-  readonly yearsOfExperience = signal<number | null>(null);
-  readonly linkedinUrl = signal<string>('');
+  public readonly expertCategory = signal<string>('');
+  public readonly expertSubcategory = signal<string>('');
+  public readonly professionTitle = signal<string>('');
+  public readonly yearsOfExperience = signal<number | null>(null);
+  public readonly linkedinUrl = signal<string>('');
 
   // ── Category data (exposed for template) ──────────────────────────
-  readonly categories = EXPERT_CATEGORIES;
+  public readonly categories = EXPERT_CATEGORIES;
 
   // ── Phone number ───────────────────────────────────────────────────
-  readonly countryCodes = COUNTRY_CODES;
-  readonly selectedCountryIndex = signal<number>(0);
-  readonly phoneNumber = signal<string>('');
+  public readonly countryCodes = COUNTRY_CODES;
+  public readonly selectedCountryIndex = signal<number>(0);
+  public readonly phoneNumber = signal<string>('');
 
-  readonly countryCodeOptions: SelectOption[] = COUNTRY_CODES.map((cc, i) => ({
+  public readonly countryCodeOptions: SelectOption[] = COUNTRY_CODES.map((cc, i) => ({
     value: String(i),
     label: `${cc.flag} ${cc.country} (${cc.code})`,
   }));
 
   // Exposed so the template can reference String() for type conversion
-  readonly String = String;
+  public readonly String = String;
 
-  readonly fullPhoneNumber = computed(() => {
+  public readonly fullPhoneNumber = computed(() => {
     const country = COUNTRY_CODES[this.selectedCountryIndex()];
     const local = this.phoneNumber()
       .trim();
@@ -84,11 +84,11 @@ export class OnboardingStateService implements OnDestroy {
   });
 
   // ── OAuth import indicator ─────────────────────────────────────────
-  readonly hasOAuthData = signal<boolean>(false);
-  readonly oauthProvider = signal<string>('');
+  public readonly hasOAuthData = signal<boolean>(false);
+  public readonly oauthProvider = signal<string>('');
 
   // ── Validation ─────────────────────────────────────────────────────
-  readonly canProceedStep1 = computed(
+  public readonly canProceedStep1 = computed(
     () =>
       !!this.displayName() &&
       !!this.slug() &&
@@ -99,19 +99,19 @@ export class OnboardingStateService implements OnDestroy {
   );
 
   // Category must be selected to leave step 2. Subcategory and title are optional.
-  readonly canProceedStep2 = computed(() => !!this.expertCategory());
+  public readonly canProceedStep2 = computed(() => !!this.expertCategory());
 
   // Subcategories for the currently selected expert category.
-  readonly filteredSubcategories = computed<ExpertSubcategory[]>(
+  public readonly filteredSubcategories = computed<ExpertSubcategory[]>(
     () => getCategoryById(this.expertCategory())?.subcategories ?? [],
   );
 
   // Dropdown-ready option lists — fed directly to <app-searchable-select>
-  readonly categoryOptions = computed<SelectOption[]>(() =>
+  public readonly categoryOptions = computed<SelectOption[]>(() =>
     EXPERT_CATEGORIES.map((c) => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
   );
 
-  readonly subcategoryOptions = computed<SelectOption[]>(() =>
+  public readonly subcategoryOptions = computed<SelectOption[]>(() =>
     this.filteredSubcategories()
       .map((s) => ({ value: s.id, label: s.label })),
   );
@@ -122,7 +122,7 @@ export class OnboardingStateService implements OnDestroy {
 
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     if (this.slugCheckTimer != null) {
       clearTimeout(this.slugCheckTimer);
       this.slugCheckTimer = null;
@@ -131,7 +131,7 @@ export class OnboardingStateService implements OnDestroy {
 
   // ── Initialization ─────────────────────────────────────────────────
 
-  async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     this.selectedCountryIndex.set(detectCountryIndex());
     await this.checkExistingProfile();
     this.loadOAuthData();
@@ -176,13 +176,13 @@ export class OnboardingStateService implements OnDestroy {
 
   // ── Navigation ─────────────────────────────────────────────────────
 
-  nextStep(): void {
+  public nextStep(): void {
     if (this.currentStep() < this.TOTAL_STEPS) {
       this.currentStep.update((s) => s + 1);
     }
   }
 
-  prevStep(): void {
+  public prevStep(): void {
     if (this.currentStep() > 1) {
       this.currentStep.update((s) => s - 1);
     }
@@ -190,7 +190,7 @@ export class OnboardingStateService implements OnDestroy {
 
   // ── Profile field updates ──────────────────────────────────────────
 
-  updateDisplayName(value: string): void {
+  public updateDisplayName(value: string): void {
     this.displayName.set(value);
 
     if (!this.slugManuallyEdited()) {
@@ -200,7 +200,7 @@ export class OnboardingStateService implements OnDestroy {
     }
   }
 
-  updateSlug(value: string): void {
+  public updateSlug(value: string): void {
     const sanitized = FormValidators.sanitizeSlug(value);
     this.slug.set(sanitized);
     this.slugManuallyEdited.set(true);
@@ -276,7 +276,7 @@ export class OnboardingStateService implements OnDestroy {
   // ── Expertise helpers ──────────────────────────────────────────────
 
   /** Called when the category dropdown value changes. Clears subcategory on category switch. */
-  onCategoryChange(value: string): void {
+  public onCategoryChange(value: string): void {
     if (this.expertCategory() !== value) {
       this.expertSubcategory.set('');
     }
@@ -284,12 +284,12 @@ export class OnboardingStateService implements OnDestroy {
   }
 
   /** Called when the subcategory dropdown value changes. */
-  onSubcategoryChange(value: string): void {
+  public onSubcategoryChange(value: string): void {
     this.expertSubcategory.set(value);
   }
 
   /** Parse and clamp years of experience from an input string value. */
-  setYearsOfExperience(value: string): void {
+  public setYearsOfExperience(value: string): void {
     const n = parseInt(value, 10);
     this.yearsOfExperience.set(isNaN(n) ? null : Math.min(80, Math.max(0, n)));
   }
@@ -301,7 +301,7 @@ export class OnboardingStateService implements OnDestroy {
    * then navigate to the dashboard. Stripe connection and monetization activation
    * happen post-onboarding in Settings -> Payments.
    */
-  async completeOnboarding(): Promise<void> {
+  public async completeOnboarding(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 

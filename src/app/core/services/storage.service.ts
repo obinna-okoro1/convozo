@@ -25,7 +25,7 @@ export class StorageService {
   /**
    * Upload a file to a public bucket and return both the storage path and public URL.
    */
-  async uploadPublicFile(
+  public async uploadPublicFile(
     bucket: string,
     path: string,
     file: File,
@@ -56,7 +56,7 @@ export class StorageService {
   /**
    * Delete a file from a bucket.
    */
-  async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
+  public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
     const { error } = await this.supabase.client.storage.from(bucket)
       .remove([path]);
 
@@ -68,7 +68,7 @@ export class StorageService {
    * Returns the storage path (never a public URL — access via signed URLs only).
    * Path format: {creatorId}/{timestamp}_{safeFilename}
    */
-  async uploadShopFile(
+  public async uploadShopFile(
     creatorId: string,
     file: File,
   ): Promise<{ path: string | null; error: Error | null }> {
@@ -94,7 +94,7 @@ export class StorageService {
    * Upload a thumbnail to the public shop-thumbnails bucket.
    * Returns both the storage path and the derived public URL.
    */
-  async uploadShopThumbnail(
+  public async uploadShopThumbnail(
     creatorId: string,
     file: File,
   ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {

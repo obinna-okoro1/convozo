@@ -63,10 +63,10 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   `,
 })
 export class VideoCallToolbarComponent {
-  readonly otherParticipantName = input.required<string>();
-  readonly remainingSeconds = input.required<number>();
-  readonly formattedTimeRemaining = input.required<string>();
-  readonly isCreator = input.required<boolean>();
+  public readonly otherParticipantName = input.required<string>();
+  public readonly remainingSeconds = input.required<number>();
+  public readonly formattedTimeRemaining = input.required<string>();
+  public readonly isCreator = input.required<boolean>();
 
-  readonly endCallClicked = output();
+  public readonly endCallClicked = output();
 }

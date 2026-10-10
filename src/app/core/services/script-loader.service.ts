@@ -8,7 +8,7 @@ export class ScriptLoaderService {
   // Stores the promise per URL — late callers get the same promise, no duplicate network request.
   private readonly registry = new Map<string, Promise<void>>();
 
-  load(src: string): Promise<void> {
+  public load(src: string): Promise<void> {
     const cached = this.registry.get(src);
 
     if (cached) {return cached;}
@@ -30,7 +30,7 @@ export class ScriptLoaderService {
     return promise;
   }
 
-  isRequested(src: string): boolean {
+  public isRequested(src: string): boolean {
     return this.registry.has(src);
   }
 }

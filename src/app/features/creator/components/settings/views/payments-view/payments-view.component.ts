@@ -74,7 +74,7 @@ export class PaymentsViewComponent implements OnInit {
   protected readonly resolveError = signal<string | null>(null);
   protected readonly showBankForm = signal(false);
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
     const returningFromStripe =
       params.get('connected') === 'true' || params.get('refresh') === 'true';

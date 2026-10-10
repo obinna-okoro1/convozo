@@ -35,15 +35,15 @@ interface Tab {
 export class MessagePageTabsComponent {
   private readonly state = inject(MessagePageStateService);
 
-  readonly scrollContainer = viewChild<ElementRef<HTMLDivElement>>('scrollContainer');
-  readonly canScrollLeft = signal(false);
-  readonly canScrollRight = signal(false);
+  public readonly scrollContainer = viewChild<ElementRef<HTMLDivElement>>('scrollContainer');
+  public readonly canScrollLeft = signal(false);
+  public readonly canScrollRight = signal(false);
 
   constructor() {
     afterNextRender(() => this.updateScrollIndicators());
   }
 
-  onScroll(): void {
+  public onScroll(): void {
     this.updateScrollIndicators();
   }
 
@@ -57,7 +57,7 @@ export class MessagePageTabsComponent {
     );
   }
 
-  readonly visibleTabs = computed<Tab[]>(() => {
+  public readonly visibleTabs = computed<Tab[]>(() => {
     const tabs: Tab[] = [];
 
     if (this.state.messagesEnabled()) {

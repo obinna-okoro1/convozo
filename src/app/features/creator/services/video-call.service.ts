@@ -23,19 +23,19 @@ export class VideoCallService {
   private readonly supabaseService = inject(SupabaseService);
 
   // Reactive state for the video call
-  readonly callState = signal<VideoCallState>('idle');
-  readonly currentBooking = signal<CallBooking | null>(null);
-  readonly roomUrl = signal<string | null>(null);
-  readonly meetingToken = signal<string | null>(null);
-  readonly callStartedAt = signal<Date | null>(null);
-  readonly remainingSeconds = signal<number>(0);
-  readonly errorMessage = signal<string | null>(null);
+  public readonly callState = signal<VideoCallState>('idle');
+  public readonly currentBooking = signal<CallBooking | null>(null);
+  public readonly roomUrl = signal<string | null>(null);
+  public readonly meetingToken = signal<string | null>(null);
+  public readonly callStartedAt = signal<Date | null>(null);
+  public readonly remainingSeconds = signal<number>(0);
+  public readonly errorMessage = signal<string | null>(null);
 
   // Secret token for fan auth against complete-call (set when fan joins via joinCall)
   private fanAccessToken: string | null = null;
 
   // Computed: formatted time remaining (MM:SS)
-  readonly formattedTimeRemaining = computed(() => {
+  public readonly formattedTimeRemaining = computed(() => {
     const total = this.remainingSeconds();
 
     if (total <= 0) {
@@ -49,13 +49,13 @@ export class VideoCallService {
       .padStart(2, '0')}`;
   });
 
-  readonly isCallActive = computed(
+  public readonly isCallActive = computed(
     () => this.callState() === 'in_progress' || this.callState() === 'waiting',
   );
 
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
-  async joinCall(
+  public async joinCall(
     bookingId: string,
     role: 'creator' | 'fan',
     fanAccessToken?: string,
@@ -129,7 +129,7 @@ export class VideoCallService {
     }
   }
 
-  async completeCall(
+  public async completeCall(
     bookingId: string,
     endedBy: 'creator' | 'fan' | 'system' = 'system',
     fanAccessToken?: string,
@@ -179,7 +179,7 @@ export class VideoCallService {
    * Uses direct table SELECT — requires the caller to have SELECT access via RLS.
    * Creators are authenticated and pass RLS. Fans should use loadCallStatus() instead.
    */
-  async loadBooking(bookingId: string): Promise<SupabaseResponse<CallBooking>> {
+  public async loadBooking(bookingId: string): Promise<SupabaseResponse<CallBooking>> {
     const { data, error } = await this.supabaseService.client
       .from('call_bookings')
       .select('*')
@@ -199,7 +199,7 @@ export class VideoCallService {
    * booker email, or payment IDs (migration 029 security requirement).
    * Use this instead of loadBooking() when the caller may be an anon fan.
    */
-  async loadCallStatus(bookingId: string): Promise<SupabaseResponse<Partial<CallBooking>>> {
+  public async loadCallStatus(bookingId: string): Promise<SupabaseResponse<Partial<CallBooking>>> {
     const { data, error } = await this.supabaseService.client.rpc('get_call_status', {
       p_booking_id: bookingId,
     });
@@ -220,7 +220,7 @@ export class VideoCallService {
     return { data: row, error: null };
   }
 
-  startCountdown(durationMinutes: number): void {
+  public startCountdown(durationMinutes: number): void {
     this.stopCountdown(); // Clear any existing timer
 
     const startedAt = this.callStartedAt();
@@ -245,14 +245,14 @@ export class VideoCallService {
     }, 1000);
   }
 
-  stopCountdown(): void {
+  public stopCountdown(): void {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
     }
   }
 
-  reset(): void {
+  public reset(): void {
     this.stopCountdown();
     this.callState.set('idle');
     this.currentBooking.set(null);

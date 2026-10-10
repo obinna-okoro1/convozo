@@ -56,7 +56,7 @@ export class PortalComponent implements OnInit, OnDestroy {
 
   private authUnsubscribe: (() => void) | null = null;
 
-  async ngOnInit(): Promise<void> {
+  public async ngOnInit(): Promise<void> {
     // Subscribe to future auth events (magic-link click fires SIGNED_IN)
     const {
       data: { subscription },
@@ -85,7 +85,7 @@ export class PortalComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.authUnsubscribe?.();
   }
 

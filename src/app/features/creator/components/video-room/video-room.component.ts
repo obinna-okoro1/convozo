@@ -60,16 +60,16 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
-  readonly videoCallService = inject(VideoCallService);
+  public readonly videoCallService = inject(VideoCallService);
   private readonly supabaseService = inject(SupabaseService);
 
-  @ViewChild('dailyIframe') dailyIframeRef!: ElementRef<HTMLIFrameElement>;
+  @ViewChild('dailyIframe') public dailyIframeRef!: ElementRef<HTMLIFrameElement>;
 
-  readonly loading = signal(true);
-  readonly connecting = signal(false);
-  readonly completionResult = signal<CompleteCallResponse | null>(null);
+  public readonly loading = signal(true);
+  public readonly connecting = signal(false);
+  public readonly completionResult = signal<CompleteCallResponse | null>(null);
   /** Populated during initializeCall() — used to navigate back to /:slug/settings after a call. */
-  readonly creatorSlug = signal<string | null>(null);
+  public readonly creatorSlug = signal<string | null>(null);
 
   private bookingId = '';
   private role: 'creator' | 'fan' = 'fan';
@@ -86,7 +86,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   // Fires as soon as the join-call Edge Function sets call_started_at on the DB row.
   private bookingChannel: RealtimeChannel | null = null;
 
-  readonly otherParticipantName = computed(() => {
+  public readonly otherParticipantName = computed(() => {
     const booking = this.videoCallService.currentBooking();
 
     if (!booking) {
@@ -96,7 +96,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.role === 'creator' ? booking.booker_name : 'Creator';
   });
 
-  readonly isCreator = computed(() => this.role === 'creator');
+  public readonly isCreator = computed(() => this.role === 'creator');
 
   constructor() {
     // Watch for timer expiry → auto-complete the call (creator only)
@@ -112,7 +112,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.bookingId = this.route.snapshot.paramMap.get('bookingId') || '';
     this.role = (this.route.snapshot.queryParamMap.get('role') as 'creator' | 'fan') || 'fan';
     this.fanAccessToken = this.route.snapshot.queryParamMap.get('token') || '';
@@ -154,7 +154,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * By the time the async initializeCall() resolves (~1-2s Edge Function round-trip),
    * ngAfterViewInit will always have already run, so dailyCall is guaranteed to be set.
    */
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     // Destroy any lingering Daily.co singleton before wrapping.
     // This prevents "Duplicate DailyIframe instances are not allowed" when
     // the component is remounted (e.g. Angular hot reload or fast navigation)
@@ -694,7 +694,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * Both paths hit the same complete-call Edge Function — if both race simultaneously,
    * the second caller gets a 409 which is handled gracefully (shows completed screen).
    */
-  async endCall(): Promise<void> {
+  public async endCall(): Promise<void> {
     // Prevent double-ending
     const currentState = this.videoCallService.callState();
 
@@ -722,7 +722,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  goBack(): void {
+  public goBack(): void {
     if (this.isCreator()) {
       const slug = this.creatorSlug();
       void this.router.navigate(slug ? [`/${slug}/settings`] : ['/home']);
@@ -737,7 +737,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * from Daily and navigate back. The booking stays 'confirmed' so they
    * can rejoin later.
    */
-  async leaveWaiting(): Promise<void> {
+  public async leaveWaiting(): Promise<void> {
     if (this.dailyCall) {
       try {
         await this.dailyCall.leave();
@@ -749,7 +749,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     this.goBack();
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     if (this.autoCompleteTimeout) {
       clearTimeout(this.autoCompleteTimeout);
     }

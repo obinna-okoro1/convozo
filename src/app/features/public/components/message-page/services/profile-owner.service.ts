@@ -45,37 +45,37 @@ export class ProfileOwnerService {
   private readonly router = inject(Router);
 
   // ── Ownership ──────────────────────────────────────────────────────
-  readonly isOwner = signal(false);
-  readonly isOwnerLoading = signal(true);
-  readonly creatorId = signal<string | null>(null);
-  readonly creatorSlug = signal<string | null>(null);
-  readonly settings = signal<CreatorSettings | null>(null);
+  public readonly isOwner = signal(false);
+  public readonly isOwnerLoading = signal(true);
+  public readonly creatorId = signal<string | null>(null);
+  public readonly creatorSlug = signal<string | null>(null);
+  public readonly settings = signal<CreatorSettings | null>(null);
   private readonly paymentProvider = signal<'stripe' | 'flutterwave'>('stripe');
 
   // ── Data signals ──────────────────────────────────────────────
-  readonly messages = signal<Message[]>([]);
-  readonly callBookings = signal<CallBooking[]>([]);
-  readonly monthlyAnalytics = signal<CreatorMonthlyAnalytics[]>([]);
-  readonly stripeAccount = signal<StripeAccount | null>(null);
-  readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
+  public readonly messages = signal<Message[]>([]);
+  public readonly callBookings = signal<CallBooking[]>([]);
+  public readonly monthlyAnalytics = signal<CreatorMonthlyAnalytics[]>([]);
+  public readonly stripeAccount = signal<StripeAccount | null>(null);
+  public readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
 
   // ── Computed ───────────────────────────────────────────────────────
-  readonly unreadCount = computed(() => this.messages()
+  public readonly unreadCount = computed(() => this.messages()
     .filter((m) => !m.is_handled).length);
 
-  readonly confirmedBookingCount = computed(
+  public readonly confirmedBookingCount = computed(
     () => this.callBookings()
       .filter((b) => b.status === 'confirmed').length,
   );
 
-  readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
-  readonly isStripeConnected = computed(() => {
+  public readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
+  public readonly isStripeConnected = computed(() => {
     const account = this.stripeAccount();
 
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
 
-  readonly isPaymentReady = computed(() => {
+  public readonly isPaymentReady = computed(() => {
     if (this.paymentProvider() === 'flutterwave') {
       return !!this.flutterwaveSubaccount()?.is_active;
     }
@@ -84,10 +84,10 @@ export class ProfileOwnerService {
   });
 
   // ── Delete confirmation state ──────────────────────────────────────
-  readonly showDeleteConfirm = signal(false);
-  readonly messageToDelete = signal<Message | CallBooking | null>(null);
-  readonly deleting = signal(false);
-  readonly itemToDeleteName = computed(() => {
+  public readonly showDeleteConfirm = signal(false);
+  public readonly messageToDelete = signal<Message | CallBooking | null>(null);
+  public readonly deleting = signal(false);
+  public readonly itemToDeleteName = computed(() => {
     const item = this.messageToDelete();
 
     if (!item) {
@@ -99,7 +99,7 @@ export class ProfileOwnerService {
 
   // ── Initialization ─────────────────────────────────────────────────
 
-  async initialize(creator: CreatorProfile): Promise<void> {
+  public async initialize(creator: CreatorProfile): Promise<void> {
     const user = this.auth.getCurrentUser();
 
     if (!user) {
@@ -122,7 +122,7 @@ export class ProfileOwnerService {
 
   // ── Actions ────────────────────────────────────────────────────────
 
-  async markAsHandled(message: Message): Promise<void> {
+  public async markAsHandled(message: Message): Promise<void> {
     const { error } = await this.messageService.markAsHandled(message.id);
 
     if (error) {
@@ -135,7 +135,7 @@ export class ProfileOwnerService {
     );
   }
 
-  async markBookingCompleted(booking: CallBooking): Promise<void> {
+  public async markBookingCompleted(booking: CallBooking): Promise<void> {
     const { error } = await this.bookingService.updateBookingStatus(booking.id, 'completed');
 
     if (error) {
@@ -149,7 +149,7 @@ export class ProfileOwnerService {
     this.toast.success('Booking marked as completed!');
   }
 
-  async cancelBooking(booking: CallBooking): Promise<void> {
+  public async cancelBooking(booking: CallBooking): Promise<void> {
     const { error } = await this.bookingService.updateBookingStatus(booking.id, 'cancelled');
 
     if (error) {
@@ -163,11 +163,11 @@ export class ProfileOwnerService {
     this.toast.success('Booking cancelled');
   }
 
-  joinVideoCall(booking: CallBooking): void {
+  public joinVideoCall(booking: CallBooking): void {
     void this.router.navigate(['/call', booking.id], { queryParams: { role: 'creator' } });
   }
 
-  async verifyPhysicalMeeting(bookingId: string, code: string): Promise<void> {
+  public async verifyPhysicalMeeting(bookingId: string, code: string): Promise<void> {
     const { error } = await this.edgeFunctionService.verifyPhysicalMeeting(bookingId, code);
 
     if (error) {
@@ -193,12 +193,12 @@ export class ProfileOwnerService {
     this.toast.success('Meeting confirmed! Payment hold period has started.');
   }
 
-  confirmDelete(item: Message | CallBooking): void {
+  public confirmDelete(item: Message | CallBooking): void {
     this.messageToDelete.set(item);
     this.showDeleteConfirm.set(true);
   }
 
-  async deleteItem(): Promise<void> {
+  public async deleteItem(): Promise<void> {
     const item = this.messageToDelete();
 
     if (!item) {
@@ -226,12 +226,12 @@ export class ProfileOwnerService {
     }
   }
 
-  cancelDelete(): void {
+  public cancelDelete(): void {
     this.showDeleteConfirm.set(false);
     this.messageToDelete.set(null);
   }
 
-  async signOut(): Promise<void> {
+  public async signOut(): Promise<void> {
     await this.auth.signOut();
   }
 

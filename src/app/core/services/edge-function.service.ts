@@ -102,19 +102,19 @@ export class EdgeFunctionService {
 
   // ── Checkout ───────────────────────────────────────────────────────
 
-  async createCheckoutSession(
+  public async createCheckoutSession(
     payload: CheckoutSessionPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     return this.invoke('create-checkout-session', payload);
   }
 
-  async createCallBookingSession(
+  public async createCallBookingSession(
     payload: CallBookingPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     return this.invoke('create-call-booking-session', payload);
   }
 
-  async createShopCheckout(
+  public async createShopCheckout(
     payload: ShopCheckoutPayload,
   ): Promise<EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     return this.invoke('create-shop-checkout', payload);
@@ -122,7 +122,7 @@ export class EdgeFunctionService {
 
   // ── Stripe Connect ─────────────────────────────────────────────────
 
-  async createConnectAccount(
+  public async createConnectAccount(
     creatorId: string,
     email: string,
     displayName: string,
@@ -134,7 +134,7 @@ export class EdgeFunctionService {
     });
   }
 
-  async verifyConnectAccount(
+  public async verifyConnectAccount(
     accountId: string,
   ): Promise<EdgeFunctionResponse<StripeAccountStatus>> {
     return this.invoke('verify-connect-account', { account_id: accountId });
@@ -142,7 +142,7 @@ export class EdgeFunctionService {
 
   // ── Email ──────────────────────────────────────────────────────────
 
-  async sendReplyEmail(
+  public async sendReplyEmail(
     messageId: string,
     replyContent: string,
   ): Promise<EdgeFunctionResponse<void>> {
@@ -159,7 +159,7 @@ export class EdgeFunctionService {
    * using the client-facing token. No auth required — called from the
    * public `/conversation/:token` page.
    */
-  async getConversation(token: string): Promise<EdgeFunctionResponse<ConversationData>> {
+  public async getConversation(token: string): Promise<EdgeFunctionResponse<ConversationData>> {
     return this.invokePublic('get-conversation', { token });
   }
 
@@ -167,7 +167,7 @@ export class EdgeFunctionService {
    * Post a client reply to a conversation.
    * No auth required — uses the conversation token for ownership.
    */
-  async postClientReply(
+  public async postClientReply(
     token: string,
     content: string,
   ): Promise<EdgeFunctionResponse<{ reply: Pick<MessageReply, 'id' | 'created_at'> }>> {
@@ -176,7 +176,7 @@ export class EdgeFunctionService {
 
   // ── Shop Downloads ─────────────────────────────────────────────────
 
-  async getShopDownloadUrl(
+  public async getShopDownloadUrl(
     sessionId: string,
   ): Promise<EdgeFunctionResponse<{ url: string; filename: string }>> {
     return this.invoke('get-shop-download', { session_id: sessionId });
@@ -189,7 +189,7 @@ export class EdgeFunctionService {
    * Called by the expert from their dashboard after the session.
    * On success the booking is marked completed and the 7-day payout hold begins.
    */
-  async verifyPhysicalMeeting(
+  public async verifyPhysicalMeeting(
     bookingId: string,
     verificationCode: string,
   ): Promise<EdgeFunctionResponse<{ status: string; booking_id: string }>> {
@@ -206,7 +206,7 @@ export class EdgeFunctionService {
    * Requires a valid Supabase JWT (from a magic-link session).
    * The edge function filters by auth.email() — clients only see their own data.
    */
-  async getClientPortal(): Promise<EdgeFunctionResponse<ClientPortalData>> {
+  public async getClientPortal(): Promise<EdgeFunctionResponse<ClientPortalData>> {
     return this.invoke('get-client-portal', {});
   }
 

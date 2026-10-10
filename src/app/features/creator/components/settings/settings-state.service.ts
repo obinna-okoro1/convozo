@@ -31,63 +31,63 @@ export class SettingsStateService {
   private readonly router = inject(Router);
 
   // ── Core data ──────────────────────────────────────────────────────
-  readonly creator = signal<Creator | null>(null);
-  readonly settings = signal<CreatorSettings | null>(null);
-  readonly paymentAccount = signal<StripeAccount | null>(null);
+  public readonly creator = signal<Creator | null>(null);
+  public readonly settings = signal<CreatorSettings | null>(null);
+  public readonly paymentAccount = signal<StripeAccount | null>(null);
   /** Flutterwave subaccount for NG/ZA creators. Null until loaded or not set up yet. */
-  readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
+  public readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
   /** Bank list for the Flutterwave bank picker. */
-  readonly flutterwaveBanks = signal<FlutterwaveBank[]>([]);
+  public readonly flutterwaveBanks = signal<FlutterwaveBank[]>([]);
   /** True while the Flutterwave bank list is loading. */
-  readonly flutterwaveBanksLoading = signal(false);
+  public readonly flutterwaveBanksLoading = signal(false);
   /** True while the Flutterwave subaccount is being created. */
-  readonly flutterwaveConnecting = signal(false);
+  public readonly flutterwaveConnecting = signal(false);
 
   // ── Shared UI state ────────────────────────────────────────────────
-  readonly loading = signal(false);
+  public readonly loading = signal(false);
   /** True while the profile section is being saved — drives the Profile tab save button spinner. */
-  readonly profileSaving = signal(false);
+  public readonly profileSaving = signal(false);
   /** True while the monetization section is being saved — drives the Monetization tab save button spinner. */
-  readonly monetizationSaving = signal(false);
-  readonly success = signal(false);
-  readonly error = signal<string | null>(null);
-  readonly paymentConnecting = signal(false);
+  public readonly monetizationSaving = signal(false);
+  public readonly success = signal(false);
+  public readonly error = signal<string | null>(null);
+  public readonly paymentConnecting = signal(false);
 
   // ── Profile fields ─────────────────────────────────────────────────
-  readonly displayName = signal('');
-  readonly slug = signal('');
-  readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
-  readonly bio = signal('');
-  readonly profileImageUrl = signal('');
-  readonly bannerImageUrl = signal('');
-  readonly phoneNumber = signal('');
+  public readonly displayName = signal('');
+  public readonly slug = signal('');
+  public readonly slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  public readonly bio = signal('');
+  public readonly profileImageUrl = signal('');
+  public readonly bannerImageUrl = signal('');
+  public readonly phoneNumber = signal('');
 
   // ── Expertise fields ──────────────────────────────────────────────────
-  readonly expertCategory = signal<string>('');
-  readonly expertSubcategory = signal<string>('');
-  readonly professionTitle = signal<string>('');
-  readonly yearsOfExperience = signal<number | null>(null);
-  readonly linkedinUrl = signal<string>('');
-  readonly profileType = signal<'consultant' | 'practitioner'>('consultant');
+  public readonly expertCategory = signal<string>('');
+  public readonly expertSubcategory = signal<string>('');
+  public readonly professionTitle = signal<string>('');
+  public readonly yearsOfExperience = signal<number | null>(null);
+  public readonly linkedinUrl = signal<string>('');
+  public readonly profileType = signal<'consultant' | 'practitioner'>('consultant');
 
   private originalSlug = '';
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ── Monetization fields ────────────────────────────────────────────
-  readonly messagePrice = signal(500);
-  readonly messagesEnabled = signal(false);
-  readonly callPrice = signal(2000);
-  readonly callDuration = signal(10);
-  readonly callsEnabled = signal(false);
-  readonly sessionType = signal<'online' | 'physical' | 'both'>('online');
-  readonly physicalAddress = signal('');
-  readonly tipsEnabled = signal(false);
-  readonly shopEnabled = signal(false);
-  readonly responseExpectation = signal('');
-  readonly bufferMinutes = signal<number>(0);
+  public readonly messagePrice = signal(500);
+  public readonly messagesEnabled = signal(false);
+  public readonly callPrice = signal(2000);
+  public readonly callDuration = signal(10);
+  public readonly callsEnabled = signal(false);
+  public readonly sessionType = signal<'online' | 'physical' | 'both'>('online');
+  public readonly physicalAddress = signal('');
+  public readonly tipsEnabled = signal(false);
+  public readonly shopEnabled = signal(false);
+  public readonly responseExpectation = signal('');
+  public readonly bufferMinutes = signal<number>(0);
 
   // ── Dirty-state tracking ───────────────────────────────────────────
-  readonly originalProfile = signal({
+  public readonly originalProfile = signal({
     displayName: '',
     slug: '',
     bio: '',
@@ -102,7 +102,7 @@ export class SettingsStateService {
     profileType: 'consultant',
   });
 
-  readonly originalMonetization = signal({
+  public readonly originalMonetization = signal({
     messagePrice: 500,
     messagesEnabled: false,
     callPrice: 2000,
@@ -117,7 +117,7 @@ export class SettingsStateService {
   });
 
   // ── Computed ───────────────────────────────────────────────────────
-  readonly profileDirty = computed(() => {
+  public readonly profileDirty = computed(() => {
     const o = this.originalProfile();
 
     return (
@@ -136,7 +136,7 @@ export class SettingsStateService {
     );
   });
 
-  readonly canSaveProfile = computed(
+  public readonly canSaveProfile = computed(
     () =>
       this.profileDirty() &&
       !!this.displayName() &&
@@ -147,7 +147,7 @@ export class SettingsStateService {
       this.slugStatus() !== 'invalid',
   );
 
-  readonly monetizationDirty = computed(() => {
+  public readonly monetizationDirty = computed(() => {
     const o = this.originalMonetization();
 
     return (
@@ -165,32 +165,32 @@ export class SettingsStateService {
     );
   });
 
-  readonly canSaveMonetization = computed(() => this.monetizationDirty());
+  public readonly canSaveMonetization = computed(() => this.monetizationDirty());
 
   /** Subcategories for the currently selected expert category. */
-  readonly filteredSubcategories = computed<ExpertSubcategory[]>(
+  public readonly filteredSubcategories = computed<ExpertSubcategory[]>(
     () => getCategoryById(this.expertCategory())?.subcategories ?? [],
   );
 
   /** Dropdown-ready option lists — fed directly to <app-searchable-select> */
-  readonly categoryOptions = computed<SelectOption[]>(() =>
+  public readonly categoryOptions = computed<SelectOption[]>(() =>
     EXPERT_CATEGORIES.map((c) => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
   );
 
-  readonly subcategoryOptions = computed<SelectOption[]>(() =>
+  public readonly subcategoryOptions = computed<SelectOption[]>(() =>
     this.filteredSubcategories()
       .map((s) => ({ value: s.id, label: s.label })),
   );
 
   /** True only when Stripe account is fully connected and onboarding is complete */
-  readonly isStripeConnected = computed(() => {
+  public readonly isStripeConnected = computed(() => {
     const account = this.paymentAccount();
 
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
 
   /** True when this creator uses Flutterwave (NG/ZA). */
-  readonly isFlutterwaveCreator = computed(
+  public readonly isFlutterwaveCreator = computed(
     () => this.creator()?.payment_provider === 'flutterwave',
   );
 
@@ -199,7 +199,7 @@ export class SettingsStateService {
    * Flutterwave subaccounts are immediately active upon creation — no async
    * verification step is needed.
    */
-  readonly isFlutterwaveConnected = computed(() => !!this.flutterwaveSubaccount()?.is_active);
+  public readonly isFlutterwaveConnected = computed(() => !!this.flutterwaveSubaccount()?.is_active);
 
   /**
    * True when payments are ready to accept — regardless of provider.
@@ -207,32 +207,32 @@ export class SettingsStateService {
    * Flutterwave creators: bank account active.
    * Used to gate the Monetization and Shop settings views.
    */
-  readonly isPaymentReady = computed(
+  public readonly isPaymentReady = computed(
     () => this.isStripeConnected() || this.isFlutterwaveConnected(),
   );
 
   // ── Helpers ────────────────────────────────────────────────────────
 
-  inputValue(event: Event): string {
+  public inputValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }
 
-  inputNumber(event: Event): number {
+  public inputNumber(event: Event): number {
     return +(event.target as HTMLInputElement).value;
   }
 
-  inputChecked(event: Event): boolean {
+  public inputChecked(event: Event): boolean {
     return (event.target as HTMLInputElement).checked;
   }
 
-  clearMessages(): void {
+  public clearMessages(): void {
     this.error.set(null);
     this.success.set(false);
   }
 
   // ── Slug validation ────────────────────────────────────────────────
 
-  updateSlug(value: string): void {
+  public updateSlug(value: string): void {
     const sanitized = FormValidators.sanitizeSlug(value);
     this.slug.set(sanitized);
     this.debouncedSlugCheck(sanitized);
@@ -278,7 +278,7 @@ export class SettingsStateService {
 
   // ── Profile actions ────────────────────────────────────────────────
 
-  async saveProfile(): Promise<void> {
+  public async saveProfile(): Promise<void> {
     if (!this.canSaveProfile()) {
       this.error.set('Please fix the errors above before saving');
 
@@ -341,7 +341,7 @@ export class SettingsStateService {
 
   // ── Monetization actions ───────────────────────────────────────────
 
-  async saveMonetization(): Promise<void> {
+  public async saveMonetization(): Promise<void> {
     this.monetizationSaving.set(true);
     this.error.set(null);
     this.success.set(false);
@@ -390,7 +390,7 @@ export class SettingsStateService {
 
   // ── Payment actions ────────────────────────────────────────────────
 
-  async connectPayment(): Promise<void> {
+  public async connectPayment(): Promise<void> {
     this.paymentConnecting.set(true);
     this.error.set(null);
 
@@ -444,7 +444,7 @@ export class SettingsStateService {
   /**
    * Refresh Stripe account status (called after returning from Stripe onboarding)
    */
-  async refreshStripeStatus(): Promise<void> {
+  public async refreshStripeStatus(): Promise<void> {
     const creator = this.creator();
     const account = this.paymentAccount();
 
@@ -482,7 +482,7 @@ export class SettingsStateService {
   // ── Expertise helpers ──────────────────────────────────────────────
 
   /** Called when the category dropdown value changes. Clears subcategory on category switch. */
-  onCategoryChange(value: string): void {
+  public onCategoryChange(value: string): void {
     if (this.expertCategory() !== value) {
       this.expertSubcategory.set('');
     }
@@ -490,26 +490,26 @@ export class SettingsStateService {
   }
 
   /** Called when the subcategory dropdown value changes. */
-  onSubcategoryChange(value: string): void {
+  public onSubcategoryChange(value: string): void {
     this.expertSubcategory.set(value);
   }
 
   /** Parse and clamp years of experience from an input string value. */
-  setYearsOfExperience(value: string): void {
+  public setYearsOfExperience(value: string): void {
     const n = parseInt(value, 10);
     this.yearsOfExperience.set(isNaN(n) ? null : Math.min(80, Math.max(0, n)));
   }
 
   // ── Navigation ─────────────────────────────────────────────────────
 
-  goToProfile(): void {
+  public goToProfile(): void {
     const slug = this.creator()?.slug;
     void this.router.navigate(slug ? [`/${slug}`] : ['/home']);
   }
 
   // ── Initialization ─────────────────────────────────────────────────
 
-  async loadCreatorData(): Promise<void> {
+  public async loadCreatorData(): Promise<void> {
     this.loading.set(true);
 
     const creatorData = await this.creatorService.getCurrentCreator();
@@ -612,7 +612,7 @@ export class SettingsStateService {
    * Resolve a bank account number to the registered account name.
    * Used by the UI to verify the account before submitting bank setup.
    */
-  async resolveFlutterwaveAccount(
+  public async resolveFlutterwaveAccount(
     accountNumber: string,
     bankCode: string,
   ): Promise<{ accountName: string | null; error: string | null }> {
@@ -654,7 +654,7 @@ export class SettingsStateService {
    * Load the bank list for the creator's country (NG or ZA).
    * Called lazily when the creator opens the Flutterwave bank setup form.
    */
-  async loadFlutterwaveBanks(): Promise<void> {
+  public async loadFlutterwaveBanks(): Promise<void> {
     const country = this.creator()?.country;
 
     if (!country) {
@@ -688,7 +688,7 @@ export class SettingsStateService {
    * Submit the creator's bank account details to set up a Flutterwave subaccount.
    * Called from Settings → Payments for NG/ZA creators.
    */
-  async connectFlutterwave(params: {
+  public async connectFlutterwave(params: {
     bankCode: string;
     accountNumber: string;
     businessName: string;

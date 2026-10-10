@@ -50,22 +50,22 @@ export class SearchableSelectComponent implements OnDestroy {
   private readonly elementRef = inject(ElementRef);
 
   /** The list of options to display. */
-  readonly options = input.required<SelectOption[]>();
+  public readonly options = input.required<SelectOption[]>();
 
   /** The currently selected value (two-way bindable via [(value)]). */
-  readonly value = model<string>('');
+  public readonly value = model<string>('');
 
   /** Placeholder text when no option is selected. */
-  readonly placeholder = input<string>('Select…');
+  public readonly placeholder = input<string>('Select…');
 
   /** Whether to show a search input inside the dropdown. */
-  readonly searchable = input<boolean>(true);
+  public readonly searchable = input<boolean>(true);
 
   /** Optional size variant. */
-  readonly size = input<'sm' | 'md'>('md');
+  public readonly size = input<'sm' | 'md'>('md');
 
   /** Whether the control is disabled. */
-  readonly disabled = input<boolean>(false);
+  public readonly disabled = input<boolean>(false);
 
   /* ─── Internal state ─── */
 
@@ -101,14 +101,14 @@ export class SearchableSelectComponent implements OnDestroy {
 
   /* ─── Lifecycle ─── */
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     // Cleanup if needed
   }
 
   /* ─── Click outside to close ─── */
 
   @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
+  public onDocumentClick(event: MouseEvent): void {
     if (!this.isOpen()) {
       return;
     }

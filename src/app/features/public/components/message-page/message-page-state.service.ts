@@ -26,47 +26,47 @@ export class MessagePageStateService {
   private readonly linkService = inject(LinkService);
 
   // ── Core data ──
-  readonly creator = signal<CreatorProfile | null>(null);
-  readonly loading = signal<boolean>(true);
-  readonly error = signal<string | null>(null);
+  public readonly creator = signal<CreatorProfile | null>(null);
+  public readonly loading = signal<boolean>(true);
+  public readonly error = signal<string | null>(null);
 
   // ── Availability data ──
-  readonly availabilitySlots = signal<AvailabilitySlot[]>([]);
+  public readonly availabilitySlots = signal<AvailabilitySlot[]>([]);
   /**
    * ISO strings of already-confirmed or in-progress call_bookings for this
    * creator. Passed to the booking form so taken slots are hidden from the
    * picker before the client reaches Stripe.
    */
-  readonly bookedIsos = signal<string[]>([]);
+  public readonly bookedIsos = signal<string[]>([]);
 
   // ── Links data ──
-  readonly creatorLinks = signal<CreatorLink[]>([]);
+  public readonly creatorLinks = signal<CreatorLink[]>([]);
 
   // ── Posts feed (5 most recent, for public profile preview) ──
-  readonly creatorPosts = signal<CreatorPost[]>([]);
+  public readonly creatorPosts = signal<CreatorPost[]>([]);
 
   // ── UI state ──
-  readonly submitting = signal<boolean>(false);
+  public readonly submitting = signal<boolean>(false);
 
   // ── Creator settings ──
   private readonly creatorSettings = signal<CreatorProfile['creator_settings'] | null>(null);
-  readonly settings = computed(() => this.creatorSettings());
-  readonly messagePriceCents = computed(() => this.settings()?.message_price ?? 0);
-  readonly messagesEnabled = computed(() => this.settings()?.messages_enabled ?? false);
-  readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
-  readonly callDuration = computed(() => this.settings()?.call_duration ?? 10);
-  readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
-  readonly tipsEnabled = computed(() => this.settings()?.tips_enabled ?? false);
-  readonly shopEnabled = computed(() => this.settings()?.shop_enabled ?? false);
+  public readonly settings = computed(() => this.creatorSettings());
+  public readonly messagePriceCents = computed(() => this.settings()?.message_price ?? 0);
+  public readonly messagesEnabled = computed(() => this.settings()?.messages_enabled ?? false);
+  public readonly callPriceCents = computed(() => this.settings()?.call_price ?? 0);
+  public readonly callDuration = computed(() => this.settings()?.call_duration ?? 10);
+  public readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
+  public readonly tipsEnabled = computed(() => this.settings()?.tips_enabled ?? false);
+  public readonly shopEnabled = computed(() => this.settings()?.shop_enabled ?? false);
   /** Session format offered: 'online', 'physical', or 'both'. */
-  readonly sessionType = computed(() => this.settings()?.session_type ?? 'online');
+  public readonly sessionType = computed(() => this.settings()?.session_type ?? 'online');
   /** In-person address; only populated when sessionType is 'physical' or 'both'. */
-  readonly physicalAddress = computed(() => this.settings()?.physical_address ?? '');
+  public readonly physicalAddress = computed(() => this.settings()?.physical_address ?? '');
   /**
    * The primary booking type to show inline on the profile page.
    * 'call' takes priority over 'message' since sessions are higher-value.
    */
-  readonly primaryBookingType = computed((): 'call' | 'message' | null => {
+  public readonly primaryBookingType = computed((): 'call' | 'message' | null => {
     if (this.callsEnabled()) {
       return 'call';
     }
@@ -78,50 +78,50 @@ export class MessagePageStateService {
     return null;
   });
 
-  readonly responseExpectation = computed(
+  public readonly responseExpectation = computed(
     () => this.settings()?.response_expectation ?? '24-48 hours',
   );
 
   /** Controls public-facing copy: 'consultant' = advisory language; 'practitioner' = appointment language. */
-  readonly profileType = computed(
+  public readonly profileType = computed(
     (): 'consultant' | 'practitioner' => this.creator()?.profile_type ?? 'consultant',
   );
 
   /** Dead time in minutes between consecutive call bookings — fed to the slot generator. */
-  readonly bufferMinutes = computed(() => this.settings()?.buffer_minutes ?? 0);
+  public readonly bufferMinutes = computed(() => this.settings()?.buffer_minutes ?? 0);
 
   // ── Professional credentials (migration 041) ──
-  readonly professionTitle = computed(() => this.creator()?.profession_title ?? null);
-  readonly yearsOfExperience = computed(() => this.creator()?.years_of_experience ?? null);
-  readonly expertCategory = computed(() => this.creator()?.category ?? null);
-  readonly expertSubcategory = computed(() => this.creator()?.subcategory ?? null);
-  readonly linkedinUrl = computed(() => this.creator()?.linkedin_url ?? null);
+  public readonly professionTitle = computed(() => this.creator()?.profession_title ?? null);
+  public readonly yearsOfExperience = computed(() => this.creator()?.years_of_experience ?? null);
+  public readonly expertCategory = computed(() => this.creator()?.category ?? null);
+  public readonly expertSubcategory = computed(() => this.creator()?.subcategory ?? null);
+  public readonly linkedinUrl = computed(() => this.creator()?.linkedin_url ?? null);
   /** True when the expert has filled in enough credentials to show a trust card. */
-  readonly hasCredentials = computed(() => !!(this.professionTitle() ?? this.expertCategory()));
+  public readonly hasCredentials = computed(() => !!(this.professionTitle() ?? this.expertCategory()));
 
   // ── Initialization ──
 
-  async initialize(slug: string): Promise<void> {
+  public async initialize(slug: string): Promise<void> {
     await this.loadCreator(slug);
   }
 
   // ── Public actions ──
 
-  async onMessageSubmit(formData: MessageFormData): Promise<void> {
+  public async onMessageSubmit(formData: MessageFormData): Promise<void> {
     if (!this.validateMessageForm(formData)) {
       return;
     }
     await this.processCheckout(formData.senderName, formData.senderEmail, formData.messageContent);
   }
 
-  async onCallBookingSubmit(formData: CallBookingFormData): Promise<void> {
+  public async onCallBookingSubmit(formData: CallBookingFormData): Promise<void> {
     if (!this.validateCallForm(formData)) {
       return;
     }
     await this.processCallCheckout(formData);
   }
 
-  async onSupportSubmit(formData: SupportFormData): Promise<void> {
+  public async onSupportSubmit(formData: SupportFormData): Promise<void> {
     if (!FormValidators.isNotEmpty(formData.senderName)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
 
@@ -142,7 +142,7 @@ export class MessagePageStateService {
     await this.processSupportCheckout(formData);
   }
 
-  async onShopCheckout(
+  public async onShopCheckout(
     itemId: string,
     buyerName: string,
     buyerEmail: string,
@@ -192,7 +192,7 @@ export class MessagePageStateService {
     }
   }
 
-  onLinkClicked(link: CreatorLink): void {
+  public onLinkClicked(link: CreatorLink): void {
     const creatorData = this.creator();
 
     if (creatorData) {
@@ -204,7 +204,7 @@ export class MessagePageStateService {
   // ── Public helpers ────────────────────────────────────────────────
 
   /** Re-fetches the creator's active links (called after the owner adds a new link). */
-  async reloadLinks(creatorId: string): Promise<void> {
+  public async reloadLinks(creatorId: string): Promise<void> {
     await this.loadCreatorLinks(creatorId);
   }
 
