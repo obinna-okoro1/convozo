@@ -45,7 +45,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         <span class="w-px h-4 opacity-25" style="background: white;"></span>
 
         <!-- End / Leave button -->
-        <button
+        <button type="button"
           (click)="endCallClicked.emit()"
           class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full
                  font-semibold text-xs text-white transition-all duration-150

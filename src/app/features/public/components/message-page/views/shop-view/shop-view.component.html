@@ -113,8 +113,9 @@
 
                 <form (ngSubmit)="onSubmit(item)" class="space-y-4 mt-4">
                   <div>
-                    <label class="form-label">Your Name *</label>
+                    <label for="public-shop-view-your-name" class="form-label">Your Name *</label>
                     <input
+                      id="public-shop-view-your-name"
                       type="text"
                       [(ngModel)]="buyerName"
                       name="buyerName"
@@ -125,8 +126,9 @@
                   </div>
 
                   <div>
-                    <label class="form-label">Your Email *</label>
+                    <label for="public-shop-view-your-email" class="form-label">Your Email *</label>
                     <input
+                      id="public-shop-view-your-email"
                       type="email"
                       [(ngModel)]="buyerEmail"
                       name="buyerEmail"
@@ -143,8 +145,11 @@
 
                   @if (item.is_request_based) {
                     <div>
-                      <label class="form-label">Your Brief / Instructions *</label>
+                      <label for="public-shop-view-your-brief-instructions" class="form-label"
+                        >Your Brief / Instructions *</label
+                      >
                       <textarea
+                        id="public-shop-view-your-brief-instructions"
                         [(ngModel)]="requestDetails"
                         name="requestDetails"
                         placeholder="Tell me what you'd like — be as specific as possible!"

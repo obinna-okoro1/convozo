@@ -85,6 +85,7 @@
                 <span class="badge">{{ message.message_type }}</span>
                 @if (message.is_handled) {
                   <button
+                    type="button"
                     (click)="onConfirmDelete(message); $event.stopPropagation()"
                     class="w-6 h-6 rounded-md flex items-center justify-center text-content-muted hover:text-[#d70015] hover:bg-[#d70015]/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
                     title="Delete message"
@@ -367,6 +368,7 @@
             <div class="flex gap-2">
               @if (msg.is_handled) {
                 <button
+                  type="button"
                   (click)="onConfirmDelete(msg)"
                   class="btn-danger btn-sm flex items-center gap-1.5"
                 >
@@ -382,6 +384,7 @@
                 </button>
               } @else {
                 <button
+                  type="button"
                   (click)="markAsHandled(msg)"
                   class="btn-secondary btn-sm flex items-center gap-1.5"
                 >
@@ -397,6 +400,7 @@
                 </button>
               }
               <button
+                type="button"
                 (click)="sendInlineReply()"
                 [disabled]="!replyText().trim() || sendingReply()"
                 class="btn-primary btn-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -478,6 +482,7 @@
       >
         <h3 class="text-lg font-bold text-content">{{ msg.sender_name }}</h3>
         <button
+          type="button"
           (click)="closeMessageModal()"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:text-content hover:bg-surface-overlay transition-all"
         >
@@ -578,6 +583,7 @@
 
         <div class="flex flex-col gap-2.5 pb-4">
           <button
+            type="button"
             (click)="sendInlineReplyFromMobile()"
             [disabled]="!replyText().trim() || sendingReply()"
             class="btn-primary btn-md w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -613,6 +619,7 @@
           </button>
           @if (!msg.is_handled) {
             <button
+              type="button"
               (click)="markAsHandledFromMobile(msg)"
               class="btn-secondary btn-md w-full flex items-center justify-center gap-2"
             >
@@ -628,6 +635,7 @@
             </button>
           } @else {
             <button
+              type="button"
               (click)="confirmDeleteFromMobile(msg)"
               class="btn-danger btn-md w-full flex items-center justify-center gap-2"
             >

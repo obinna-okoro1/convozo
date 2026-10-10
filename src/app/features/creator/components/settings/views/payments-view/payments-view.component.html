@@ -54,7 +54,7 @@
       </div>
 
       @if (!showBankForm()) {
-        <button (click)="openBankForm()" class="btn-ghost btn-md text-sm">
+        <button type="button" (click)="openBankForm()" class="btn-ghost btn-md text-sm">
           Update Bank Account
         </button>
       }
@@ -84,6 +84,7 @@
       </div>
       @if (!showBankForm()) {
         <button
+          type="button"
           (click)="openBankForm()"
           class="btn-primary btn-md w-full flex items-center justify-center gap-2"
         >
@@ -104,8 +105,11 @@
         }
 
         <div class="mb-4">
-          <label class="form-label">Business / Display Name</label>
+          <label for="payments-view-business-display-name" class="form-label"
+            >Business / Display Name</label
+          >
           <input
+            id="payments-view-business-display-name"
             type="text"
             class="form-input"
             [value]="businessName()"
@@ -116,7 +120,7 @@
         </div>
 
         <div class="mb-4">
-          <label class="form-label">Bank</label>
+          <p class="form-label">Bank</p>
           @if (state.flutterwaveBanksLoading()) {
             <div class="form-input flex items-center gap-2 text-content-muted text-sm">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -199,7 +203,7 @@
         </div>
 
         <div class="mb-4">
-          <label class="form-label">Account Number</label>
+          <p class="form-label">Account Number</p>
           <div class="flex gap-2">
             <input
               type="text"
@@ -212,6 +216,7 @@
             />
             @if (supportsNameResolution) {
               <button
+                type="button"
                 (click)="resolveAccount()"
                 [disabled]="resolving() || !accountNumber() || !bankCode()"
                 class="btn-ghost btn-md text-sm flex-shrink-0"
@@ -271,6 +276,7 @@
 
         <div class="flex gap-3">
           <button
+            type="button"
             (click)="submitBankAccount()"
             [disabled]="!canSubmitBank || state.flutterwaveConnecting()"
             class="btn-primary btn-md flex items-center gap-2"
@@ -296,7 +302,9 @@
               Save Bank Account
             }
           </button>
-          <button (click)="showBankForm.set(false)" class="btn-ghost btn-md text-sm">Cancel</button>
+          <button type="button" (click)="showBankForm.set(false)" class="btn-ghost btn-md text-sm">
+            Cancel
+          </button>
         </div>
       </div>
     }
@@ -491,6 +499,7 @@
         @if (stripeConnectEnabled) {
           @if (!state.paymentAccount()?.onboarding_completed) {
             <button
+              type="button"
               (click)="connectStripe()"
               [disabled]="state.paymentConnecting()"
               class="btn-primary btn-md flex items-center justify-center gap-2"
@@ -518,6 +527,7 @@
             </button>
           }
           <button
+            type="button"
             (click)="connectStripe()"
             [disabled]="state.paymentConnecting()"
             class="btn-ghost btn-md flex items-center justify-center gap-2 text-sm"
@@ -558,6 +568,7 @@
           </div>
         }
         <button
+          type="button"
           (click)="refreshStatus()"
           [disabled]="refreshing()"
           class="btn-ghost btn-md flex items-center justify-center gap-2 text-sm"
@@ -615,6 +626,7 @@
 
       @if (stripeConnectEnabled) {
         <button
+          type="button"
           (click)="connectStripe()"
           [disabled]="state.paymentConnecting()"
           class="btn-primary btn-md w-full flex items-center justify-center gap-2"

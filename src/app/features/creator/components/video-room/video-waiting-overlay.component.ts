@@ -51,7 +51,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
           }
         </div>
 
-        <button
+        <button type="button"
           (click)="leaveClicked.emit()"
           class="text-sm font-medium transition-all duration-200 px-5 py-2.5 rounded-xl
                  min-h-[2.75rem] hover:text-white/70 hover:bg-white/[0.09]"

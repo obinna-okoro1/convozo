@@ -152,7 +152,7 @@
         <div class="space-y-4">
           <!-- Item type -->
           <div>
-            <label class="form-label">Item Type <span class="text-red-400">*</span></label>
+            <p class="form-label">Item Type <span class="text-red-400">*</span></p>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               @for (type of itemTypes; track type) {
                 <button
@@ -174,8 +174,11 @@
 
           <!-- Title -->
           <div>
-            <label class="form-label">Title <span class="text-red-400">*</span></label>
+            <label for="shop-view-title" class="form-label"
+              >Title <span class="text-red-400">*</span></label
+            >
             <input
+              id="shop-view-title"
               type="text"
               [value]="form().title"
               (input)="setTitle($any($event.target).value)"
@@ -187,10 +190,11 @@
 
           <!-- Description -->
           <div>
-            <label class="form-label"
+            <label for="shop-view-description" class="form-label"
               >Description <span class="text-content-muted font-normal">(optional)</span></label
             >
             <textarea
+              id="shop-view-description"
               [value]="form().description"
               (input)="setDescription($any($event.target).value)"
               placeholder="What does the buyer get?"
@@ -203,7 +207,7 @@
           <!-- Price -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">Price (USD) <span class="text-red-400">*</span></label>
+              <p class="form-label">Price (USD) <span class="text-red-400">*</span></p>
               <div class="flex items-center gap-2">
                 <span class="text-lg font-semibold text-content-secondary">$</span>
                 <input
@@ -221,7 +225,7 @@
             <!-- Request-based info badge (shown for shoutout_request type) -->
             @if (form().isRequestBased) {
               <div>
-                <label class="form-label">Delivery</label>
+                <p class="form-label">Delivery</p>
                 <div
                   class="flex items-center gap-2.5 p-3 bg-accent/10 border border-accent/20 rounded-xl"
                 >
@@ -240,10 +244,10 @@
           <!-- File upload (only for non-request types) -->
           @if (!form().isRequestBased) {
             <div>
-              <label class="form-label">
+              <p class="form-label">
                 Digital File <span class="text-red-400">*</span>
                 <span class="text-content-muted font-normal ml-1">— max 500 MB</span>
-              </label>
+              </p>
 
               @if (form().fileStoragePath) {
                 <!-- File already uploaded -->
@@ -347,10 +351,9 @@
 
           <!-- Thumbnail upload -->
           <div>
-            <label class="form-label"
-              >Cover Image
-              <span class="text-content-muted font-normal">(optional — max 10 MB)</span></label
-            >
+            <p class="form-label">
+              Cover Image <span class="text-content-muted font-normal">(optional — max 10 MB)</span>
+            </p>
 
             @if (form().thumbnailStoragePath) {
               <!-- Thumbnail preview -->
@@ -464,11 +467,12 @@
           <!-- Preview + Delivery -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="form-label"
+              <label for="shop-view-preview-teaser" class="form-label"
                 >Preview Teaser
                 <span class="text-content-muted font-normal">(optional)</span></label
               >
               <input
+                id="shop-view-preview-teaser"
                 type="text"
                 [value]="form().previewText"
                 (input)="setPreviewText($any($event.target).value)"
@@ -478,10 +482,11 @@
               />
             </div>
             <div>
-              <label class="form-label"
+              <label for="shop-view-delivery-note" class="form-label"
                 >Delivery Note <span class="text-content-muted font-normal">(optional)</span></label
               >
               <input
+                id="shop-view-delivery-note"
                 type="text"
                 [value]="form().deliveryNote"
                 (input)="setDeliveryNote($any($event.target).value)"

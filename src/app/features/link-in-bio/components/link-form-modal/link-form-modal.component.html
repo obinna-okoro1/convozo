@@ -72,8 +72,11 @@
 
     <!-- Footer -->
     <div class="flex gap-3 p-5 sm:p-6 border-t border-separator">
-      <button (click)="closeModal()" class="btn-secondary btn-md flex-1">Cancel</button>
+      <button type="button" (click)="closeModal()" class="btn-secondary btn-md flex-1">
+        Cancel
+      </button>
       <button
+        type="button"
         (click)="saveLink()"
         [disabled]="saving() || !formTitle.trim() || !formUrl.trim()"
         class="btn-primary btn-md flex-1"

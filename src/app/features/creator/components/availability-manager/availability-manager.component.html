@@ -115,6 +115,7 @@
                   />
                   @if (day.slots.length > 1) {
                     <button
+                      type="button"
                       (click)="removeSlot(i, j)"
                       class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
                       style="background: rgba(215, 0, 21, 0.06); color: #d70015"
@@ -139,6 +140,7 @@
               }
               <div class="flex items-center gap-3 pt-0.5">
                 <button
+                  type="button"
                   (click)="addSlot(i)"
                   class="text-xs text-accent hover:text-accent/80 font-semibold flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-accent/8 transition-colors"
                 >
@@ -154,6 +156,7 @@
                 </button>
                 @if (day.day >= 1 && day.day <= 5) {
                   <button
+                    type="button"
                     (click)="copyToWeekdays(i)"
                     class="text-xs text-content-muted hover:text-content-secondary font-medium py-1 px-2 rounded-lg hover:bg-surface-elevated transition-colors"
                   >

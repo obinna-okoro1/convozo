@@ -41,6 +41,7 @@
 <div class="flex gap-1 p-1 rounded-xl bg-surface-raised mb-5">
   @for (tab of filterTabs(); track tab.value) {
     <button
+      type="button"
       (click)="onFilterChange(tab.value)"
       class="flex-1 py-2 px-3 rounded-lg text-sm font-bold transition-all duration-200"
       [class]="
@@ -233,6 +234,7 @@
                         (keydown.enter)="onVerifyPhysicalMeeting(booking)"
                       />
                       <button
+                        type="button"
                         (click)="onVerifyPhysicalMeeting(booking)"
                         [disabled]="!(codeInputs()[booking.id] ?? '').trim()"
                         class="btn-primary btn-sm flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -263,6 +265,7 @@
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <!-- Join / Rejoin -->
                   <button
+                    type="button"
                     (click)="onJoinCall(booking)"
                     class="btn-primary btn-sm flex items-center gap-1.5"
                   >
@@ -284,6 +287,7 @@
                   @if (booking.status === 'confirmed') {
                     <!-- Mark done -->
                     <button
+                      type="button"
                       (click)="markBookingCompleted(booking)"
                       class="btn-secondary btn-sm flex items-center gap-1.5"
                       title="Mark as completed"
@@ -306,6 +310,7 @@
 
                     <!-- Cancel -->
                     <button
+                      type="button"
                       (click)="onCancelBooking(booking)"
                       class="btn-sm h-8 px-2.5 rounded-lg flex items-center gap-1 text-content-muted hover:text-[#d70015] hover:bg-[#d70015]/10 transition-all duration-200"
                       title="Cancel booking"
@@ -464,6 +469,7 @@
                   </span>
                 }
                 <button
+                  type="button"
                   (click)="onConfirmDelete(booking)"
                   class="w-7 h-7 rounded-lg flex items-center justify-center text-content-muted hover:text-[#d70015] hover:bg-[#d70015]/10 transition-all duration-200"
                   title="Delete booking"

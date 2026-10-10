@@ -8,7 +8,12 @@
         <h3 class="text-lg sm:text-xl font-bold text-content">Delete Confirmation</h3>
         <p class="text-sm text-content-tertiary mt-1">This action cannot be undone</p>
       </div>
-      <button (click)="cancelled.emit()" [disabled]="deleting()" class="btn-ghost btn-sm !p-2">
+      <button
+        type="button"
+        (click)="cancelled.emit()"
+        [disabled]="deleting()"
+        class="btn-ghost btn-sm !p-2"
+      >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -63,10 +68,16 @@
     <div
       class="flex flex-col-reverse sm:flex-row justify-end gap-3 p-5 sm:p-6 border-t border-separator"
     >
-      <button (click)="cancelled.emit()" [disabled]="deleting()" class="btn-secondary btn-md">
+      <button
+        type="button"
+        (click)="cancelled.emit()"
+        [disabled]="deleting()"
+        class="btn-secondary btn-md"
+      >
         Cancel
       </button>
       <button
+        type="button"
         (click)="confirmed.emit()"
         [disabled]="deleting()"
         class="btn-danger btn-md flex items-center justify-center gap-2"

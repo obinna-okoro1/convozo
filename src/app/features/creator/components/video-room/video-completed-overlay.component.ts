@@ -70,7 +70,7 @@ import { CompleteCallResponse } from 'app/core/models';
           </div>
         }
 
-        <button
+        <button type="button"
           (click)="goBackClicked.emit()"
           class="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200"
           style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">

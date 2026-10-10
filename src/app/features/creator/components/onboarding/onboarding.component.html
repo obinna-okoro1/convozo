@@ -288,11 +288,12 @@
             <div class="space-y-5">
               <!-- Display Name -->
               <div>
-                <label class="form-label">
+                <label for="onboarding-display-name" class="form-label">
                   Display Name
                   <span class="text-[#d70015]">*</span>
                 </label>
                 <input
+                  id="onboarding-display-name"
                   type="text"
                   [value]="state.displayName()"
                   (input)="state.updateDisplayName(inputValue($event))"
@@ -304,10 +305,10 @@
 
               <!-- URL / Slug -->
               <div>
-                <label class="form-label">
+                <p class="form-label">
                   Your Convozo URL
                   <span class="text-[#d70015]">*</span>
-                </label>
+                </p>
                 <div class="flex items-center gap-3">
                   <span class="text-content-muted text-sm font-medium">convozo.com/</span>
                   <div class="relative flex-1">
@@ -410,8 +411,9 @@
 
               <!-- Bio -->
               <div>
-                <label class="form-label">Bio</label>
+                <label for="onboarding-bio" class="form-label">Bio</label>
                 <textarea
+                  id="onboarding-bio"
                   [value]="state.bio()"
                   (input)="state.bio.set(inputValue($event))"
                   placeholder="Tell people about yourself..."
@@ -431,10 +433,10 @@
 
               <!-- Phone Number -->
               <div>
-                <label class="form-label">
+                <p class="form-label">
                   Phone Number
                   <span class="text-[#d70015]">*</span>
-                </label>
+                </p>
                 <div class="flex flex-col sm:flex-row items-stretch gap-2">
                   <div class="sm:min-w-[10rem]">
                     <app-searchable-select
@@ -470,6 +472,7 @@
 
             <div class="mt-8 flex justify-end">
               <button
+                type="button"
                 (click)="state.nextStep()"
                 [disabled]="!state.canProceedStep1()"
                 class="btn-primary btn-lg flex items-center gap-3"
@@ -548,11 +551,12 @@
             <!-- Profession title + years of experience -->
             <div class="grid sm:grid-cols-2 gap-4 mb-5">
               <div>
-                <label class="form-label">
+                <label for="onboarding-professional-title" class="form-label">
                   Professional title
                   <span class="text-content-muted font-normal">(optional)</span>
                 </label>
                 <input
+                  id="onboarding-professional-title"
                   type="text"
                   [value]="state.professionTitle()"
                   (input)="state.professionTitle.set(inputValue($event))"
@@ -562,11 +566,12 @@
                 <p class="form-hint">Your exact job title</p>
               </div>
               <div>
-                <label class="form-label">
+                <label for="onboarding-years-of-experience" class="form-label">
                   Years of experience
                   <span class="text-content-muted font-normal">(optional)</span>
                 </label>
                 <input
+                  id="onboarding-years-of-experience"
                   type="number"
                   [value]="state.yearsOfExperience() ?? ''"
                   (input)="state.setYearsOfExperience(inputValue($event))"
@@ -580,11 +585,12 @@
 
             <!-- LinkedIn URL -->
             <div class="mb-5">
-              <label class="form-label">
+              <label for="onboarding-linkedin-profile" class="form-label">
                 LinkedIn profile
                 <span class="text-content-muted font-normal">(optional)</span>
               </label>
               <input
+                id="onboarding-linkedin-profile"
                 type="url"
                 [value]="state.linkedinUrl()"
                 (input)="state.linkedinUrl.set(inputValue($event))"
@@ -595,7 +601,11 @@
             </div>
 
             <div class="mt-8 flex justify-between">
-              <button (click)="state.prevStep()" class="btn-ghost btn-lg flex items-center gap-2">
+              <button
+                type="button"
+                (click)="state.prevStep()"
+                class="btn-ghost btn-lg flex items-center gap-2"
+              >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
@@ -607,6 +617,7 @@
                 Back
               </button>
               <button
+                type="button"
                 (click)="state.nextStep()"
                 [disabled]="!state.canProceedStep2()"
                 class="btn-primary btn-lg flex items-center gap-3"
@@ -762,7 +773,11 @@
             </div>
 
             <div class="mt-8 flex justify-between">
-              <button (click)="state.prevStep()" class="btn-ghost btn-lg flex items-center gap-2">
+              <button
+                type="button"
+                (click)="state.prevStep()"
+                class="btn-ghost btn-lg flex items-center gap-2"
+              >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
@@ -773,7 +788,11 @@
                 </svg>
                 Back
               </button>
-              <button (click)="state.nextStep()" class="btn-primary btn-lg flex items-center gap-3">
+              <button
+                type="button"
+                (click)="state.nextStep()"
+                class="btn-primary btn-lg flex items-center gap-3"
+              >
                 <span>Continue</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -896,6 +915,7 @@
 
             <div class="mt-8 flex justify-between">
               <button
+                type="button"
                 (click)="state.prevStep()"
                 class="btn-ghost btn-lg flex items-center gap-2"
                 [disabled]="state.loading()"
@@ -911,6 +931,7 @@
                 Back
               </button>
               <button
+                type="button"
                 (click)="state.completeOnboarding()"
                 [disabled]="state.loading()"
                 class="btn-primary btn-lg flex items-center gap-3"

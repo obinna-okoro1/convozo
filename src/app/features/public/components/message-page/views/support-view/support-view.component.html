@@ -3,10 +3,10 @@
     <form (ngSubmit)="onSubmit()" class="space-y-6">
       <!-- Amount Presets -->
       <div>
-        <label class="form-label flex items-center gap-1.5">
+        <p class="form-label flex items-center gap-1.5">
           Amount
           <span class="text-system-red">*</span>
-        </label>
+        </p>
         <div class="flex flex-wrap gap-2 mb-4">
           @for (amount of presetAmounts; track amount) {
             <button
@@ -46,11 +46,12 @@
       <!-- Sender Info -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="form-label">
+          <label for="public-support-view-your-name" class="form-label">
             Your Name
             <span class="text-system-red">*</span>
           </label>
           <input
+            id="public-support-view-your-name"
             type="text"
             [(ngModel)]="senderName"
             name="senderName"
@@ -60,11 +61,12 @@
           />
         </div>
         <div>
-          <label class="form-label">
+          <label for="public-support-view-your-email" class="form-label">
             Your Email
             <span class="text-system-red">*</span>
           </label>
           <input
+            id="public-support-view-your-email"
             type="email"
             [(ngModel)]="senderEmail"
             name="senderEmail"
@@ -77,11 +79,12 @@
 
       <!-- Note -->
       <div>
-        <label class="form-label">
+        <label for="public-support-view-leave-a-note" class="form-label">
           Leave a Note
           <span class="text-content-tertiary text-xs font-normal">(optional)</span>
         </label>
         <textarea
+          id="public-support-view-leave-a-note"
           [(ngModel)]="messageContent"
           name="messageContent"
           placeholder="Add a personal note..."

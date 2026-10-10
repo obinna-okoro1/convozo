@@ -4,6 +4,7 @@
   <div class="absolute top-3 right-3 z-20 flex items-center gap-1.5">
     <!-- Primary: Copy link — one tap, no menu needed -->
     <button
+      type="button"
       (click)="copyLink()"
       class="inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/15 text-white text-[0.72rem] font-semibold hover:bg-black/50 transition-all active:scale-95 select-none"
       aria-label="Copy profile link"
@@ -40,6 +41,7 @@
     <!-- Secondary: WhatsApp / X / native share -->
     <div class="relative">
       <button
+        type="button"
         (click)="shareProfile()"
         class="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:bg-black/50 transition-all active:scale-95"
         aria-label="More share options"

@@ -86,7 +86,7 @@ export type VideoOverlayStatus = 'loading' | 'connecting' | 'ending' | 'error';
             <p class="text-sm mb-8 leading-relaxed" style="color: rgba(255,255,255,0.45);">
               {{ errorMessage() }}
             </p>
-            <button
+            <button type="button"
               (click)="actionClicked.emit()"
               class="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200"
               style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">
