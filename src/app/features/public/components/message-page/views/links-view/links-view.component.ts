@@ -10,7 +10,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { CreatorLink, CreatorPost } from 'app/core/models';
+import { CreatorLink } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
 import {
   BrandInfo,

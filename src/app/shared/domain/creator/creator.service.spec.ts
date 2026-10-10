@@ -428,7 +428,7 @@ describe('CreatorService', () => {
       expect(result.data)
         .toEqual(expect.objectContaining({ subaccount_id: 'RS_xyz' }));
       expect(result.error)
-        .toBeNull();
+        .toBeUndefined();
     });
 
     it('propagates edge function errors', async () => {

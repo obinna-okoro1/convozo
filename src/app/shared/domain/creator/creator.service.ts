@@ -309,7 +309,7 @@ export class CreatorService {
       { country },
     );
 
-    return { data: data ?? undefined, error };
+    return { data: data ?? undefined, error: error ?? undefined };
   }
 
   /**
@@ -326,7 +326,7 @@ export class CreatorService {
       { resolve: true, account_number: accountNumber, bank_code: bankCode },
     );
 
-    return { data: data ?? undefined, error };
+    return { data: data ?? undefined, error: error ?? undefined };
   }
 
   /**
@@ -350,6 +350,6 @@ export class CreatorService {
       },
     );
 
-    return { data: data ?? undefined, error };
+    return { data: data ?? undefined, error: error ?? undefined };
   }
 }
