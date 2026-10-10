@@ -8,7 +8,7 @@
  * Errors: all methods handle errors internally and never throw to callers
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import { AvailabilitySlot, SupabaseResponse } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
@@ -17,7 +17,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class AvailabilityService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   /**
    * Load availability slots for a creator, ordered by day then start time

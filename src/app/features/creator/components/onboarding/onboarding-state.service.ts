@@ -13,29 +13,27 @@
  * (Stripe connection, pricing, toggle activation) happens post-onboarding in Settings.
  */
 
-import { Injectable, OnDestroy, computed, signal } from '@angular/core';
+import { Injectable, OnDestroy, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { APP_CONSTANTS, ERROR_MESSAGES, ROUTES } from 'app/core/constants';
-import {
-  EXPERT_CATEGORIES,
-  type ExpertSubcategory,
-  getCategoryById,
-} from 'app/core/models';
+import { EXPERT_CATEGORIES, type ExpertSubcategory, getCategoryById } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { FormValidators } from 'app/core/validators/form-validators';
 import { AuthService } from 'app/features/auth/services/auth.service';
 import type { SelectOption } from 'app/shared/components/ui/searchable-select/searchable-select.component';
 import { errorMessage } from 'app/shared/utils/error.utils';
 
-import {
-  COUNTRY_CODES,
-  detectCountryIndex,
-} from './phone-country-codes.data';
+import { COUNTRY_CODES, detectCountryIndex } from './phone-country-codes.data';
 import { CreatorService } from '../../services/creator.service';
 
 @Injectable()
 export class OnboardingStateService implements OnDestroy {
+  private readonly creatorService = inject(CreatorService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly supabaseService = inject(SupabaseService);
+
   // ── Step management ────────────────────────────────────────────────
   readonly currentStep = signal<number>(1);
   readonly loading = signal<boolean>(false);
@@ -56,7 +54,6 @@ export class OnboardingStateService implements OnDestroy {
   readonly professionTitle = signal<string>('');
   readonly yearsOfExperience = signal<number | null>(null);
   readonly linkedinUrl = signal<string>('');
-
 
   // ── Category data (exposed for template) ──────────────────────────
   readonly categories = EXPERT_CATEGORIES;
@@ -79,7 +76,9 @@ export class OnboardingStateService implements OnDestroy {
     const local = this.phoneNumber()
       .trim();
 
-    if (!local) {return '';}
+    if (!local) {
+      return '';
+    }
 
     return `${country.code} ${local}`;
   });
@@ -109,12 +108,12 @@ export class OnboardingStateService implements OnDestroy {
 
   // Dropdown-ready option lists — fed directly to <app-searchable-select>
   readonly categoryOptions = computed<SelectOption[]>(() =>
-    EXPERT_CATEGORIES.map(c => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
+    EXPERT_CATEGORIES.map((c) => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
   );
 
   readonly subcategoryOptions = computed<SelectOption[]>(() =>
     this.filteredSubcategories()
-      .map(s => ({ value: s.id, label: s.label })),
+      .map((s) => ({ value: s.id, label: s.label })),
   );
 
   // Tracks a creator row already written to the DB during this session.
@@ -122,13 +121,6 @@ export class OnboardingStateService implements OnDestroy {
   private readonly _savedCreatorId = signal<string | null>(null);
 
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
-
-  constructor(
-    private readonly creatorService: CreatorService,
-    private readonly authService: AuthService,
-    private readonly router: Router,
-    private readonly supabaseService: SupabaseService,
-  ) {}
 
   ngOnDestroy(): void {
     if (this.slugCheckTimer != null) {
@@ -148,7 +140,9 @@ export class OnboardingStateService implements OnDestroy {
   private loadOAuthData(): void {
     const oauthData = this.authService.getStoredOAuthData();
 
-    if (!oauthData) {return;}
+    if (!oauthData) {
+      return;
+    }
 
     this.hasOAuthData.set(true);
     this.oauthProvider.set(oauthData.provider || '');
@@ -233,11 +227,15 @@ export class OnboardingStateService implements OnDestroy {
   }
 
   private async performSlugCheck(slug: string): Promise<void> {
-    if (this.slug() !== slug) {return;}
+    if (this.slug() !== slug) {
+      return;
+    }
 
     const { available } = await this.creatorService.checkSlugAvailability(slug);
 
-    if (this.slug() !== slug) {return;}
+    if (this.slug() !== slug) {
+      return;
+    }
 
     this.slugStatus.set(available ? 'available' : 'taken');
   }
@@ -249,7 +247,9 @@ export class OnboardingStateService implements OnDestroy {
    * Redirects to login and throws if the session is gone.
    */
   private async requireUser() {
-    const { data: { user } } = await this.supabaseService.client.auth.getUser();
+    const {
+      data: { user },
+    } = await this.supabaseService.client.auth.getUser();
 
     if (!user) {
       void this.router.navigate([ROUTES.AUTH.LOGIN]);
@@ -320,7 +320,9 @@ export class OnboardingStateService implements OnDestroy {
           linkedinUrl: this.linkedinUrl() || undefined,
         });
 
-        if (error) {throw error;}
+        if (error) {
+          throw error;
+        }
       } else {
         const { data: creator, error } = await this.creatorService.createCreator({
           userId: user.id,
@@ -365,7 +367,9 @@ export class OnboardingStateService implements OnDestroy {
         responseExpectation: APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
       });
 
-      if (settingsError) {throw settingsError;}
+      if (settingsError) {
+        throw settingsError;
+      }
 
       // Verify settings were actually created (guard against future database issues)
       const { data: settingsCheck } = await this.creatorService.getCreatorSettings(creatorId);

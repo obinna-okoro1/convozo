@@ -4,7 +4,7 @@
  * Holds creator data, settings, Stripe account, and form-level state.
  */
 
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import {
@@ -24,9 +24,12 @@ import { errorMessage } from 'app/shared/utils/error.utils';
 
 import { CreatorService } from '../../services/creator.service';
 
-
 @Injectable()
 export class SettingsStateService {
+  private readonly creatorService = inject(CreatorService);
+  private readonly supabaseService = inject(SupabaseService);
+  private readonly router = inject(Router);
+
   // ── Core data ──────────────────────────────────────────────────────
   readonly creator = signal<Creator | null>(null);
   readonly settings = signal<CreatorSettings | null>(null);
@@ -66,7 +69,6 @@ export class SettingsStateService {
   readonly yearsOfExperience = signal<number | null>(null);
   readonly linkedinUrl = signal<string>('');
   readonly profileType = signal<'consultant' | 'practitioner'>('consultant');
-
 
   private originalSlug = '';
   private slugCheckTimer: ReturnType<typeof setTimeout> | null = null;
@@ -172,12 +174,12 @@ export class SettingsStateService {
 
   /** Dropdown-ready option lists — fed directly to <app-searchable-select> */
   readonly categoryOptions = computed<SelectOption[]>(() =>
-    EXPERT_CATEGORIES.map(c => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
+    EXPERT_CATEGORIES.map((c) => ({ value: c.id, label: `${c.emoji}\u2002${c.label}` })),
   );
 
   readonly subcategoryOptions = computed<SelectOption[]>(() =>
     this.filteredSubcategories()
-      .map(s => ({ value: s.id, label: s.label })),
+      .map((s) => ({ value: s.id, label: s.label })),
   );
 
   /** True only when Stripe account is fully connected and onboarding is complete */
@@ -197,9 +199,7 @@ export class SettingsStateService {
    * Flutterwave subaccounts are immediately active upon creation — no async
    * verification step is needed.
    */
-  readonly isFlutterwaveConnected = computed(
-    () => !!(this.flutterwaveSubaccount()?.is_active),
-  );
+  readonly isFlutterwaveConnected = computed(() => !!this.flutterwaveSubaccount()?.is_active);
 
   /**
    * True when payments are ready to accept — regardless of provider.
@@ -210,12 +210,6 @@ export class SettingsStateService {
   readonly isPaymentReady = computed(
     () => this.isStripeConnected() || this.isFlutterwaveConnected(),
   );
-
-  constructor(
-    private readonly creatorService: CreatorService,
-    private readonly supabaseService: SupabaseService,
-    private readonly router: Router,
-  ) {}
 
   // ── Helpers ────────────────────────────────────────────────────────
 
@@ -268,12 +262,16 @@ export class SettingsStateService {
   }
 
   private async performSlugCheck(slug: string): Promise<void> {
-    if (this.slug() !== slug) {return;}
+    if (this.slug() !== slug) {
+      return;
+    }
 
     const creatorId = this.creator()?.id;
     const { available } = await this.creatorService.checkSlugAvailability(slug, creatorId);
 
-    if (this.slug() !== slug) {return;}
+    if (this.slug() !== slug) {
+      return;
+    }
 
     this.slugStatus.set(available ? 'available' : 'taken');
   }
@@ -356,7 +354,10 @@ export class SettingsStateService {
       callDuration: this.callsEnabled() ? this.callDuration() : undefined,
       callsEnabled: this.callsEnabled(),
       sessionType: this.sessionType(),
-      physicalAddress: this.callsEnabled() && this.sessionType() !== 'online' ? (this.physicalAddress() || null) : null,
+      physicalAddress:
+        this.callsEnabled() && this.sessionType() !== 'online'
+          ? this.physicalAddress() || null
+          : null,
       tipsEnabled: this.tipsEnabled(),
       shopEnabled: this.shopEnabled(),
       responseExpectation: this.responseExpectation() || '',
@@ -403,7 +404,9 @@ export class SettingsStateService {
     }
 
     try {
-      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      const {
+        data: { user },
+      } = await this.supabaseService.client.auth.getUser();
 
       if (!user) {
         this.error.set('Your session has expired. Please sign in again.');
@@ -419,12 +422,14 @@ export class SettingsStateService {
       );
 
       if (error != null || !data?.url) {
-        const body = (data as { error?: string } | null)?.error
-          ?? (error as { message?: string } | null)?.message
-          ?? '';
-        const msg = typeof body === 'string' && body.length > 0
-          ? body
-          : 'Failed to create payment account. Please try again.';
+        const body =
+          (data as { error?: string } | null)?.error ??
+          (error as { message?: string } | null)?.message ??
+          '';
+        const msg =
+          typeof body === 'string' && body.length > 0
+            ? body
+            : 'Failed to create payment account. Please try again.';
         throw new Error(msg);
       }
 
@@ -443,7 +448,9 @@ export class SettingsStateService {
     const creator = this.creator();
     const account = this.paymentAccount();
 
-    if (!creator || !account) {return;}
+    if (!creator || !account) {
+      return;
+    }
 
     try {
       const { data, error } = await this.creatorService.verifyStripeAccount(
@@ -623,9 +630,11 @@ export class SettingsStateService {
           const context = (error as { context?: Response }).context;
 
           if (context instanceof Response) {
-            const body = await context.json() as { error?: string };
+            const body = (await context.json()) as { error?: string };
 
-            if (body?.error) {userMessage = body.error;}
+            if (body?.error) {
+              userMessage = body.error;
+            }
           }
         } catch {
           // Ignore body-parse failure — use the default message.
@@ -648,7 +657,9 @@ export class SettingsStateService {
   async loadFlutterwaveBanks(): Promise<void> {
     const country = this.creator()?.country;
 
-    if (!country) {return;}
+    if (!country) {
+      return;
+    }
 
     this.flutterwaveBanksLoading.set(true);
     try {
@@ -660,10 +671,11 @@ export class SettingsStateService {
         return;
       }
       // Edge function returns { banks: [...] } — extract the array
-      const responseData = data as unknown as { banks?: FlutterwaveBank[] } | FlutterwaveBank[] | null;
+      const responseData = data as unknown as
+        { banks?: FlutterwaveBank[] } | FlutterwaveBank[] | null;
       const banks: FlutterwaveBank[] = Array.isArray(responseData)
         ? responseData
-        : (responseData)?.banks ?? [];
+        : (responseData?.banks ?? []);
       this.flutterwaveBanks.set(banks);
     } catch {
       this.error.set('Failed to load bank list. Please try again.');
@@ -683,7 +695,9 @@ export class SettingsStateService {
   }): Promise<void> {
     const country = this.creator()?.country;
 
-    if (!country) {return;}
+    if (!country) {
+      return;
+    }
 
     this.flutterwaveConnecting.set(true);
     this.error.set(null);
@@ -711,5 +725,4 @@ export class SettingsStateService {
       this.flutterwaveConnecting.set(false);
     }
   }
-
 }

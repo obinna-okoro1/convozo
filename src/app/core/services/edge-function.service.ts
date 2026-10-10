@@ -8,7 +8,7 @@
  * Extracted from SupabaseService to follow Single Responsibility Principle.
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FunctionsHttpError } from '@supabase/functions-js';
 
 import { environment } from 'environments/environment';
@@ -98,7 +98,7 @@ export interface ClientPortalData {
   providedIn: 'root',
 })
 export class EdgeFunctionService {
-  constructor(private readonly supabase: SupabaseService) {}
+  private readonly supabase = inject(SupabaseService);
 
   // ── Checkout ───────────────────────────────────────────────────────
 
@@ -159,9 +159,7 @@ export class EdgeFunctionService {
    * using the client-facing token. No auth required — called from the
    * public `/conversation/:token` page.
    */
-  async getConversation(
-    token: string,
-  ): Promise<EdgeFunctionResponse<ConversationData>> {
+  async getConversation(token: string): Promise<EdgeFunctionResponse<ConversationData>> {
     return this.invokePublic('get-conversation', { token });
   }
 
@@ -220,10 +218,7 @@ export class EdgeFunctionService {
    * FunctionsHttpError.message is always generic — the actual error is
    * in error.context.json(). This method unwraps it automatically.
    */
-  private async invoke<T>(
-    functionName: string,
-    body: object,
-  ): Promise<EdgeFunctionResponse<T>> {
+  private async invoke<T>(functionName: string, body: object): Promise<EdgeFunctionResponse<T>> {
     const { data, error } = await this.supabase.client.functions.invoke(functionName, { body });
 
     if (!error) {
@@ -233,7 +228,7 @@ export class EdgeFunctionService {
     // Unwrap FunctionsHttpError: read the real JSON body from the response
     if (error instanceof FunctionsHttpError) {
       try {
-        const responseBody = await error.context.json() as { error?: string };
+        const responseBody = (await error.context.json()) as { error?: string };
         const message = responseBody?.error ?? error.message;
 
         return { data: undefined, error: { message } };
@@ -267,15 +262,16 @@ export class EdgeFunctionService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': anonKey,
+          apikey: anonKey,
         },
         body: JSON.stringify(body),
       });
 
-      const json = await res.json() as Record<string, unknown>;
+      const json = (await res.json()) as Record<string, unknown>;
 
       if (!res.ok) {
-        const message = typeof json['error'] === 'string' ? json['error'] : 'An unexpected error occurred';
+        const message =
+          typeof json['error'] === 'string' ? json['error'] : 'An unexpected error occurred';
 
         return { data: undefined, error: { message } };
       }

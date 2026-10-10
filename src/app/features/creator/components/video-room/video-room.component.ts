@@ -27,6 +27,7 @@ import {
   ViewChild,
   computed,
   effect,
+  inject,
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -56,6 +57,12 @@ import { VideoCallService } from '../../services/video-call.service';
   ],
 })
 export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly ngZone = inject(NgZone);
+  readonly videoCallService = inject(VideoCallService);
+  private readonly supabaseService = inject(SupabaseService);
+
   @ViewChild('dailyIframe') dailyIframeRef!: ElementRef<HTMLIFrameElement>;
 
   readonly loading = signal(true);
@@ -82,20 +89,16 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly otherParticipantName = computed(() => {
     const booking = this.videoCallService.currentBooking();
 
-    if (!booking) {return 'participant';}
+    if (!booking) {
+      return 'participant';
+    }
 
     return this.role === 'creator' ? booking.booker_name : 'Creator';
   });
 
   readonly isCreator = computed(() => this.role === 'creator');
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly ngZone: NgZone,
-    readonly videoCallService: VideoCallService,
-    private readonly supabaseService: SupabaseService,
-  ) {
+  constructor() {
     // Watch for timer expiry → auto-complete the call (creator only)
     effect(() => {
       const remaining = this.videoCallService.remainingSeconds();
@@ -128,7 +131,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   private async checkCreatorAuth(): Promise<boolean> {
     // Creators must be authenticated — the join-call Edge Function requires a valid JWT
     // for the creator role. If the session is missing or expired, redirect to login.
-    if (this.role !== 'creator') {return true;}
+    if (this.role !== 'creator') {
+      return true;
+    }
 
     const user = await this.supabaseService.waitForSession();
 
@@ -162,7 +167,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       try {
         const existingInstance = DailyIframe.getCallInstance();
 
-        if (!existingInstance) {break;} // No instance to destroy
+        if (!existingInstance) {
+          break;
+        } // No instance to destroy
         existingInstance.destroy();
         // Small yield to allow async cleanup
         break;
@@ -190,7 +197,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * wrapped in ngZone.run() to ensure change detection is triggered.
    */
   private setupDailyEvents(): void {
-    if (!this.dailyCall) {return;}
+    if (!this.dailyCall) {
+      return;
+    }
 
     this.dailyCall
       // Fires when the local user successfully enters the meeting room.
@@ -201,7 +210,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       //   3. Polling + presence might not have started/connected yet
       .on('joined-meeting', () => {
         this.ngZone.run(() => {
-          if (!this.dailyCall || this.videoCallService.callState() !== 'waiting') {return;}
+          if (!this.dailyCall || this.videoCallService.callState() !== 'waiting') {
+            return;
+          }
 
           // Immediate participant check — catches the race window
           const count = Object.keys(this.dailyCall.participants()).length;
@@ -228,7 +239,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       // When we see 2 participants total, both parties are present.
       .on('participant-joined', () => {
         this.ngZone.run(() => {
-          if (!this.dailyCall || this.videoCallService.callState() !== 'waiting') {return;}
+          if (!this.dailyCall || this.videoCallService.callState() !== 'waiting') {
+            return;
+          }
           const count = Object.keys(this.dailyCall.participants()).length;
 
           if (count >= 2) {
@@ -240,7 +253,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       // Fires when a participant disconnects mid-call.
       .on('participant-left', () => {
         this.ngZone.run(() => {
-          if (!this.dailyCall || this.videoCallService.callState() !== 'in_progress') {return;}
+          if (!this.dailyCall || this.videoCallService.callState() !== 'in_progress') {
+            return;
+          }
           const count = Object.keys(this.dailyCall.participants()).length;
 
           if (count < 2) {
@@ -282,10 +297,14 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // Accept transition from both 'waiting' (normal) and 'connecting' (already transitioning).
     const currentState = this.videoCallService.callState();
 
-    if (currentState !== 'waiting') {return;}
+    if (currentState !== 'waiting') {
+      return;
+    }
     const booking = this.videoCallService.currentBooking();
 
-    if (!booking) {return;}
+    if (!booking) {
+      return;
+    }
 
     // ── Stop all detection mechanisms — we have the signal ──
     this.stopParticipantPolling();
@@ -307,9 +326,10 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // If we didn't have a timestamp from the trigger source, fetch it from DB
     if (!callStartedAt) {
       try {
-        const loadFn = this.role === 'fan'
-          ? this.videoCallService.loadCallStatus(this.bookingId)
-          : this.videoCallService.loadBooking(this.bookingId);
+        const loadFn =
+          this.role === 'fan'
+            ? this.videoCallService.loadCallStatus(this.bookingId)
+            : this.videoCallService.loadBooking(this.bookingId);
         const { data: fresh } = await loadFn;
 
         if (fresh?.call_started_at) {
@@ -323,7 +343,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // Brief pause so the "Connected" overlay is visible — feels intentional,
     // like FaceTime's "Connecting..." → video transition. 600 ms is enough
     // to register visually without feeling sluggish.
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     // ── Transition to live call ──
     this.connecting.set(false);
@@ -336,7 +356,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // Verify creator auth before making any Edge Function calls
     const isAuthed = await this.checkCreatorAuth();
 
-    if (!isAuthed) {return;}
+    if (!isAuthed) {
+      return;
+    }
 
     // Creators are authenticated and can query call_bookings directly via RLS.
     // Fans are unauthenticated — RLS blocks their SELECT, so skip the client-side
@@ -363,15 +385,21 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           .single();
 
         if (creatorData) {
-          this.creatorSlug.set((creatorData).slug);
+          this.creatorSlug.set(creatorData.slug);
         }
       }
     }
 
-    const joinResult = await this.videoCallService.joinCall(this.bookingId, this.role, this.fanAccessToken);
+    const joinResult = await this.videoCallService.joinCall(
+      this.bookingId,
+      this.role,
+      this.fanAccessToken,
+    );
     this.loading.set(false);
 
-    if (!joinResult) {return;} // joinCall already set error state
+    if (!joinResult) {
+      return;
+    } // joinCall already set error state
 
     // Start warming up camera/mic permissions immediately so the browser prompt
     // appears on the waiting screen — not after the call begins.
@@ -419,7 +447,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * Stops automatically when the call moves to any non-waiting state.
    */
   private startParticipantPolling(): void {
-    if (this.participantPollInterval) {return;} // already polling
+    if (this.participantPollInterval) {
+      return;
+    } // already polling
 
     this.participantPollInterval = setInterval(() => {
       this.ngZone.run(() => {
@@ -429,7 +459,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        if (!this.dailyCall) {return;}
+        if (!this.dailyCall) {
+          return;
+        }
 
         const count = Object.keys(this.dailyCall.participants()).length;
 
@@ -463,7 +495,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * within 3 seconds, guaranteed.
    */
   private startCallStatusPolling(): void {
-    if (this.callStatusPollInterval) {return;}
+    if (this.callStatusPollInterval) {
+      return;
+    }
 
     // Do an immediate first check (no initial delay) then poll every 1.5s.
     // This catches the case where call_started_at was set before any mechanism
@@ -510,12 +544,14 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * will surface its own in-room error state when join() is called.
    */
   private async requestMediaPermissions(): Promise<void> {
-    if (!navigator.mediaDevices?.getUserMedia) {return;} // unsupported environment
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return;
+    } // unsupported environment
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       // Release immediately — Daily.co reopens its own stream during join()
       stream.getTracks()
-        .forEach(track => track.stop());
+        .forEach((track) => track.stop());
     } catch (err) {
       // Permission denied or no devices — non-fatal, Daily.co handles its own error
       console.warn('[Media] Early permission request failed (non-fatal):', (err as Error).message);
@@ -535,7 +571,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
    * away from 'waiting'.
    */
   private subscribeToBookingRealtime(): void {
-    if (this.bookingChannel) {return;} // already subscribed
+    if (this.bookingChannel) {
+      return;
+    } // already subscribed
 
     this.bookingChannel = this.supabaseService.client
       .channel(`call_room_${this.bookingId}`, {
@@ -560,13 +598,15 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       //     automatically (~10 s) so state stays accurate
       .on('presence', { event: 'sync' }, () => {
         this.ngZone.run(() => {
-          if (this.videoCallService.callState() !== 'waiting' || !this.bookingChannel) {return;}
+          if (this.videoCallService.callState() !== 'waiting' || !this.bookingChannel) {
+            return;
+          }
 
           const state = this.bookingChannel.presenceState<{ role: string }>();
           const presences = Object.values(state)
             .flat();
-          const hasCreator = presences.some(p => p['role'] === 'creator');
-          const hasFan = presences.some(p => p['role'] === 'fan');
+          const hasCreator = presences.some((p) => p['role'] === 'creator');
+          const hasFan = presences.some((p) => p['role'] === 'fan');
 
           if (hasCreator && hasFan) {
             void this.transitionToInProgress();
@@ -578,24 +618,23 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       // The join-call Edge Function still broadcasts 'call_started' with the
       // authoritative call_started_at timestamp. Use it to get the exact server
       // timestamp for the countdown timer rather than relying on client clocks.
-      .on(
-        'broadcast',
-        { event: 'call_started' },
-        (payload) => {
-          this.ngZone.run(() => {
-            if (this.videoCallService.callState() !== 'waiting') {return;}
+      .on('broadcast', { event: 'call_started' }, (payload) => {
+        this.ngZone.run(() => {
+          if (this.videoCallService.callState() !== 'waiting') {
+            return;
+          }
 
-            // The broadcast payload contains { call_started_at, status }
-            // (nested under payload.payload in the Supabase broadcast envelope).
-            const data = (payload as { payload?: { call_started_at?: string; status?: string } }).payload ?? {};
-            const callStartedAt = data.call_started_at ?? undefined;
+          // The broadcast payload contains { call_started_at, status }
+          // (nested under payload.payload in the Supabase broadcast envelope).
+          const data =
+            (payload as { payload?: { call_started_at?: string; status?: string } }).payload ?? {};
+          const callStartedAt = data.call_started_at ?? undefined;
 
-            if (callStartedAt || data.status === 'in_progress') {
-              void this.transitionToInProgress(callStartedAt);
-            }
-          });
-        },
-      )
+          if (callStartedAt || data.status === 'in_progress') {
+            void this.transitionToInProgress(callStartedAt);
+          }
+        });
+      })
 
       .subscribe((status) => {
         if (status === 'SUBSCRIBED' && this.bookingChannel) {
@@ -605,7 +644,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           void this.bookingChannel
             .track({ role: this.role, joined_at: new Date()
               .toISOString() })
-            .catch(err => console.warn('[Presence] track() failed (non-fatal):', err));
+            .catch((err) => console.warn('[Presence] track() failed (non-fatal):', err));
         }
       });
   }
@@ -615,7 +654,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       // Untrack presence first so the other participant's 'sync' fires immediately
       // on our departure rather than waiting for the ~10 s heartbeat timeout.
       void this.bookingChannel.untrack()
-        .catch(() => { /* non-fatal */ });
+        .catch(() => {
+        /* non-fatal */
+        });
       void this.supabaseService.client.removeChannel(this.bookingChannel);
       this.bookingChannel = null;
     }
@@ -657,7 +698,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // Prevent double-ending
     const currentState = this.videoCallService.callState();
 
-    if (currentState === 'ending' || currentState === 'completed') {return;}
+    if (currentState === 'ending' || currentState === 'completed') {
+      return;
+    }
 
     if (this.dailyCall) {
       try {
@@ -718,7 +761,10 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     // a complete-call request so the booking doesn't stay stuck in 'in_progress'.
     const state = this.videoCallService.callState();
 
-    if (this.isCreator() && (state === 'in_progress' || state === 'waiting' || state === 'joining')) {
+    if (
+      this.isCreator() &&
+      (state === 'in_progress' || state === 'waiting' || state === 'joining')
+    ) {
       void this.videoCallService.completeCall(this.bookingId, 'creator');
     }
 
@@ -729,7 +775,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.dailyCall) {
       void this.dailyCall
         .leave()
-        .catch(() => { /* already left or no active session — safe to ignore */ })
+        .catch(() => {
+          /* already left or no active session — safe to ignore */
+        })
         .finally(() => {
           void this.dailyCall!.destroy();
           this.dailyCall = null;

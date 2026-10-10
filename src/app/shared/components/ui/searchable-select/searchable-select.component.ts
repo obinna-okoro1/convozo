@@ -27,6 +27,7 @@ import {
   HostListener,
   OnDestroy,
   computed,
+  inject,
   input,
   model,
   signal,
@@ -46,6 +47,8 @@ export interface SelectOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchableSelectComponent implements OnDestroy {
+  private readonly elementRef = inject(ElementRef);
+
   /** The list of options to display. */
   readonly options = input.required<SelectOption[]>();
 
@@ -79,7 +82,9 @@ export class SearchableSelectComponent implements OnDestroy {
       .trim();
     const opts = this.options();
 
-    if (!term) {return opts;}
+    if (!term) {
+      return opts;
+    }
 
     return opts.filter((o) => o.label.toLowerCase()
       .includes(term));
@@ -104,7 +109,9 @@ export class SearchableSelectComponent implements OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.isOpen()) {return;}
+    if (!this.isOpen()) {
+      return;
+    }
     const el = this.elementRef.nativeElement as HTMLElement;
 
     if (!el.contains(event.target as Node)) {
@@ -112,12 +119,12 @@ export class SearchableSelectComponent implements OnDestroy {
     }
   }
 
-  constructor(private readonly elementRef: ElementRef) {}
-
   /* ─── Public actions ─── */
 
   protected toggle(): void {
-    if (this.disabled()) {return;}
+    if (this.disabled()) {
+      return;
+    }
 
     if (this.isOpen()) {
       this.close();
@@ -127,7 +134,9 @@ export class SearchableSelectComponent implements OnDestroy {
   }
 
   protected open(): void {
-    if (this.disabled()) {return;}
+    if (this.disabled()) {
+      return;
+    }
     this.isOpen.set(true);
     this.searchTerm.set('');
     // Pre-highlight the currently selected option
@@ -145,7 +154,9 @@ export class SearchableSelectComponent implements OnDestroy {
   }
 
   protected selectOption(option: SelectOption): void {
-    if (option.disabled) {return;}
+    if (option.disabled) {
+      return;
+    }
     this.value.set(option.value);
     this.close();
   }
@@ -162,7 +173,9 @@ export class SearchableSelectComponent implements OnDestroy {
     const opts = this.filteredOptions();
     const len = opts.length;
 
-    if (!len) {return;}
+    if (!len) {
+      return;
+    }
 
     switch (event.key) {
       case 'ArrowDown':

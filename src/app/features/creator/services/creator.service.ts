@@ -7,7 +7,7 @@
  * For availability → AvailabilityService
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import {
   Creator,
@@ -25,7 +25,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class CreatorService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   public async getCreatorByUserId(userId: string): Promise<SupabaseResponse<Creator>> {
     return this.supabaseService.getCreatorByUserId(userId);
@@ -34,7 +34,9 @@ export class CreatorService {
   public async getCurrentCreator(): Promise<Creator | null> {
     const user = this.supabaseService.getCurrentUser();
 
-    if (!user) {return null;}
+    if (!user) {
+      return null;
+    }
     const { data } = await this.supabaseService.getCreatorByUserId(user.id);
 
     return data;
@@ -68,9 +70,22 @@ export class CreatorService {
     // Determine the payment provider based on country.
     // African countries supported by Flutterwave use Flutterwave; all others use Stripe.
     const FLUTTERWAVE_COUNTRIES = new Set([
-      'NG', 'ZA', 'GH', 'KE', 'TZ', 'UG', 'RW', 'ZM', 'CM', 'CI', 'SN', 'MA',
+      'NG',
+      'ZA',
+      'GH',
+      'KE',
+      'TZ',
+      'UG',
+      'RW',
+      'ZM',
+      'CM',
+      'CI',
+      'SN',
+      'MA',
     ]);
-    const paymentProvider = FLUTTERWAVE_COUNTRIES.has(data.country.toUpperCase()) ? 'flutterwave' : 'stripe';
+    const paymentProvider = FLUTTERWAVE_COUNTRIES.has(data.country.toUpperCase())
+      ? 'flutterwave'
+      : 'stripe';
 
     const { data: creator, error } = await this.supabaseService.client
       .from('creators')
@@ -189,12 +204,8 @@ export class CreatorService {
   }): Promise<SupabaseResponse<CreatorSettings>> {
     // Ensure prices meet DB constraints: message_price >= 100, call_price >= 500.
     // Send null (not undefined) when a feature is disabled so the DB column is cleared.
-    const messagePrice = data.messagesEnabled
-      ? Math.max(data.messagePrice ?? 100, 100)
-      : null;
-    const callPrice = data.callsEnabled
-      ? Math.max(data.callPrice ?? 500, 500)
-      : null;
+    const messagePrice = data.messagesEnabled ? Math.max(data.messagePrice ?? 100, 100) : null;
+    const callPrice = data.callsEnabled ? Math.max(data.callPrice ?? 500, 500) : null;
     const callDuration = data.callsEnabled
       ? Math.min(Math.max(data.callDuration ?? 30, 5), 240)
       : null;

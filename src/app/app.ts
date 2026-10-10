@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { SupabaseService } from './core/services/supabase.service';
@@ -11,11 +11,10 @@ import { ToastContainerComponent } from './shared/components/toast-container/toa
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-
 export class App implements OnInit {
-  protected readonly title = 'Convozo';
+  private readonly supabaseService = inject(SupabaseService);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  protected readonly title = 'Convozo';
 
   public ngOnInit(): void {
     void this.supabaseService.waitForSession();

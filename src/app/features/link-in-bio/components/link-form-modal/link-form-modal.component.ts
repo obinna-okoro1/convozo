@@ -4,7 +4,15 @@
  * Handles URL validation, brand detection, form submission, and cancellation.
  */
 
-import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { CreatorLink } from 'app/core/models';
@@ -21,6 +29,9 @@ import { BrandInfo, detectBrandKey, getBrandByKey } from '../../utils/brand-dete
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LinkFormModalComponent {
+  private readonly linkService = inject(LinkService);
+  private readonly toast = inject(ToastService);
+
   /** The creator ID (passed from parent) */
   public readonly creatorId = input.required<string>();
 
@@ -45,10 +56,7 @@ export class LinkFormModalComponent {
   protected readonly saving = signal(false);
   private brandCache = new Map<string, BrandInfo | null>();
 
-  constructor(
-    private readonly linkService: LinkService,
-    private readonly toast: ToastService,
-  ) {
+  constructor() {
     // Pre-fill form fields when the modal opens in edit mode
     effect(() => {
       const link = this.editingLink();
@@ -90,7 +98,9 @@ export class LinkFormModalComponent {
    * Saves the link (create or update)
    */
   protected async saveLink(): Promise<void> {
-    if (this.saving()) {return;}
+    if (this.saving()) {
+      return;
+    }
 
     const rawUrl = this.formUrl.trim();
 

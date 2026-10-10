@@ -6,7 +6,7 @@
  * The email contains a link → /auth/reset-password?code=XXXX.
  */
 
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -22,12 +22,12 @@ import { AuthService } from '../../services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForgotPasswordComponent {
+  private readonly authService = inject(AuthService);
+
   protected readonly email = signal('');
   protected readonly loading = signal(false);
   protected readonly success = signal(false);
   protected readonly error = signal<string | null>(null);
-
-  constructor(private readonly authService: AuthService) {}
 
   protected inputValue(event: Event): string {
     return (event.target as HTMLInputElement).value;

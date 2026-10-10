@@ -9,7 +9,7 @@
  * Errors: all methods handle errors internally and never throw to callers
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { Message, MessageReply, MessageStats, SupabaseResponse } from 'app/core/models';
@@ -19,7 +19,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class MessageService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   /**
    * Load messages for a creator (excludes call-type messages)
@@ -163,7 +163,9 @@ export class MessageService {
           void (async () => {
             const { data } = await this.getReplies(messageId);
 
-            if (data) {onChange(data);}
+            if (data) {
+              onChange(data);
+            }
           })();
         },
       )

@@ -6,6 +6,7 @@ import {
   Input,
   Output,
   computed,
+  inject,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -21,6 +22,8 @@ import { SettingsStateService } from '../../settings-state.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MonetizationViewComponent {
+  protected readonly state = inject(SettingsStateService);
+
   /** True when rendered inside the owner toolbar drawer — disables routerLinks and emits events instead. */
   @Input() public drawerMode = false;
   /** Emitted when the user clicks "Go to Payments" inside the drawer. */
@@ -34,8 +37,6 @@ export class MonetizationViewComponent {
     () => this.state.canSaveMonetization() || (this.availabilityManager()
       ?.hasChanges() ?? false),
   );
-
-  constructor(protected readonly state: SettingsStateService) {}
 
   /**
    * Save both monetization settings and the availability schedule in parallel.

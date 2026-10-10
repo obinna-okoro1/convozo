@@ -4,7 +4,7 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -21,14 +21,14 @@ import { AuthService } from '../../services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
+  private readonly authService = inject(AuthService);
+
   protected readonly email = signal<string>('');
   protected readonly password = signal<string>('');
   protected readonly usePassword = signal<boolean>(true); // Default to password for local dev
   protected readonly loading = signal<boolean>(false);
   protected readonly success = signal<boolean>(false);
   protected readonly error = signal<string | null>(null);
-
-  constructor(private readonly authService: AuthService) {}
 
   /**
    * Extract string value from an input event

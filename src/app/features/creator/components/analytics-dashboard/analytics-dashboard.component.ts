@@ -4,7 +4,15 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 
 import { CallBooking, CreatorMonthlyAnalytics, Message } from 'app/core/models';
 import { AnalyticsData, AnalyticsService } from 'app/core/services/analytics.service';
@@ -24,6 +32,8 @@ import { AnalyticsData, AnalyticsService } from 'app/core/services/analytics.ser
   ],
 })
 export class AnalyticsDashboardComponent implements OnInit {
+  private readonly analyticsService = inject(AnalyticsService);
+
   public readonly messages = input<Message[]>([]);
   public readonly callBookings = input<CallBooking[]>([]);
   /** Retained monthly analytics from the DB — immune to message/booking deletions. */
@@ -240,7 +250,10 @@ export class AnalyticsDashboardComponent implements OnInit {
       .map(Number);
     const prevDate = new Date(cy, cm - 2, 1); // month is 1-based, subtract 2 for prev
     const prevKey = `${String(prevDate.getFullYear())}-${String(prevDate.getMonth() + 1)
-      .padStart(2, '0')}-01`;
+      .padStart(
+        2,
+        '0',
+      )}-01`;
     const prevRow = allRows.find((r) => r.month === prevKey);
 
     if (!prevRow) {
@@ -257,8 +270,6 @@ export class AnalyticsDashboardComponent implements OnInit {
 
     return { revenueGrowth, messageGrowth };
   });
-
-  constructor(private readonly analyticsService: AnalyticsService) {}
 
   public ngOnInit(): void {
     this.updateAnalytics();

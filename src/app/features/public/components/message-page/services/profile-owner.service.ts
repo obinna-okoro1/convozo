@@ -12,7 +12,7 @@
  * Errors: All async methods catch internally and surface via ToastService.
  */
 
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import {
@@ -35,6 +35,15 @@ import { errorMessage } from 'app/shared/utils/error.utils';
 
 @Injectable()
 export class ProfileOwnerService {
+  private readonly auth = inject(AuthService);
+  private readonly supabase = inject(SupabaseService);
+  private readonly creatorService = inject(CreatorService);
+  private readonly messageService = inject(MessageService);
+  private readonly bookingService = inject(BookingService);
+  private readonly edgeFunctionService = inject(EdgeFunctionService);
+  private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
+
   // ── Ownership ──────────────────────────────────────────────────────
   readonly isOwner = signal(false);
   readonly isOwnerLoading = signal(true);
@@ -68,7 +77,7 @@ export class ProfileOwnerService {
 
   readonly isPaymentReady = computed(() => {
     if (this.paymentProvider() === 'flutterwave') {
-      return !!(this.flutterwaveSubaccount()?.is_active);
+      return !!this.flutterwaveSubaccount()?.is_active;
     }
 
     return this.isStripeConnected();
@@ -81,21 +90,12 @@ export class ProfileOwnerService {
   readonly itemToDeleteName = computed(() => {
     const item = this.messageToDelete();
 
-    if (!item) {return '';}
+    if (!item) {
+      return '';
+    }
 
     return 'message_content' in item ? item.sender_name : item.booker_name;
   });
-
-  constructor(
-    private readonly auth: AuthService,
-    private readonly supabase: SupabaseService,
-    private readonly creatorService: CreatorService,
-    private readonly messageService: MessageService,
-    private readonly bookingService: BookingService,
-    private readonly edgeFunctionService: EdgeFunctionService,
-    private readonly toast: ToastService,
-    private readonly router: Router,
-  ) {}
 
   // ── Initialization ─────────────────────────────────────────────────
 
@@ -171,7 +171,9 @@ export class ProfileOwnerService {
     const { error } = await this.edgeFunctionService.verifyPhysicalMeeting(bookingId, code);
 
     if (error) {
-      this.toast.error(error.message || 'Verification failed — please check the code and try again');
+      this.toast.error(
+        error.message || 'Verification failed — please check the code and try again',
+      );
 
       return;
     }
@@ -179,7 +181,12 @@ export class ProfileOwnerService {
     this.callBookings.update((bks) =>
       bks.map((b) =>
         b.id === bookingId
-          ? { ...b, status: 'completed' as const, payout_status: 'pending_release' as const, meeting_verification_code: null }
+          ? {
+            ...b,
+            status: 'completed' as const,
+            payout_status: 'pending_release' as const,
+            meeting_verification_code: null,
+          }
           : b,
       ),
     );
@@ -194,7 +201,9 @@ export class ProfileOwnerService {
   async deleteItem(): Promise<void> {
     const item = this.messageToDelete();
 
-    if (!item) {return;}
+    if (!item) {
+      return;
+    }
 
     this.deleting.set(true);
     try {
@@ -236,13 +245,21 @@ export class ProfileOwnerService {
       this.supabase.getMonthlyAnalytics(creator.id),
     ]);
 
-    if (messagesRes.data) {this.messages.set(messagesRes.data);}
+    if (messagesRes.data) {
+      this.messages.set(messagesRes.data);
+    }
 
-    if (bookingsRes.data) {this.callBookings.set(bookingsRes.data);}
+    if (bookingsRes.data) {
+      this.callBookings.set(bookingsRes.data);
+    }
 
-    if (stripeRes.data) {this.stripeAccount.set(stripeRes.data);}
+    if (stripeRes.data) {
+      this.stripeAccount.set(stripeRes.data);
+    }
 
-    if (analyticsRes.data) {this.monthlyAnalytics.set(analyticsRes.data);}
+    if (analyticsRes.data) {
+      this.monthlyAnalytics.set(analyticsRes.data);
+    }
 
     if (creator.payment_provider === 'flutterwave') {
       const { data: flw } = await this.creatorService.getFlutterwaveSubaccount(creator.id);

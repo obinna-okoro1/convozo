@@ -5,7 +5,15 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AvailabilitySlot, DayOfWeek } from 'app/core/models';
@@ -59,6 +67,8 @@ for (let h = 0; h < 24; h++) {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AvailabilityManagerComponent implements OnInit {
+  private readonly availabilityService = inject(AvailabilityService);
+
   public readonly creatorId = input.required<string>();
 
   protected readonly loading = signal<boolean>(true);
@@ -77,8 +87,11 @@ export class AvailabilityManagerComponent implements OnInit {
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
 
-    return { value: t, label: `${String(displayHour)}:${minutes.toString()
-      .padStart(2, '0')} ${period}` };
+    return {
+      value: t,
+      label: `${String(displayHour)}:${minutes.toString()
+        .padStart(2, '0')} ${period}`,
+    };
   });
 
   protected readonly totalSlots = computed(() =>
@@ -88,8 +101,6 @@ export class AvailabilityManagerComponent implements OnInit {
 
   protected readonly activeDays = computed(() => this.schedule()
     .filter((d) => d.enabled).length);
-
-  constructor(private readonly availabilityService: AvailabilityService) {}
 
   public ngOnInit(): void {
     void this.loadAvailability();

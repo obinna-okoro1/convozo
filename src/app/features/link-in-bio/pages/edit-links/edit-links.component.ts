@@ -5,7 +5,7 @@
  * Uses a modal form for adding/editing links.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 
 import { CreatorLink } from 'app/core/models';
 import { ToastService } from 'app/shared/services/toast.service';
@@ -22,6 +22,9 @@ import { BrandInfo, getBrandByKey } from '../../utils/brand-detection';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditLinksComponent implements OnInit {
+  private readonly linkService = inject(LinkService);
+  private readonly toast = inject(ToastService);
+
   /** The creator ID passed in from the parent dashboard */
   public readonly creatorId = input.required<string>();
 
@@ -33,11 +36,6 @@ export class EditLinksComponent implements OnInit {
   protected readonly deletePendingId = signal<string | null>(null);
 
   private brandCache = new Map<string, BrandInfo | null>();
-
-  constructor(
-    private readonly linkService: LinkService,
-    private readonly toast: ToastService,
-  ) {}
 
   public ngOnInit(): void {
     void this.loadLinks();

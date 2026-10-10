@@ -6,7 +6,7 @@
  *
  * Returns a typed result object — never throws.
  */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import { SupabaseService } from 'app/core/services/supabase.service';
 
@@ -20,7 +20,7 @@ export interface RefundResult {
   providedIn: 'root',
 })
 export class RefundService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   /**
    * Issue a full refund for a paid message.

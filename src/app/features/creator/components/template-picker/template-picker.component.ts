@@ -9,6 +9,7 @@ import {
   Component,
   OnInit,
   computed,
+  inject,
   output,
   signal,
 } from '@angular/core';
@@ -39,6 +40,8 @@ import {
   ],
 })
 export class TemplatePickerComponent implements OnInit {
+  private readonly templateService = inject(ResponseTemplateService);
+
   public readonly templateSelected = output<string>();
   public readonly closed = output();
 
@@ -82,8 +85,6 @@ export class TemplatePickerComponent implements OnInit {
     { value: 'Decline', label: 'Decline' },
     { value: 'Other', label: 'Other' },
   ];
-
-  constructor(private readonly templateService: ResponseTemplateService) {}
 
   public ngOnInit(): void {
     const creatorId = this.templateService.currentCreatorId();

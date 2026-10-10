@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ShopService } from 'app/features/creator/services/shop.service';
@@ -12,6 +12,10 @@ import { ShopService } from 'app/features/creator/services/shop.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SuccessComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly shopService = inject(ShopService);
+
   protected readonly isCallBooking = signal(false);
   protected readonly isShopPurchase = signal(false);
   protected readonly isSupportTip = signal(false);
@@ -26,9 +30,18 @@ export class SuccessComponent implements OnInit {
   protected readonly downloadError = signal<string | null>(null);
 
   protected readonly callSteps = [
-    { n: 1, text: 'Check your email — a booking confirmation with all the details has been sent to you.' },
-    { n: 2, text: 'Your card has been authorized — full charge applies after a successful session (at least 30% of the booked time). If the session is shorter, a 50% fee applies.' },
-    { n: 3, text: 'Click the join link at the scheduled time — your session starts automatically. Enjoy!' },
+    {
+      n: 1,
+      text: 'Check your email — a booking confirmation with all the details has been sent to you.',
+    },
+    {
+      n: 2,
+      text: 'Your card has been authorized — full charge applies after a successful session (at least 30% of the booked time). If the session is shorter, a 50% fee applies.',
+    },
+    {
+      n: 3,
+      text: 'Click the join link at the scheduled time — your session starts automatically. Enjoy!',
+    },
   ];
 
   protected readonly messageSteps = [
@@ -42,12 +55,6 @@ export class SuccessComponent implements OnInit {
     { n: 2, text: "Click 'Download Your File' below — a secure link will open immediately." },
     { n: 3, text: 'Save your file after downloading \u2014 the download link expires in 1 hour.' },
   ];
-
-  constructor(
-    private readonly router: Router,
-    private readonly route: ActivatedRoute,
-    private readonly shopService: ShopService,
-  ) {}
 
   public ngOnInit(): void {
     const type = this.route.snapshot.queryParamMap.get('type');
@@ -90,7 +97,9 @@ export class SuccessComponent implements OnInit {
     this.loadingDownload.set(false);
 
     if (result.error || !result.data?.url) {
-      this.downloadError.set('Could not load your download link. Please check your email or contact support.');
+      this.downloadError.set(
+        'Could not load your download link. Please check your email or contact support.',
+      );
 
       return;
     }
@@ -121,9 +130,11 @@ export class SuccessComponent implements OnInit {
     const start = scheduledAt ? new Date(scheduledAt) : new Date();
     const end = new Date(start.getTime() + duration * 60 * 1000);
 
-    const fmt = (d: Date): string => d.toISOString()
-      .replace(/[-:]/g, '')
-      .replace(/\.\d{3}/, '');
+    const fmt = (d: Date): string =>
+      d
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d{3}/, '');
 
     const params = new URLSearchParams({
       action: 'TEMPLATE',
@@ -135,4 +146,3 @@ export class SuccessComponent implements OnInit {
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 }
-

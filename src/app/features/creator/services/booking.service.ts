@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { CallBooking, SupabaseResponse } from 'app/core/models';
@@ -8,7 +8,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class BookingService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   public async getCallBookings(creatorId: string): Promise<SupabaseResponse<CallBooking[]>> {
     const { data, error } = await this.supabaseService.client

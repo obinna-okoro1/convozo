@@ -13,7 +13,7 @@
  *   - updateUser failure → inline form error
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -29,6 +29,10 @@ import { AuthService } from '../../services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResetPasswordComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+  private readonly supabaseService = inject(SupabaseService);
+  private readonly route = inject(ActivatedRoute);
+
   protected readonly newPassword = signal('');
   protected readonly confirmPassword = signal('');
 
@@ -41,12 +45,6 @@ export class ResetPasswordComponent implements OnInit {
   protected readonly success = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly supabaseService: SupabaseService,
-    private readonly route: ActivatedRoute,
-  ) {}
-
   public ngOnInit(): void {
     void this.exchangeSession();
   }
@@ -56,9 +54,7 @@ export class ResetPasswordComponent implements OnInit {
     const code = this.route.snapshot.queryParamMap.get('code');
 
     if (!code) {
-      this.sessionError.set(
-        'Invalid or missing reset link. Please request a new password reset.',
-      );
+      this.sessionError.set('Invalid or missing reset link. Please request a new password reset.');
       this.sessionLoading.set(false);
 
       return;

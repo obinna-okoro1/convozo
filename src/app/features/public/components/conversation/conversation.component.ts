@@ -17,16 +17,14 @@ import {
   Component,
   OnInit,
   computed,
+  inject,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
 import { MessageReply } from 'app/core/models';
-import {
-  ConversationData,
-  EdgeFunctionService,
-} from 'app/core/services/edge-function.service';
+import { ConversationData, EdgeFunctionService } from 'app/core/services/edge-function.service';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -37,6 +35,9 @@ type LoadState = 'loading' | 'loaded' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConversationComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly edgeFn = inject(EdgeFunctionService);
+
   protected readonly loadState = signal<LoadState>('loading');
   protected readonly loadError = signal<string | null>(null);
   protected readonly conversation = signal<ConversationData | null>(null);
@@ -50,7 +51,9 @@ export class ConversationComponent implements OnInit {
   protected readonly canReply = computed(() => {
     const conv = this.conversation();
 
-    if (!conv) {return false;}
+    if (!conv) {
+      return false;
+    }
 
     return conv.replies.some((r) => r.sender_type === 'expert');
   });
@@ -59,11 +62,6 @@ export class ConversationComponent implements OnInit {
   protected readonly replies = computed<MessageReply[]>(() => this.conversation()?.replies ?? []);
 
   private readonly token = signal<string>('');
-
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly edgeFn: EdgeFunctionService,
-  ) {}
 
   public ngOnInit(): void {
     const token = this.route.snapshot.paramMap.get('token') ?? '';
@@ -92,7 +90,9 @@ export class ConversationComponent implements OnInit {
     const content = this.replyText()
       .trim();
 
-    if (!content || this.sending()) {return;}
+    if (!content || this.sending()) {
+      return;
+    }
 
     this.sending.set(true);
     this.sendError.set(null);

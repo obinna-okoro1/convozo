@@ -6,7 +6,7 @@
  * the public shop view (for loading active items + initiating checkout).
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import { EdgeFunctionResponse, ShopCheckoutPayload, ShopItem, ShopOrder } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
@@ -15,7 +15,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class ShopService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   // ── Creator-side (authenticated) ──────────────────────────────────────────
 
@@ -23,7 +23,9 @@ export class ShopService {
    * Load all shop items for the creator (includes inactive drafts).
    * Only the authenticated creator can read their own inactive items via RLS.
    */
-  public async getShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
+  public async getShopItems(
+    creatorId: string,
+  ): Promise<{ data: ShopItem[] | null; error: unknown }> {
     return this.supabaseService.getShopItems(creatorId);
   }
 
@@ -59,7 +61,9 @@ export class ShopService {
   /**
    * Load all orders for the creator's shop (creator-side view).
    */
-  public async getShopOrders(creatorId: string): Promise<{ data: ShopOrder[] | null; error: unknown }> {
+  public async getShopOrders(
+    creatorId: string,
+  ): Promise<{ data: ShopOrder[] | null; error: unknown }> {
     return this.supabaseService.getShopOrders(creatorId);
   }
 
@@ -69,7 +73,9 @@ export class ShopService {
    * Load all active shop items for a creator (fan-facing storefront).
    * RLS returns only active items to anonymous users.
    */
-  public async getActiveShopItems(creatorId: string): Promise<{ data: ShopItem[] | null; error: unknown }> {
+  public async getActiveShopItems(
+    creatorId: string,
+  ): Promise<{ data: ShopItem[] | null; error: unknown }> {
     return this.supabaseService.getActiveShopItems(creatorId);
   }
 

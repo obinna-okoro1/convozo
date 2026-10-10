@@ -3,7 +3,7 @@
  * Handles all authentication-related business logic
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { User } from '@supabase/supabase-js';
 
@@ -24,10 +24,8 @@ export interface OAuthUserData {
   providedIn: 'root',
 })
 export class AuthService {
-  constructor(
-    private readonly supabaseService: SupabaseService,
-    private readonly router: Router,
-  ) {}
+  private readonly supabaseService = inject(SupabaseService);
+  private readonly router = inject(Router);
 
   /**
    * Sign in with email and password

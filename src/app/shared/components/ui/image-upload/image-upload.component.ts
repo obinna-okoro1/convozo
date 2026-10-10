@@ -14,7 +14,7 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { errorMessage } from 'app/shared/utils/error.utils';
@@ -34,6 +34,8 @@ export interface ImageChangeEvent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageUploadComponent {
+  private readonly supabaseService = inject(SupabaseService);
+
   /**
    * Current image URL – drives the preview.
    * Pass the parent's stored URL so the preview shows on load.
@@ -68,8 +70,6 @@ export class ImageUploadComponent {
 
   private static idCounter = 0;
   protected readonly inputId = `img-upload-${String(++ImageUploadComponent.idCounter)}`;
-
-  constructor(private readonly supabaseService: SupabaseService) {}
 
   /* ------------------------------------------------------------------ */
   /*  Public helpers used in the template                                */

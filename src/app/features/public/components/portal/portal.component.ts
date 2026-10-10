@@ -16,6 +16,7 @@ import {
   Component,
   OnDestroy,
   OnInit,
+  inject,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +40,9 @@ type PortalView = 'loading' | 'unauthenticated' | 'link-sent' | 'authenticated';
   templateUrl: './portal.component.html',
 })
 export class PortalComponent implements OnInit, OnDestroy {
+  private readonly supabase = inject(SupabaseService);
+  private readonly edgeFn = inject(EdgeFunctionService);
+
   protected readonly view = signal<PortalView>('loading');
   protected readonly emailInput = signal<string>('');
   protected readonly emailError = signal<string>('');
@@ -52,26 +56,21 @@ export class PortalComponent implements OnInit, OnDestroy {
 
   private authUnsubscribe: (() => void) | null = null;
 
-  constructor(
-    private readonly supabase: SupabaseService,
-    private readonly edgeFn: EdgeFunctionService,
-  ) {}
-
   async ngOnInit(): Promise<void> {
     // Subscribe to future auth events (magic-link click fires SIGNED_IN)
-    const { data: { subscription } } = this.supabase.client.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          this.user.set(session.user);
-          await this.loadPortalData();
-        } else if (event === 'SIGNED_OUT') {
-          this.user.set(null);
-          this.messages.set([]);
-          this.bookings.set([]);
-          this.view.set('unauthenticated');
-        }
-      },
-    );
+    const {
+      data: { subscription },
+    } = this.supabase.client.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        this.user.set(session.user);
+        await this.loadPortalData();
+      } else if (event === 'SIGNED_OUT') {
+        this.user.set(null);
+        this.messages.set([]);
+        this.bookings.set([]);
+        this.view.set('unauthenticated');
+      }
+    });
     this.authUnsubscribe = subscription.unsubscribe.bind(subscription);
 
     // Check if a session already exists (client clicked link, JS already processed hash)
@@ -157,7 +156,9 @@ export class PortalComponent implements OnInit, OnDestroy {
 
   protected formatCurrency(cents: number): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-      .format(cents / 100);
+      .format(
+        cents / 100,
+      );
   }
 
   protected formatDate(iso: string): string {

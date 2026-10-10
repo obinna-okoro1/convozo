@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import { PostgrestError, SupabaseClient, User, createClient } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -46,6 +46,7 @@ export class SupabaseService {
   public readonly client: SupabaseClient;
   public readonly currentUser$: Observable<User | null>;
 
+  private readonly injector = inject(Injector);
   private readonly currentUserSubject: BehaviorSubject<User | null>;
   private sessionInitialized = false;
   private sessionInitPromise: Promise<void> | null = null;
@@ -312,7 +313,7 @@ export class SupabaseService {
 
     // Dynamic import — not ideal but preserves backward compat without circular deps
     // TODO: migrate all callers to EdgeFunctionService directly
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .createCheckoutSession(payload);
   }
 
@@ -322,7 +323,7 @@ export class SupabaseService {
   ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
 
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .createCallBookingSession(payload);
   }
 
@@ -333,7 +334,7 @@ export class SupabaseService {
   ): Promise<import('../models').EdgeFunctionResponse<void>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
 
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .sendReplyEmail(messageId, replyContent);
   }
 
@@ -345,7 +346,7 @@ export class SupabaseService {
   ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeConnectResponse>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
 
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .createConnectAccount(creatorId, email, displayName);
   }
 
@@ -355,7 +356,7 @@ export class SupabaseService {
   ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeAccountStatus>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
 
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .verifyConnectAccount(accountId);
   }
 
@@ -365,7 +366,7 @@ export class SupabaseService {
   ): Promise<import('../models').EdgeFunctionResponse<{ url: string; filename: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
 
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .getShopDownloadUrl(sessionId);
   }
 
@@ -375,7 +376,7 @@ export class SupabaseService {
   ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
 
-    return new EdgeFunctionService(this)
+    return this.injector.get(EdgeFunctionService)
       .createShopCheckout(payload);
   }
 
@@ -389,7 +390,7 @@ export class SupabaseService {
   ): Promise<{ data: { path: string; publicUrl: string } | null; error: Error | null }> {
     const { StorageService } = await import('./storage.service');
 
-    return new StorageService(this)
+    return this.injector.get(StorageService)
       .uploadPublicFile(bucket, path, file);
   }
 
@@ -397,7 +398,7 @@ export class SupabaseService {
   public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
     const { StorageService } = await import('./storage.service');
 
-    return new StorageService(this)
+    return this.injector.get(StorageService)
       .deleteFile(bucket, path);
   }
 
@@ -408,7 +409,7 @@ export class SupabaseService {
   ): Promise<{ path: string | null; error: Error | null }> {
     const { StorageService } = await import('./storage.service');
 
-    return new StorageService(this)
+    return this.injector.get(StorageService)
       .uploadShopFile(creatorId, file);
   }
 
@@ -419,7 +420,7 @@ export class SupabaseService {
   ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
     const { StorageService } = await import('./storage.service');
 
-    return new StorageService(this)
+    return this.injector.get(StorageService)
       .uploadShopThumbnail(creatorId, file);
   }
 

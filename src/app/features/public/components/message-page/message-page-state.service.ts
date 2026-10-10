@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { ERROR_MESSAGES } from 'app/core/constants';
 import {
@@ -21,6 +21,10 @@ import { SupportFormData } from './views/support-view/support-view.component';
 
 @Injectable()
 export class MessagePageStateService {
+  private readonly supabaseService = inject(SupabaseService);
+  private readonly toast = inject(ToastService);
+  private readonly linkService = inject(LinkService);
+
   // ── Core data ──
   readonly creator = signal<CreatorProfile | null>(null);
   readonly loading = signal<boolean>(true);
@@ -63,9 +67,13 @@ export class MessagePageStateService {
    * 'call' takes priority over 'message' since sessions are higher-value.
    */
   readonly primaryBookingType = computed((): 'call' | 'message' | null => {
-    if (this.callsEnabled()) {return 'call';}
+    if (this.callsEnabled()) {
+      return 'call';
+    }
 
-    if (this.messagesEnabled()) {return 'message';}
+    if (this.messagesEnabled()) {
+      return 'message';
+    }
 
     return null;
   });
@@ -83,21 +91,13 @@ export class MessagePageStateService {
   readonly bufferMinutes = computed(() => this.settings()?.buffer_minutes ?? 0);
 
   // ── Professional credentials (migration 041) ──
-  readonly professionTitle     = computed(() => this.creator()?.profession_title ?? null);
-  readonly yearsOfExperience   = computed(() => this.creator()?.years_of_experience ?? null);
-  readonly expertCategory      = computed(() => this.creator()?.category ?? null);
-  readonly expertSubcategory   = computed(() => this.creator()?.subcategory ?? null);
-  readonly linkedinUrl         = computed(() => this.creator()?.linkedin_url ?? null);
+  readonly professionTitle = computed(() => this.creator()?.profession_title ?? null);
+  readonly yearsOfExperience = computed(() => this.creator()?.years_of_experience ?? null);
+  readonly expertCategory = computed(() => this.creator()?.category ?? null);
+  readonly expertSubcategory = computed(() => this.creator()?.subcategory ?? null);
+  readonly linkedinUrl = computed(() => this.creator()?.linkedin_url ?? null);
   /** True when the expert has filled in enough credentials to show a trust card. */
-  readonly hasCredentials      = computed(() =>
-    !!(this.professionTitle() ?? this.expertCategory())
-  );
-
-  constructor(
-    private readonly supabaseService: SupabaseService,
-    private readonly toast: ToastService,
-    private readonly linkService: LinkService,
-  ) {}
+  readonly hasCredentials = computed(() => !!(this.professionTitle() ?? this.expertCategory()));
 
   // ── Initialization ──
 
@@ -111,11 +111,7 @@ export class MessagePageStateService {
     if (!this.validateMessageForm(formData)) {
       return;
     }
-    await this.processCheckout(
-      formData.senderName,
-      formData.senderEmail,
-      formData.messageContent,
-    );
+    await this.processCheckout(formData.senderName, formData.senderEmail, formData.messageContent);
   }
 
   async onCallBookingSubmit(formData: CallBookingFormData): Promise<void> {
@@ -154,7 +150,9 @@ export class MessagePageStateService {
   ): Promise<void> {
     const creatorData = this.creator();
 
-    if (!creatorData) {return;}
+    if (!creatorData) {
+      return;
+    }
 
     if (!FormValidators.isNotEmpty(buyerName)) {
       this.toast.error(ERROR_MESSAGES.MESSAGE.NAME_REQUIRED);
@@ -271,17 +269,15 @@ export class MessagePageStateService {
     try {
       const now = new Date()
         .toISOString();
-      const { data, error } = await this.supabaseService.client
-        .rpc('get_creator_booked_slots', {
-          p_creator_id: creatorId,
-          p_after_ts: now,
-        });
+      const { data, error } = await this.supabaseService.client.rpc('get_creator_booked_slots', {
+        p_creator_id: creatorId,
+        p_after_ts: now,
+      });
 
       if (error == null && data != null) {
         this.bookedIsos.set(
-          (data as { scheduled_at: string }[])
-            .map((b) => new Date(b.scheduled_at)
-              .toISOString()),
+          (data as { scheduled_at: string }[]).map((b) => new Date(b.scheduled_at)
+            .toISOString()),
         );
       }
     } catch (err) {

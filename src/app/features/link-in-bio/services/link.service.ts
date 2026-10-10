@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import { CreatorLink, SupabaseResponse } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
@@ -7,7 +7,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class LinkService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  private readonly supabaseService = inject(SupabaseService);
 
   // ── Public reads (no auth needed) ────────────────────────────────
 
@@ -137,7 +137,7 @@ export class LinkService {
     const counts = new Map<string, number>();
 
     for (const row of data) {
-      const linkId = (row).link_id;
+      const linkId = row.link_id;
       counts.set(linkId, (counts.get(linkId) ?? 0) + 1);
     }
 

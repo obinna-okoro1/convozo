@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
 import {
   ImageChangeEvent,
@@ -10,7 +10,10 @@ import { SearchableSelectComponent } from 'app/shared/components/ui/searchable-s
 import { SettingsStateService } from '../../settings-state.service';
 
 /** Preset banner images bundled with the app (served from /assets/banners/). */
-interface BannerPreset { label: string; value: string }
+interface BannerPreset {
+  label: string;
+  value: string;
+}
 
 @Component({
   selector: 'app-profile-view',
@@ -19,6 +22,8 @@ interface BannerPreset { label: string; value: string }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileViewComponent {
+  protected readonly state = inject(SettingsStateService);
+
   protected readonly bannerPresets: BannerPreset[] = [
     { label: 'Mountains', value: '/assets/banners/banner-1.jpg' },
     { label: 'City Lights', value: '/assets/banners/banner-2.jpg' },
@@ -39,8 +44,6 @@ export class ProfileViewComponent {
     this.state.bannerImageUrl()
       .startsWith('/assets/banners/'),
   );
-
-  constructor(protected readonly state: SettingsStateService) {}
 
   protected selectBannerPreset(value: string): void {
     // Toggle: clicking the same preset deselects it

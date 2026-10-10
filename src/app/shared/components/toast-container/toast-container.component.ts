@@ -4,7 +4,7 @@
  * Place once in the root template (app.ts).
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 import { Toast, ToastService } from '../../services/toast.service';
 
@@ -15,7 +15,7 @@ import { Toast, ToastService } from '../../services/toast.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToastContainerComponent {
-  constructor(protected readonly toastService: ToastService) {}
+  protected readonly toastService = inject(ToastService);
 
   protected getToastClasses(toast: Toast): string {
     const base = 'border';

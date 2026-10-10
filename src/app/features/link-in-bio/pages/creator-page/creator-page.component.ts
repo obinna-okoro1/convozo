@@ -4,7 +4,14 @@
  * Shows creator profile header, their links, and CTAs for messaging/booking.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { CreatorLink } from 'app/core/models';
@@ -37,6 +44,10 @@ interface CreatorProfile {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreatorPageComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly supabaseService = inject(SupabaseService);
+  private readonly linkService = inject(LinkService);
+
   protected readonly creator = signal<CreatorProfile | null>(null);
   protected readonly links = signal<CreatorLink[]>([]);
   protected readonly loading = signal(true);
@@ -48,12 +59,6 @@ export class CreatorPageComponent implements OnInit {
 
     return `linear-gradient(to bottom right, #f5f5f7, ${color}08, #f5f5f7)`;
   });
-
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly supabaseService: SupabaseService,
-    private readonly linkService: LinkService,
-  ) {}
 
   public ngOnInit(): void {
     void this.initialize();

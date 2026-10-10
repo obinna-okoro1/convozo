@@ -7,7 +7,7 @@
  * Extracted from SupabaseService to follow Single Responsibility Principle.
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import { SupabaseService } from './supabase.service';
 
@@ -20,7 +20,7 @@ interface UploadResult {
   providedIn: 'root',
 })
 export class StorageService {
-  constructor(private readonly supabase: SupabaseService) {}
+  private readonly supabase = inject(SupabaseService);
 
   /**
    * Upload a file to a public bucket and return both the storage path and public URL.
@@ -35,10 +35,13 @@ export class StorageService {
         .from(bucket)
         .upload(path, file, { cacheControl: '3600', upsert: true });
 
-      if (error) {throw error;}
+      if (error) {
+        throw error;
+      }
 
-      const { data: { publicUrl } } = this.supabase.client.storage
-        .from(bucket)
+      const {
+        data: { publicUrl },
+      } = this.supabase.client.storage.from(bucket)
         .getPublicUrl(path);
 
       return { data: { path: data.path, publicUrl }, error: null };
@@ -77,7 +80,9 @@ export class StorageService {
         .from('shop-files')
         .upload(storagePath, file, { upsert: false });
 
-      if (error) {throw error;}
+      if (error) {
+        throw error;
+      }
 
       return { path: data.path, error: null };
     } catch (error) {
@@ -101,10 +106,13 @@ export class StorageService {
         .from('shop-thumbnails')
         .upload(storagePath, file, { upsert: false });
 
-      if (error) {throw error;}
+      if (error) {
+        throw error;
+      }
 
-      const { data: { publicUrl } } = this.supabase.client.storage
-        .from('shop-thumbnails')
+      const {
+        data: { publicUrl },
+      } = this.supabase.client.storage.from('shop-thumbnails')
         .getPublicUrl(data.path);
 
       return { path: data.path, publicUrl, error: null };

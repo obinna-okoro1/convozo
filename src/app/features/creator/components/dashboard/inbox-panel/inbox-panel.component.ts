@@ -5,6 +5,7 @@ import {
   OnDestroy,
   computed,
   effect,
+  inject,
   input,
   output,
   signal,
@@ -27,6 +28,9 @@ import { ToastService } from 'app/shared/services/toast.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InboxPanelComponent implements OnDestroy {
+  private readonly messageService = inject(MessageService);
+  private readonly toast = inject(ToastService);
+
   public readonly messages = input.required<Message[]>();
 
   public readonly markHandled = output<Message>();
@@ -50,10 +54,7 @@ export class InboxPanelComponent implements OnDestroy {
     this.messageService.calculateStats(this.messages()),
   );
 
-  constructor(
-    private readonly messageService: MessageService,
-    private readonly toast: ToastService,
-  ) {
+  constructor() {
     // Reload replies whenever the selected message changes.
     effect(() => {
       const msg = this.selectedMessage();
@@ -69,9 +70,13 @@ export class InboxPanelComponent implements OnDestroy {
     const msgs = this.messages();
     const status = this.filterStatus();
 
-    if (status === 'unhandled') {return msgs.filter((m) => !m.is_handled);}
+    if (status === 'unhandled') {
+      return msgs.filter((m) => !m.is_handled);
+    }
 
-    if (status === 'handled') {return msgs.filter((m) => m.is_handled);}
+    if (status === 'handled') {
+      return msgs.filter((m) => m.is_handled);
+    }
 
     return msgs;
   });
@@ -114,11 +119,17 @@ export class InboxPanelComponent implements OnDestroy {
     const content = this.replyText()
       .trim();
 
-    if (!message || !content || this.sendingReply()) {return;}
+    if (!message || !content || this.sendingReply()) {
+      return;
+    }
 
     this.sendingReply.set(true);
 
-    const result = await this.messageService.replyToMessage(message.id, content, message.sender_email);
+    const result = await this.messageService.replyToMessage(
+      message.id,
+      content,
+      message.sender_email,
+    );
 
     if (result.success) {
       this.replyText.set('');
@@ -174,13 +185,17 @@ export class InboxPanelComponent implements OnDestroy {
     this.replies.set([]);
     this.replyText.set('');
 
-    if (!messageId) {return;}
+    if (!messageId) {
+      return;
+    }
 
     this.loadingReplies.set(true);
     const { data } = await this.messageService.getReplies(messageId);
     this.loadingReplies.set(false);
 
-    if (data) {this.replies.set(data);}
+    if (data) {
+      this.replies.set(data);
+    }
 
     // Subscribe to new replies in real-time
     this.repliesChannel = this.messageService.subscribeToReplies(messageId, (updated) => {

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { FEATURE_FLAGS } from 'app/core/constants';
@@ -11,6 +18,8 @@ import { SettingsStateService } from '../../settings-state.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PaymentsViewComponent implements OnInit {
+  protected readonly state = inject(SettingsStateService);
+
   private readonly route = inject(ActivatedRoute);
   protected readonly refreshing = signal(false);
   protected readonly stripeConnectEnabled = FEATURE_FLAGS.STRIPE_CONNECT_ENABLED;
@@ -28,10 +37,15 @@ export class PaymentsViewComponent implements OnInit {
   protected readonly selectedBankName = computed(() => {
     const code = this.bankCode();
 
-    if (!code) {return '';}
+    if (!code) {
+      return '';
+    }
 
-    return this.state.flutterwaveBanks()
-      .find((b: { code: string; name: string }) => b.code === code)?.name ?? '';
+    return (
+      this.state.flutterwaveBanks()
+        .find((b: { code: string; name: string }) => b.code === code)
+        ?.name ?? ''
+    );
   });
 
   /**
@@ -45,10 +59,13 @@ export class PaymentsViewComponent implements OnInit {
       .trim();
     const banks = this.state.flutterwaveBanks();
 
-    if (!search) {return banks.slice(0, 60);}
+    if (!search) {
+      return banks.slice(0, 60);
+    }
 
-    return banks.filter((b: { name: string }) => b.name.toLowerCase()
-      .includes(search))
+    return banks
+      .filter((b: { name: string }) => b.name.toLowerCase()
+        .includes(search))
       .slice(0, 60);
   });
 
@@ -57,14 +74,13 @@ export class PaymentsViewComponent implements OnInit {
   protected readonly resolveError = signal<string | null>(null);
   protected readonly showBankForm = signal(false);
 
-  constructor(protected readonly state: SettingsStateService) {}
-
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
     const returningFromStripe =
       params.get('connected') === 'true' || params.get('refresh') === 'true';
     const account = this.state.paymentAccount();
-    const needsStripeRefresh = returningFromStripe || (account != null && !account.onboarding_completed);
+    const needsStripeRefresh =
+      returningFromStripe || (account != null && !account.onboarding_completed);
 
     if (needsStripeRefresh) {
       void this.state.refreshStripeStatus();
@@ -153,7 +169,9 @@ export class PaymentsViewComponent implements OnInit {
     const num = this.accountNumber();
     const code = this.bankCode();
 
-    if (!num || !code) {return;}
+    if (!num || !code) {
+      return;
+    }
 
     // Non-NG countries: NIBSS resolution is not available — mark as verified
     // immediately so the form can proceed to submit.
@@ -184,7 +202,9 @@ export class PaymentsViewComponent implements OnInit {
   }
 
   protected async submitBankAccount(): Promise<void> {
-    if (!this.canSubmitBank) {return;}
+    if (!this.canSubmitBank) {
+      return;
+    }
 
     await this.state.connectFlutterwave({
       bankCode: this.bankCode(),

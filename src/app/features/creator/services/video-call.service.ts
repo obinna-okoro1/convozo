@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 
 import {
   CallBooking,
@@ -10,8 +10,8 @@ import { SupabaseService } from 'app/core/services/supabase.service';
 export type VideoCallState =
   | 'idle'
   | 'joining'
-  | 'waiting'      // Waiting for the other participant
-  | 'in_progress'  // Both participants in the call
+  | 'waiting' // Waiting for the other participant
+  | 'in_progress' // Both participants in the call
   | 'ending'
   | 'completed'
   | 'error';
@@ -20,6 +20,8 @@ export type VideoCallState =
   providedIn: 'root',
 })
 export class VideoCallService {
+  private readonly supabaseService = inject(SupabaseService);
+
   // Reactive state for the video call
   readonly callState = signal<VideoCallState>('idle');
   readonly currentBooking = signal<CallBooking | null>(null);
@@ -36,7 +38,9 @@ export class VideoCallService {
   readonly formattedTimeRemaining = computed(() => {
     const total = this.remainingSeconds();
 
-    if (total <= 0) {return '00:00';}
+    if (total <= 0) {
+      return '00:00';
+    }
     const minutes = Math.floor(total / 60);
     const seconds = total % 60;
 
@@ -45,15 +49,17 @@ export class VideoCallService {
       .padStart(2, '0')}`;
   });
 
-  readonly isCallActive = computed(() =>
-    this.callState() === 'in_progress' || this.callState() === 'waiting',
+  readonly isCallActive = computed(
+    () => this.callState() === 'in_progress' || this.callState() === 'waiting',
   );
 
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private readonly supabaseService: SupabaseService) {}
-
-  async joinCall(bookingId: string, role: 'creator' | 'fan', fanAccessToken?: string): Promise<JoinCallResponse | null> {
+  async joinCall(
+    bookingId: string,
+    role: 'creator' | 'fan',
+    fanAccessToken?: string,
+  ): Promise<JoinCallResponse | null> {
     this.callState.set('joining');
     this.errorMessage.set(null);
     // Store for use in completeCall when the fan ends the call
@@ -123,7 +129,11 @@ export class VideoCallService {
     }
   }
 
-  async completeCall(bookingId: string, endedBy: 'creator' | 'fan' | 'system' = 'system', fanAccessToken?: string): Promise<CompleteCallResponse | null> {
+  async completeCall(
+    bookingId: string,
+    endedBy: 'creator' | 'fan' | 'system' = 'system',
+    fanAccessToken?: string,
+  ): Promise<CompleteCallResponse | null> {
     this.callState.set('ending');
     this.stopCountdown();
 
@@ -190,10 +200,13 @@ export class VideoCallService {
    * Use this instead of loadBooking() when the caller may be an anon fan.
    */
   async loadCallStatus(bookingId: string): Promise<SupabaseResponse<Partial<CallBooking>>> {
-    const { data, error } = await this.supabaseService.client
-      .rpc('get_call_status', { p_booking_id: bookingId });
+    const { data, error } = await this.supabaseService.client.rpc('get_call_status', {
+      p_booking_id: bookingId,
+    });
 
-    if (error) {return { data: null, error };}
+    if (error) {
+      return { data: null, error };
+    }
 
     // rpc returns an array; take the first row (there will be 0 or 1 result)
     const row = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
@@ -212,7 +225,9 @@ export class VideoCallService {
 
     const startedAt = this.callStartedAt();
 
-    if (!startedAt) {return;}
+    if (!startedAt) {
+      return;
+    }
 
     const totalSeconds = durationMinutes * 60;
     const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
