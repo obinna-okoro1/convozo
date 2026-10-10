@@ -10,6 +10,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RealtimeChannel } from '@supabase/supabase-js';
+
 import { FilterStatus, Message, MessageReply, MessageStats } from 'app/core/models';
 import { MessageService } from 'app/features/creator/services/message.service';
 import {
@@ -17,7 +19,6 @@ import {
   SelectOption,
 } from 'app/shared/components/ui/searchable-select/searchable-select.component';
 import { ToastService } from 'app/shared/services/toast.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Component({
   selector: 'app-inbox-panel',

@@ -14,6 +14,7 @@
 
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+
 import { SettingsStateService } from 'app/features/creator/components/settings/settings-state.service';
 import { MonetizationViewComponent } from 'app/features/creator/components/settings/views/monetization-view/monetization-view.component';
 import { PaymentsViewComponent } from 'app/features/creator/components/settings/views/payments-view/payments-view.component';

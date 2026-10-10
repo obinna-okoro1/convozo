@@ -6,6 +6,7 @@
 
 import { ChangeDetectionStrategy, Component, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+
 import { CreatorLink } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
 

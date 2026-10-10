@@ -15,6 +15,7 @@
 
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { errorMessage } from 'app/shared/utils/error.utils';
 import { compressImage } from 'app/shared/utils/image.utils';

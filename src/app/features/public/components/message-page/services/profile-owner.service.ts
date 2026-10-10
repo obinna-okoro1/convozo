@@ -14,6 +14,7 @@
 
 import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
+
 import {
   CallBooking,
   CreatorMonthlyAnalytics,
@@ -168,8 +169,10 @@ export class ProfileOwnerService {
 
   async verifyPhysicalMeeting(bookingId: string, code: string): Promise<void> {
     const { error } = await this.edgeFunctionService.verifyPhysicalMeeting(bookingId, code);
+
     if (error) {
       this.toast.error(error.message || 'Verification failed — please check the code and try again');
+
       return;
     }
     // Update local state so UI reflects completed status immediately

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { environment } from 'environments/environment';
 import { PostgrestError, SupabaseClient, User, createClient } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
+
+import { environment } from 'environments/environment';
 
 import {
   Creator,

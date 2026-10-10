@@ -22,6 +22,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { CallBooking } from 'app/core/models';
 
 interface FilterTab {
@@ -149,7 +150,8 @@ export class BookingsPanelComponent {
 
   protected onVerifyPhysicalMeeting(booking: CallBooking): void {
     const code = (this.codeInputs()[booking.id] ?? '').trim();
-    if (!code) return;
+
+    if (!code) {return;}
     this.verifyPhysicalMeeting.emit({ bookingId: booking.id, code });
   }
 }

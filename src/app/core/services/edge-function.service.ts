@@ -9,8 +9,9 @@
  */
 
 import { Injectable } from '@angular/core';
-import { environment } from 'environments/environment';
 import { FunctionsHttpError } from '@supabase/functions-js';
+
+import { environment } from 'environments/environment';
 
 import {
   CallBookingPayload,

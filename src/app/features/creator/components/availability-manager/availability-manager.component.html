@@ -1,8 +1,19 @@
 @if (loading()) {
   <div class="flex items-center gap-2 py-3 text-content-muted text-sm">
     <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
     </svg>
     Loading schedule…
   </div>
@@ -17,12 +28,18 @@
     @if (error()) {
       <div
         class="flex items-center gap-2 p-3 rounded-xl text-xs"
-        style="background: rgba(215, 0, 21, 0.06); border: 1px solid rgba(215, 0, 21, 0.15); color: #d70015">
+        style="
+          background: rgba(215, 0, 21, 0.06);
+          border: 1px solid rgba(215, 0, 21, 0.15);
+          color: #d70015;
+        "
+      >
         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path
             fill-rule="evenodd"
             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-            clip-rule="evenodd" />
+            clip-rule="evenodd"
+          />
         </svg>
         {{ error() }}
       </div>
@@ -33,17 +50,30 @@
       @for (day of schedule(); track day.day; let i = $index) {
         <div
           [class]="
-            'rounded-xl border transition-all duration-200 ' + (day.enabled ? 'border-accent/20' : 'border-separator')
+            'rounded-xl border transition-all duration-200 ' +
+            (day.enabled ? 'border-accent/20' : 'border-separator')
           "
-          [style]="day.enabled ? 'background:rgba(124,58,237,0.04)' : ''">
+          [style]="day.enabled ? 'background:rgba(124,58,237,0.04)' : ''"
+        >
           <!-- Toggle row -->
           <div class="flex items-center gap-3 px-3.5 py-2.5">
             <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input type="checkbox" [checked]="day.enabled" (change)="toggleDay(i)" class="sr-only peer" />
+              <input
+                type="checkbox"
+                [checked]="day.enabled"
+                (change)="toggleDay(i)"
+                class="sr-only peer"
+              />
               <div
-                class="w-9 h-5 rounded-full peer peer-checked:bg-accent bg-surface-elevated peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4 rtl:peer-checked:after:-translate-x-4"></div>
+                class="w-9 h-5 rounded-full peer peer-checked:bg-accent bg-surface-elevated peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4 rtl:peer-checked:after:-translate-x-4"
+              ></div>
             </label>
-            <span [class]="'text-sm font-semibold flex-1 ' + (day.enabled ? 'text-content' : 'text-content-muted')">
+            <span
+              [class]="
+                'text-sm font-semibold flex-1 ' +
+                (day.enabled ? 'text-content' : 'text-content-muted')
+              "
+            >
               {{ day.label }}
             </span>
             @if (!day.enabled) {
@@ -61,36 +91,47 @@
                     [value]="slot.startTime"
                     (valueChange)="updateStartTime(i, j, $event)"
                     placeholder="Start"
-                    size="sm" />
+                    size="sm"
+                  />
                   <svg
                     class="w-3 h-3 text-content-muted flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
-                    viewBox="0 0 24 24">
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
                   </svg>
                   <app-searchable-select
                     [options]="timeSelectOptions"
                     [value]="slot.endTime"
                     (valueChange)="updateEndTime(i, j, $event)"
                     placeholder="End"
-                    size="sm" />
+                    size="sm"
+                  />
                   @if (day.slots.length > 1) {
                     <button
                       (click)="removeSlot(i, j)"
                       class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
                       style="background: rgba(215, 0, 21, 0.06); color: #d70015"
-                      title="Remove slot">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      title="Remove slot"
+                    >
+                      <svg
+                        class="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12" />
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   }
@@ -99,16 +140,23 @@
               <div class="flex items-center gap-3 pt-0.5">
                 <button
                   (click)="addSlot(i)"
-                  class="text-xs text-accent hover:text-accent/80 font-semibold flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-accent/8 transition-colors">
+                  class="text-xs text-accent hover:text-accent/80 font-semibold flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-accent/8 transition-colors"
+                >
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                   Add slot
                 </button>
                 @if (day.day >= 1 && day.day <= 5) {
                   <button
                     (click)="copyToWeekdays(i)"
-                    class="text-xs text-content-muted hover:text-content-secondary font-medium py-1 px-2 rounded-lg hover:bg-surface-elevated transition-colors">
+                    class="text-xs text-content-muted hover:text-content-secondary font-medium py-1 px-2 rounded-lg hover:bg-surface-elevated transition-colors"
+                  >
                     Copy to weekdays
                   </button>
                 }

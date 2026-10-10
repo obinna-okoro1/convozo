@@ -5,6 +5,7 @@
 
 import { NgClass } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+
 import {
   ImageChangeEvent,
   ImageUploadComponent,

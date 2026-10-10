@@ -9,30 +9,46 @@
             viewBox="0 0 40 40"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            aria-label="Convozo">
+            aria-label="Convozo"
+          >
             <defs>
-              <linearGradient id="cvz-ob" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <linearGradient
+                id="cvz-ob"
+                x1="0"
+                y1="0"
+                x2="40"
+                y2="40"
+                gradientUnits="userSpaceOnUse"
+              >
                 <stop stop-color="#7c3aed" />
                 <stop offset="1" stop-color="#ec4899" />
               </linearGradient>
             </defs>
             <rect width="40" height="40" rx="10" fill="url(#cvz-ob)" />
             <circle cx="20" cy="20" r="2.5" fill="white" />
-            <path d="M25 13 A8 8 0 1 0 25 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none" />
+            <path
+              d="M25 13 A8 8 0 1 0 25 27"
+              stroke="white"
+              stroke-width="3.5"
+              stroke-linecap="round"
+              fill="none"
+            />
             <path
               d="M27 10 A12 12 0 1 0 27 30"
               stroke="white"
               stroke-width="2.5"
               stroke-linecap="round"
               fill="none"
-              stroke-opacity="0.6" />
+              stroke-opacity="0.6"
+            />
             <path
               d="M29 7 A16 16 0 1 0 29 33"
               stroke="white"
               stroke-width="2"
               stroke-linecap="round"
               fill="none"
-              stroke-opacity="0.3" />
+              stroke-opacity="0.3"
+            />
           </svg>
           <span class="text-4xl font-bold text-content">Convozo</span>
         </div>
@@ -74,7 +90,8 @@
                   : state.currentStep() === step
                     ? 'bg-accent'
                     : 'bg-surface-overlay'
-              "></div>
+              "
+            ></div>
           }
         </div>
 
@@ -86,10 +103,16 @@
                 state.currentStep() >= 1
                   ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
                   : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
-              ">
+              "
+            >
               @if (state.currentStep() > 1) {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               } @else {
                 1
@@ -100,7 +123,8 @@
                 state.currentStep() >= 1
                   ? 'ml-2 font-semibold text-sm text-content'
                   : 'ml-2 font-semibold text-sm text-content-muted'
-              ">
+              "
+            >
               Profile
             </span>
           </div>
@@ -109,17 +133,24 @@
               state.currentStep() >= 2
                 ? 'w-8 h-0.5 rounded-full transition-all duration-500 bg-accent'
                 : 'w-8 h-0.5 rounded-full transition-all duration-500 bg-surface-overlay'
-            "></div>
+            "
+          ></div>
           <div class="flex items-center">
             <div
               [class]="
                 state.currentStep() >= 2
                   ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
                   : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
-              ">
+              "
+            >
               @if (state.currentStep() > 2) {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               } @else {
                 2
@@ -130,7 +161,8 @@
                 state.currentStep() >= 2
                   ? 'ml-2 font-semibold text-sm text-content'
                   : 'ml-2 font-semibold text-sm text-content-muted'
-              ">
+              "
+            >
               Expertise
             </span>
           </div>
@@ -139,17 +171,24 @@
               state.currentStep() >= 3
                 ? 'w-8 h-0.5 rounded-full transition-all duration-500 bg-accent'
                 : 'w-8 h-0.5 rounded-full transition-all duration-500 bg-surface-overlay'
-            "></div>
+            "
+          ></div>
           <div class="flex items-center">
             <div
               [class]="
                 state.currentStep() >= 3
                   ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
                   : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
-              ">
+              "
+            >
               @if (state.currentStep() > 3) {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               } @else {
                 3
@@ -160,7 +199,8 @@
                 state.currentStep() >= 3
                   ? 'ml-2 font-semibold text-sm text-content'
                   : 'ml-2 font-semibold text-sm text-content-muted'
-              ">
+              "
+            >
               Payments
             </span>
           </div>
@@ -169,14 +209,16 @@
               state.currentStep() >= 4
                 ? 'w-8 h-0.5 rounded-full transition-all duration-500 bg-accent'
                 : 'w-8 h-0.5 rounded-full transition-all duration-500 bg-surface-overlay'
-            "></div>
+            "
+          ></div>
           <div class="flex items-center">
             <div
               [class]="
                 state.currentStep() >= 4
                   ? 'w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
                   : 'w-9 h-9 bg-surface-overlay text-content-muted border border-separator rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500'
-              ">
+              "
+            >
               4
             </div>
             <span
@@ -184,7 +226,8 @@
                 state.currentStep() >= 4
                   ? 'ml-2 font-semibold text-sm text-content'
                   : 'ml-2 font-semibold text-sm text-content-muted'
-              ">
+              "
+            >
               Review
             </span>
           </div>
@@ -198,12 +241,18 @@
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
-                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-7 h-7 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
               </div>
               <div>
@@ -214,15 +263,24 @@
 
             @if (state.hasOAuthData()) {
               <div class="alert-success mb-6">
-                <svg class="w-5 h-5 text-[#1a9e3f] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  class="w-5 h-5 text-[#1a9e3f] flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fill-rule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd" />
+                    clip-rule="evenodd"
+                  />
                 </svg>
                 <div>
-                  <p class="font-semibold text-content">Auto-filled from {{ state.oauthProvider() }}</p>
-                  <p class="text-content-secondary text-sm">We imported your details — feel free to edit them</p>
+                  <p class="font-semibold text-content">
+                    Auto-filled from {{ state.oauthProvider() }}
+                  </p>
+                  <p class="text-content-secondary text-sm">
+                    We imported your details — feel free to edit them
+                  </p>
                 </div>
               </div>
             }
@@ -240,7 +298,8 @@
                   (input)="state.updateDisplayName(inputValue($event))"
                   placeholder="Your Name"
                   class="input"
-                  required />
+                  required
+                />
               </div>
 
               <!-- URL / Slug -->
@@ -265,52 +324,79 @@
                             ? '!border-[#d70015]/40 !ring-[#d70015]'
                             : ''
                       "
-                      required />
+                      required
+                    />
                     <div class="absolute right-3 top-1/2 -translate-y-1/2">
                       @if (state.slugStatus() === 'checking') {
-                        <svg class="w-5 h-5 text-content-muted animate-spin" fill="none" viewBox="0 0 24 24">
+                        <svg
+                          class="w-5 h-5 text-content-muted animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
                           <circle
                             class="opacity-25"
                             cx="12"
                             cy="12"
                             r="10"
                             stroke="currentColor"
-                            stroke-width="4"></circle>
+                            stroke-width="4"
+                          ></circle>
                           <path
                             class="opacity-75"
                             fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          ></path>
                         </svg>
                       } @else if (state.slugStatus() === 'available') {
-                        <svg class="w-5 h-5 text-[#1a9e3f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-5 h-5 text-[#1a9e3f]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M5 13l4 4L19 7"></path>
+                            d="M5 13l4 4L19 7"
+                          ></path>
                         </svg>
                       } @else if (state.slugStatus() === 'taken') {
-                        <svg class="w-5 h-5 text-[#d70015]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-5 h-5 text-[#d70015]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"></path>
+                            d="M6 18L18 6M6 6l12 12"
+                          ></path>
                         </svg>
                       } @else if (state.slugStatus() === 'invalid') {
-                        <svg class="w-5 h-5 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-5 h-5 text-[#b85c00]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
                         </svg>
                       }
                     </div>
                   </div>
                 </div>
                 @if (state.slugStatus() === 'taken') {
-                  <p class="form-hint text-[#d70015]">This URL is already taken — try a different one</p>
+                  <p class="form-hint text-[#d70015]">
+                    This URL is already taken — try a different one
+                  </p>
                 } @else if (state.slugStatus() === 'invalid' && state.slug()) {
                   <p class="form-hint text-[#b85c00]">
                     Must be at least 2 characters: lowercase letters, numbers, and hyphens
@@ -330,7 +416,8 @@
                   (input)="state.bio.set(inputValue($event))"
                   placeholder="Tell people about yourself..."
                   rows="3"
-                  class="input resize-none"></textarea>
+                  class="input resize-none"
+                ></textarea>
               </div>
 
               <!-- Profile Photo -->
@@ -339,7 +426,8 @@
                 [variant]="'compact'"
                 [label]="'Profile Photo (optional)'"
                 (imageChanged)="onImageChanged($event)"
-                (uploadError)="onImageUploadError($event)" />
+                (uploadError)="onImageUploadError($event)"
+              />
 
               <!-- Phone Number -->
               <div>
@@ -353,10 +441,13 @@
                       [options]="state.countryCodeOptions"
                       [value]="state.String(state.selectedCountryIndex())"
                       (valueChange)="state.selectedCountryIndex.set(+$event)"
-                      placeholder="Country" />
+                      placeholder="Country"
+                    />
                   </div>
                   <div class="relative flex-1">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <div
+                      class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none"
+                    >
                       <span class="text-content-muted text-base font-medium">
                         {{ state.countryCodes[state.selectedCountryIndex()].code }}
                       </span>
@@ -367,10 +458,13 @@
                       (input)="state.phoneNumber.set(inputValue($event))"
                       placeholder="Phone number"
                       class="input pl-14"
-                      required />
+                      required
+                    />
                   </div>
                 </div>
-                <p class="form-hint">Your phone number with country code — we auto-detected your region</p>
+                <p class="form-hint">
+                  Your phone number with country code — we auto-detected your region
+                </p>
               </div>
             </div>
 
@@ -378,10 +472,16 @@
               <button
                 (click)="state.nextStep()"
                 [disabled]="!state.canProceedStep1()"
-                class="btn-primary btn-lg flex items-center gap-3">
+                class="btn-primary btn-lg flex items-center gap-3"
+              >
                 <span>Continue</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </button>
             </div>
@@ -393,12 +493,18 @@
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
-                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-7 h-7 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
               <div>
@@ -418,7 +524,8 @@
                 [value]="state.expertCategory()"
                 (valueChange)="state.onCategoryChange($event)"
                 placeholder="Select your field of expertise"
-                [searchable]="true" />
+                [searchable]="true"
+              />
             </div>
 
             <!-- Subcategory (shown when a category is selected) -->
@@ -433,7 +540,8 @@
                   [value]="state.expertSubcategory()"
                   (valueChange)="state.onSubcategoryChange($event)"
                   placeholder="Select a specialisation"
-                  [searchable]="true" />
+                  [searchable]="true"
+                />
               </div>
             }
 
@@ -449,7 +557,8 @@
                   [value]="state.professionTitle()"
                   (input)="state.professionTitle.set(inputValue($event))"
                   placeholder="e.g. Senior Family Lawyer"
-                  class="input" />
+                  class="input"
+                />
                 <p class="form-hint">Your exact job title</p>
               </div>
               <div>
@@ -464,7 +573,8 @@
                   placeholder="e.g. 10"
                   min="0"
                   max="60"
-                  class="input" />
+                  class="input"
+                />
               </div>
             </div>
 
@@ -479,7 +589,8 @@
                 [value]="state.linkedinUrl()"
                 (input)="state.linkedinUrl.set(inputValue($event))"
                 placeholder="https://linkedin.com/in/yourname"
-                class="input" />
+                class="input"
+              />
               <p class="form-hint">Adds credibility to your profile</p>
             </div>
 
@@ -490,17 +601,24 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                    d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                  />
                 </svg>
                 Back
               </button>
               <button
                 (click)="state.nextStep()"
                 [disabled]="!state.canProceedStep2()"
-                class="btn-primary btn-lg flex items-center gap-3">
+                class="btn-primary btn-lg flex items-center gap-3"
+              >
                 <span>Continue</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </button>
             </div>
@@ -512,12 +630,18 @@
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
-                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-7 h-7 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
                 </svg>
               </div>
               <div>
@@ -532,73 +656,106 @@
                 class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24">
+                viewBox="0 0 24 24"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <div>
-                <p class="font-semibold text-content mb-1">Set up payments after your profile is live</p>
+                <p class="font-semibold text-content mb-1">
+                  Set up payments after your profile is live
+                </p>
                 <p class="text-content-secondary text-sm leading-relaxed">
                   Once your account is created, go to
                   <strong class="text-content">Settings → Payments</strong>
-                  to connect your Stripe account. This is what allows you to receive payments from clients.
+                  to connect your Stripe account. This is what allows you to receive payments from
+                  clients.
                 </p>
               </div>
             </div>
 
             <div class="space-y-4 mb-8">
-              <div class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator">
-                <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div
+                class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator"
+              >
+                <div
+                  class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-5 h-5 text-accent"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p class="font-bold text-content">78% goes to you</p>
                   <p class="text-sm text-content-secondary">
-                    Every payment a client makes, you keep 78% — sent directly to your bank account via Stripe.
+                    Every payment a client makes, you keep 78% — sent directly to your bank account
+                    via Stripe.
                   </p>
                 </div>
               </div>
 
-              <div class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator">
-                <div class="w-10 h-10 bg-[#1a9e3f]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div
+                class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator"
+              >
+                <div
+                  class="w-10 h-10 bg-[#1a9e3f]/10 rounded-xl flex items-center justify-center flex-shrink-0"
+                >
                   <svg class="w-5 h-5 text-[#1a9e3f]" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fill-rule="evenodd"
                       d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd" />
+                      clip-rule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p class="font-bold text-content">Secure & trusted</p>
                   <p class="text-sm text-content-secondary">
-                    Payments are powered by Stripe — the same platform used by millions of businesses worldwide.
+                    Payments are powered by Stripe — the same platform used by millions of
+                    businesses worldwide.
                   </p>
                 </div>
               </div>
 
-              <div class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator">
-                <div class="w-10 h-10 bg-[#b85c00]/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-[#b85c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div
+                class="flex items-start gap-4 p-4 bg-surface-raised rounded-xl border border-separator"
+              >
+                <div
+                  class="w-10 h-10 bg-[#b85c00]/10 rounded-xl flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-5 h-5 text-[#b85c00]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p class="font-bold text-content">Takes just a few minutes</p>
                   <p class="text-sm text-content-secondary">
-                    Connecting Stripe is quick. You'll need your bank details and a form of ID to complete setup.
+                    Connecting Stripe is quick. You'll need your bank details and a form of ID to
+                    complete setup.
                   </p>
                 </div>
               </div>
@@ -611,14 +768,20 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                    d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                  />
                 </svg>
                 Back
               </button>
               <button (click)="state.nextStep()" class="btn-primary btn-lg flex items-center gap-3">
                 <span>Continue</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </button>
             </div>
@@ -630,12 +793,18 @@
           <div class="animate-fade-in">
             <div class="flex items-center gap-4 mb-8">
               <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
-                <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-7 h-7 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <div>
@@ -673,12 +842,14 @@
                   class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24">
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <div>
                   <p class="font-semibold text-content mb-2">What happens next</p>
@@ -706,12 +877,18 @@
 
             @if (state.error()) {
               <div class="alert-error mb-6">
-                <svg class="w-5 h-5 text-[#d70015] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5 text-[#d70015] flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span class="text-content-secondary text-sm">{{ state.error() }}</span>
               </div>
@@ -721,33 +898,54 @@
               <button
                 (click)="state.prevStep()"
                 class="btn-ghost btn-lg flex items-center gap-2"
-                [disabled]="state.loading()">
+                [disabled]="state.loading()"
+              >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                    d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                  />
                 </svg>
                 Back
               </button>
               <button
                 (click)="state.completeOnboarding()"
                 [disabled]="state.loading()"
-                class="btn-primary btn-lg flex items-center gap-3">
+                class="btn-primary btn-lg flex items-center gap-3"
+              >
                 @if (state.loading()) {
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <svg
+                    class="animate-spin h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
                     <path
                       class="opacity-75"
                       fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   <span>Creating...</span>
                 } @else {
                   <span>Create Account</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 }
               </button>

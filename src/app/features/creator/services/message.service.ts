@@ -10,9 +10,10 @@
  */
 
 import { Injectable } from '@angular/core';
+import { RealtimeChannel } from '@supabase/supabase-js';
+
 import { Message, MessageReply, MessageStats, SupabaseResponse } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Injectable({
   providedIn: 'root',
@@ -136,7 +137,7 @@ export class MessageService {
       .eq('message_id', messageId)
       .order('created_at', { ascending: true });
 
-    return { data: data as MessageReply[] | null, error };
+    return { data: data, error };
   }
 
   /**

@@ -7,6 +7,7 @@
  */
 
 import { Injectable } from '@angular/core';
+
 import { EdgeFunctionResponse, ShopCheckoutPayload, ShopItem, ShopOrder } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
 

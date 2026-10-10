@@ -21,7 +21,8 @@
                 amountDollars === amount
                   ? 'background:linear-gradient(135deg,#7c3aed 0%,#ec4899 100%)'
                   : 'background:rgba(255,255,255,0.55);backdrop-filter:blur(0.75rem);-webkit-backdrop-filter:blur(0.75rem);border:1px solid rgba(255,255,255,0.48)'
-              ">
+              "
+            >
               ${{ amount }}
             </button>
           }
@@ -36,7 +37,8 @@
             step="1"
             required
             placeholder="Custom amount"
-            class="input flex-1" />
+            class="input flex-1"
+          />
         </div>
         <p class="form-hint">Minimum $1.00 USD</p>
       </div>
@@ -54,7 +56,8 @@
             name="senderName"
             placeholder="Enter your name"
             class="input"
-            required />
+            required
+          />
         </div>
         <div>
           <label class="form-label">
@@ -67,7 +70,8 @@
             name="senderEmail"
             placeholder="you&#64;example.com"
             class="input"
-            required />
+            required
+          />
         </div>
       </div>
 
@@ -83,21 +87,31 @@
           placeholder="Add a personal note..."
           rows="4"
           maxlength="500"
-          class="input resize-none"></textarea>
+          class="input resize-none"
+        ></textarea>
       </div>
 
       <!-- Submit -->
       <button
         type="submit"
         [disabled]="state.submitting() || !senderName || !senderEmail || amountDollars < 1"
-        class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2">
+        class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2"
+      >
         @if (state.submitting()) {
           <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
             <path
               class="opacity-75"
               fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
           Processing…
         } @else {
@@ -108,12 +122,18 @@
   </div>
 } @else {
   <div class="card-glass p-8 text-center">
-    <svg class="w-10 h-10 text-content-tertiary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg
+      class="w-10 h-10 text-content-tertiary mx-auto mb-3"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="2"
-        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+      />
     </svg>
     <p class="text-content-tertiary text-sm">Tips are not available for this professional</p>
   </div>

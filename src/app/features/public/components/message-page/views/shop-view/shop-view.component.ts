@@ -18,6 +18,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { ShopItem } from 'app/core/models';
 import { ShopService } from 'app/features/creator/services/shop.service';
 

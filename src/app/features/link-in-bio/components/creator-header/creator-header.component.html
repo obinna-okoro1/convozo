@@ -6,18 +6,21 @@
       [alt]="displayName()"
       (error)="imageLoadError.set(true)"
       class="w-24 h-24 rounded-full object-cover border-4 shadow-2xl mb-4"
-      [style.border-color]="themeColor() + '80'" />
+      [style.border-color]="themeColor() + '80'"
+    />
     @if (imageLoadError()) {
       <div
         class="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-2xl mb-4 absolute"
-        [style.background]="'linear-gradient(135deg, ' + themeColor() + ', ' + themeColor() + 'cc)'">
+        [style.background]="'linear-gradient(135deg, ' + themeColor() + ', ' + themeColor() + 'cc)'"
+      >
         {{ (displayName() || 'C')[0].toUpperCase() }}
       </div>
     }
   } @else {
     <div
       class="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-2xl mb-4"
-      [style.background]="'linear-gradient(135deg, ' + themeColor() + ', ' + themeColor() + 'cc)'">
+      [style.background]="'linear-gradient(135deg, ' + themeColor() + ', ' + themeColor() + 'cc)'"
+    >
       {{ (displayName() || 'C')[0].toUpperCase() }}
     </div>
   }

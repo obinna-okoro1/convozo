@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
+import { RealtimeChannel } from '@supabase/supabase-js';
+
 import { CallBooking, SupabaseResponse } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Injectable({
   providedIn: 'root',

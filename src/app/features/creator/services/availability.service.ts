@@ -9,6 +9,7 @@
  */
 
 import { Injectable } from '@angular/core';
+
 import { AvailabilitySlot, SupabaseResponse } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
 

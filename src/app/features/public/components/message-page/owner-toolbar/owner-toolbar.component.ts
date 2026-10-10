@@ -15,11 +15,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
+
 import { AnalyticsDashboardComponent } from 'app/features/creator/components/analytics-dashboard/analytics-dashboard.component';
 import { BookingsPanelComponent } from 'app/features/creator/components/dashboard/bookings-panel/bookings-panel.component';
 import { DeleteConfirmModalComponent } from 'app/features/creator/components/dashboard/delete-confirm-modal/delete-confirm-modal.component';
 import { InboxPanelComponent } from 'app/features/creator/components/dashboard/inbox-panel/inbox-panel.component';
-import { filter } from 'rxjs';
 
 import { OwnerSettingsPanelComponent } from './owner-settings-panel.component';
 import { ProfileOwnerService } from '../services/profile-owner.service';

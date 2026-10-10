@@ -7,6 +7,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
 import { APP_CONSTANTS } from 'app/core/constants';
 
 export interface MessageFormData {

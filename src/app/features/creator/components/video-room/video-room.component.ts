@@ -30,10 +30,11 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CompleteCallResponse } from 'app/core/models';
-import { SupabaseService } from 'app/core/services/supabase.service';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import { RealtimeChannel } from '@supabase/supabase-js';
+
+import { CompleteCallResponse } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 
 import { VideoCallToolbarComponent } from './video-call-toolbar.component';
 import { VideoCompletedOverlayComponent } from './video-completed-overlay.component';
@@ -216,7 +217,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           void this.videoCallService.loadCallStatus(this.bookingId)
             .then(({ data }) => {
               if (data?.call_started_at && this.videoCallService.callState() === 'waiting') {
-                void this.transitionToInProgress(data.call_started_at as string);
+                void this.transitionToInProgress(data.call_started_at);
               }
             });
         });
@@ -312,7 +313,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
         const { data: fresh } = await loadFn;
 
         if (fresh?.call_started_at) {
-          startedAt = new Date(fresh.call_started_at as string);
+          startedAt = new Date(fresh.call_started_at);
         }
       } catch {
         // Continue with optimistic timer on any unexpected error
@@ -362,7 +363,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           .single();
 
         if (creatorData) {
-          this.creatorSlug.set((creatorData as { slug: string }).slug);
+          this.creatorSlug.set((creatorData).slug);
         }
       }
     }

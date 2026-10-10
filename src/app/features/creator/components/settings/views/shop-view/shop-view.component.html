@@ -1,23 +1,60 @@
 <div class="space-y-6 animate-fade-in">
-
   <!-- ── Header card ── -->
   <div class="card p-5">
-
     @if (!state.isPaymentReady()) {
       <div class="alert-warning mb-6">
         <div class="flex items-start gap-3">
-          <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <svg
+            class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
           </svg>
           <div>
             @if (state.isFlutterwaveCreator()) {
               <p class="font-semibold text-content text-sm">Bank account required</p>
-              <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until your Flutterwave bank account is connected.</p>
-              <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Go to Payments <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+              <p class="text-content-secondary text-sm mt-1">
+                You can add items now, but your shop won't go live until your Flutterwave bank
+                account is connected.
+              </p>
+              <a
+                [routerLink]="drawerMode ? null : '../payments'"
+                (click)="drawerMode && goToPayments.emit()"
+                class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5"
+                >Go to Payments
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  /></svg
+              ></a>
             } @else {
               <p class="font-semibold text-content text-sm">Connect Stripe to enable your shop</p>
-              <p class="text-content-secondary text-sm mt-1">You can add items now, but your shop won't go live until Stripe is connected.</p>
-              <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5">Connect with Stripe <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+              <p class="text-content-secondary text-sm mt-1">
+                You can add items now, but your shop won't go live until Stripe is connected.
+              </p>
+              <a
+                [routerLink]="drawerMode ? null : '../payments'"
+                (click)="drawerMode && goToPayments.emit()"
+                class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5"
+                >Connect with Stripe
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  /></svg
+              ></a>
             }
           </div>
         </div>
@@ -25,18 +62,47 @@
     }
 
     <!-- Shop toggle -->
-    <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
+    <div
+      class="flex items-center justify-between p-4 bg-surface-raised rounded-xl"
+      [class.opacity-50]="!state.isPaymentReady()"
+    >
       <div>
         <h3 class="font-semibold text-content">Shop Active</h3>
         <p class="text-sm text-content-muted mt-0.5">Show your shop tab on your public profile</p>
       </div>
       <div class="flex items-center gap-2">
         @if (state.monetizationSaving()) {
-          <svg class="animate-spin h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          <svg class="animate-spin h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            ></path>
+          </svg>
         }
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
-          <input type="checkbox" [checked]="state.shopEnabled()" (change)="state.isPaymentReady() && toggleShop()" [disabled]="!state.isPaymentReady() || state.monetizationSaving()" class="sr-only peer" />
-          <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
+        <label
+          class="relative inline-flex items-center"
+          [class.cursor-not-allowed]="!state.isPaymentReady()"
+          [class.cursor-pointer]="state.isPaymentReady()"
+        >
+          <input
+            type="checkbox"
+            [checked]="state.shopEnabled()"
+            (change)="state.isPaymentReady() && toggleShop()"
+            [disabled]="!state.isPaymentReady() || state.monetizationSaving()"
+            class="sr-only peer"
+          />
+          <div
+            class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"
+          ></div>
         </label>
       </div>
     </div>
@@ -54,11 +120,24 @@
     <div class="flex items-center justify-between mb-5">
       <div>
         <h3 class="font-semibold text-content">Your Items</h3>
-        <p class="text-xs text-content-muted mt-0.5">{{ activeCount() }} active · {{ items().length }} total</p>
+        <p class="text-xs text-content-muted mt-0.5">
+          {{ activeCount() }} active · {{ items().length }} total
+        </p>
       </div>
       @if (!showForm()) {
-        <button type="button" (click)="openAddForm()" class="btn-primary btn-sm flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+        <button
+          type="button"
+          (click)="openAddForm()"
+          class="btn-primary btn-sm flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
           Add Item
         </button>
       }
@@ -67,17 +146,24 @@
     <!-- Add / Edit form -->
     @if (showForm()) {
       <div class="mb-6 p-5 bg-accent/5 border border-accent/15 rounded-xl animate-fade-in">
-        <h4 class="font-semibold text-content mb-4">{{ editingId() ? 'Edit Item' : 'New Item' }}</h4>
+        <h4 class="font-semibold text-content mb-4">
+          {{ editingId() ? 'Edit Item' : 'New Item' }}
+        </h4>
         <div class="space-y-4">
           <!-- Item type -->
           <div>
             <label class="form-label">Item Type <span class="text-red-400">*</span></label>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               @for (type of itemTypes; track type) {
-                <button type="button" (click)="onTypeChange(type)"
-                  [class]="form().itemType === type
-                    ? 'p-3 rounded-xl border-2 border-accent bg-accent/10 text-content font-semibold text-xs flex flex-col items-center gap-1.5 transition-all duration-200'
-                    : 'p-3 rounded-xl border border-separator bg-surface-raised text-content-muted hover:text-content font-medium text-xs flex flex-col items-center gap-1.5 transition-all duration-200'">
+                <button
+                  type="button"
+                  (click)="onTypeChange(type)"
+                  [class]="
+                    form().itemType === type
+                      ? 'p-3 rounded-xl border-2 border-accent bg-accent/10 text-content font-semibold text-xs flex flex-col items-center gap-1.5 transition-all duration-200'
+                      : 'p-3 rounded-xl border border-separator bg-surface-raised text-content-muted hover:text-content font-medium text-xs flex flex-col items-center gap-1.5 transition-all duration-200'
+                  "
+                >
                   <span class="text-xl">{{ getTypeMeta(type).emoji }}</span>
                   <span class="text-center leading-tight">{{ getTypeMeta(type).label }}</span>
                 </button>
@@ -89,13 +175,29 @@
           <!-- Title -->
           <div>
             <label class="form-label">Title <span class="text-red-400">*</span></label>
-            <input type="text" [value]="form().title" (input)="setTitle($any($event.target).value)" placeholder="e.g. 'My Lightroom Preset Pack'" maxlength="100" class="input" />
+            <input
+              type="text"
+              [value]="form().title"
+              (input)="setTitle($any($event.target).value)"
+              placeholder="e.g. 'My Lightroom Preset Pack'"
+              maxlength="100"
+              class="input"
+            />
           </div>
 
           <!-- Description -->
           <div>
-            <label class="form-label">Description <span class="text-content-muted font-normal">(optional)</span></label>
-            <textarea [value]="form().description" (input)="setDescription($any($event.target).value)" placeholder="What does the buyer get?" rows="3" maxlength="500" class="input resize-none"></textarea>
+            <label class="form-label"
+              >Description <span class="text-content-muted font-normal">(optional)</span></label
+            >
+            <textarea
+              [value]="form().description"
+              (input)="setDescription($any($event.target).value)"
+              placeholder="What does the buyer get?"
+              rows="3"
+              maxlength="500"
+              class="input resize-none"
+            ></textarea>
           </div>
 
           <!-- Price -->
@@ -104,7 +206,14 @@
               <label class="form-label">Price (USD) <span class="text-red-400">*</span></label>
               <div class="flex items-center gap-2">
                 <span class="text-lg font-semibold text-content-secondary">$</span>
-                <input type="number" [value]="form().priceDollars" (input)="setPrice($any($event.target).value)" min="1" step="1" class="input flex-1" />
+                <input
+                  type="number"
+                  [value]="form().priceDollars"
+                  (input)="setPrice($any($event.target).value)"
+                  min="1"
+                  step="1"
+                  class="input flex-1"
+                />
               </div>
               <p class="form-hint">Minimum $1.00</p>
             </div>
@@ -113,11 +222,15 @@
             @if (form().isRequestBased) {
               <div>
                 <label class="form-label">Delivery</label>
-                <div class="flex items-center gap-2.5 p-3 bg-accent/10 border border-accent/20 rounded-xl">
+                <div
+                  class="flex items-center gap-2.5 p-3 bg-accent/10 border border-accent/20 rounded-xl"
+                >
                   <span class="text-lg">🎥</span>
                   <div>
                     <p class="text-content font-semibold text-sm">Manual Fulfilment</p>
-                    <p class="text-content-muted text-xs">Client submits a brief → you record & deliver</p>
+                    <p class="text-content-muted text-xs">
+                      Client submits a brief → you record & deliver
+                    </p>
                   </div>
                 </div>
               </div>
@@ -134,34 +247,95 @@
 
               @if (form().fileStoragePath) {
                 <!-- File already uploaded -->
-                <div class="flex items-center gap-3 p-3 bg-[#1a9e3f]/10 border border-[#1a9e3f]/30 rounded-xl">
-                  <svg class="w-5 h-5 text-[#1a9e3f] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div
+                  class="flex items-center gap-3 p-3 bg-[#1a9e3f]/10 border border-[#1a9e3f]/30 rounded-xl"
+                >
+                  <svg
+                    class="w-5 h-5 text-[#1a9e3f] flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <div class="flex-1 min-w-0">
-                    <p class="text-content text-sm font-medium truncate">{{ form().fileDisplayName ?? 'Uploaded file' }}</p>
+                    <p class="text-content text-sm font-medium truncate">
+                      {{ form().fileDisplayName ?? 'Uploaded file' }}
+                    </p>
                     <p class="text-content-muted text-xs">File stored securely</p>
                   </div>
-                  <button type="button" (click)="clearFile()" class="text-content-muted hover:text-[#d70015] transition-colors flex-shrink-0" title="Remove file">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  <button
+                    type="button"
+                    (click)="clearFile()"
+                    class="text-content-muted hover:text-[#d70015] transition-colors flex-shrink-0"
+                    title="Remove file"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
                   </button>
                 </div>
               } @else {
                 <!-- Upload zone -->
-                <label class="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-separator rounded-xl cursor-pointer hover:border-accent/50 hover:bg-accent/5 transition-all duration-200" [class.opacity-60]="uploadingFile()">
+                <label
+                  class="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-separator rounded-xl cursor-pointer hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
+                  [class.opacity-60]="uploadingFile()"
+                >
                   @if (uploadingFile()) {
-                    <svg class="animate-spin w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <svg class="animate-spin w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      ></path>
+                    </svg>
                     <p class="text-content-muted text-sm">Uploading…</p>
                   } @else {
-                    <svg class="w-8 h-8 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    <svg
+                      class="w-8 h-8 text-content-muted"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
                     </svg>
                     <div class="text-center">
                       <p class="text-content text-sm font-medium">Click to upload your file</p>
-                      <p class="text-content-muted text-xs mt-0.5">{{ getTypeMeta(form().itemType).accept.split(',').join(', ') }}</p>
+                      <p class="text-content-muted text-xs mt-0.5">
+                        {{ getTypeMeta(form().itemType).accept.split(',').join(', ') }}
+                      </p>
                     </div>
                   }
-                  <input type="file" class="hidden" [accept]="getTypeMeta(form().itemType).accept" (change)="onFileSelected($event)" [disabled]="uploadingFile()" />
+                  <input
+                    type="file"
+                    class="hidden"
+                    [accept]="getTypeMeta(form().itemType).accept"
+                    (change)="onFileSelected($event)"
+                    [disabled]="uploadingFile()"
+                  />
                 </label>
               }
 
@@ -173,38 +347,112 @@
 
           <!-- Thumbnail upload -->
           <div>
-            <label class="form-label">Cover Image <span class="text-content-muted font-normal">(optional — max 10 MB)</span></label>
+            <label class="form-label"
+              >Cover Image
+              <span class="text-content-muted font-normal">(optional — max 10 MB)</span></label
+            >
 
             @if (form().thumbnailStoragePath) {
               <!-- Thumbnail preview -->
-              <div class="flex items-center gap-3 p-3 bg-surface-raised border border-separator rounded-xl">
+              <div
+                class="flex items-center gap-3 p-3 bg-surface-raised border border-separator rounded-xl"
+              >
                 @if (form().thumbnailPublicUrl) {
-                  <img [src]="form().thumbnailPublicUrl" alt="Thumbnail preview" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                  <img
+                    [src]="form().thumbnailPublicUrl"
+                    alt="Thumbnail preview"
+                    class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  />
                 } @else {
-                  <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <div
+                    class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"
+                  >
+                    <svg
+                      class="w-5 h-5 text-accent"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
                   </div>
                 }
                 <div class="flex-1 min-w-0">
                   <p class="text-content text-sm font-medium">Cover image uploaded</p>
                   <p class="text-content-muted text-xs">Shown on your shop card</p>
                 </div>
-                <button type="button" (click)="clearThumbnail()" class="text-content-muted hover:text-[#d70015] transition-colors flex-shrink-0" title="Remove thumbnail">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button
+                  type="button"
+                  (click)="clearThumbnail()"
+                  class="text-content-muted hover:text-[#d70015] transition-colors flex-shrink-0"
+                  title="Remove thumbnail"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
             } @else {
-              <label class="flex items-center gap-3 p-4 border border-dashed border-separator rounded-xl cursor-pointer hover:border-accent/50 hover:bg-accent/5 transition-all duration-200" [class.opacity-60]="uploadingThumbnail()">
+              <label
+                class="flex items-center gap-3 p-4 border border-dashed border-separator rounded-xl cursor-pointer hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
+                [class.opacity-60]="uploadingThumbnail()"
+              >
                 @if (uploadingThumbnail()) {
-                  <svg class="animate-spin w-5 h-5 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  <svg
+                    class="animate-spin w-5 h-5 text-accent flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+                  </svg>
                   <span class="text-content-muted text-sm">Uploading…</span>
                 } @else {
-                  <svg class="w-5 h-5 text-content-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    class="w-5 h-5 text-content-muted flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
-                  <span class="text-content-muted text-sm">Upload cover image (JPG, PNG, WebP)</span>
+                  <span class="text-content-muted text-sm"
+                    >Upload cover image (JPG, PNG, WebP)</span
+                  >
                 }
-                <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onThumbnailSelected($event)" [disabled]="uploadingThumbnail()" />
+                <input
+                  type="file"
+                  class="hidden"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  (change)="onThumbnailSelected($event)"
+                  [disabled]="uploadingThumbnail()"
+                />
               </label>
             }
 
@@ -216,21 +464,59 @@
           <!-- Preview + Delivery -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">Preview Teaser <span class="text-content-muted font-normal">(optional)</span></label>
-              <input type="text" [value]="form().previewText" (input)="setPreviewText($any($event.target).value)" placeholder="e.g. '30 professional presets'" maxlength="200" class="input" />
+              <label class="form-label"
+                >Preview Teaser
+                <span class="text-content-muted font-normal">(optional)</span></label
+              >
+              <input
+                type="text"
+                [value]="form().previewText"
+                (input)="setPreviewText($any($event.target).value)"
+                placeholder="e.g. '30 professional presets'"
+                maxlength="200"
+                class="input"
+              />
             </div>
             <div>
-              <label class="form-label">Delivery Note <span class="text-content-muted font-normal">(optional)</span></label>
-              <input type="text" [value]="form().deliveryNote" (input)="setDeliveryNote($any($event.target).value)" placeholder="e.g. 'Compatible with Lightroom 6+'" maxlength="300" class="input" />
+              <label class="form-label"
+                >Delivery Note <span class="text-content-muted font-normal">(optional)</span></label
+              >
+              <input
+                type="text"
+                [value]="form().deliveryNote"
+                (input)="setDeliveryNote($any($event.target).value)"
+                placeholder="e.g. 'Compatible with Lightroom 6+'"
+                maxlength="300"
+                class="input"
+              />
             </div>
           </div>
         </div>
 
         <!-- Form actions -->
         <div class="flex gap-3 mt-5">
-          <button type="button" (click)="saveItem()" [disabled]="!canSaveItem() || savingItem()" class="btn-primary btn-md flex items-center gap-2">
+          <button
+            type="button"
+            (click)="saveItem()"
+            [disabled]="!canSaveItem() || savingItem()"
+            class="btn-primary btn-md flex items-center gap-2"
+          >
             @if (savingItem()) {
-              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                ></path>
+              </svg>
               <span>Saving…</span>
             } @else {
               <span>{{ editingId() ? 'Update Item' : 'Add to Shop' }}</span>
@@ -244,7 +530,7 @@
     <!-- Loading -->
     @if (loadingItems()) {
       <div class="space-y-3">
-        @for (_ of [1,2,3]; track $index) {
+        @for (_ of [1, 2, 3]; track $index) {
           <div class="h-16 bg-surface-raised rounded-xl animate-pulse"></div>
         }
       </div>
@@ -253,14 +539,32 @@
       <div class="flex flex-col items-center justify-center py-12 text-center">
         <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
           <svg class="w-7 h-7 text-accent/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+            />
           </svg>
         </div>
         <p class="text-content font-semibold mb-1">Your shop is empty</p>
-        <p class="text-content-muted text-sm mb-4 max-w-xs">Upload your first digital item and start making money from your content.</p>
+        <p class="text-content-muted text-sm mb-4 max-w-xs">
+          Upload your first digital item and start making money from your content.
+        </p>
         @if (!showForm()) {
-          <button type="button" (click)="openAddForm()" class="btn-primary btn-sm flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+          <button
+            type="button"
+            (click)="openAddForm()"
+            class="btn-primary btn-sm flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
             Add Your First Item
           </button>
         }
@@ -269,40 +573,119 @@
       <!-- Items -->
       <div class="space-y-2">
         @for (item of items(); track item.id) {
-          <div [class]="'flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ' + (item.is_active ? 'bg-surface-raised border-separator hover:border-content-muted/20' : 'bg-surface border-separator/50 opacity-50')">
+          <div
+            [class]="
+              'flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ' +
+              (item.is_active
+                ? 'bg-surface-raised border-separator hover:border-content-muted/20'
+                : 'bg-surface border-separator/50 opacity-50')
+            "
+          >
             @if (shopService.getItemThumbnailUrl(item)) {
-              <img [src]="shopService.getItemThumbnailUrl(item)!" [alt]="item.title"
-                class="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-separator" />
+              <img
+                [src]="shopService.getItemThumbnailUrl(item)!"
+                [alt]="item.title"
+                class="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-separator"
+              />
             } @else {
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg" [class]="item.is_active ? 'bg-accent/10' : 'bg-surface-overlay'">
+              <div
+                class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
+                [class]="item.is_active ? 'bg-accent/10' : 'bg-surface-overlay'"
+              >
                 {{ getTypeMeta(item.item_type).emoji }}
               </div>
             }
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <p class="font-semibold text-content text-sm truncate">{{ item.title }}</p>
-                <span [class]="'px-1.5 py-0.5 rounded text-xs font-medium ' + (item.is_request_based ? 'bg-accent/10 text-accent' : 'bg-[#1a9e3f]/10 text-[#1a9e3f]')">
+                <span
+                  [class]="
+                    'px-1.5 py-0.5 rounded text-xs font-medium ' +
+                    (item.is_request_based
+                      ? 'bg-accent/10 text-accent'
+                      : 'bg-[#1a9e3f]/10 text-[#1a9e3f]')
+                  "
+                >
                   {{ item.is_request_based ? 'Request' : 'Download' }}
                 </span>
               </div>
-              <p class="text-content-muted text-xs mt-0.5">{{ getTypeMeta(item.item_type).label }} · <strong class="text-content-secondary">{{ formatPrice(item.price) }}</strong></p>
+              <p class="text-content-muted text-xs mt-0.5">
+                {{ getTypeMeta(item.item_type).label }} ·
+                <strong class="text-content-secondary">{{ formatPrice(item.price) }}</strong>
+              </p>
             </div>
             <div class="flex items-center gap-1.5 flex-shrink-0">
-              <button type="button" (click)="toggleItemActive(item)" [title]="item.is_active ? 'Deactivate' : 'Activate'"
-                [class]="'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 ' + (item.is_active ? 'bg-[#1a9e3f]/10 text-[#1a9e3f]' : 'bg-surface-overlay text-content-muted')">
+              <button
+                type="button"
+                (click)="toggleItemActive(item)"
+                [title]="item.is_active ? 'Deactivate' : 'Activate'"
+                [class]="
+                  'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 ' +
+                  (item.is_active
+                    ? 'bg-[#1a9e3f]/10 text-[#1a9e3f]'
+                    : 'bg-surface-overlay text-content-muted')
+                "
+              >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    [attr.d]="item.is_active ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    [attr.d]="
+                      item.is_active
+                        ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                        : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'
+                    "
+                  />
                 </svg>
               </button>
-              <button type="button" (click)="openEditForm(item)" title="Edit item" class="w-7 h-7 rounded-lg flex items-center justify-center bg-surface-overlay text-content-muted hover:text-content transition-all duration-200">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              <button
+                type="button"
+                (click)="openEditForm(item)"
+                title="Edit item"
+                class="w-7 h-7 rounded-lg flex items-center justify-center bg-surface-overlay text-content-muted hover:text-content transition-all duration-200"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
               </button>
-              <button type="button" (click)="deleteItem(item.id)" title="Delete item" [disabled]="deletingId() === item.id" class="w-7 h-7 rounded-lg flex items-center justify-center bg-surface-overlay text-content-muted hover:text-[#d70015] transition-all duration-200 disabled:opacity-40">
+              <button
+                type="button"
+                (click)="deleteItem(item.id)"
+                title="Delete item"
+                [disabled]="deletingId() === item.id"
+                class="w-7 h-7 rounded-lg flex items-center justify-center bg-surface-overlay text-content-muted hover:text-[#d70015] transition-all duration-200 disabled:opacity-40"
+              >
                 @if (deletingId() === item.id) {
-                  <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+                  </svg>
                 } @else {
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
                 }
               </button>
             </div>
@@ -316,10 +699,22 @@
   <div class="p-5 bg-accent/5 border border-accent/15 rounded-xl">
     <p class="font-semibold text-content text-sm mb-2">How the Digital Shop works</p>
     <ul class="space-y-1.5 text-sm text-content-secondary">
-      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>Upload your file directly — it's stored securely on our servers</span></li>
-      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>Clients pay securely via Stripe and are taken straight to their download</span></li>
-      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>For custom requests, you see the client's brief and deliver manually</span></li>
-      <li class="flex items-start gap-2"><span class="text-accent mt-0.5 flex-shrink-0">→</span> <span>You keep 78% of every sale — Convozo's 22% platform fee applies</span></li>
+      <li class="flex items-start gap-2">
+        <span class="text-accent mt-0.5 flex-shrink-0">→</span>
+        <span>Upload your file directly — it's stored securely on our servers</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-accent mt-0.5 flex-shrink-0">→</span>
+        <span>Clients pay securely via Stripe and are taken straight to their download</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-accent mt-0.5 flex-shrink-0">→</span>
+        <span>For custom requests, you see the client's brief and deliver manually</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-accent mt-0.5 flex-shrink-0">→</span>
+        <span>You keep 78% of every sale — Convozo's 22% platform fee applies</span>
+      </li>
     </ul>
   </div>
 </div>

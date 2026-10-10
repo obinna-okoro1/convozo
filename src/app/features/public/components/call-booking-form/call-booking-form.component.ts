@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
 import { APP_CONSTANTS } from 'app/core/constants';
 import { AvailabilitySlot, DayOfWeek } from 'app/core/models';
 

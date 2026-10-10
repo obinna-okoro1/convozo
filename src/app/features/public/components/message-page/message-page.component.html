@@ -1,7 +1,10 @@
 <!-- Owner management bar — only visible to the logged-in profile owner -->
 <app-owner-toolbar />
 
-<div class="min-h-screen bg-surface relative overflow-x-hidden" [class.pt-11]="ownerState.isOwner()">
+<div
+  class="min-h-screen bg-surface relative overflow-x-hidden"
+  [class.pt-11]="ownerState.isOwner()"
+>
   <!-- Ambient blobs — brand colour wash for glass effects -->
   <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
     <div
@@ -11,8 +14,13 @@
         right: -6rem;
         width: 40rem;
         height: 40rem;
-        background: radial-gradient(ellipse at 100% 0%, rgba(124, 58, 237, 0.14) 0%, transparent 65%);
-      "></div>
+        background: radial-gradient(
+          ellipse at 100% 0%,
+          rgba(124, 58, 237, 0.14) 0%,
+          transparent 65%
+        );
+      "
+    ></div>
     <div
       style="
         position: absolute;
@@ -20,8 +28,13 @@
         left: -10rem;
         width: 36rem;
         height: 36rem;
-        background: radial-gradient(ellipse at 0% 50%, rgba(236, 72, 153, 0.11) 0%, transparent 65%);
-      "></div>
+        background: radial-gradient(
+          ellipse at 0% 50%,
+          rgba(236, 72, 153, 0.11) 0%,
+          transparent 65%
+        );
+      "
+    ></div>
     <div
       style="
         position: absolute;
@@ -29,21 +42,36 @@
         left: 25%;
         width: 32rem;
         height: 32rem;
-        background: radial-gradient(ellipse at 50% 100%, rgba(124, 58, 237, 0.09) 0%, transparent 65%);
-      "></div>
+        background: radial-gradient(
+          ellipse at 50% 100%,
+          rgba(124, 58, 237, 0.09) 0%,
+          transparent 65%
+        );
+      "
+    ></div>
   </div>
 
   @if (state.loading()) {
     <!-- Loading -->
     <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+        <div
+          class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"
+        >
           <svg class="animate-spin h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
             <path
               class="opacity-75"
               fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
         </div>
         <p class="text-content-tertiary text-sm">Loading profile…</p>
@@ -53,18 +81,30 @@
     <!-- Error -->
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="text-center max-w-xs">
-        <div class="w-16 h-16 rounded-2xl bg-system-red/10 flex items-center justify-center mx-auto mb-6">
-          <svg class="w-8 h-8 text-system-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div
+          class="w-16 h-16 rounded-2xl bg-system-red/10 flex items-center justify-center mx-auto mb-6"
+        >
+          <svg
+            class="w-8 h-8 text-system-red"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </div>
         <h2 class="text-2xl font-bold text-content mb-2 tracking-tight">Profile not found</h2>
-        <p class="text-content-tertiary text-sm mb-6">This profile doesn't exist or is no longer active.</p>
-        <a routerLink="/home" class="btn-primary btn-md inline-flex items-center gap-2">Explore Convozo</a>
+        <p class="text-content-tertiary text-sm mb-6">
+          This profile doesn't exist or is no longer active.
+        </p>
+        <a routerLink="/home" class="btn-primary btn-md inline-flex items-center gap-2"
+          >Explore Convozo</a
+        >
       </div>
     </div>
   } @else {
@@ -76,10 +116,15 @@
           Mobile  → single column: header stacked above content
           lg+     → two columns: sticky profile card left, booking content right
         -->
-        <div class="lg:max-w-5xl lg:mx-auto lg:px-6 lg:py-8 lg:grid lg:grid-cols-[22rem_1fr] lg:gap-8 lg:items-start">
+        <div
+          class="lg:max-w-5xl lg:mx-auto lg:px-6 lg:py-8 lg:grid lg:grid-cols-[22rem_1fr] lg:gap-8 lg:items-start"
+        >
           <!-- ── Left: Profile header + desktop action list ───────────── -->
           <div class="lg:sticky lg:top-6 animate-fade-in">
-            <app-creator-profile-header [creator]="creatorData" [responseExpectation]="state.responseExpectation()" />
+            <app-creator-profile-header
+              [creator]="creatorData"
+              [responseExpectation]="state.responseExpectation()"
+            />
 
             <!-- Desktop-only secondary action list (hidden on mobile — shown in bottom bar) -->
             @if (secondaryActions().length > 0) {
@@ -87,57 +132,91 @@
                 @for (action of secondaryActions(); track action.route) {
                   <a
                     [routerLink]="action.route"
-                    class="flex items-center gap-3 px-4 py-3 rounded-2xl card-glass hover:-translate-y-0.5 transition-all duration-200 group">
+                    class="flex items-center gap-3 px-4 py-3 rounded-2xl card-glass hover:-translate-y-0.5 transition-all duration-200 group"
+                  >
                     <div
                       class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                       [style]="
                         action.icon === 'support'
                           ? 'background:linear-gradient(135deg,rgba(236,72,153,0.12) 0%,rgba(239,68,68,0.12) 100%)'
                           : 'background:linear-gradient(135deg,rgba(124,58,237,0.12) 0%,rgba(236,72,153,0.12) 100%)'
-                      ">
+                      "
+                    >
                       @if (action.icon === 'message') {
-                        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-3.5 h-3.5 text-accent"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
                         </svg>
                       } @else if (action.icon === 'support') {
-                        <svg class="w-3.5 h-3.5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-3.5 h-3.5 text-pink-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                          />
                         </svg>
                       } @else if (action.icon === 'shop') {
-                        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-3.5 h-3.5 text-accent"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                          />
                         </svg>
                       } @else {
-                        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          class="w-3.5 h-3.5 text-accent"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                          />
                         </svg>
                       }
                     </div>
-                    <span class="text-sm font-semibold text-content group-hover:text-accent transition-colors">
+                    <span
+                      class="text-sm font-semibold text-content group-hover:text-accent transition-colors"
+                    >
                       {{ action.label }}
                     </span>
                     <svg
                       class="w-3.5 h-3.5 text-content-tertiary ml-auto group-hover:text-accent transition-colors"
                       fill="none"
                       stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </a>
                 }
@@ -153,10 +232,23 @@
             <div class="text-center mt-12">
               <a
                 routerLink="/home"
-                class="inline-flex items-center gap-1.5 text-xs text-content-tertiary hover:text-content-secondary transition-colors duration-200">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                class="inline-flex items-center gap-1.5 text-xs text-content-tertiary hover:text-content-secondary transition-colors duration-200"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <defs>
-                    <linearGradient id="cvz-fp" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                    <linearGradient
+                      id="cvz-fp"
+                      x1="0"
+                      y1="0"
+                      x2="40"
+                      y2="40"
+                      gradientUnits="userSpaceOnUse"
+                    >
                       <stop stop-color="#7c3aed" />
                       <stop offset="1" stop-color="#ec4899" />
                     </linearGradient>
@@ -168,7 +260,8 @@
                     stroke="white"
                     stroke-width="3.5"
                     stroke-linecap="round"
-                    fill="none" />
+                    fill="none"
+                  />
                 </svg>
                 <span>
                   Powered by
@@ -188,14 +281,18 @@
         class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
         (click)="closePanelRoute()"
         role="presentation"
-        aria-hidden="true"></div>
+        aria-hidden="true"
+      ></div>
 
       <!-- Sheet (slides up from bottom, max 90 vh) -->
       <div
         class="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-surface rounded-t-2xl border-t border-surface-border overflow-hidden"
-        style="max-height: 90dvh">
+        style="max-height: 90dvh"
+      >
         <!-- Sheet header -->
-        <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border flex-shrink-0">
+        <div
+          class="flex items-center justify-between px-4 py-3 border-b border-surface-border flex-shrink-0"
+        >
           <div class="flex items-center gap-3 min-w-0">
             <div
               class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0"
@@ -203,46 +300,77 @@
                 activePanelRoute() === 'support'
                   ? 'background:linear-gradient(135deg,rgba(236,72,153,0.12) 0%,rgba(239,68,68,0.12) 100%)'
                   : ''
-              ">
+              "
+            >
               @if (activePanelRoute() === 'message') {
-                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-4.5 h-4.5 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
                 </svg>
               } @else if (activePanelRoute() === 'call') {
-                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-4.5 h-4.5 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
                 </svg>
               } @else if (activePanelRoute() === 'shop') {
-                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-4.5 h-4.5 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
                 </svg>
               } @else if (activePanelRoute() === 'support') {
-                <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-4 h-4 text-pink-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
                 </svg>
               } @else if (activePanelRoute() === 'posts') {
-                <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-4.5 h-4.5 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
                 </svg>
               }
             </div>
@@ -255,9 +383,20 @@
             type="button"
             (click)="closePanelRoute()"
             class="w-8 h-8 rounded-full bg-surface-raised hover:bg-surface-border flex items-center justify-center transition-colors flex-shrink-0 ml-2"
-            aria-label="Close panel">
-            <svg class="w-4 h-4 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            aria-label="Close panel"
+          >
+            <svg
+              class="w-4 h-4 text-content-secondary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -283,43 +422,69 @@
     @if (secondaryActions().length > 0) {
       <div
         class="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface/95 backdrop-blur-xl border-t border-surface-border"
-        style="padding-bottom: env(safe-area-inset-bottom, 0)">
+        style="padding-bottom: env(safe-area-inset-bottom, 0)"
+      >
         <div class="flex items-center justify-around px-1" style="height: 3.5rem">
           @for (action of secondaryActions(); track action.route) {
             <a
               [routerLink]="action.route"
-              class="flex flex-col items-center justify-center gap-0.5 min-w-[2.75rem] min-h-[2.75rem] px-3 py-1.5 rounded-xl text-content-secondary hover:text-accent active:scale-95 transition-all duration-150">
+              class="flex flex-col items-center justify-center gap-0.5 min-w-[2.75rem] min-h-[2.75rem] px-3 py-1.5 rounded-xl text-content-secondary hover:text-accent active:scale-95 transition-all duration-150"
+            >
               @if (action.icon === 'message') {
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
                 </svg>
               } @else if (action.icon === 'support') {
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
                 </svg>
               } @else if (action.icon === 'shop') {
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
                 </svg>
               } @else {
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
                 </svg>
               }
               <span class="text-[0.6rem] font-semibold leading-none">{{ action.label }}</span>

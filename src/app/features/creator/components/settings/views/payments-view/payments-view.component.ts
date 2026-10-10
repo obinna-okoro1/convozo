@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+
 import { FEATURE_FLAGS } from 'app/core/constants';
 
 import { SettingsStateService } from '../../settings-state.service';

@@ -1,6 +1,10 @@
 <div class="flex flex-col gap-3 w-full">
   @for (link of links(); track link.id) {
-    <app-link-button [link]="link" [themeColor]="themeColor()" (clicked)="linkClicked.emit($event)" />
+    <app-link-button
+      [link]="link"
+      [themeColor]="themeColor()"
+      (clicked)="linkClicked.emit($event)"
+    />
   } @empty {
     <div class="text-center py-8">
       <p class="text-content-secondary text-sm">No links yet</p>

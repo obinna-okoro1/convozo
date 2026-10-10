@@ -2,23 +2,61 @@
   @if (!state.isPaymentReady()) {
     <div class="alert-warning mb-6">
       <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <svg
+          class="w-5 h-5 text-[#b85c00] mt-0.5 flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
         </svg>
         <div>
           @if (state.isFlutterwaveCreator()) {
             <p class="font-semibold text-content text-sm">Bank account required</p>
-            <p class="text-content-secondary text-sm mt-1">Connect your Flutterwave bank account to start receiving payments. Toggles will unlock once your bank account is connected.</p>
-            <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5">
+            <p class="text-content-secondary text-sm mt-1">
+              Connect your Flutterwave bank account to start receiving payments. Toggles will unlock
+              once your bank account is connected.
+            </p>
+            <a
+              [routerLink]="drawerMode ? null : '../payments'"
+              (click)="drawerMode && goToPayments.emit()"
+              class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5"
+            >
               Go to Payments
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
             </a>
           } @else {
             <p class="font-semibold text-content text-sm">Stripe account required</p>
-            <p class="text-content-secondary text-sm mt-1">Connect your Stripe account first so you can receive payments. You can set prices here, but toggles are locked until connected.</p>
-            <a [routerLink]="drawerMode ? null : '../payments'" (click)="drawerMode && goToPayments.emit()" class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5">
+            <p class="text-content-secondary text-sm mt-1">
+              Connect your Stripe account first so you can receive payments. You can set prices
+              here, but toggles are locked until connected.
+            </p>
+            <a
+              [routerLink]="drawerMode ? null : '../payments'"
+              (click)="drawerMode && goToPayments.emit()"
+              class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5"
+            >
               Connect with Stripe
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
             </a>
           }
         </div>
@@ -29,23 +67,51 @@
   <form class="space-y-6">
     <!-- ── Paid Messages ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
+      <div
+        class="flex items-center justify-between p-4 bg-surface-raised rounded-xl"
+        [class.opacity-50]="!state.isPaymentReady()"
+      >
         <div>
           <h3 class="font-semibold text-content">Paid Messages</h3>
           <p class="text-sm text-content-muted mt-0.5">Allow clients to send you paid messages</p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
-          <input type="checkbox" [checked]="state.messagesEnabled()" (change)="state.isPaymentReady() && state.messagesEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
-          <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
+        <label
+          class="relative inline-flex items-center"
+          [class.cursor-not-allowed]="!state.isPaymentReady()"
+          [class.cursor-pointer]="state.isPaymentReady()"
+        >
+          <input
+            type="checkbox"
+            [checked]="state.messagesEnabled()"
+            (change)="
+              state.isPaymentReady() && state.messagesEnabled.set(state.inputChecked($event))
+            "
+            [disabled]="!state.isPaymentReady()"
+            class="sr-only peer"
+          />
+          <div
+            class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"
+          ></div>
         </label>
       </div>
 
       @if (state.messagesEnabled()) {
         <div class="mt-4 animate-fade-in">
-          <label for="messagePrice" class="form-label">Message Price <span class="text-red-400">*</span></label>
+          <label for="messagePrice" class="form-label"
+            >Message Price <span class="text-red-400">*</span></label
+          >
           <div class="flex items-center gap-3">
             <span class="text-xl font-semibold text-content-secondary">$</span>
-            <input type="number" id="messagePrice" [value]="state.messagePrice() / 100" (input)="state.messagePrice.set(state.inputNumber($event) * 100)" min="1" step="1" required class="input flex-1" />
+            <input
+              type="number"
+              id="messagePrice"
+              [value]="state.messagePrice() / 100"
+              (input)="state.messagePrice.set(state.inputNumber($event) * 100)"
+              min="1"
+              step="1"
+              required
+              class="input flex-1"
+            />
           </div>
           <p class="form-hint">Price per message in USD</p>
         </div>
@@ -54,14 +120,31 @@
 
     <!-- ── Video Calls ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
+      <div
+        class="flex items-center justify-between p-4 bg-surface-raised rounded-xl"
+        [class.opacity-50]="!state.isPaymentReady()"
+      >
         <div>
           <h3 class="font-semibold text-content">Video Sessions</h3>
-          <p class="text-sm text-content-muted mt-0.5">Allow clients to book video sessions with you</p>
+          <p class="text-sm text-content-muted mt-0.5">
+            Allow clients to book video sessions with you
+          </p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
-          <input type="checkbox" [checked]="state.callsEnabled()" (change)="state.isPaymentReady() && state.callsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
-          <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
+        <label
+          class="relative inline-flex items-center"
+          [class.cursor-not-allowed]="!state.isPaymentReady()"
+          [class.cursor-pointer]="state.isPaymentReady()"
+        >
+          <input
+            type="checkbox"
+            [checked]="state.callsEnabled()"
+            (change)="state.isPaymentReady() && state.callsEnabled.set(state.inputChecked($event))"
+            [disabled]="!state.isPaymentReady()"
+            class="sr-only peer"
+          />
+          <div
+            class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"
+          ></div>
         </label>
       </div>
 
@@ -69,17 +152,40 @@
         <div class="mt-4 space-y-4 animate-fade-in">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="callPrice" class="form-label">Session Price <span class="text-red-400">*</span></label>
+              <label for="callPrice" class="form-label"
+                >Session Price <span class="text-red-400">*</span></label
+              >
               <div class="flex items-center gap-3">
                 <span class="text-xl font-semibold text-content-secondary">$</span>
-                <input type="number" id="callPrice" [value]="state.callPrice() / 100" (input)="state.callPrice.set(state.inputNumber($event) * 100)" min="5" step="1" required class="input flex-1" />
+                <input
+                  type="number"
+                  id="callPrice"
+                  [value]="state.callPrice() / 100"
+                  (input)="state.callPrice.set(state.inputNumber($event) * 100)"
+                  min="5"
+                  step="1"
+                  required
+                  class="input flex-1"
+                />
               </div>
               <p class="form-hint">Minimum $5 per session</p>
             </div>
             <div>
-              <label for="callDuration" class="form-label">Session Duration <span class="text-red-400">*</span></label>
+              <label for="callDuration" class="form-label"
+                >Session Duration <span class="text-red-400">*</span></label
+              >
               <div class="flex items-center gap-3">
-                <input type="number" id="callDuration" [value]="state.callDuration()" (input)="state.callDuration.set(state.inputNumber($event))" min="15" max="120" step="15" required class="input flex-1" />
+                <input
+                  type="number"
+                  id="callDuration"
+                  [value]="state.callDuration()"
+                  (input)="state.callDuration.set(state.inputNumber($event))"
+                  min="15"
+                  max="120"
+                  step="15"
+                  required
+                  class="input flex-1"
+                />
                 <span class="text-content-muted text-sm font-medium">minutes</span>
               </div>
               <p class="form-hint">Duration of each session (15-120 min)</p>
@@ -102,7 +208,10 @@
               />
               <span class="text-content-muted text-sm font-medium">minutes</span>
             </div>
-            <p class="form-hint">Dead time after each booking before the next slot is available (0 = back-to-back, max 60 min)</p>
+            <p class="form-hint">
+              Dead time after each booking before the next slot is available (0 = back-to-back, max
+              60 min)
+            </p>
           </div>
 
           <!-- ── Session format (online / physical / both) ── -->
@@ -110,15 +219,21 @@
             <div class="flex items-center gap-2">
               <p class="form-label mb-0">Session Format <span class="text-red-400">*</span></p>
               @if (state.sessionType() !== state.originalMonetization().sessionType) {
-                <span class="text-[0.65rem] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-500">Unsaved</span>
+                <span
+                  class="text-[0.65rem] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-500"
+                  >Unsaved</span
+                >
               }
             </div>
             <div class="grid grid-cols-3 gap-2">
-              @for (opt of [
-                { value: 'online',   icon: 'video',    label: 'Online',    hint: 'Video call' },
-                { value: 'physical', icon: 'map-pin',  label: 'In-person', hint: 'Fixed address' },
-                { value: 'both',     icon: 'both',     label: 'Both',      hint: 'Client picks' }
-              ]; track opt.value) {
+              @for (
+                opt of [
+                  { value: 'online', icon: 'video', label: 'Online', hint: 'Video call' },
+                  { value: 'physical', icon: 'map-pin', label: 'In-person', hint: 'Fixed address' },
+                  { value: 'both', icon: 'both', label: 'Both', hint: 'Client picks' },
+                ];
+                track opt.value
+              ) {
                 <button
                   type="button"
                   (click)="state.sessionType.set($any(opt.value))"
@@ -131,15 +246,36 @@
                 >
                   @if (opt.icon === 'video') {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
                     </svg>
                   } @else if (opt.icon === 'map-pin') {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   } @else {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   }
                   <span class="text-xs font-semibold leading-tight">{{ opt.label }}</span>
@@ -164,19 +300,33 @@
                 placeholder="e.g. Suite 4B, 221B Baker Street, London, NW1 6XE"
                 class="input resize-none"
               ></textarea>
-              <p class="form-hint">This address is shown to the client after payment. Be precise.</p>
+              <p class="form-hint">
+                This address is shown to the client after payment. Be precise.
+              </p>
             </div>
           }
 
           <!-- Weekly Schedule — embedded availability manager -->
           <div class="rounded-xl border border-separator p-4 space-y-3">
             <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                class="w-4 h-4 text-accent flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               <p class="font-semibold text-content text-sm">Weekly Schedule</p>
             </div>
-            <p class="text-content-secondary text-xs">Set which days and times you're available for session bookings.</p>
+            <p class="text-content-secondary text-xs">
+              Set which days and times you're available for session bookings.
+            </p>
             @if (state.creator()?.id) {
               <app-availability-manager [creatorId]="state.creator()!.id" />
             }
@@ -187,21 +337,41 @@
 
     <!-- ── Tips & Appreciation ── -->
     <div class="border-b border-separator pb-6">
-      <div class="flex items-center justify-between p-4 bg-surface-raised rounded-xl" [class.opacity-50]="!state.isPaymentReady()">
+      <div
+        class="flex items-center justify-between p-4 bg-surface-raised rounded-xl"
+        [class.opacity-50]="!state.isPaymentReady()"
+      >
         <div>
           <h3 class="font-semibold text-content">Tips & Appreciation</h3>
-          <p class="text-sm text-content-muted mt-0.5">Let clients show appreciation with a custom tip</p>
+          <p class="text-sm text-content-muted mt-0.5">
+            Let clients show appreciation with a custom tip
+          </p>
         </div>
-        <label class="relative inline-flex items-center" [class.cursor-not-allowed]="!state.isPaymentReady()" [class.cursor-pointer]="state.isPaymentReady()">
-          <input type="checkbox" [checked]="state.tipsEnabled()" (change)="state.isPaymentReady() && state.tipsEnabled.set(state.inputChecked($event))" [disabled]="!state.isPaymentReady()" class="sr-only peer" />
-          <div class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"></div>
+        <label
+          class="relative inline-flex items-center"
+          [class.cursor-not-allowed]="!state.isPaymentReady()"
+          [class.cursor-pointer]="state.isPaymentReady()"
+        >
+          <input
+            type="checkbox"
+            [checked]="state.tipsEnabled()"
+            (change)="state.isPaymentReady() && state.tipsEnabled.set(state.inputChecked($event))"
+            [disabled]="!state.isPaymentReady()"
+            class="sr-only peer"
+          />
+          <div
+            class="w-12 h-7 bg-surface-overlay rounded-full peer peer-checked:bg-accent peer-focus:ring-2 peer-focus:ring-accent/30 after:content-[''] after:absolute after:top-[0.125rem] after:start-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-disabled:opacity-50"
+          ></div>
         </label>
       </div>
 
       @if (state.tipsEnabled()) {
         <div class="mt-4 p-4 bg-pink-500/8 border border-pink-500/15 rounded-xl animate-fade-in">
           <p class="font-semibold text-content text-sm">How it works</p>
-          <p class="text-content-secondary text-sm mt-1">Clients choose their own amount — no fixed price. A “Tip” tab will appear on your public page where anyone can send you a tip with a note.</p>
+          <p class="text-content-secondary text-sm mt-1">
+            Clients choose their own amount — no fixed price. A “Tip” tab will appear on your public
+            page where anyone can send you a tip with a note.
+          </p>
         </div>
       }
     </div>
@@ -217,7 +387,9 @@
         placeholder="e.g., 24-48 hours"
         class="input"
       />
-      <p class="form-hint">Shown as "Replies in ___" on your profile — keep it short (e.g., 24-48 hours, same day)</p>
+      <p class="form-hint">
+        Shown as "Replies in ___" on your profile — keep it short (e.g., 24-48 hours, same day)
+      </p>
     </div>
 
     <!-- Save -->
@@ -230,8 +402,19 @@
       >
         @if (state.monetizationSaving()) {
           <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            ></path>
           </svg>
           <span>Saving...</span>
         } @else {

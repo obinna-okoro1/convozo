@@ -17,7 +17,8 @@ interface HowItWorksStep {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LandingComponent {
-  protected readonly currentYear = new Date().getFullYear();
+  protected readonly currentYear = new Date()
+    .getFullYear();
 
   protected readonly howItWorksSteps: HowItWorksStep[] = [
     {

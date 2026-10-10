@@ -6,6 +6,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, input, signal } from '@angular/core';
+
 import { CreatorLink } from 'app/core/models';
 import { ToastService } from 'app/shared/services/toast.service';
 

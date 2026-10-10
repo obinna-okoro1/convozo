@@ -5,6 +5,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, input, output } from '@angular/core';
+
 import { CreatorLink } from 'app/core/models';
 
 import { BrandInfo, getBrandByKey } from '../../utils/brand-detection';

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+
 import {
   ImageChangeEvent,
   ImageUploadComponent,

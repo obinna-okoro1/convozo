@@ -17,14 +17,21 @@
             rla.isActive
               ? 'background:linear-gradient(135deg,rgba(124,58,237,0.82),rgba(147,51,234,0.82),rgba(236,72,153,0.82));backdrop-filter:saturate(200%) blur(1rem);-webkit-backdrop-filter:saturate(200%) blur(1rem);border:1px solid rgba(255,255,255,0.28);box-shadow:0 0.25rem 1rem rgba(124,58,237,0.32),inset 0 1px 0 rgba(255,255,255,0.22)'
               : ''
-          ">
+          "
+        >
           <!-- Shine on active -->
           @if (rla.isActive) {
             <div
-              class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shine-sweep pointer-events-none"></div>
+              class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shine-sweep pointer-events-none"
+            ></div>
           }
           <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="tab.iconPath" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              [attr.d]="tab.iconPath"
+            />
           </svg>
           <span class="hidden sm:inline">{{ tab.label }}</span>
           <!-- Mobile: abbreviated -->

@@ -7,6 +7,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { AvailabilitySlot, DayOfWeek } from 'app/core/models';
 import {
   SearchableSelectComponent,

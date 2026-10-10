@@ -5,10 +5,11 @@
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { User } from '@supabase/supabase-js';
+
 import { ERROR_MESSAGES, ROUTES } from 'app/core/constants';
 import { SupabaseService } from 'app/core/services/supabase.service';
 import { FormValidators } from 'app/core/validators/form-validators';
-import { User } from '@supabase/supabase-js';
 
 export interface OAuthUserData {
   id: string;

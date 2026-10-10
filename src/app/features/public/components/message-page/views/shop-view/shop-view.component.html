@@ -1,12 +1,18 @@
 @if (!state.shopEnabled()) {
   <div class="flex flex-col items-center justify-center py-16 text-center px-4 lg:px-10">
     <div class="w-14 h-14 bg-surface-raised rounded-2xl flex items-center justify-center mb-4">
-      <svg class="w-7 h-7 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        class="w-7 h-7 text-content-tertiary"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="1.5"
-          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+        />
       </svg>
     </div>
     <p class="text-content-secondary font-semibold text-lg mb-1">Products not available</p>
@@ -36,35 +42,44 @@
             <button
               type="button"
               (click)="toggleItem(item.id)"
-              class="w-full text-left p-5 flex items-center gap-4 hover:bg-surface-elevated/50 transition-colors duration-200">
+              class="w-full text-left p-5 flex items-center gap-4 hover:bg-surface-elevated/50 transition-colors duration-200"
+            >
               @if (shopService.getItemThumbnailUrl(item)) {
                 <img
                   [src]="shopService.getItemThumbnailUrl(item)!"
                   [alt]="item.title"
-                  class="w-16 h-16 object-cover rounded-xl flex-shrink-0 border border-separator" />
+                  class="w-16 h-16 object-cover rounded-xl flex-shrink-0 border border-separator"
+                />
               } @else {
                 <div
-                  class="w-16 h-16 flex items-center justify-center rounded-xl flex-shrink-0 text-3xl bg-surface-elevated">
+                  class="w-16 h-16 flex items-center justify-center rounded-xl flex-shrink-0 text-3xl bg-surface-elevated"
+                >
                   {{ typeEmoji[item.item_type] }}
                 </div>
               }
 
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-3">
-                  <p class="font-semibold text-content text-base leading-snug truncate">{{ item.title }}</p>
+                  <p class="font-semibold text-content text-base leading-snug truncate">
+                    {{ item.title }}
+                  </p>
                   <span class="text-lg font-bold text-accent flex-shrink-0">
                     {{ formatPrice(item.price) }}
                   </span>
                 </div>
                 @if (item.description) {
-                  <p class="text-content-tertiary text-xs mt-1 line-clamp-2">{{ item.description }}</p>
+                  <p class="text-content-tertiary text-xs mt-1 line-clamp-2">
+                    {{ item.description }}
+                  </p>
                 }
                 <div class="flex items-center gap-2 mt-2">
                   <span class="badge text-xs">
                     {{ typeLabel[item.item_type] }}
                   </span>
                   @if (item.is_request_based) {
-                    <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-system-orange/10 text-system-orange">
+                    <span
+                      class="px-2 py-0.5 rounded-full text-xs font-medium bg-system-orange/10 text-system-orange"
+                    >
                       Custom Request
                     </span>
                   }
@@ -78,8 +93,14 @@
                 "
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -99,7 +120,8 @@
                       name="buyerName"
                       placeholder="Enter your name"
                       required
-                      class="input" />
+                      class="input"
+                    />
                   </div>
 
                   <div>
@@ -110,9 +132,12 @@
                       name="buyerEmail"
                       placeholder="you@example.com"
                       required
-                      class="input" />
+                      class="input"
+                    />
                     @if (!item.is_request_based) {
-                      <p class="form-hint">You'll be taken directly to your download after checkout.</p>
+                      <p class="form-hint">
+                        You'll be taken directly to your download after checkout.
+                      </p>
                     }
                   </div>
 
@@ -126,7 +151,8 @@
                         rows="4"
                         maxlength="1000"
                         required
-                        class="input resize-none"></textarea>
+                        class="input resize-none"
+                      ></textarea>
                       @if (item.delivery_note) {
                         <p class="form-hint italic">{{ item.delivery_note }}</p>
                       }
@@ -136,7 +162,8 @@
                   <button
                     type="submit"
                     [disabled]="state.submitting()"
-                    class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2">
+                    class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2"
+                  >
                     @if (state.submitting()) {
                       <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle
@@ -145,11 +172,13 @@
                           cy="12"
                           r="10"
                           stroke="currentColor"
-                          stroke-width="4"></circle>
+                          stroke-width="4"
+                        ></circle>
                         <path
                           class="opacity-75"
                           fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Processing…
                     } @else {
@@ -158,7 +187,8 @@
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
                       </svg>
                       Buy for {{ formatPrice(item.price) }}
                     }
