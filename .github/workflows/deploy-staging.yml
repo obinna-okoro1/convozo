@@ -33,11 +33,12 @@ jobs:
         run: pnpm build --configuration=staging
 
       - name: Deploy frontend to Cloudflare Pages (develop)
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist/convozo-app/browser --project-name=convozo --branch=develop
+        # npx keeps Wrangler out of the project tree; wrangler-action runs `npm i`, which cannot
+        # resolve this pnpm project's dependency graph.
+        run: npx --yes wrangler@3.90.0 pages deploy dist/convozo-app/browser --project-name=convozo --branch=develop
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
