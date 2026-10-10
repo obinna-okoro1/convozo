@@ -62,6 +62,7 @@ export async function compressImage(
   }
 
   const stem = file.name.replace(/\.[^.]+$/, '');
+
   return new File([blob], `${stem}.jpg`, { type: 'image/jpeg' });
 }
 
@@ -95,8 +96,10 @@ function drawToBlob(
     canvas.height = height;
 
     const ctx = canvas.getContext('2d');
+
     if (!ctx) {
       reject(new Error('Canvas 2D context not available'));
+
       return;
     }
 

@@ -15,8 +15,9 @@
 
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '@core/services/supabase.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SupabaseService } from 'app/core/services/supabase.service';
+
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -43,7 +44,6 @@ export class ResetPasswordComponent implements OnInit {
     private readonly authService: AuthService,
     private readonly supabaseService: SupabaseService,
     private readonly route: ActivatedRoute,
-    private readonly router: Router,
   ) {}
 
   public ngOnInit(): void {
@@ -59,11 +59,13 @@ export class ResetPasswordComponent implements OnInit {
         'Invalid or missing reset link. Please request a new password reset.',
       );
       this.sessionLoading.set(false);
+
       return;
     }
 
     try {
       const { error } = await this.supabaseService.client.auth.exchangeCodeForSession(code);
+
       if (error) {
         throw error;
       }
@@ -96,11 +98,13 @@ export class ResetPasswordComponent implements OnInit {
 
     if (pw.length < 8) {
       this.error.set('Password must be at least 8 characters');
+
       return;
     }
 
     if (pw !== cpw) {
       this.error.set('Passwords do not match');
+
       return;
     }
 

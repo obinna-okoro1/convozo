@@ -10,9 +10,9 @@
  */
 
 import { Injectable } from '@angular/core';
+import { Message, MessageReply, MessageStats, SupabaseResponse } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Message, MessageReply, MessageStats, SupabaseResponse } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -55,6 +55,7 @@ export class MessageService {
         () => {
           void (async () => {
             const { data } = await this.getMessages(creatorId);
+
             if (data) {
               onchange(data);
             }
@@ -94,6 +95,7 @@ export class MessageService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to send reply';
+
       return { success: false, error: message };
     }
   }
@@ -159,7 +161,8 @@ export class MessageService {
         () => {
           void (async () => {
             const { data } = await this.getReplies(messageId);
-            if (data) onChange(data);
+
+            if (data) {onChange(data);}
           })();
         },
       )

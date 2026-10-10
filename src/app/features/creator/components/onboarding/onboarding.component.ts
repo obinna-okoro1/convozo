@@ -3,13 +3,14 @@
  * Thin shell — all state and business logic lives in OnboardingStateService.
  */
 
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
-  ImageUploadComponent,
   ImageChangeEvent,
-} from '@shared/components/ui/image-upload/image-upload.component';
-import { SearchableSelectComponent } from '@shared/components/ui/searchable-select/searchable-select.component';
+  ImageUploadComponent,
+} from 'app/shared/components/ui/image-upload/image-upload.component';
+import { SearchableSelectComponent } from 'app/shared/components/ui/searchable-select/searchable-select.component';
+
 import { OnboardingStateService } from './onboarding-state.service';
 
 @Component({

@@ -3,15 +3,21 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
-      "@core/*": ["src/app/core/*"],
-      "@shared/*": ["src/app/shared/*"],
-      "@features/*": ["src/app/features/*"],
-      "@env/*": ["src/environments/*"]
+      "app/*": ["app/*"],
+      "environments/*": ["environments/*"],
+      "@testing/*": ["../testing/*"]
     },
     "strict": true,
     "noImplicitOverride": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "alwaysStrict": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "strictPropertyInitialization": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -20,13 +26,22 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "ES2022",
+    "moduleResolution": "bundler"
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "strictTemplates": true,
+    "strictStandalone": true,
+    "typeCheckHostBindings": true,
+    "extendedDiagnostics": {
+      "checks": {
+        "optionalChainNotNullable": "error",
+        "nullishCoalescingNotNullable": "error"
+      }
+    }
   },
   "files": [],
   "references": [

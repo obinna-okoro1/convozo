@@ -7,7 +7,7 @@
  * Returns a typed result object — never throws.
  */
 import { Injectable } from '@angular/core';
-import { SupabaseService } from '@core/services/supabase.service';
+import { SupabaseService } from 'app/core/services/supabase.service';
 
 export interface RefundResult {
   success: boolean;
@@ -51,10 +51,11 @@ export class RefundService {
         const msg =
           (error as { context?: { json?: () => Promise<{ error?: string }> } }).context != null
             ? await (error as { context: { json: () => Promise<{ error?: string }> } }).context
-                .json()
-                .then((b) => b.error ?? error.message)
-                .catch(() => error.message)
+              .json()
+              .then((b) => b.error ?? error.message)
+              .catch(() => error.message)
             : error.message;
+
         return { success: false, refund_id: null, error: msg };
       }
 
@@ -64,6 +65,7 @@ export class RefundService {
       };
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Refund failed';
+
       return { success: false, refund_id: null, error: msg };
     }
   }

@@ -9,18 +9,19 @@
  */
 
 import { Injectable } from '@angular/core';
+import { environment } from 'environments/environment';
 import { FunctionsHttpError } from '@supabase/functions-js';
+
 import {
-  EdgeFunctionResponse,
-  CheckoutSessionPayload,
   CallBookingPayload,
-  ShopCheckoutPayload,
-  StripeConnectResponse,
-  StripeAccountStatus,
+  CheckoutSessionPayload,
+  EdgeFunctionResponse,
   MessageReply,
+  ShopCheckoutPayload,
+  StripeAccountStatus,
+  StripeConnectResponse,
 } from '../models';
 import { SupabaseService } from './supabase.service';
-import { environment } from '@env/environment';
 
 // ── Conversation types (public, token-based access) ────────────────────────
 
@@ -233,6 +234,7 @@ export class EdgeFunctionService {
       try {
         const responseBody = await error.context.json() as { error?: string };
         const message = responseBody?.error ?? error.message;
+
         return { data: undefined, error: { message } };
       } catch {
         return { data: undefined, error: { message: error.message } };
@@ -241,6 +243,7 @@ export class EdgeFunctionService {
 
     // Fallback for any other error type
     const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+
     return { data: undefined, error: { message } };
   }
 
@@ -272,12 +275,14 @@ export class EdgeFunctionService {
 
       if (!res.ok) {
         const message = typeof json['error'] === 'string' ? json['error'] : 'An unexpected error occurred';
+
         return { data: undefined, error: { message } };
       }
 
       return { data: json as T, error: undefined };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error';
+
       return { data: undefined, error: { message } };
     }
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { CreatorLink, SupabaseResponse } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
+import { CreatorLink, SupabaseResponse } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -27,12 +27,13 @@ export class LinkService {
     referrer: string | null,
   ): Promise<void> {
     // Fire-and-forget insert; we don't block the redirect
-    await this.supabaseService.client.from('link_clicks').insert({
-      link_id: linkId,
-      creator_id: creatorId,
-      referrer,
-      user_agent: navigator.userAgent,
-    });
+    await this.supabaseService.client.from('link_clicks')
+      .insert({
+        link_id: linkId,
+        creator_id: creatorId,
+        referrer,
+        user_agent: navigator.userAgent,
+      });
 
     // Optimistic bump of the denormalized counter
     try {
@@ -110,6 +111,7 @@ export class LinkService {
         return { error };
       }
     }
+
     return { error: null };
   }
 
@@ -132,12 +134,15 @@ export class LinkService {
 
     // Aggregate counts client-side (avoids needing a custom RPC)
     const counts = new Map<string, number>();
+
     for (const row of data) {
       const linkId = (row as { link_id: string }).link_id;
       counts.set(linkId, (counts.get(linkId) ?? 0) + 1);
     }
 
-    const result = Array.from(counts.entries()).map(([link_id, count]) => ({ link_id, count }));
+    const result = Array.from(counts.entries())
+      .map(([link_id, count]) => ({ link_id, count }));
+
     return { data: result, error: null };
   }
 }

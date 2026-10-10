@@ -11,7 +11,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Routes } from '@angular/router';
 
 /** Renders nothing — the owner toolbar drawer handles the visual content for these routes. */
-// eslint-disable-next-line @angular-eslint/component-max-inline-declarations
+
 @Component({ template: '', standalone: true, changeDetection: ChangeDetectionStrategy.OnPush })
 class OwnerPanelPlaceholderComponent {}
 

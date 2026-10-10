@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { FEATURE_FLAGS } from 'app/core/constants';
+
 import { SettingsStateService } from '../../settings-state.service';
-import { FEATURE_FLAGS } from '@core/constants';
 
 @Component({
   selector: 'app-payments-view',
@@ -25,8 +26,11 @@ export class PaymentsViewComponent implements OnInit {
   /** The display name of the currently selected bank (derived from bankCode). */
   protected readonly selectedBankName = computed(() => {
     const code = this.bankCode();
-    if (!code) return '';
-    return this.state.flutterwaveBanks().find((b: { code: string; name: string }) => b.code === code)?.name ?? '';
+
+    if (!code) {return '';}
+
+    return this.state.flutterwaveBanks()
+      .find((b: { code: string; name: string }) => b.code === code)?.name ?? '';
   });
 
   /**
@@ -35,11 +39,18 @@ export class PaymentsViewComponent implements OnInit {
    * When no search is typed, shows the first 60 banks (alphabetical from Flutterwave).
    */
   protected readonly filteredBanks = computed(() => {
-    const search = this.bankSearch().toLowerCase().trim();
+    const search = this.bankSearch()
+      .toLowerCase()
+      .trim();
     const banks = this.state.flutterwaveBanks();
-    if (!search) return banks.slice(0, 60);
-    return banks.filter((b: { name: string }) => b.name.toLowerCase().includes(search)).slice(0, 60);
+
+    if (!search) {return banks.slice(0, 60);}
+
+    return banks.filter((b: { name: string }) => b.name.toLowerCase()
+      .includes(search))
+      .slice(0, 60);
   });
+
   protected readonly resolvedAccountName = signal<string | null>(null);
   protected readonly resolving = signal(false);
   protected readonly resolveError = signal<string | null>(null);
@@ -53,12 +64,14 @@ export class PaymentsViewComponent implements OnInit {
       params.get('connected') === 'true' || params.get('refresh') === 'true';
     const account = this.state.paymentAccount();
     const needsStripeRefresh = returningFromStripe || (account != null && !account.onboarding_completed);
+
     if (needsStripeRefresh) {
       void this.state.refreshStripeStatus();
     }
 
     // Pre-fill the business name with the creator's display name
     const creator = this.state.creator();
+
     if (creator) {
       this.businessName.set(creator.display_name);
     }
@@ -108,19 +121,47 @@ export class PaymentsViewComponent implements OnInit {
     this.bankCode.set(code);
     this.resolvedAccountName.set(null);
     this.resolveError.set(null);
+
+    // Non-NG: auto-mark as verified if account number is already filled.
+    if (!this.supportsNameResolution && this.accountNumber()) {
+      void this.resolveAccount();
+    }
   }
 
   protected onAccountNumberChange(num: string): void {
     this.accountNumber.set(num.replace(/\D/g, ''));
     this.resolvedAccountName.set(null);
     this.resolveError.set(null);
+
+    // Non-NG: no manual verify step — auto-mark as verified so canSubmitBank works.
+    if (!this.supportsNameResolution && this.bankCode()) {
+      void this.resolveAccount();
+    }
+  }
+
+  /**
+   * Account name resolution via NIBSS is only available for Nigeria.
+   * All other Flutterwave countries skip this step and go straight to submit.
+   */
+  protected get supportsNameResolution(): boolean {
+    return this.state.creator()?.country?.toUpperCase() === 'NG';
   }
 
   /** Resolve the account name so the creator can confirm before submitting. */
   protected async resolveAccount(): Promise<void> {
     const num = this.accountNumber();
     const code = this.bankCode();
-    if (!num || !code) return;
+
+    if (!num || !code) {return;}
+
+    // Non-NG countries: NIBSS resolution is not available — mark as verified
+    // immediately so the form can proceed to submit.
+    if (!this.supportsNameResolution) {
+      this.resolvedAccountName.set('–');
+      this.resolveError.set(null);
+
+      return;
+    }
 
     this.resolving.set(true);
     this.resolveError.set(null);
@@ -142,7 +183,7 @@ export class PaymentsViewComponent implements OnInit {
   }
 
   protected async submitBankAccount(): Promise<void> {
-    if (!this.canSubmitBank) return;
+    if (!this.canSubmitBank) {return;}
 
     await this.state.connectFlutterwave({
       bankCode: this.bankCode(),

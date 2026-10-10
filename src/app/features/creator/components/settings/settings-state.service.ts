@@ -4,23 +4,25 @@
  * Holds creator data, settings, Stripe account, and form-level state.
  */
 
-import { computed, Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   Creator,
   CreatorSettings,
-  StripeAccount,
-  FlutterwaveSubaccount,
-  FlutterwaveBank,
   EXPERT_CATEGORIES,
-  getCategoryById,
   type ExpertSubcategory,
-} from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
-import { FormValidators } from '@core/validators/form-validators';
+  FlutterwaveBank,
+  FlutterwaveSubaccount,
+  StripeAccount,
+  getCategoryById,
+} from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { FormValidators } from 'app/core/validators/form-validators';
+import type { SelectOption } from 'app/shared/components/ui/searchable-select/searchable-select.component';
+import { errorMessage } from 'app/shared/utils/error.utils';
+
 import { CreatorService } from '../../services/creator.service';
-import { errorMessage } from '@shared/utils/error.utils';
-import type { SelectOption } from '@shared/components/ui/searchable-select/searchable-select.component';
+
 
 @Injectable()
 export class SettingsStateService {
@@ -94,15 +96,16 @@ export class SettingsStateService {
     professionTitle: '',
     yearsOfExperience: null as number | null,
     linkedinUrl: '',
-    profileType: 'consultant' as 'consultant' | 'practitioner',
+    profileType: 'consultant',
   });
+
   readonly originalMonetization = signal({
     messagePrice: 500,
     messagesEnabled: false,
     callPrice: 2000,
     callDuration: 10,
     callsEnabled: false,
-    sessionType: 'online' as 'online' | 'physical' | 'both',
+    sessionType: 'online',
     physicalAddress: '',
     tipsEnabled: false,
     shopEnabled: false,
@@ -113,6 +116,7 @@ export class SettingsStateService {
   // ── Computed ───────────────────────────────────────────────────────
   readonly profileDirty = computed(() => {
     const o = this.originalProfile();
+
     return (
       this.displayName() !== o.displayName ||
       this.slug() !== o.slug ||
@@ -142,6 +146,7 @@ export class SettingsStateService {
 
   readonly monetizationDirty = computed(() => {
     const o = this.originalMonetization();
+
     return (
       this.messagePrice() !== o.messagePrice ||
       this.messagesEnabled() !== o.messagesEnabled ||
@@ -170,12 +175,14 @@ export class SettingsStateService {
   );
 
   readonly subcategoryOptions = computed<SelectOption[]>(() =>
-    this.filteredSubcategories().map(s => ({ value: s.id, label: s.label })),
+    this.filteredSubcategories()
+      .map(s => ({ value: s.id, label: s.label })),
   );
 
   /** True only when Stripe account is fully connected and onboarding is complete */
   readonly isStripeConnected = computed(() => {
     const account = this.paymentAccount();
+
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
 
@@ -243,11 +250,13 @@ export class SettingsStateService {
 
     if (slug === this.originalSlug) {
       this.slugStatus.set('idle');
+
       return;
     }
 
     if (!slug || !FormValidators.isValidSlug(slug)) {
       this.slugStatus.set(slug ? 'invalid' : 'idle');
+
       return;
     }
 
@@ -258,11 +267,12 @@ export class SettingsStateService {
   }
 
   private async performSlugCheck(slug: string): Promise<void> {
-    if (this.slug() !== slug) return;
+    if (this.slug() !== slug) {return;}
 
     const creatorId = this.creator()?.id;
     const { available } = await this.creatorService.checkSlugAvailability(slug, creatorId);
-    if (this.slug() !== slug) return;
+
+    if (this.slug() !== slug) {return;}
 
     this.slugStatus.set(available ? 'available' : 'taken');
   }
@@ -272,6 +282,7 @@ export class SettingsStateService {
   async saveProfile(): Promise<void> {
     if (!this.canSaveProfile()) {
       this.error.set('Please fix the errors above before saving');
+
       return;
     }
 
@@ -318,6 +329,7 @@ export class SettingsStateService {
       setTimeout(() => this.success.set(false), 3000);
     } else {
       const errMsg = updated.error?.message ?? '';
+
       if (errMsg.includes('unique') || errMsg.includes('duplicate') || errMsg.includes('slug')) {
         this.slugStatus.set('taken');
         this.error.set('This slug is already taken — please choose a different one');
@@ -381,17 +393,21 @@ export class SettingsStateService {
     this.error.set(null);
 
     const creator = this.creator();
+
     if (!creator) {
       this.error.set('Creator profile not found');
       this.paymentConnecting.set(false);
+
       return;
     }
 
     try {
       const { data: { user } } = await this.supabaseService.client.auth.getUser();
+
       if (!user) {
         this.error.set('Your session has expired. Please sign in again.');
         this.paymentConnecting.set(false);
+
         return;
       }
 
@@ -425,16 +441,20 @@ export class SettingsStateService {
   async refreshStripeStatus(): Promise<void> {
     const creator = this.creator();
     const account = this.paymentAccount();
-    if (!creator || !account) return;
+
+    if (!creator || !account) {return;}
 
     try {
       const { data, error } = await this.creatorService.verifyStripeAccount(
         account.stripe_account_id,
       );
+
       if (error != null) {
         console.error('[refreshStripeStatus] verify failed:', error);
+
         return;
       }
+
       if (data != null) {
         // Update the signal with the fresh values returned by the edge function
         // so the UI reflects the real Stripe account status immediately.
@@ -485,6 +505,7 @@ export class SettingsStateService {
     this.loading.set(true);
 
     const creatorData = await this.creatorService.getCurrentCreator();
+
     if (creatorData) {
       this.creator.set(creatorData);
       this.displayName.set(creatorData.display_name);
@@ -516,6 +537,7 @@ export class SettingsStateService {
       });
 
       const settingsData = await this.creatorService.getCreatorSettings(creatorData.id);
+
       if (settingsData.data) {
         this.settings.set(settingsData.data);
         this.messagePrice.set(settingsData.data.message_price);
@@ -560,6 +582,7 @@ export class SettingsStateService {
 
     if (data != null) {
       this.paymentAccount.set(data);
+
       // If the account isn't fully onboarded yet, pull the latest status from
       // Stripe immediately so the user always sees current data without needing
       // to manually click refresh.
@@ -571,6 +594,7 @@ export class SettingsStateService {
 
   private async loadFlutterwaveSubaccount(creatorId: string): Promise<void> {
     const { data } = await this.creatorService.getFlutterwaveSubaccount(creatorId);
+
     if (data) {
       this.flutterwaveSubaccount.set(data);
     }
@@ -589,22 +613,27 @@ export class SettingsStateService {
         accountNumber,
         bankCode,
       );
+
       if (error) {
         // The edge function returns a 422 with a user-facing message in the JSON body
         // when Flutterwave rejects the account details. Try to extract it.
         let userMessage = 'Could not verify account. Please check your account number and bank.';
         try {
           const context = (error as { context?: Response }).context;
+
           if (context instanceof Response) {
             const body = await context.json() as { error?: string };
-            if (body?.error) userMessage = body.error;
+
+            if (body?.error) {userMessage = body.error;}
           }
         } catch {
           // Ignore body-parse failure — use the default message.
         }
+
         return { accountName: null, error: userMessage };
       }
       const name = (data as unknown as { account_name?: string })?.account_name ?? null;
+
       return { accountName: name, error: null };
     } catch {
       return { accountName: null, error: 'Account verification failed. Please try again.' };
@@ -617,20 +646,23 @@ export class SettingsStateService {
    */
   async loadFlutterwaveBanks(): Promise<void> {
     const country = this.creator()?.country;
-    if (!country) return;
+
+    if (!country) {return;}
 
     this.flutterwaveBanksLoading.set(true);
     try {
       const { data, error } = await this.creatorService.getFlutterwaveBanks(country);
+
       if (error) {
         this.error.set('Failed to load bank list. Please try again.');
+
         return;
       }
       // Edge function returns { banks: [...] } — extract the array
       const responseData = data as unknown as { banks?: FlutterwaveBank[] } | FlutterwaveBank[] | null;
       const banks: FlutterwaveBank[] = Array.isArray(responseData)
         ? responseData
-        : (responseData as { banks?: FlutterwaveBank[] } | null)?.banks ?? [];
+        : (responseData)?.banks ?? [];
       this.flutterwaveBanks.set(banks);
     } catch {
       this.error.set('Failed to load bank list. Please try again.');
@@ -649,7 +681,8 @@ export class SettingsStateService {
     businessName: string;
   }): Promise<void> {
     const country = this.creator()?.country;
-    if (!country) return;
+
+    if (!country) {return;}
 
     this.flutterwaveConnecting.set(true);
     this.error.set(null);
@@ -664,10 +697,11 @@ export class SettingsStateService {
 
       if (error) {
         this.error.set((error as { message?: string })?.message ?? 'Failed to set up bank account');
+
         return;
       }
 
-      this.flutterwaveSubaccount.set(data as unknown as FlutterwaveSubaccount);
+      this.flutterwaveSubaccount.set(data ?? null);
       this.success.set(true);
       setTimeout(() => this.success.set(false), 3000);
     } catch {

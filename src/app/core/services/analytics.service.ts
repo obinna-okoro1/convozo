@@ -4,7 +4,8 @@
  */
 
 import { Injectable, signal } from '@angular/core';
-import { Message, CallBooking } from '../models';
+
+import { CallBooking, Message } from '../models';
 
 export interface DailyStats {
   date: string;
@@ -114,7 +115,8 @@ export class AnalyticsService {
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value);
+    })
+      .format(value);
   }
 
   /**
@@ -122,6 +124,7 @@ export class AnalyticsService {
    */
   public formatPercentage(value: number): string {
     const sign = value >= 0 ? '+' : '';
+
     return `${sign}${value.toFixed(1)}%`;
   }
 
@@ -131,7 +134,8 @@ export class AnalyticsService {
   public getProjectedRevenue(messages: Message[], bookings: CallBooking[] = []): number {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      .getDate();
     const daysPassed = now.getDate();
 
     const messageRevenue =
@@ -154,12 +158,14 @@ export class AnalyticsService {
         .reduce((sum, b) => sum + b.amount_paid, 0) / 100;
 
     const monthRevenue = messageRevenue + bookingRevenue;
+
     return (monthRevenue / daysPassed) * daysInMonth;
   }
 
   /** Filters an array of date-stamped objects to those created in the last 30 days. */
   private filterLast30Days<T extends { created_at: string }>(items: T[]): T[] {
     const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
     return items.filter((i) => new Date(i.created_at) >= cutoff);
   }
 
@@ -169,14 +175,19 @@ export class AnalyticsService {
     const replied = messages.filter(
       (m): m is Message & { replied_at: string } => m.replied_at !== null,
     );
+
     if (replied.length === 0) {
       return 0;
     }
     const totalMs = replied.reduce((sum, m) => {
-      const created = new Date(m.created_at).getTime();
-      const repliedAt = new Date(m.replied_at).getTime();
+      const created = new Date(m.created_at)
+        .getTime();
+      const repliedAt = new Date(m.replied_at)
+        .getTime();
+
       return sum + (repliedAt - created);
     }, 0);
+
     return totalMs / replied.length / (1000 * 60 * 60);
   }
 
@@ -195,11 +206,13 @@ export class AnalyticsService {
     const last30Msgs = messages.filter((m) => new Date(m.created_at) >= t30);
     const prev30Msgs = messages.filter((m) => {
       const d = new Date(m.created_at);
+
       return d >= t60 && d < t30;
     });
     const last30Book = bookings.filter((b) => new Date(b.created_at) >= t30);
     const prev30Book = bookings.filter((b) => {
       const d = new Date(b.created_at);
+
       return d >= t60 && d < t30;
     });
 
@@ -238,6 +251,7 @@ export class AnalyticsService {
       existing.messageCount += 1;
       senderMap.set(m.sender_email, existing);
     });
+
     return Array.from(senderMap.values())
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 5);
@@ -255,9 +269,13 @@ export class AnalyticsService {
 
     if (viewMonth) {
       // Initialise every day of the selected calendar month
-      const daysInMonth = new Date(viewMonth.year, viewMonth.month, 0).getDate();
+      const daysInMonth = new Date(viewMonth.year, viewMonth.month, 0)
+        .getDate();
+
       for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${String(viewMonth.year)}-${String(viewMonth.month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dateStr = `${String(viewMonth.year)}-${String(viewMonth.month)
+          .padStart(2, '0')}-${String(d)
+          .padStart(2, '0')}`;
         dailyMap.set(dateStr, { date: dateStr, revenue: 0, messageCount: 0 });
       }
     } else {
@@ -265,15 +283,19 @@ export class AnalyticsService {
       for (let i = 29; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = date.toISOString()
+          .split('T')[0];
         dailyMap.set(dateStr, { date: dateStr, revenue: 0, messageCount: 0 });
       }
     }
 
     // Populate with message data
     messages.forEach((m) => {
-      const dateStr = new Date(m.created_at).toISOString().split('T')[0];
+      const dateStr = new Date(m.created_at)
+        .toISOString()
+        .split('T')[0];
       const existing = dailyMap.get(dateStr);
+
       if (existing) {
         existing.revenue += m.amount_paid / 100;
         existing.messageCount += 1;
@@ -282,8 +304,11 @@ export class AnalyticsService {
 
     // Add booking revenue
     bookings.forEach((b) => {
-      const dateStr = new Date(b.created_at).toISOString().split('T')[0];
+      const dateStr = new Date(b.created_at)
+        .toISOString()
+        .split('T')[0];
       const existing = dailyMap.get(dateStr);
+
       if (existing) {
         existing.revenue += b.amount_paid / 100;
         existing.messageCount += 1;
@@ -319,7 +344,8 @@ export class AnalyticsService {
       typeMap.set('session', bookingData);
     }
 
-    return Array.from(typeMap.entries()).map(([type, data]) => ({ type, ...data }));
+    return Array.from(typeMap.entries())
+      .map(([type, data]) => ({ type, ...data }));
   }
 
   /**

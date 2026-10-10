@@ -19,9 +19,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { EdgeFunctionService } from './edge-function.service';
 import { SupabaseService } from './supabase.service';
 
@@ -70,20 +71,23 @@ describe('EdgeFunctionService', () => {
         price: 1000,
       });
 
-      expect(result.data).toEqual(responseData);
-      expect(result.error).toBeUndefined();
+      expect(result.data)
+        .toEqual(responseData);
+      expect(result.error)
+        .toBeUndefined();
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
-      expect(invokeCall).toHaveBeenCalledWith('create-checkout-session', {
-        body: {
-          creator_slug: 'sarahjohnson',
-          message_content: 'Test message',
-          sender_name: 'Test User',
-          sender_email: 'test@example.com',
-          message_type: 'message',
-          price: 1000,
-        },
-      });
+      expect(invokeCall)
+        .toHaveBeenCalledWith('create-checkout-session', {
+          body: {
+            creator_slug: 'sarahjohnson',
+            message_content: 'Test message',
+            sender_name: 'Test User',
+            sender_email: 'test@example.com',
+            message_type: 'message',
+            price: 1000,
+          },
+        });
     });
 
     it('returns error when edge function fails', async () => {
@@ -107,9 +111,12 @@ describe('EdgeFunctionService', () => {
         price: 1000,
       });
 
-      expect(result.data).toBeUndefined();
-      expect(result.error).toBeDefined();
-      expect(result.error!.message).toBe('Creator not found');
+      expect(result.data)
+        .toBeUndefined();
+      expect(result.error)
+        .toBeDefined();
+      expect(result.error!.message)
+        .toBe('Creator not found');
     });
 
     it('invokes the correct function name', async () => {
@@ -133,7 +140,8 @@ describe('EdgeFunctionService', () => {
       });
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
-      expect(invokeCall).toHaveBeenCalledWith('create-checkout-session', jasmine.any(Object));
+      expect(invokeCall)
+        .toHaveBeenCalledWith('create-checkout-session', jasmine.any(Object));
     });
   });
 
@@ -163,17 +171,20 @@ describe('EdgeFunctionService', () => {
         session_type: 'online',
       });
 
-      expect(result.data).toEqual(responseData);
-      expect(result.error).toBeUndefined();
+      expect(result.data)
+        .toEqual(responseData);
+      expect(result.error)
+        .toBeUndefined();
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
-      expect(invokeCall).toHaveBeenCalledWith('create-call-booking-session', {
-        body: jasmine.objectContaining({
-          creator_slug: 'sarahjohnson',
-          price: 5000,
-          scheduled_at: '2026-04-01T14:00:00.000Z',
-        }),
-      });
+      expect(invokeCall)
+        .toHaveBeenCalledWith('create-call-booking-session', {
+          body: jasmine.objectContaining({
+            creator_slug: 'sarahjohnson',
+            price: 5000,
+            scheduled_at: '2026-04-01T14:00:00.000Z',
+          }),
+        });
     });
 
     it('passes price as integer cents', async () => {
@@ -200,8 +211,10 @@ describe('EdgeFunctionService', () => {
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
       const passedBody = invokeCall.calls.mostRecent().args[1].body;
-      expect(passedBody.price).toBe(10000);
-      expect(Number.isInteger(passedBody.price)).toBeTrue();
+      expect(passedBody.price)
+        .toBe(10000);
+      expect(Number.isInteger(passedBody.price))
+        .toBeTrue();
     });
   });
 
@@ -228,9 +241,11 @@ describe('EdgeFunctionService', () => {
         buyer_email: 'buyer@example.com',
       } as any);
 
-      expect(result.data?.sessionId).toBe('cs_shop_1');
+      expect(result.data?.sessionId)
+        .toBe('cs_shop_1');
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
-      expect(invokeCall).toHaveBeenCalledWith('create-shop-checkout', jasmine.any(Object));
+      expect(invokeCall)
+        .toHaveBeenCalledWith('create-shop-checkout', jasmine.any(Object));
     });
   });
 
@@ -258,17 +273,20 @@ describe('EdgeFunctionService', () => {
         'Dr. Smith',
       );
 
-      expect(result.data).toEqual(responseData);
-      expect(result.error).toBeUndefined();
+      expect(result.data)
+        .toEqual(responseData);
+      expect(result.error)
+        .toBeUndefined();
 
       const invokeCall = (supabaseSpy.client as any).functions.invoke;
-      expect(invokeCall).toHaveBeenCalledWith('create-connect-account', {
-        body: {
-          creator_id: 'creator-123',
-          email: 'expert@example.com',
-          display_name: 'Dr. Smith',
-        },
-      });
+      expect(invokeCall)
+        .toHaveBeenCalledWith('create-connect-account', {
+          body: {
+            creator_id: 'creator-123',
+            email: 'expert@example.com',
+            display_name: 'Dr. Smith',
+          },
+        });
     });
 
     it('returns error when auth fails', async () => {
@@ -284,7 +302,8 @@ describe('EdgeFunctionService', () => {
       service = TestBed.inject(EdgeFunctionService);
 
       const result = await service.createConnectAccount('x', 'x@x.com', 'X');
-      expect(result.error?.message).toBe('Unauthorized');
+      expect(result.error?.message)
+        .toBe('Unauthorized');
     });
   });
 
@@ -311,9 +330,12 @@ describe('EdgeFunctionService', () => {
 
       const result = await service.verifyConnectAccount('acct_xxx');
 
-      expect(result.data?.charges_enabled).toBeTrue();
-      expect(result.data?.payouts_enabled).toBeTrue();
-      expect(result.data?.onboarding_completed).toBeTrue();
+      expect(result.data?.charges_enabled)
+        .toBeTrue();
+      expect(result.data?.payouts_enabled)
+        .toBeTrue();
+      expect(result.data?.onboarding_completed)
+        .toBeTrue();
     });
   });
 
@@ -334,8 +356,10 @@ describe('EdgeFunctionService', () => {
 
       const result = await service.getShopDownloadUrl('cs_session_123');
 
-      expect(result.data?.url).toContain('signed-url');
-      expect(result.data?.filename).toBe('guide.pdf');
+      expect(result.data?.url)
+        .toContain('signed-url');
+      expect(result.data?.filename)
+        .toBe('guide.pdf');
     });
   });
 
@@ -359,9 +383,12 @@ describe('EdgeFunctionService', () => {
 
       const result = await service.getClientPortal();
 
-      expect(result.data?.messages.length).toBe(1);
-      expect(result.data?.bookings.length).toBe(1);
-      expect(result.data?.messages[0].amount_paid).toBe(1000);
+      expect(result.data?.messages.length)
+        .toBe(1);
+      expect(result.data?.bookings.length)
+        .toBe(1);
+      expect(result.data?.messages[0].amount_paid)
+        .toBe(1000);
     });
   });
 
@@ -397,10 +424,13 @@ describe('EdgeFunctionService', () => {
         price: 1000,
       });
 
-      expect(result.data).toBeUndefined();
-      expect(result.error).toBeDefined();
+      expect(result.data)
+        .toBeUndefined();
+      expect(result.error)
+        .toBeDefined();
       // Falls back to Error.message because our fake isn't a real FunctionsHttpError instance
-      expect(typeof result.error!.message).toBe('string');
+      expect(typeof result.error!.message)
+        .toBe('string');
     });
 
     it('handles non-Error objects gracefully', async () => {
@@ -423,8 +453,10 @@ describe('EdgeFunctionService', () => {
         price: 1000,
       });
 
-      expect(result.error).toBeDefined();
-      expect(result.error!.message).toBe('An unexpected error occurred');
+      expect(result.error)
+        .toBeDefined();
+      expect(result.error!.message)
+        .toBe('An unexpected error occurred');
     });
 
     it('returns data: undefined on error (never leaks partial data)', async () => {
@@ -448,8 +480,10 @@ describe('EdgeFunctionService', () => {
       });
 
       // Even though data was present in the response, the error path should NOT return it
-      expect(result.data).toBeUndefined();
-      expect(result.error).toBeDefined();
+      expect(result.data)
+        .toBeUndefined();
+      expect(result.error)
+        .toBeDefined();
     });
   });
 });

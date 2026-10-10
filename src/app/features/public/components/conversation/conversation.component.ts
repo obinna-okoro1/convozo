@@ -11,21 +11,21 @@
  * expert has replied at least once.
  */
 
+import { DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
-  signal,
   computed,
+  signal,
 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { MessageReply } from 'app/core/models';
 import {
-  EdgeFunctionService,
   ConversationData,
-} from '@core/services/edge-function.service';
-import { MessageReply } from '@core/models';
+  EdgeFunctionService,
+} from 'app/core/services/edge-function.service';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -48,14 +48,14 @@ export class ConversationComponent implements OnInit {
   /** True once the expert has replied at least once — enables client reply box. */
   protected readonly canReply = computed(() => {
     const conv = this.conversation();
-    if (!conv) return false;
+
+    if (!conv) {return false;}
+
     return conv.replies.some((r) => r.sender_type === 'expert');
   });
 
   /** Live reply list — updated optimistically after a successful send. */
-  protected readonly replies = computed<MessageReply[]>(() => {
-    return this.conversation()?.replies ?? [];
-  });
+  protected readonly replies = computed<MessageReply[]>(() => this.conversation()?.replies ?? []);
 
   private readonly token = signal<string>('');
 
@@ -79,6 +79,7 @@ export class ConversationComponent implements OnInit {
     if (error || !data) {
       this.loadError.set(error?.message ?? 'Conversation not found.');
       this.loadState.set('error');
+
       return;
     }
 
@@ -87,8 +88,10 @@ export class ConversationComponent implements OnInit {
   }
 
   protected async sendReply(): Promise<void> {
-    const content = this.replyText().trim();
-    if (!content || this.sending()) return;
+    const content = this.replyText()
+      .trim();
+
+    if (!content || this.sending()) {return;}
 
     this.sending.set(true);
     this.sendError.set(null);
@@ -98,6 +101,7 @@ export class ConversationComponent implements OnInit {
     if (error || !data) {
       this.sendError.set(error?.message ?? 'Failed to send reply. Please try again.');
       this.sending.set(false);
+
       return;
     }
 
@@ -111,6 +115,7 @@ export class ConversationComponent implements OnInit {
     };
 
     const current = this.conversation();
+
     if (current) {
       this.conversation.set({ ...current, replies: [...current.replies, newReply] });
     }

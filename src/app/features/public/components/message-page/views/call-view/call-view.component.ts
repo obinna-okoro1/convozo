@@ -4,11 +4,12 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MessagePageStateService } from '../../message-page-state.service';
 import {
   CallBookingFormComponent,
   CallBookingFormData,
-} from '@features/public/components/call-booking-form/call-booking-form.component';
+} from 'app/features/public/components/call-booking-form/call-booking-form.component';
+
+import { MessagePageStateService } from '../../message-page-state.service';
 
 @Component({
   selector: 'app-call-view',

@@ -730,8 +730,8 @@ def test_flutterwave_banks_invalid_country() -> list[TestResult]:
         status, 400, body,
     )]
     results.append(expect_error(
-        "get-flutterwave-banks – error message mentions NG and ZA",
-        body, "NG and ZA",
+        "get-flutterwave-banks – unsupported country returns descriptive error",
+        body, "not available in your country",
     ))
     return results
 

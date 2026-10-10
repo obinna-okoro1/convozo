@@ -20,14 +20,12 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-
-import { SupabaseService } from '@core/services/supabase.service';
 import {
-  ClientPortalData,
   EdgeFunctionService,
   PortalBooking,
   PortalMessage,
-} from '@core/services/edge-function.service';
+} from 'app/core/services/edge-function.service';
+import { SupabaseService } from 'app/core/services/supabase.service';
 import { User } from '@supabase/supabase-js';
 
 type PortalView = 'loading' | 'unauthenticated' | 'link-sent' | 'authenticated';
@@ -78,6 +76,7 @@ export class PortalComponent implements OnInit, OnDestroy {
     // Check if a session already exists (client clicked link, JS already processed hash)
     await this.supabase.waitForSession();
     const currentUser = this.supabase.getCurrentUser();
+
     if (currentUser) {
       this.user.set(currentUser);
       await this.loadPortalData();
@@ -99,9 +98,12 @@ export class PortalComponent implements OnInit, OnDestroy {
   }
 
   protected async sendMagicLink(): Promise<void> {
-    const email = this.emailInput().trim();
+    const email = this.emailInput()
+      .trim();
+
     if (!email || !this.isValidEmail(email)) {
       this.emailError.set('Please enter a valid email address.');
+
       return;
     }
 
@@ -121,6 +123,7 @@ export class PortalComponent implements OnInit, OnDestroy {
 
       if (error) {
         this.sendError.set('Failed to send the link. Please try again in a moment.');
+
         return;
       }
 
@@ -152,27 +155,30 @@ export class PortalComponent implements OnInit, OnDestroy {
   }
 
   protected formatCurrency(cents: number): string {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+      .format(cents / 100);
   }
 
   protected formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Date(iso)
+      .toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
   }
 
   protected formatDateTime(iso: string, timezone?: string | null): string {
-    return new Date(iso).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: timezone ?? 'UTC',
-      timeZoneName: 'short',
-    });
+    return new Date(iso)
+      .toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: timezone ?? 'UTC',
+        timeZoneName: 'short',
+      });
   }
 
   protected expertReplyCount(msg: PortalMessage): number {
@@ -191,6 +197,7 @@ export class PortalComponent implements OnInit, OnDestroy {
       no_show_creator: 'Refunded',
       cancelled: 'Cancelled',
     };
+
     return labels[status] ?? status;
   }
 
@@ -205,6 +212,7 @@ export class PortalComponent implements OnInit, OnDestroy {
     if (error || !data) {
       this.loadError.set(error?.message ?? 'Failed to load your data. Please refresh the page.');
       this.view.set('authenticated');
+
       return;
     }
 

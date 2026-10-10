@@ -21,6 +21,7 @@
  */
 
 import { TestBed } from '@angular/core/testing';
+
 import { CreatorMonthlyAnalytics } from '../models';
 import { AnalyticsService } from './analytics.service';
 
@@ -149,29 +150,44 @@ describe('Analytics Retention – Frontend', () => {
   describe('CreatorMonthlyAnalytics model', () => {
     it('can be constructed with all required fields', () => {
       const row = makeMonthlyAnalytics();
-      expect(row.creator_id).toBeDefined();
-      expect(row.month).toBeDefined();
-      expect(typeof row.total_gross).toBe('number');
-      expect(typeof row.total_net).toBe('number');
-      expect(typeof row.total_refunds).toBe('number');
+      expect(row.creator_id)
+        .toBeDefined();
+      expect(row.month)
+        .toBeDefined();
+      expect(typeof row.total_gross)
+        .toBe('number');
+      expect(typeof row.total_net)
+        .toBe('number');
+      expect(typeof row.total_refunds)
+        .toBe('number');
     });
 
     it('has separate refund fields for each revenue stream', () => {
       const row = makeMonthlyAnalytics();
-      expect('message_refund_count' in row).toBeTrue();
-      expect('message_refund_amount' in row).toBeTrue();
-      expect('call_refund_count' in row).toBeTrue();
-      expect('call_refund_amount' in row).toBeTrue();
-      expect('shop_refund_count' in row).toBeTrue();
-      expect('shop_refund_amount' in row).toBeTrue();
+      expect('message_refund_count' in row)
+        .toBeTrue();
+      expect('message_refund_amount' in row)
+        .toBeTrue();
+      expect('call_refund_count' in row)
+        .toBeTrue();
+      expect('call_refund_amount' in row)
+        .toBeTrue();
+      expect('shop_refund_count' in row)
+        .toBeTrue();
+      expect('shop_refund_amount' in row)
+        .toBeTrue();
     });
 
     it('has platform_fee fields for every stream', () => {
       const row = makeMonthlyAnalytics();
-      expect('message_platform_fee' in row).toBeTrue();
-      expect('call_platform_fee' in row).toBeTrue();
-      expect('shop_platform_fee' in row).toBeTrue();
-      expect('total_platform_fee' in row).toBeTrue();
+      expect('message_platform_fee' in row)
+        .toBeTrue();
+      expect('call_platform_fee' in row)
+        .toBeTrue();
+      expect('shop_platform_fee' in row)
+        .toBeTrue();
+      expect('total_platform_fee' in row)
+        .toBeTrue();
     });
   });
 
@@ -179,15 +195,18 @@ describe('Analytics Retention – Frontend', () => {
 
   describe('centsToDisplay()', () => {
     it('converts 1000 cents to $10.00', () => {
-      expect(centsToDisplay(1000)).toBeCloseTo(10);
+      expect(centsToDisplay(1000))
+        .toBeCloseTo(10);
     });
 
     it('converts 0 cents to $0.00', () => {
-      expect(centsToDisplay(0)).toBe(0);
+      expect(centsToDisplay(0))
+        .toBe(0);
     });
 
     it('converts 2299 cents to $22.99', () => {
-      expect(centsToDisplay(2299)).toBeCloseTo(22.99);
+      expect(centsToDisplay(2299))
+        .toBeCloseTo(22.99);
     });
   });
 
@@ -211,10 +230,14 @@ describe('Analytics Retention – Frontend', () => {
       const withMessages = getDisplayedAnalytics(retained, [{}, {}, {}, {}, {}]);
 
       // The retained analytics row is the source of truth — both must be identical
-      expect(withNoMessages.gross).toBeCloseTo(withMessages.gross);
-      expect(withNoMessages.net).toBeCloseTo(withMessages.net);
-      expect(withNoMessages.messageCount).toBe(withMessages.messageCount);
-      expect(withNoMessages.messageCount).toBe(5);
+      expect(withNoMessages.gross)
+        .toBeCloseTo(withMessages.gross);
+      expect(withNoMessages.net)
+        .toBeCloseTo(withMessages.net);
+      expect(withNoMessages.messageCount)
+        .toBe(withMessages.messageCount);
+      expect(withNoMessages.messageCount)
+        .toBe(5);
     });
 
     it('message_count in retained row reflects completed payments, not current inbox size', () => {
@@ -223,7 +246,8 @@ describe('Analytics Retention – Frontend', () => {
 
       // Live inbox is now empty (creator deleted all messages after handling)
       const displayed = getDisplayedAnalytics(retained, []);
-      expect(displayed.messageCount).toBe(10); // retained figure persists
+      expect(displayed.messageCount)
+        .toBe(10); // retained figure persists
     });
   });
 
@@ -242,9 +266,12 @@ describe('Analytics Retention – Frontend', () => {
       });
 
       const displayed = getDisplayedAnalytics(retained, []);
-      expect(displayed.gross).toBeCloseTo(100); // gross stays $100
-      expect(displayed.refunds).toBeCloseTo(30); // refund shown separately
-      expect(displayed.net).toBeCloseTo(54.6); // net is net of refund
+      expect(displayed.gross)
+        .toBeCloseTo(100); // gross stays $100
+      expect(displayed.refunds)
+        .toBeCloseTo(30); // refund shown separately
+      expect(displayed.net)
+        .toBeCloseTo(54.6); // net is net of refund
     });
 
     it('refund amount is shown separately from total_gross', () => {
@@ -255,8 +282,10 @@ describe('Analytics Retention – Frontend', () => {
       });
       const displayed = getDisplayedAnalytics(retained, []);
       // Gross and refunds are separate numbers, not subtracted
-      expect(displayed.gross).toBeCloseTo(200);
-      expect(displayed.refunds).toBeCloseTo(50);
+      expect(displayed.gross)
+        .toBeCloseTo(200);
+      expect(displayed.refunds)
+        .toBeCloseTo(50);
       // They don't sum to 200 - 50 — they are independent display values
     });
 
@@ -269,8 +298,10 @@ describe('Analytics Retention – Frontend', () => {
         message_net: 4680, // 78% of $60 remaining
       });
       // The refund count is a field on the retained row — it's not computed from messages
-      expect(retained.message_refund_count).toBe(2);
-      expect(retained.message_count).toBe(8);
+      expect(retained.message_refund_count)
+        .toBe(2);
+      expect(retained.message_count)
+        .toBe(8);
     });
   });
 
@@ -279,18 +310,21 @@ describe('Analytics Retention – Frontend', () => {
   describe('netAfterRefunds() – floor at 0', () => {
     it('returns 0 when total_net is 0', () => {
       const row = makeMonthlyAnalytics({ total_net: 0 });
-      expect(netAfterRefunds(row)).toBe(0);
+      expect(netAfterRefunds(row))
+        .toBe(0);
     });
 
     it('returns positive net when total_net > 0', () => {
       const row = makeMonthlyAnalytics({ total_net: 7800 }); // $78
-      expect(netAfterRefunds(row)).toBeCloseTo(78);
+      expect(netAfterRefunds(row))
+        .toBeCloseTo(78);
     });
 
     it('floors at 0 if a partial post-payout refund results in negative net', () => {
       // Edge case: payout was released, then fan disputes → net goes negative in DB
       const row = makeMonthlyAnalytics({ total_net: -500 });
-      expect(netAfterRefunds(row)).toBe(0); // UI never shows negative earnings
+      expect(netAfterRefunds(row))
+        .toBe(0); // UI never shows negative earnings
     });
   });
 
@@ -304,9 +338,12 @@ describe('Analytics Retention – Frontend', () => {
         makeMonthlyAnalytics({ month: '2026-02-01', total_gross: 2000 }),
       ];
       const sorted = sortByMonthDesc(rows);
-      expect(sorted[0].month).toBe('2026-03-01');
-      expect(sorted[1].month).toBe('2026-02-01');
-      expect(sorted[2].month).toBe('2026-01-01');
+      expect(sorted[0].month)
+        .toBe('2026-03-01');
+      expect(sorted[1].month)
+        .toBe('2026-02-01');
+      expect(sorted[2].month)
+        .toBe('2026-01-01');
     });
 
     it('does not mutate the original array', () => {
@@ -316,11 +353,13 @@ describe('Analytics Retention – Frontend', () => {
       ];
       const original = rows.map((r) => r.month);
       sortByMonthDesc(rows);
-      expect(rows.map((r) => r.month)).toEqual(original);
+      expect(rows.map((r) => r.month))
+        .toEqual(original);
     });
 
     it('returns empty array for empty input', () => {
-      expect(sortByMonthDesc([])).toEqual([]);
+      expect(sortByMonthDesc([]))
+        .toEqual([]);
     });
   });
 
@@ -335,7 +374,8 @@ describe('Analytics Retention – Frontend', () => {
         total_gross: 12499,
       });
       const expectedTotal = retained.message_gross + retained.call_gross + retained.shop_gross;
-      expect(retained.total_gross).toBe(expectedTotal);
+      expect(retained.total_gross)
+        .toBe(expectedTotal);
     });
 
     it('total_refunds equals sum of message + call + shop refund amounts', () => {
@@ -347,7 +387,8 @@ describe('Analytics Retention – Frontend', () => {
       });
       const expected =
         retained.message_refund_amount + retained.call_refund_amount + retained.shop_refund_amount;
-      expect(retained.total_refunds).toBe(expected);
+      expect(retained.total_refunds)
+        .toBe(expected);
     });
 
     it('total_net equals total_gross minus total_platform_fee minus total_refund_net_reversals', () => {
@@ -364,7 +405,8 @@ describe('Analytics Retention – Frontend', () => {
         total_net: net,
         total_refunds: 0,
       });
-      expect(retained.total_net).toBe(retained.total_gross - retained.total_platform_fee);
+      expect(retained.total_net)
+        .toBe(retained.total_gross - retained.total_platform_fee);
     });
   });
 
@@ -377,17 +419,21 @@ describe('Analytics Retention – Frontend', () => {
       it(`fee + net = gross for amount=${String(amount)} cents (no penny lost)`, () => {
         const fee = platformFee(amount);
         const net = creatorNet(amount);
-        expect(fee + net).toBe(amount);
+        expect(fee + net)
+          .toBe(amount);
       });
     });
 
     it('platform fee is exactly 22% rounded to nearest cent', () => {
       // $10.00 → fee = ROUND(1000 * 22 / 100) = ROUND(220) = 220
-      expect(platformFee(1000)).toBe(220);
+      expect(platformFee(1000))
+        .toBe(220);
       // $4.99 → fee = ROUND(499 * 22 / 100) = ROUND(109.78) = 110
-      expect(platformFee(499)).toBe(110);
+      expect(platformFee(499))
+        .toBe(110);
       // $33.33 → fee = ROUND(3333 * 22 / 100) = ROUND(733.26) = 733
-      expect(platformFee(3333)).toBe(733);
+      expect(platformFee(3333))
+        .toBe(733);
     });
 
     it('AnalyticsService does not lose money in revenue calculations', () => {
@@ -396,7 +442,8 @@ describe('Analytics Retention – Frontend', () => {
       const amountsCents = [499, 1001, 3333];
       const totalCents = amountsCents.reduce((sum, a) => sum + a, 0);
       const totalDollars = totalCents / 100; // single division, not per-item
-      expect(totalDollars).toBeCloseTo(48.33);
+      expect(totalDollars)
+        .toBeCloseTo(48.33);
     });
   });
 
@@ -407,18 +454,22 @@ describe('Analytics Retention – Frontend', () => {
       const rows: CreatorMonthlyAnalytics[] = [];
       const totalGross = rows.reduce((sum, r) => sum + r.total_gross, 0);
       const totalNet = rows.reduce((sum, r) => sum + r.total_net, 0);
-      expect(totalGross).toBe(0);
-      expect(totalNet).toBe(0);
+      expect(totalGross)
+        .toBe(0);
+      expect(totalNet)
+        .toBe(0);
     });
 
     it('sortByMonthDesc on empty array returns empty array safely', () => {
       expect(() => sortByMonthDesc([])).not.toThrow();
-      expect(sortByMonthDesc([])).toEqual([]);
+      expect(sortByMonthDesc([]))
+        .toEqual([]);
     });
 
     it('netAfterRefunds returns 0 for a zero-value row', () => {
       const emptyRow = makeMonthlyAnalytics();
-      expect(netAfterRefunds(emptyRow)).toBe(0);
+      expect(netAfterRefunds(emptyRow))
+        .toBe(0);
     });
   });
 
@@ -429,8 +480,10 @@ describe('Analytics Retention – Frontend', () => {
       // The service only sees the live messages/bookings arrays it is given.
       // If those arrays are empty (messages deleted), it returns zeros.
       const result = analyticsService.calculateAnalytics([], []);
-      expect(result.totalRevenue).toBe(0);
-      expect(result.totalMessages).toBe(0);
+      expect(result.totalRevenue)
+        .toBe(0);
+      expect(result.totalMessages)
+        .toBe(0);
 
       // But the RETAINED analytics row still has the correct historical values.
       const retained = makeMonthlyAnalytics({
@@ -440,8 +493,10 @@ describe('Analytics Retention – Frontend', () => {
         total_net: 3900,
       });
       // The retained row is unaffected by what the service computes
-      expect(retained.message_count).toBe(5);
-      expect(retained.total_gross).toBe(5000);
+      expect(retained.message_count)
+        .toBe(5);
+      expect(retained.total_gross)
+        .toBe(5000);
     });
 
     it('mixing live service data with retained data would double-count — use one source per context', () => {
@@ -452,18 +507,21 @@ describe('Analytics Retention – Frontend', () => {
 
       // Correct: use retained row for historical monthly view
       const historicalDisplay = centsToDisplay(retainedGross);
-      expect(historicalDisplay).toBeCloseTo(100);
+      expect(historicalDisplay)
+        .toBeCloseTo(100);
 
       // WRONG would be: historicalDisplay + liveServiceRevenue = 200 (double count)
       // We just verify they are equal (same underlying data), not additive
-      expect(historicalDisplay).toBeCloseTo(liveServiceRevenue);
+      expect(historicalDisplay)
+        .toBeCloseTo(liveServiceRevenue);
     });
 
     it('retained analytics survives even when AnalyticsService receives empty arrays', () => {
       // Simulates: creator deleted all inbox messages → service sees []
       // But retained DB row still holds the correct monthly totals
       const serviceResult = analyticsService.calculateAnalytics([]);
-      expect(serviceResult.totalRevenue).toBe(0); // service knows nothing
+      expect(serviceResult.totalRevenue)
+        .toBe(0); // service knows nothing
 
       const retained = makeMonthlyAnalytics({
         message_count: 20,
@@ -471,8 +529,10 @@ describe('Analytics Retention – Frontend', () => {
         total_net: 15600,
       });
       // Retained data is unaffected
-      expect(retained.message_count).toBe(20);
-      expect(retained.total_gross).toBe(20000);
+      expect(retained.message_count)
+        .toBe(20);
+      expect(retained.total_gross)
+        .toBe(20000);
     });
   });
 
@@ -481,12 +541,18 @@ describe('Analytics Retention – Frontend', () => {
   describe('Support stream – migration 032 separate support analytics', () => {
     it('CreatorMonthlyAnalytics has all 6 support_* fields', () => {
       const row = makeMonthlyAnalytics();
-      expect('support_count' in row).toBeTrue();
-      expect('support_gross' in row).toBeTrue();
-      expect('support_platform_fee' in row).toBeTrue();
-      expect('support_net' in row).toBeTrue();
-      expect('support_refund_count' in row).toBeTrue();
-      expect('support_refund_amount' in row).toBeTrue();
+      expect('support_count' in row)
+        .toBeTrue();
+      expect('support_gross' in row)
+        .toBeTrue();
+      expect('support_platform_fee' in row)
+        .toBeTrue();
+      expect('support_net' in row)
+        .toBeTrue();
+      expect('support_refund_count' in row)
+        .toBeTrue();
+      expect('support_refund_amount' in row)
+        .toBeTrue();
     });
 
     it('support stream is independent of message stream', () => {
@@ -499,10 +565,14 @@ describe('Analytics Retention – Frontend', () => {
         support_net: 780,
       });
       // The two streams are separate buckets — changing one doesn't affect the other
-      expect(row.message_count).toBe(3);
-      expect(row.support_count).toBe(2);
-      expect(row.message_gross).toBe(3000);
-      expect(row.support_gross).toBe(1000);
+      expect(row.message_count)
+        .toBe(3);
+      expect(row.support_count)
+        .toBe(2);
+      expect(row.message_gross)
+        .toBe(3000);
+      expect(row.support_gross)
+        .toBe(1000);
     });
 
     it('total_gross includes support tips (all 4 streams roll up)', () => {
@@ -514,7 +584,8 @@ describe('Analytics Retention – Frontend', () => {
         total_gross: 12000,
       });
       const computed = row.message_gross + row.support_gross + row.call_gross + row.shop_gross;
-      expect(row.total_gross).toBe(computed);
+      expect(row.total_gross)
+        .toBe(computed);
     });
 
     it('support refund does not reduce message_refund_count', () => {
@@ -526,13 +597,16 @@ describe('Analytics Retention – Frontend', () => {
         total_refunds: 1500,
       });
       // Each stream tracks refunds independently
-      expect(row.message_refund_count).toBe(1);
-      expect(row.support_refund_count).toBe(2);
+      expect(row.message_refund_count)
+        .toBe(1);
+      expect(row.support_refund_count)
+        .toBe(2);
       // total_refunds is sum of all streams' refund amounts
       const expectedTotalRefunds =
         row.message_refund_amount + row.support_refund_amount +
         row.call_refund_amount + row.shop_refund_amount;
-      expect(row.total_refunds).toBe(expectedTotalRefunds);
+      expect(row.total_refunds)
+        .toBe(expectedTotalRefunds);
     });
 
     it('support gross and net satisfy the 22% fee formula', () => {
@@ -544,7 +618,8 @@ describe('Analytics Retention – Frontend', () => {
         support_platform_fee: feeCents,
         support_net: netCents,
       });
-      expect(row.support_platform_fee + row.support_net).toBe(row.support_gross);
+      expect(row.support_platform_fee + row.support_net)
+        .toBe(row.support_gross);
     });
 
     it('a month with only support tips shows zero message_count', () => {
@@ -556,14 +631,18 @@ describe('Analytics Retention – Frontend', () => {
         support_gross: 2500,
         total_gross: 2500,
       });
-      expect(row.message_count).toBe(0);
-      expect(row.support_count).toBe(5);
-      expect(row.total_gross).toBe(row.support_gross);
+      expect(row.message_count)
+        .toBe(0);
+      expect(row.support_count)
+        .toBe(5);
+      expect(row.total_gross)
+        .toBe(row.support_gross);
     });
 
     it('centsToDisplay works correctly for support tip amounts', () => {
       const row = makeMonthlyAnalytics({ support_gross: 2500 }); // $25 in tips
-      expect(centsToDisplay(row.support_gross)).toBeCloseTo(25);
+      expect(centsToDisplay(row.support_gross))
+        .toBeCloseTo(25);
     });
   });
 });

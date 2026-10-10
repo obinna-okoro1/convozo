@@ -32,19 +32,21 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/unbound-method */
+
+
 
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+
 import { SettingsStateService } from './settings-state.service';
-import { Creator, FlutterwaveSubaccount, FlutterwaveBank } from '../../../../core/models';
+import { Creator, FlutterwaveBank, FlutterwaveSubaccount } from '../../../../core/models';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { CreatorService } from '../../services/creator.service';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const NOW = new Date().toISOString();
+const NOW = new Date()
+  .toISOString();
 
 function makeCreator(overrides: Partial<Creator> = {}): Creator {
   return {
@@ -65,7 +67,7 @@ function makeCreator(overrides: Partial<Creator> = {}): Creator {
     profession_title: null,
     years_of_experience: null,
     linkedin_url: null,
-    profile_type: 'consultant' as 'consultant' | 'practitioner',
+    profile_type: 'consultant',
     created_at: NOW,
     updated_at: NOW,
     ...overrides,
@@ -154,7 +156,8 @@ describe('SettingsStateService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── isFlutterwaveCreator ──────────────────────────────────────────────────
@@ -162,25 +165,30 @@ describe('SettingsStateService', () => {
   describe('isFlutterwaveCreator computed', () => {
     it('returns true when payment_provider is "flutterwave"', () => {
       service.creator.set(makeCreator({ payment_provider: 'flutterwave' }));
-      expect(service.isFlutterwaveCreator()).toBe(true);
+      expect(service.isFlutterwaveCreator())
+        .toBe(true);
     });
 
     it('returns false when payment_provider is "stripe"', () => {
       service.creator.set(makeCreator({ payment_provider: 'stripe' }));
-      expect(service.isFlutterwaveCreator()).toBe(false);
+      expect(service.isFlutterwaveCreator())
+        .toBe(false);
     });
 
     it('returns false when creator signal is null (not yet loaded)', () => {
       service.creator.set(null);
-      expect(service.isFlutterwaveCreator()).toBe(false);
+      expect(service.isFlutterwaveCreator())
+        .toBe(false);
     });
 
     it('updates reactively when creator signal changes', () => {
       service.creator.set(makeCreator({ payment_provider: 'stripe' }));
-      expect(service.isFlutterwaveCreator()).toBe(false);
+      expect(service.isFlutterwaveCreator())
+        .toBe(false);
 
       service.creator.set(makeCreator({ payment_provider: 'flutterwave' }));
-      expect(service.isFlutterwaveCreator()).toBe(true);
+      expect(service.isFlutterwaveCreator())
+        .toBe(true);
     });
   });
 
@@ -189,25 +197,30 @@ describe('SettingsStateService', () => {
   describe('isFlutterwaveConnected computed', () => {
     it('returns true when flutterwaveSubaccount.is_active is true', () => {
       service.flutterwaveSubaccount.set(makeFlutterwaveSubaccount({ is_active: true }));
-      expect(service.isFlutterwaveConnected()).toBe(true);
+      expect(service.isFlutterwaveConnected())
+        .toBe(true);
     });
 
     it('returns false when flutterwaveSubaccount is null (not yet set up)', () => {
       service.flutterwaveSubaccount.set(null);
-      expect(service.isFlutterwaveConnected()).toBe(false);
+      expect(service.isFlutterwaveConnected())
+        .toBe(false);
     });
 
     it('returns false when flutterwaveSubaccount.is_active is false', () => {
       service.flutterwaveSubaccount.set(makeFlutterwaveSubaccount({ is_active: false }));
-      expect(service.isFlutterwaveConnected()).toBe(false);
+      expect(service.isFlutterwaveConnected())
+        .toBe(false);
     });
 
     it('updates reactively when flutterwaveSubaccount signal changes', () => {
       service.flutterwaveSubaccount.set(null);
-      expect(service.isFlutterwaveConnected()).toBe(false);
+      expect(service.isFlutterwaveConnected())
+        .toBe(false);
 
       service.flutterwaveSubaccount.set(makeFlutterwaveSubaccount({ is_active: true }));
-      expect(service.isFlutterwaveConnected()).toBe(true);
+      expect(service.isFlutterwaveConnected())
+        .toBe(true);
     });
   });
 
@@ -224,7 +237,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: { banks } as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
-      expect(service.flutterwaveBanks()).toEqual(banks);
+      expect(service.flutterwaveBanks())
+        .toEqual(banks);
     });
 
     it('sets flutterwaveBanks from a flat array response', async () => {
@@ -233,7 +247,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: banks as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
-      expect(service.flutterwaveBanks()).toEqual(banks);
+      expect(service.flutterwaveBanks())
+        .toEqual(banks);
     });
 
     it('sets flutterwaveBanksLoading to true while loading and false after', async () => {
@@ -251,8 +266,10 @@ describe('SettingsStateService', () => {
       await loadPromise;
       loadingStates.push(service.flutterwaveBanksLoading());
 
-      expect(loadingStates[0]).toBe(true);
-      expect(loadingStates[1]).toBe(false);
+      expect(loadingStates[0])
+        .toBe(true);
+      expect(loadingStates[1])
+        .toBe(false);
     });
 
     it('returns early without calling the edge function when creator has no country', async () => {
@@ -272,7 +289,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: undefined, error: { message: 'Service unavailable' } }),
       );
       await service.loadFlutterwaveBanks();
-      expect(service.error()).toBe('Failed to load bank list. Please try again.');
+      expect(service.error())
+        .toBe('Failed to load bank list. Please try again.');
     });
 
     it('always clears flutterwaveBanksLoading even when an error occurs', async () => {
@@ -280,7 +298,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: undefined, error: { message: 'error' } }),
       );
       await service.loadFlutterwaveBanks();
-      expect(service.flutterwaveBanksLoading()).toBe(false);
+      expect(service.flutterwaveBanksLoading())
+        .toBe(false);
     });
 
     it('calls the edge function with the creator country', async () => {
@@ -288,7 +307,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: { banks: [] } as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
-      expect(creatorServiceSpy.getFlutterwaveBanks).toHaveBeenCalledWith('NG');
+      expect(creatorServiceSpy.getFlutterwaveBanks)
+        .toHaveBeenCalledWith('NG');
     });
 
     it('uses ZA country when creator is in South Africa', async () => {
@@ -297,7 +317,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: { banks: [] } as any, error: undefined }),
       );
       await service.loadFlutterwaveBanks();
-      expect(creatorServiceSpy.getFlutterwaveBanks).toHaveBeenCalledWith('ZA');
+      expect(creatorServiceSpy.getFlutterwaveBanks)
+        .toHaveBeenCalledWith('ZA');
     });
   });
 
@@ -316,7 +337,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: subaccount as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
-      expect(service.flutterwaveSubaccount()).toEqual(subaccount as any);
+      expect(service.flutterwaveSubaccount())
+        .toEqual(subaccount as any);
     });
 
     it('sets success signal to true after connecting', async () => {
@@ -325,7 +347,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: subaccount as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
-      expect(service.success()).toBe(true);
+      expect(service.success())
+        .toBe(true);
     });
 
     it('clears flutterwaveConnecting after a successful connection', async () => {
@@ -333,7 +356,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: makeFlutterwaveSubaccount() as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
-      expect(service.flutterwaveConnecting()).toBe(false);
+      expect(service.flutterwaveConnecting())
+        .toBe(false);
     });
 
     it('sets error message when the edge function returns an error', async () => {
@@ -341,7 +365,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: undefined, error: { message: 'Invalid bank account' } }),
       );
       await service.connectFlutterwave(params);
-      expect(service.error()).toBe('Invalid bank account');
+      expect(service.error())
+        .toBe('Invalid bank account');
     });
 
     it('clears flutterwaveConnecting after a failed connection', async () => {
@@ -349,7 +374,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: undefined, error: { message: 'Failed' } }),
       );
       await service.connectFlutterwave(params);
-      expect(service.flutterwaveConnecting()).toBe(false);
+      expect(service.flutterwaveConnecting())
+        .toBe(false);
     });
 
     it('sets generic error message when error has no message', async () => {
@@ -357,7 +383,8 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: undefined, error: {} as any }),
       );
       await service.connectFlutterwave(params);
-      expect(service.error()).toBe('Failed to set up bank account');
+      expect(service.error())
+        .toBe('Failed to set up bank account');
     });
 
     it('sets generic error message when an exception is thrown', async () => {
@@ -365,8 +392,10 @@ describe('SettingsStateService', () => {
         Promise.reject(new Error('Network error')),
       );
       await service.connectFlutterwave(params);
-      expect(service.error()).toBe('An unexpected error occurred. Please try again.');
-      expect(service.flutterwaveConnecting()).toBe(false);
+      expect(service.error())
+        .toBe('An unexpected error occurred. Please try again.');
+      expect(service.flutterwaveConnecting())
+        .toBe(false);
     });
 
     it('returns early without calling edge function when creator is null', async () => {
@@ -380,12 +409,13 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: makeFlutterwaveSubaccount() as any, error: undefined }),
       );
       await service.connectFlutterwave(params);
-      expect(creatorServiceSpy.createFlutterwaveSubaccount).toHaveBeenCalledWith({
-        bankCode: '044',
-        accountNumber: '1234567890',
-        businessName: 'Test',
-        country: 'NG',
-      });
+      expect(creatorServiceSpy.createFlutterwaveSubaccount)
+        .toHaveBeenCalledWith({
+          bankCode: '044',
+          accountNumber: '1234567890',
+          businessName: 'Test',
+          country: 'NG',
+        });
     });
   });
 
@@ -397,8 +427,10 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: { account_name: 'ADEWALE OSEI' } as any, error: undefined }),
       );
       const result = await service.resolveFlutterwaveAccount('1234567890', '044');
-      expect(result.accountName).toBe('ADEWALE OSEI');
-      expect(result.error).toBeNull();
+      expect(result.accountName)
+        .toBe('ADEWALE OSEI');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error message when the edge function returns an error', async () => {
@@ -406,8 +438,10 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: undefined, error: { message: 'Not found' } }),
       );
       const result = await service.resolveFlutterwaveAccount('0000000000', '044');
-      expect(result.accountName).toBeNull();
-      expect(result.error).toBe('Could not verify account. Please check your account number and bank.');
+      expect(result.accountName)
+        .toBeNull();
+      expect(result.error)
+        .toBe('Could not verify account. Please check your account number and bank.');
     });
 
     it('returns generic error message when an exception is thrown', async () => {
@@ -415,8 +449,10 @@ describe('SettingsStateService', () => {
         Promise.reject(new Error('Network error')),
       );
       const result = await service.resolveFlutterwaveAccount('1234567890', '044');
-      expect(result.accountName).toBeNull();
-      expect(result.error).toBe('Account verification failed. Please try again.');
+      expect(result.accountName)
+        .toBeNull();
+      expect(result.error)
+        .toBe('Account verification failed. Please try again.');
     });
 
     it('returns null accountName when data has no account_name field', async () => {
@@ -424,8 +460,10 @@ describe('SettingsStateService', () => {
         Promise.resolve({ data: {} as any, error: undefined }),
       );
       const result = await service.resolveFlutterwaveAccount('1234567890', '044');
-      expect(result.accountName).toBeNull();
-      expect(result.error).toBeNull();
+      expect(result.accountName)
+        .toBeNull();
+      expect(result.error)
+        .toBeNull();
     });
   });
 
@@ -465,7 +503,8 @@ describe('SettingsStateService', () => {
 
       await service.loadCreatorData();
 
-      expect(creatorServiceSpy.getFlutterwaveSubaccount).toHaveBeenCalledWith(creator.id);
+      expect(creatorServiceSpy.getFlutterwaveSubaccount)
+        .toHaveBeenCalledWith(creator.id);
       // Stripe account should NOT be loaded for Flutterwave creators
       expect(creatorServiceSpy.getStripeAccount).not.toHaveBeenCalled();
     });
@@ -484,7 +523,8 @@ describe('SettingsStateService', () => {
 
       await service.loadCreatorData();
 
-      expect(service.flutterwaveSubaccount()).toEqual(subaccount);
+      expect(service.flutterwaveSubaccount())
+        .toEqual(subaccount);
     });
 
     it('does not call getFlutterwaveSubaccount for a stripe creator', async () => {
@@ -507,17 +547,20 @@ describe('SettingsStateService', () => {
     it('clears loading after loadCreatorData completes', async () => {
       creatorServiceSpy.getCurrentCreator.and.returnValue(Promise.resolve(null) as any);
       await service.loadCreatorData();
-      expect(service.loading()).toBe(false);
+      expect(service.loading())
+        .toBe(false);
     });
 
     it('sets loading to true during loadCreatorData', async () => {
       let wasLoading = false;
       creatorServiceSpy.getCurrentCreator.and.callFake(() => {
         wasLoading = service.loading();
+
         return Promise.resolve(null);
       });
       await service.loadCreatorData();
-      expect(wasLoading).toBe(true);
+      expect(wasLoading)
+        .toBe(true);
     });
   });
 });

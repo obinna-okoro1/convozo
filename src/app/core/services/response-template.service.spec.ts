@@ -5,10 +5,11 @@
  */
 
 import { TestBed } from '@angular/core/testing';
+
 import {
-  ResponseTemplateService,
-  ResponseTemplate,
   DEFAULT_TEMPLATES,
+  ResponseTemplate,
+  ResponseTemplateService,
 } from './response-template.service';
 
 describe('ResponseTemplateService', () => {
@@ -26,11 +27,13 @@ describe('ResponseTemplateService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   it('starts with no templates before initialization', () => {
-    expect(service.allTemplates().length).toBe(0);
+    expect(service.allTemplates().length)
+      .toBe(0);
   });
 
   // ── initializeTemplates() ──────────────────────────────────────────────────
@@ -38,23 +41,27 @@ describe('ResponseTemplateService', () => {
   describe('initializeTemplates()', () => {
     it('loads all default templates for a new creator', () => {
       service.initializeTemplates('creator-1', 'Alice');
-      expect(service.allTemplates().length).toBe(DEFAULT_TEMPLATES.length);
+      expect(service.allTemplates().length)
+        .toBe(DEFAULT_TEMPLATES.length);
     });
 
     it('sets the current creator id', () => {
       service.initializeTemplates('creator-42', 'Bob');
-      expect(service.currentCreatorId()).toBe('creator-42');
+      expect(service.currentCreatorId())
+        .toBe('creator-42');
     });
 
     it('sets the creator name when provided', () => {
       service.initializeTemplates('creator-1', 'Carol');
-      expect(service.currentCreatorName()).toBe('Carol');
+      expect(service.currentCreatorName())
+        .toBe('Carol');
     });
 
     it('is idempotent — calling twice does not duplicate templates', () => {
       service.initializeTemplates('creator-1');
       service.initializeTemplates('creator-1');
-      expect(service.allTemplates().length).toBe(DEFAULT_TEMPLATES.length);
+      expect(service.allTemplates().length)
+        .toBe(DEFAULT_TEMPLATES.length);
     });
   });
 
@@ -65,8 +72,10 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const favorites = service.favoriteTemplates();
       const expected = DEFAULT_TEMPLATES.filter((t) => t.is_favorite).length;
-      expect(favorites.length).toBe(expected);
-      expect(favorites.every((t) => t.is_favorite)).toBeTrue();
+      expect(favorites.length)
+        .toBe(expected);
+      expect(favorites.every((t) => t.is_favorite))
+        .toBeTrue();
     });
   });
 
@@ -77,15 +86,19 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const categories = service.categories();
       const distinctCategories = new Set(DEFAULT_TEMPLATES.map((t) => t.category));
-      expect(categories.length).toBe(distinctCategories.size);
+      expect(categories.length)
+        .toBe(distinctCategories.size);
     });
 
     it('provides a count that matches the number of templates in that category', () => {
       service.initializeTemplates('creator-1');
-      service.categories().forEach((cat) => {
-        const count = service.allTemplates().filter((t) => t.category === cat.name).length;
-        expect(cat.count).toBe(count);
-      });
+      service.categories()
+        .forEach((cat) => {
+          const count = service.allTemplates()
+            .filter((t) => t.category === cat.name).length;
+          expect(cat.count)
+            .toBe(count);
+        });
     });
   });
 
@@ -102,7 +115,8 @@ describe('ResponseTemplateService', () => {
         category: 'Other',
         is_favorite: false,
       });
-      expect(service.allTemplates().length).toBe(before + 1);
+      expect(service.allTemplates().length)
+        .toBe(before + 1);
     });
 
     it('returns the newly created template with a unique id', () => {
@@ -114,8 +128,10 @@ describe('ResponseTemplateService', () => {
         category: 'General',
         is_favorite: false,
       });
-      expect(t.id).toBeTruthy();
-      expect(t.usage_count).toBe(0);
+      expect(t.id)
+        .toBeTruthy();
+      expect(t.usage_count)
+        .toBe(0);
     });
   });
 
@@ -126,14 +142,17 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const id = service.allTemplates()[0].id;
       service.updateTemplate(id, { title: 'Updated Title' });
-      const updated = service.allTemplates().find((t) => t.id === id);
-      expect(updated?.title).toBe('Updated Title');
+      const updated = service.allTemplates()
+        .find((t) => t.id === id);
+      expect(updated?.title)
+        .toBe('Updated Title');
     });
 
     it('returns null for a non-existent id', () => {
       service.initializeTemplates('creator-1');
       const result = service.updateTemplate('nonexistent-id', { title: 'X' });
-      expect(result).toBeNull();
+      expect(result)
+        .toBeNull();
     });
   });
 
@@ -145,15 +164,20 @@ describe('ResponseTemplateService', () => {
       const id = service.allTemplates()[0].id;
       const before = service.allTemplates().length;
       const result = service.deleteTemplate(id);
-      expect(result).toBeTrue();
-      expect(service.allTemplates().length).toBe(before - 1);
-      expect(service.allTemplates().find((t) => t.id === id)).toBeUndefined();
+      expect(result)
+        .toBeTrue();
+      expect(service.allTemplates().length)
+        .toBe(before - 1);
+      expect(service.allTemplates()
+        .find((t) => t.id === id))
+        .toBeUndefined();
     });
 
     it('returns false when the id does not exist', () => {
       service.initializeTemplates('creator-1');
       const result = service.deleteTemplate('ghost-id');
-      expect(result).toBeFalse();
+      expect(result)
+        .toBeFalse();
     });
   });
 
@@ -164,20 +188,27 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const favId = service.favoriteTemplates()[0].id;
       service.toggleFavorite(favId);
-      const toggled = service.allTemplates().find((t) => t.id === favId);
-      expect(toggled?.is_favorite).toBeFalse();
+      const toggled = service.allTemplates()
+        .find((t) => t.id === favId);
+      expect(toggled?.is_favorite)
+        .toBeFalse();
     });
 
     it('flips a non-favorite template to favorite', () => {
       service.initializeTemplates('creator-1');
-      const nonFav = service.allTemplates().find((t) => !t.is_favorite);
+      const nonFav = service.allTemplates()
+        .find((t) => !t.is_favorite);
+
       if (!nonFav) {
         pending('No non-favorite templates to test');
+
         return;
       }
       service.toggleFavorite(nonFav.id);
-      const toggled = service.allTemplates().find((t) => t.id === nonFav.id);
-      expect(toggled?.is_favorite).toBeTrue();
+      const toggled = service.allTemplates()
+        .find((t) => t.id === nonFav.id);
+      expect(toggled?.is_favorite)
+        .toBeTrue();
     });
   });
 
@@ -189,8 +220,10 @@ describe('ResponseTemplateService', () => {
       const id = service.allTemplates()[0].id;
       const before = service.allTemplates()[0].usage_count;
       service.incrementUsage(id);
-      const after = service.allTemplates().find((t) => t.id === id)?.usage_count;
-      expect(after).toBe(before + 1);
+      const after = service.allTemplates()
+        .find((t) => t.id === id)?.usage_count;
+      expect(after)
+        .toBe(before + 1);
     });
   });
 
@@ -200,25 +233,32 @@ describe('ResponseTemplateService', () => {
     it('returns all templates when query is empty string', () => {
       service.initializeTemplates('creator-1');
       const results = service.searchTemplates('');
-      expect(results.length).toBe(service.allTemplates().length);
+      expect(results.length)
+        .toBe(service.allTemplates().length);
     });
 
     it('matches by title (case-insensitive)', () => {
       service.initializeTemplates('creator-1');
       const results = service.searchTemplates('thank you');
-      expect(results.length).toBeGreaterThan(0);
+      expect(results.length)
+        .toBeGreaterThan(0);
       results.forEach((t) => {
-        const matchesTitle = t.title.toLowerCase().includes('thank you');
-        const matchesContent = t.content.toLowerCase().includes('thank you');
-        const matchesCategory = t.category.toLowerCase().includes('thank you');
-        expect(matchesTitle || matchesContent || matchesCategory).toBeTrue();
+        const matchesTitle = t.title.toLowerCase()
+          .includes('thank you');
+        const matchesContent = t.content.toLowerCase()
+          .includes('thank you');
+        const matchesCategory = t.category.toLowerCase()
+          .includes('thank you');
+        expect(matchesTitle || matchesContent || matchesCategory)
+          .toBeTrue();
       });
     });
 
     it('returns empty array for a query with no matches', () => {
       service.initializeTemplates('creator-1');
       const results = service.searchTemplates('xyzzy-no-match');
-      expect(results).toEqual([]);
+      expect(results)
+        .toEqual([]);
     });
   });
 
@@ -229,7 +269,8 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const category = 'Business';
       const results = service.getTemplatesByCategory(category);
-      expect(results.every((t) => t.category === category)).toBeTrue();
+      expect(results.every((t) => t.category === category))
+        .toBeTrue();
     });
   });
 
@@ -245,8 +286,10 @@ describe('ResponseTemplateService', () => {
       });
       expect(result).not.toContain('{sender_name}');
       expect(result).not.toContain('{creator_name}');
-      expect(result).toContain('Fan Maria');
-      expect(result).toContain('Creator Joe');
+      expect(result)
+        .toContain('Fan Maria');
+      expect(result)
+        .toContain('Creator Joe');
     });
 
     it('increments usage count after applying', () => {
@@ -254,8 +297,10 @@ describe('ResponseTemplateService', () => {
       const template = service.allTemplates()[0];
       const before = template.usage_count;
       service.applyTemplate(template, {});
-      const after = service.allTemplates().find((t) => t.id === template.id)?.usage_count;
-      expect(after).toBe(before + 1);
+      const after = service.allTemplates()
+        .find((t) => t.id === template.id)?.usage_count;
+      expect(after)
+        .toBe(before + 1);
     });
   });
 
@@ -270,8 +315,10 @@ describe('ResponseTemplateService', () => {
       service.incrementUsage(templates[0].id);
 
       const top = service.getMostUsedTemplates(2);
-      expect(top.length).toBe(2);
-      expect(top[0].usage_count).toBeGreaterThanOrEqual(top[1].usage_count);
+      expect(top.length)
+        .toBe(2);
+      expect(top[0].usage_count)
+        .toBeGreaterThanOrEqual(top[1].usage_count);
     });
   });
 
@@ -282,7 +329,8 @@ describe('ResponseTemplateService', () => {
       service.initializeTemplates('creator-1');
       const exported = service.exportTemplates();
       const parsed: ResponseTemplate[] = JSON.parse(exported);
-      expect(parsed.length).toBe(service.allTemplates().length);
+      expect(parsed.length)
+        .toBe(service.allTemplates().length);
     });
 
     it('importTemplates() adds templates to the existing list', () => {
@@ -298,14 +346,17 @@ describe('ResponseTemplateService', () => {
         },
       ]);
       const count = service.importTemplates(json, 'creator-1');
-      expect(count).toBe(1);
-      expect(service.allTemplates().length).toBe(before + 1);
+      expect(count)
+        .toBe(1);
+      expect(service.allTemplates().length)
+        .toBe(before + 1);
     });
 
     it('importTemplates() returns 0 for malformed JSON', () => {
       service.initializeTemplates('creator-1');
       const count = service.importTemplates('not-valid-json', 'creator-1');
-      expect(count).toBe(0);
+      expect(count)
+        .toBe(0);
     });
   });
 });

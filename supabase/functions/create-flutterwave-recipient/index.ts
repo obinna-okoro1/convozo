@@ -42,6 +42,7 @@ import { jsonOk, jsonError, requireAuth } from '../_shared/http.ts';
 import { supabase } from '../_shared/supabase.ts';
 import {
   isFlutterwaveCountry,
+  supportsAccountNameResolution,
   createFlutterwaveSubaccount,
   resolveFlutterwaveAccountName,
 } from '../_shared/flutterwave.ts';
@@ -82,12 +83,16 @@ Deno.serve(async (req) => {
     }
 
     if (!isFlutterwaveCountry(country)) {
-      return jsonError('Flutterwave is only available for NG and ZA creators', 403, corsHeaders);
+      return jsonError('Flutterwave payouts are not available in your country', 403, corsHeaders);
     }
 
-    // If the creator only wants to resolve the account name (validation step in the UI),
-    // return the resolved name without creating the subaccount.
+    // Account name resolution via NIBSS is only supported for Nigeria.
+    // All other Flutterwave countries skip this step — the UI should not call
+    // resolve_only for non-NG creators.
     if (resolve_only) {
+      if (!supportsAccountNameResolution(country)) {
+        return jsonOk({ account_name: null }, corsHeaders);
+      }
       const accountName = await resolveFlutterwaveAccountName(account_number, bank_code);
       return jsonOk({ account_name: accountName }, corsHeaders);
     }
@@ -135,9 +140,9 @@ Deno.serve(async (req) => {
       creatorShareDecimal,
     });
 
-    // Resolve account name for display (best-effort — Flutterwave may already return it)
+    // Resolve account name for display — NG only (NIBSS). Other countries skip this.
     let accountName: string | null = result.accountName ?? null;
-    if (!accountName) {
+    if (!accountName && supportsAccountNameResolution(country)) {
       try {
         accountName = await resolveFlutterwaveAccountName(account_number, bank_code);
       } catch {

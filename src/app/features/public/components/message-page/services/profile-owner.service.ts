@@ -12,25 +12,25 @@
  * Errors: All async methods catch internally and surface via ToastService.
  */
 
-import { computed, Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import {
-  CreatorProfile,
-  CreatorSettings,
-  Message,
   CallBooking,
   CreatorMonthlyAnalytics,
-  StripeAccount,
+  CreatorProfile,
+  CreatorSettings,
   FlutterwaveSubaccount,
-} from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
-import { AuthService } from '@features/auth/services/auth.service';
-import { CreatorService } from '@features/creator/services/creator.service';
-import { MessageService } from '@features/creator/services/message.service';
-import { BookingService } from '@features/creator/services/booking.service';
-import { EdgeFunctionService } from '@core/services/edge-function.service';
-import { ToastService } from '@shared/services/toast.service';
-import { errorMessage } from '@shared/utils/error.utils';
+  Message,
+  StripeAccount,
+} from 'app/core/models';
+import { EdgeFunctionService } from 'app/core/services/edge-function.service';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { AuthService } from 'app/features/auth/services/auth.service';
+import { BookingService } from 'app/features/creator/services/booking.service';
+import { CreatorService } from 'app/features/creator/services/creator.service';
+import { MessageService } from 'app/features/creator/services/message.service';
+import { ToastService } from 'app/shared/services/toast.service';
+import { errorMessage } from 'app/shared/utils/error.utils';
 
 @Injectable()
 export class ProfileOwnerService {
@@ -50,19 +50,26 @@ export class ProfileOwnerService {
   readonly flutterwaveSubaccount = signal<FlutterwaveSubaccount | null>(null);
 
   // ── Computed ───────────────────────────────────────────────────────
-  readonly unreadCount = computed(() => this.messages().filter((m) => !m.is_handled).length);
+  readonly unreadCount = computed(() => this.messages()
+    .filter((m) => !m.is_handled).length);
+
   readonly confirmedBookingCount = computed(
-    () => this.callBookings().filter((b) => b.status === 'confirmed').length,
+    () => this.callBookings()
+      .filter((b) => b.status === 'confirmed').length,
   );
+
   readonly callsEnabled = computed(() => this.settings()?.calls_enabled ?? false);
   readonly isStripeConnected = computed(() => {
     const account = this.stripeAccount();
+
     return !!(account?.onboarding_completed && account?.charges_enabled);
   });
+
   readonly isPaymentReady = computed(() => {
     if (this.paymentProvider() === 'flutterwave') {
       return !!(this.flutterwaveSubaccount()?.is_active);
     }
+
     return this.isStripeConnected();
   });
 
@@ -72,7 +79,9 @@ export class ProfileOwnerService {
   readonly deleting = signal(false);
   readonly itemToDeleteName = computed(() => {
     const item = this.messageToDelete();
-    if (!item) return '';
+
+    if (!item) {return '';}
+
     return 'message_content' in item ? item.sender_name : item.booker_name;
   });
 
@@ -91,8 +100,10 @@ export class ProfileOwnerService {
 
   async initialize(creator: CreatorProfile): Promise<void> {
     const user = this.auth.getCurrentUser();
+
     if (!user) {
       this.isOwnerLoading.set(false);
+
       return;
     }
 
@@ -112,8 +123,10 @@ export class ProfileOwnerService {
 
   async markAsHandled(message: Message): Promise<void> {
     const { error } = await this.messageService.markAsHandled(message.id);
+
     if (error) {
       this.toast.error('Failed to mark as handled');
+
       return;
     }
     this.messages.update((msgs) =>
@@ -123,8 +136,10 @@ export class ProfileOwnerService {
 
   async markBookingCompleted(booking: CallBooking): Promise<void> {
     const { error } = await this.bookingService.updateBookingStatus(booking.id, 'completed');
+
     if (error) {
       this.toast.error('Failed to update booking');
+
       return;
     }
     this.callBookings.update((bks) =>
@@ -135,8 +150,10 @@ export class ProfileOwnerService {
 
   async cancelBooking(booking: CallBooking): Promise<void> {
     const { error } = await this.bookingService.updateBookingStatus(booking.id, 'cancelled');
+
     if (error) {
       this.toast.error('Failed to cancel booking');
+
       return;
     }
     this.callBookings.update((bks) =>
@@ -173,11 +190,13 @@ export class ProfileOwnerService {
 
   async deleteItem(): Promise<void> {
     const item = this.messageToDelete();
-    if (!item) return;
+
+    if (!item) {return;}
 
     this.deleting.set(true);
     try {
       const isMessage = 'message_content' in item;
+
       if (isMessage) {
         await this.messageService.deleteMessage(item.id);
         this.messages.update((msgs) => msgs.filter((m) => m.id !== item.id));
@@ -214,10 +233,13 @@ export class ProfileOwnerService {
       this.supabase.getMonthlyAnalytics(creator.id),
     ]);
 
-    if (messagesRes.data) this.messages.set(messagesRes.data);
-    if (bookingsRes.data) this.callBookings.set(bookingsRes.data);
-    if (stripeRes.data) this.stripeAccount.set(stripeRes.data);
-    if (analyticsRes.data) this.monthlyAnalytics.set(analyticsRes.data);
+    if (messagesRes.data) {this.messages.set(messagesRes.data);}
+
+    if (bookingsRes.data) {this.callBookings.set(bookingsRes.data);}
+
+    if (stripeRes.data) {this.stripeAccount.set(stripeRes.data);}
+
+    if (analyticsRes.data) {this.monthlyAnalytics.set(analyticsRes.data);}
 
     if (creator.payment_provider === 'flutterwave') {
       const { data: flw } = await this.creatorService.getFlutterwaveSubaccount(creator.id);

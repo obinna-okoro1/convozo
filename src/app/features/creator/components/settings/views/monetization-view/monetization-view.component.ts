@@ -9,7 +9,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AvailabilityManagerComponent } from '@features/creator/components/availability-manager/availability-manager.component';
+import { AvailabilityManagerComponent } from 'app/features/creator/components/availability-manager/availability-manager.component';
+
 import { SettingsStateService } from '../../settings-state.service';
 
 @Component({
@@ -29,7 +30,8 @@ export class MonetizationViewComponent {
 
   /** Allow saving when either monetization settings or the availability schedule has unsaved changes */
   protected readonly canSave = computed(
-    () => this.state.canSaveMonetization() || (this.availabilityManager()?.hasChanges() ?? false),
+    () => this.state.canSaveMonetization() || (this.availabilityManager()
+      ?.hasChanges() ?? false),
   );
 
   constructor(protected readonly state: SettingsStateService) {}
@@ -41,7 +43,8 @@ export class MonetizationViewComponent {
   protected async saveAll(): Promise<void> {
     await Promise.all([
       this.state.saveMonetization(),
-      this.availabilityManager()?.save() ?? Promise.resolve(),
+      this.availabilityManager()
+        ?.save() ?? Promise.resolve(),
     ]);
   }
 }

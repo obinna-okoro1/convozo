@@ -6,11 +6,12 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnInit, input, signal } from '@angular/core';
-import { CreatorLink } from '@core/models';
-import { ToastService } from '@shared/services/toast.service';
-import { LinkService } from '../../services/link.service';
+import { CreatorLink } from 'app/core/models';
+import { ToastService } from 'app/shared/services/toast.service';
+
 import { LinkFormModalComponent } from '../../components/link-form-modal/link-form-modal.component';
-import { getBrandByKey, BrandInfo } from '../../utils/brand-detection';
+import { LinkService } from '../../services/link.service';
+import { BrandInfo, getBrandByKey } from '../../utils/brand-detection';
 
 @Component({
   selector: 'app-edit-links',
@@ -74,6 +75,7 @@ export class EditLinksComponent implements OnInit {
   protected async executeDelete(link: CreatorLink): Promise<void> {
     this.deletePendingId.set(null);
     const { error } = await this.linkService.deleteLink(link.id);
+
     if (error) {
       this.toast.error('Failed to delete link');
     } else {
@@ -86,6 +88,7 @@ export class EditLinksComponent implements OnInit {
     const { error } = await this.linkService.updateLink(link.id, {
       is_active: !link.is_active,
     });
+
     if (error) {
       this.toast.error('Failed to update link');
     } else {
@@ -101,6 +104,7 @@ export class EditLinksComponent implements OnInit {
   protected async moveLink(index: number, direction: -1 | 1): Promise<void> {
     const current = [...this.links()];
     const targetIndex = index + direction;
+
     if (targetIndex < 0 || targetIndex >= current.length) {
       return;
     }
@@ -130,11 +134,13 @@ export class EditLinksComponent implements OnInit {
     if (!link.icon) {
       return null;
     }
+
     if (this.brandCache.has(link.icon)) {
       return this.brandCache.get(link.icon)!;
     }
     const brand = getBrandByKey(link.icon);
     this.brandCache.set(link.icon, brand);
+
     return brand;
   }
 

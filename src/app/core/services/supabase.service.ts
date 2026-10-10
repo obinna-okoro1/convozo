@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient, User, PostgrestError } from '@supabase/supabase-js';
+import { environment } from 'environments/environment';
+import { PostgrestError, SupabaseClient, User, createClient } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { environment } from '@env/environment';
+
 import {
   Creator,
+  CreatorMonthlyAnalytics,
   CreatorSettings,
   Message,
-  StripeAccount,
-  CreatorMonthlyAnalytics,
   ShopItem,
   ShopOrder,
+  StripeAccount,
 } from '../models';
 
 interface SupabaseResponse<T> {
@@ -63,6 +64,7 @@ export class SupabaseService {
     if (!this.sessionInitialized && this.sessionInitPromise) {
       await this.sessionInitPromise;
     }
+
     return this.currentUserSubject.value;
   }
 
@@ -73,11 +75,13 @@ export class SupabaseService {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+
     return { data, error };
   }
 
   public async signOut(): Promise<{ data: null; error: Error | null }> {
     const { error } = await this.client.auth.signOut();
+
     return { data: null, error };
   }
 
@@ -93,6 +97,7 @@ export class SupabaseService {
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
+
     return { data: data as Creator | null, error };
   }
 
@@ -103,11 +108,16 @@ export class SupabaseService {
       .eq('slug', slug)
       .eq('is_active', true)
       .maybeSingle();
+
     return { data: data as Creator | null, error };
   }
 
   public async createCreator(creator: Partial<Creator>): Promise<SupabaseResponse<Creator>> {
-    const { data, error } = await this.client.from('creators').insert(creator).select().single();
+    const { data, error } = await this.client.from('creators')
+      .insert(creator)
+      .select()
+      .single();
+
     return { data: data as Creator | null, error };
   }
 
@@ -121,6 +131,7 @@ export class SupabaseService {
       .eq('id', id)
       .select()
       .single();
+
     return { data: data as Creator | null, error };
   }
 
@@ -132,6 +143,7 @@ export class SupabaseService {
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
+
     return { data: data as CreatorSettings | null, error };
   }
 
@@ -143,6 +155,7 @@ export class SupabaseService {
       .insert(settings)
       .select()
       .single();
+
     return { data: data as CreatorSettings | null, error };
   }
 
@@ -156,6 +169,7 @@ export class SupabaseService {
       .eq('id', id)
       .select()
       .single();
+
     return { data: data as CreatorSettings | null, error };
   }
 
@@ -167,6 +181,7 @@ export class SupabaseService {
       .select('*')
       .eq('creator_id', creatorId)
       .maybeSingle();
+
     return { data: data as StripeAccount | null, error };
   }
 
@@ -178,6 +193,7 @@ export class SupabaseService {
       .select('*')
       .eq('creator_id', creatorId)
       .order('created_at', { ascending: false });
+
     return { data: data as Message[] | null, error };
   }
 
@@ -191,6 +207,7 @@ export class SupabaseService {
       .eq('id', id)
       .select()
       .single();
+
     return { data: data as Message | null, error };
   }
 
@@ -203,6 +220,7 @@ export class SupabaseService {
       .eq('creator_id', creatorId)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
+
     return { data: data as ShopItem[] | null, error };
   }
 
@@ -214,6 +232,7 @@ export class SupabaseService {
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
+
     return { data: data as ShopItem[] | null, error };
   }
 
@@ -225,6 +244,7 @@ export class SupabaseService {
       .insert(item)
       .select()
       .single();
+
     return { data: data as ShopItem | null, error };
   }
 
@@ -238,6 +258,7 @@ export class SupabaseService {
       .eq('id', id)
       .select()
       .single();
+
     return { data: data as ShopItem | null, error };
   }
 
@@ -246,6 +267,7 @@ export class SupabaseService {
       .from('shop_items')
       .delete()
       .eq('id', id);
+
     return { error };
   }
 
@@ -255,6 +277,7 @@ export class SupabaseService {
       .select('*')
       .eq('creator_id', creatorId)
       .order('created_at', { ascending: false });
+
     return { data: data as ShopOrder[] | null, error };
   }
 
@@ -272,6 +295,7 @@ export class SupabaseService {
       .select('*')
       .eq('creator_id', creatorId)
       .order('month', { ascending: false });
+
     return { data: data as CreatorMonthlyAnalytics[] | null, error };
   }
 
@@ -284,9 +308,11 @@ export class SupabaseService {
     payload: import('../models').CheckoutSessionPayload,
   ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
+
     // Dynamic import — not ideal but preserves backward compat without circular deps
     // TODO: migrate all callers to EdgeFunctionService directly
-    return new EdgeFunctionService(this).createCheckoutSession(payload);
+    return new EdgeFunctionService(this)
+      .createCheckoutSession(payload);
   }
 
   /** @deprecated Use EdgeFunctionService.createCallBookingSession() */
@@ -294,7 +320,9 @@ export class SupabaseService {
     payload: import('../models').CallBookingPayload,
   ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
-    return new EdgeFunctionService(this).createCallBookingSession(payload);
+
+    return new EdgeFunctionService(this)
+      .createCallBookingSession(payload);
   }
 
   /** @deprecated Use EdgeFunctionService.sendReplyEmail() */
@@ -303,7 +331,9 @@ export class SupabaseService {
     replyContent: string,
   ): Promise<import('../models').EdgeFunctionResponse<void>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
-    return new EdgeFunctionService(this).sendReplyEmail(messageId, replyContent);
+
+    return new EdgeFunctionService(this)
+      .sendReplyEmail(messageId, replyContent);
   }
 
   /** @deprecated Use EdgeFunctionService.createConnectAccount() */
@@ -313,7 +343,9 @@ export class SupabaseService {
     displayName: string,
   ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeConnectResponse>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
-    return new EdgeFunctionService(this).createConnectAccount(creatorId, email, displayName);
+
+    return new EdgeFunctionService(this)
+      .createConnectAccount(creatorId, email, displayName);
   }
 
   /** @deprecated Use EdgeFunctionService.verifyConnectAccount() */
@@ -321,7 +353,9 @@ export class SupabaseService {
     accountId: string,
   ): Promise<import('../models').EdgeFunctionResponse<import('../models').StripeAccountStatus>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
-    return new EdgeFunctionService(this).verifyConnectAccount(accountId);
+
+    return new EdgeFunctionService(this)
+      .verifyConnectAccount(accountId);
   }
 
   /** @deprecated Use EdgeFunctionService.getShopDownloadUrl() */
@@ -329,7 +363,9 @@ export class SupabaseService {
     sessionId: string,
   ): Promise<import('../models').EdgeFunctionResponse<{ url: string; filename: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
-    return new EdgeFunctionService(this).getShopDownloadUrl(sessionId);
+
+    return new EdgeFunctionService(this)
+      .getShopDownloadUrl(sessionId);
   }
 
   /** @deprecated Use EdgeFunctionService.createShopCheckout() */
@@ -337,7 +373,9 @@ export class SupabaseService {
     payload: import('../models').ShopCheckoutPayload,
   ): Promise<import('../models').EdgeFunctionResponse<{ sessionId: string; url: string }>> {
     const { EdgeFunctionService } = await import('./edge-function.service');
-    return new EdgeFunctionService(this).createShopCheckout(payload);
+
+    return new EdgeFunctionService(this)
+      .createShopCheckout(payload);
   }
 
   // ── Storage (backward-compat — prefer StorageService) ──────────────
@@ -349,13 +387,17 @@ export class SupabaseService {
     file: File,
   ): Promise<{ data: { path: string; publicUrl: string } | null; error: Error | null }> {
     const { StorageService } = await import('./storage.service');
-    return new StorageService(this).uploadPublicFile(bucket, path, file);
+
+    return new StorageService(this)
+      .uploadPublicFile(bucket, path, file);
   }
 
   /** @deprecated Use StorageService.deleteFile() */
   public async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
     const { StorageService } = await import('./storage.service');
-    return new StorageService(this).deleteFile(bucket, path);
+
+    return new StorageService(this)
+      .deleteFile(bucket, path);
   }
 
   /** @deprecated Use StorageService.uploadShopFile() */
@@ -364,7 +406,9 @@ export class SupabaseService {
     file: File,
   ): Promise<{ path: string | null; error: Error | null }> {
     const { StorageService } = await import('./storage.service');
-    return new StorageService(this).uploadShopFile(creatorId, file);
+
+    return new StorageService(this)
+      .uploadShopFile(creatorId, file);
   }
 
   /** @deprecated Use StorageService.uploadShopThumbnail() */
@@ -373,16 +417,19 @@ export class SupabaseService {
     file: File,
   ): Promise<{ path: string | null; publicUrl: string | null; error: Error | null }> {
     const { StorageService } = await import('./storage.service');
-    return new StorageService(this).uploadShopThumbnail(creatorId, file);
+
+    return new StorageService(this)
+      .uploadShopThumbnail(creatorId, file);
   }
 
   // ── Private ────────────────────────────────────────────────────────
 
   private initializeAuthState(): void {
-    this.sessionInitPromise = this.client.auth.getSession().then(({ data: { session } }) => {
-      this.currentUserSubject.next(session?.user ?? null);
-      this.sessionInitialized = true;
-    });
+    this.sessionInitPromise = this.client.auth.getSession()
+      .then(({ data: { session } }) => {
+        this.currentUserSubject.next(session?.user ?? null);
+        this.sessionInitialized = true;
+      });
 
     this.client.auth.onAuthStateChange((_event, session) => {
       this.currentUserSubject.next(session?.user ?? null);

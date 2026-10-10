@@ -5,8 +5,8 @@
  * payout status (for creators), and a navigation button.
  */
 
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { CompleteCallResponse } from '@core/models';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { CompleteCallResponse } from 'app/core/models';
 
 @Component({
   selector: 'app-video-completed-overlay',
@@ -88,7 +88,9 @@ export class VideoCompletedOverlayComponent {
   formatDuration(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    if (mins === 0) return `${secs}s`;
+
+    if (mins === 0) {return `${secs}s`;}
+
     return `${mins}m ${secs}s`;
   }
 }

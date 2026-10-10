@@ -8,6 +8,7 @@
  */
 
 import { Injectable } from '@angular/core';
+
 import { SupabaseService } from './supabase.service';
 
 interface UploadResult {
@@ -34,7 +35,7 @@ export class StorageService {
         .from(bucket)
         .upload(path, file, { cacheControl: '3600', upsert: true });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       const { data: { publicUrl } } = this.supabase.client.storage
         .from(bucket)
@@ -53,7 +54,9 @@ export class StorageService {
    * Delete a file from a bucket.
    */
   async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
-    const { error } = await this.supabase.client.storage.from(bucket).remove([path]);
+    const { error } = await this.supabase.client.storage.from(bucket)
+      .remove([path]);
+
     return { error };
   }
 
@@ -74,7 +77,8 @@ export class StorageService {
         .from('shop-files')
         .upload(storagePath, file, { upsert: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
+
       return { path: data.path, error: null };
     } catch (error) {
       return { path: null, error: error instanceof Error ? error : new Error('Upload failed') };
@@ -97,7 +101,7 @@ export class StorageService {
         .from('shop-thumbnails')
         .upload(storagePath, file, { upsert: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       const { data: { publicUrl } } = this.supabase.client.storage
         .from('shop-thumbnails')
@@ -117,6 +121,7 @@ export class StorageService {
    * Strip non-safe characters from a filename and limit to 80 chars.
    */
   private sanitizeFilename(name: string): string {
-    return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
+    return name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      .slice(0, 80);
   }
 }

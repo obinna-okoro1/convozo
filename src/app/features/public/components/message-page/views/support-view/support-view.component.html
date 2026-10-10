@@ -4,20 +4,24 @@
       <!-- Amount Presets -->
       <div>
         <label class="form-label flex items-center gap-1.5">
-          Amount <span class="text-system-red">*</span>
+          Amount
+          <span class="text-system-red">*</span>
         </label>
         <div class="flex flex-wrap gap-2 mb-4">
           @for (amount of presetAmounts; track amount) {
             <button
               type="button"
               (click)="selectAmount(amount)"
-              [class]="amountDollars === amount
-                ? 'px-5 py-2.5 rounded-xl font-semibold text-white transition-all duration-200'
-                : 'px-5 py-2.5 rounded-xl font-semibold text-content-secondary transition-all duration-200 hover:text-content'"
-              [style]="amountDollars === amount
-                ? 'background:linear-gradient(135deg,#7c3aed 0%,#ec4899 100%)'
-                : 'background:rgba(255,255,255,0.55);backdrop-filter:blur(0.75rem);-webkit-backdrop-filter:blur(0.75rem);border:1px solid rgba(255,255,255,0.48)'"
-            >
+              [class]="
+                amountDollars === amount
+                  ? 'px-5 py-2.5 rounded-xl font-semibold text-white transition-all duration-200'
+                  : 'px-5 py-2.5 rounded-xl font-semibold text-content-secondary transition-all duration-200 hover:text-content'
+              "
+              [style]="
+                amountDollars === amount
+                  ? 'background:linear-gradient(135deg,#7c3aed 0%,#ec4899 100%)'
+                  : 'background:rgba(255,255,255,0.55);backdrop-filter:blur(0.75rem);-webkit-backdrop-filter:blur(0.75rem);border:1px solid rgba(255,255,255,0.48)'
+              ">
               ${{ amount }}
             </button>
           }
@@ -32,8 +36,7 @@
             step="1"
             required
             placeholder="Custom amount"
-            class="input flex-1"
-          />
+            class="input flex-1" />
         </div>
         <p class="form-hint">Minimum $1.00 USD</p>
       </div>
@@ -41,33 +44,38 @@
       <!-- Sender Info -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="form-label">Your Name <span class="text-system-red">*</span></label>
+          <label class="form-label">
+            Your Name
+            <span class="text-system-red">*</span>
+          </label>
           <input
             type="text"
             [(ngModel)]="senderName"
             name="senderName"
             placeholder="Enter your name"
             class="input"
-            required
-          />
+            required />
         </div>
         <div>
-          <label class="form-label">Your Email <span class="text-system-red">*</span></label>
+          <label class="form-label">
+            Your Email
+            <span class="text-system-red">*</span>
+          </label>
           <input
             type="email"
             [(ngModel)]="senderEmail"
             name="senderEmail"
             placeholder="you&#64;example.com"
             class="input"
-            required
-          />
+            required />
         </div>
       </div>
 
       <!-- Note -->
       <div>
         <label class="form-label">
-          Leave a Note <span class="text-content-tertiary text-xs font-normal">(optional)</span>
+          Leave a Note
+          <span class="text-content-tertiary text-xs font-normal">(optional)</span>
         </label>
         <textarea
           [(ngModel)]="messageContent"
@@ -75,33 +83,37 @@
           placeholder="Add a personal note..."
           rows="4"
           maxlength="500"
-          class="input resize-none"
-        ></textarea>
+          class="input resize-none"></textarea>
       </div>
 
       <!-- Submit -->
       <button
         type="submit"
         [disabled]="state.submitting() || !senderName || !senderEmail || amountDollars < 1"
-        class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2"
-      >
+        class="btn-glass-primary btn-lg w-full flex items-center justify-center gap-2">
         @if (state.submitting()) {
           <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           Processing…
         } @else {
           <span>Send Support — ${{ amountDollars }}</span>
         }
       </button>
-
     </form>
   </div>
 } @else {
   <div class="card-glass p-8 text-center">
     <svg class="w-10 h-10 text-content-tertiary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
     </svg>
     <p class="text-content-tertiary text-sm">Tips are not available for this professional</p>
   </div>

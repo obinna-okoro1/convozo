@@ -6,9 +6,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { AvailabilityService } from './availability.service';
 import { AvailabilitySlot } from '../../../core/models';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -23,8 +24,10 @@ function makeSlot(overrides: Partial<AvailabilitySlot> = {}): AvailabilitySlot {
     start_time: '09:00',
     end_time: '17:00',
     is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: new Date()
+      .toISOString(),
+    updated_at: new Date()
+      .toISOString(),
     ...overrides,
   };
 }
@@ -66,7 +69,8 @@ describe('AvailabilityService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── getAvailabilitySlots ──────────────────────────────────────────────────
@@ -85,16 +89,21 @@ describe('AvailabilityService', () => {
       chain.eq.and.returnValue(chain);
       chain.order.and.callFake(() => {
         orderCallCount++;
-        if (orderCallCount === 1) return chain;
+
+        if (orderCallCount === 1) {return chain;}
+
         return Promise.resolve({ data: slots, error: null });
       });
       mockClient.from.and.returnValue(chain);
 
       const result = await service.getAvailabilitySlots('creator-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('availability_slots');
-      expect(result.data).toEqual(slots);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('availability_slots');
+      expect(result.data)
+        .toEqual(slots);
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when query fails', async () => {
@@ -109,14 +118,17 @@ describe('AvailabilityService', () => {
       chain.eq.and.returnValue(chain);
       chain.order.and.callFake(() => {
         orderCallCount++;
-        if (orderCallCount === 1) return chain;
+
+        if (orderCallCount === 1) {return chain;}
+
         return Promise.resolve({ data: null, error: dbError });
       });
       mockClient.from.and.returnValue(chain);
 
       const result = await service.getAvailabilitySlots('creator-1');
 
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
       expect(result.error).not.toBeNull();
     });
 
@@ -131,17 +143,23 @@ describe('AvailabilityService', () => {
       let orderCallCount = 0;
       chain.order.and.callFake((...args: unknown[]) => {
         orderCallCount++;
+
         if (orderCallCount === 1) {
-          expect(args[0]).toBe('day_of_week');
+          expect(args[0])
+            .toBe('day_of_week');
+
           return chain;
         }
-        expect(args[0]).toBe('start_time');
+        expect(args[0])
+          .toBe('start_time');
+
         return Promise.resolve({ data: [], error: null });
       });
       mockClient.from.and.returnValue(chain);
 
       await service.getAvailabilitySlots('creator-1');
-      expect(orderCallCount).toBe(2);
+      expect(orderCallCount)
+        .toBe(2);
     });
   });
 
@@ -162,14 +180,17 @@ describe('AvailabilityService', () => {
 
       mockClient.from.and.callFake(() => {
         callIndex++;
+
         return callIndex === 1 ? deleteChain : insertChain;
       });
 
       const slots = [makeSlotPayload()];
       const result = await service.saveAvailabilitySlots('creator-1', slots);
 
-      expect(result.success).toBeTrue();
-      expect(result.error).toBeUndefined();
+      expect(result.success)
+        .toBeTrue();
+      expect(result.error)
+        .toBeUndefined();
     });
 
     it('calls delete before insert (full replace pattern)', async () => {
@@ -177,6 +198,7 @@ describe('AvailabilityService', () => {
       const deleteChain: any = {
         delete: jasmine.createSpy('delete').and.callFake(() => {
           callOrder.push('delete');
+
           return deleteChain;
         }),
         eq: jasmine.createSpy('eq').and.returnValue(Promise.resolve({ error: null })),
@@ -184,6 +206,7 @@ describe('AvailabilityService', () => {
       const insertChain: any = {
         insert: jasmine.createSpy('insert').and.callFake(() => {
           callOrder.push('insert');
+
           return Promise.resolve({ error: null });
         }),
       };
@@ -191,13 +214,16 @@ describe('AvailabilityService', () => {
       let callIndex = 0;
       mockClient.from.and.callFake(() => {
         callIndex++;
+
         return callIndex === 1 ? deleteChain : insertChain;
       });
 
       await service.saveAvailabilitySlots('creator-1', [makeSlotPayload()]);
 
-      expect(callOrder[0]).toBe('delete');
-      expect(callOrder[1]).toBe('insert');
+      expect(callOrder[0])
+        .toBe('delete');
+      expect(callOrder[1])
+        .toBe('insert');
     });
 
     it('skips insert when slots array is empty', async () => {
@@ -211,8 +237,10 @@ describe('AvailabilityService', () => {
       const result = await service.saveAvailabilitySlots('creator-1', []);
 
       // from() called only once (for delete), not twice
-      expect(mockClient.from).toHaveBeenCalledTimes(1);
-      expect(result.success).toBeTrue();
+      expect(mockClient.from)
+        .toHaveBeenCalledTimes(1);
+      expect(result.success)
+        .toBeTrue();
     });
 
     it('returns failure when delete fails', async () => {
@@ -226,8 +254,10 @@ describe('AvailabilityService', () => {
 
       const result = await service.saveAvailabilitySlots('creator-1', [makeSlotPayload()]);
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toBeTruthy();
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toBeTruthy();
     });
 
     it('returns failure when insert fails', async () => {
@@ -246,13 +276,16 @@ describe('AvailabilityService', () => {
 
       mockClient.from.and.callFake(() => {
         callIndex++;
+
         return callIndex === 1 ? deleteChain : insertChain;
       });
 
       const result = await service.saveAvailabilitySlots('creator-1', [makeSlotPayload()]);
 
-      expect(result.success).toBeFalse();
-      expect(result.error).toContain('Insert failed');
+      expect(result.success)
+        .toBeFalse();
+      expect(result.error)
+        .toContain('Insert failed');
     });
   });
 
@@ -275,10 +308,14 @@ describe('AvailabilityService', () => {
       const payload = makeSlotPayload();
       const result = await service.addAvailabilitySlot(payload);
 
-      expect(mockClient.from).toHaveBeenCalledWith('availability_slots');
-      expect(chain.insert).toHaveBeenCalledWith(payload);
-      expect(result.data).toEqual(newSlot);
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('availability_slots');
+      expect(chain.insert)
+        .toHaveBeenCalledWith(payload);
+      expect(result.data)
+        .toEqual(newSlot);
+      expect(result.error)
+        .toBeNull();
     });
   });
 
@@ -295,9 +332,12 @@ describe('AvailabilityService', () => {
 
       const result = await service.deleteAvailabilitySlot('slot-1');
 
-      expect(mockClient.from).toHaveBeenCalledWith('availability_slots');
-      expect(chain.eq).toHaveBeenCalledWith('id', 'slot-1');
-      expect(result.error).toBeNull();
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('availability_slots');
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'slot-1');
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns error when delete fails', async () => {
@@ -335,9 +375,12 @@ describe('AvailabilityService', () => {
 
       const result = await service.toggleAvailabilitySlot('slot-1', true);
 
-      expect(chain.update).toHaveBeenCalledWith({ is_active: true });
-      expect(chain.eq).toHaveBeenCalledWith('id', 'slot-1');
-      expect(result.data).toEqual(updatedSlot);
+      expect(chain.update)
+        .toHaveBeenCalledWith({ is_active: true });
+      expect(chain.eq)
+        .toHaveBeenCalledWith('id', 'slot-1');
+      expect(result.data)
+        .toEqual(updatedSlot);
     });
 
     it('updates is_active to false', async () => {
@@ -357,8 +400,10 @@ describe('AvailabilityService', () => {
 
       const result = await service.toggleAvailabilitySlot('slot-1', false);
 
-      expect(chain.update).toHaveBeenCalledWith({ is_active: false });
-      expect(result.data).toEqual(updatedSlot);
+      expect(chain.update)
+        .toHaveBeenCalledWith({ is_active: false });
+      expect(result.data)
+        .toEqual(updatedSlot);
     });
   });
 });

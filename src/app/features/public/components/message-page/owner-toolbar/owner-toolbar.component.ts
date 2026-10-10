@@ -15,12 +15,13 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { Subscription, filter } from 'rxjs';
+import { AnalyticsDashboardComponent } from 'app/features/creator/components/analytics-dashboard/analytics-dashboard.component';
+import { BookingsPanelComponent } from 'app/features/creator/components/dashboard/bookings-panel/bookings-panel.component';
+import { DeleteConfirmModalComponent } from 'app/features/creator/components/dashboard/delete-confirm-modal/delete-confirm-modal.component';
+import { InboxPanelComponent } from 'app/features/creator/components/dashboard/inbox-panel/inbox-panel.component';
+import { filter } from 'rxjs';
+
 import { OwnerSettingsPanelComponent } from './owner-settings-panel.component';
-import { AnalyticsDashboardComponent } from '@features/creator/components/analytics-dashboard/analytics-dashboard.component';
-import { BookingsPanelComponent } from '@features/creator/components/dashboard/bookings-panel/bookings-panel.component';
-import { DeleteConfirmModalComponent } from '@features/creator/components/dashboard/delete-confirm-modal/delete-confirm-modal.component';
-import { InboxPanelComponent } from '@features/creator/components/dashboard/inbox-panel/inbox-panel.component';
 import { ProfileOwnerService } from '../services/profile-owner.service';
 
 type ActivePanel = 'inbox' | 'bookings' | 'analytics' | 'settings' | null;
@@ -44,13 +45,12 @@ export class OwnerToolbarComponent {
   protected readonly activePanel = signal<ActivePanel>(null);
 
   private readonly router = inject(Router);
-  /** Stored to satisfy rxjs/no-ignored-subscription; takeUntilDestroyed() cleans it up. */
-  private readonly _navSub: Subscription;
 
   constructor() {
     // Derive the active panel from the current URL for all four panels.
     const syncFromUrl = (): void => {
       const url = this.router.url;
+
       if (/\/inbox(\?|\/|$)/.test(url)) {
         this.activePanel.set('inbox');
       } else if (/\/bookings(\?|\/|$)/.test(url)) {
@@ -68,8 +68,7 @@ export class OwnerToolbarComponent {
     syncFromUrl();
 
     // Keep the signal in sync on every subsequent navigation.
-    // Stored to satisfy rxjs/no-ignored-subscription; takeUntilDestroyed() cleans it up.
-    this._navSub = this.router.events
+    this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
@@ -88,8 +87,10 @@ export class OwnerToolbarComponent {
   protected openPanel(panel: ActivePanel): void {
     this.activePanel.set(panel);
     this.mobileMenuOpen.set(false);
+
     if (panel !== null) {
       const slug = this.ownerState.creatorSlug();
+
       if (slug) {
         void this.router.navigate([`/${slug}/${panel}`]);
       }
@@ -121,12 +122,14 @@ export class OwnerToolbarComponent {
    */
   protected tabClass(panel: ActivePanel, relative = false): string {
     const rel = relative ? 'relative ' : '';
+
     if (this.activePanel() === panel) {
       return (
         rel +
         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 bg-accent/10 text-accent'
       );
     }
+
     return (
       rel +
       'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 text-content-secondary hover:bg-accent/10 hover:text-content'
@@ -138,6 +141,7 @@ export class OwnerToolbarComponent {
     if (this.activePanel() === 'settings') {
       return 'sm:hidden inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150 bg-accent/10 text-accent';
     }
+
     return 'sm:hidden inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150 text-content-secondary hover:bg-accent/10 hover:text-content';
   }
 

@@ -9,7 +9,8 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ERROR_MESSAGES } from '@core/constants';
+import { ERROR_MESSAGES } from 'app/core/constants';
+
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -37,10 +38,12 @@ export class ForgotPasswordComponent {
   }
 
   protected async handleSubmit(): Promise<void> {
-    const emailValue = this.email().trim();
+    const emailValue = this.email()
+      .trim();
 
     if (!emailValue) {
       this.error.set(ERROR_MESSAGES.AUTH.EMAIL_REQUIRED);
+
       return;
     }
 

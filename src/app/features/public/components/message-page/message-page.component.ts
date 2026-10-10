@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
+
 import { MessagePageStateService } from './message-page-state.service';
 import { CreatorProfileHeaderComponent } from '../creator-profile-header/creator-profile-header.component';
 import { OwnerToolbarComponent } from './owner-toolbar/owner-toolbar.component';
@@ -44,14 +45,17 @@ export class MessagePageComponent implements OnInit {
 
   protected readonly activePanelRoute = computed((): PublicPanel | null => {
     const url = this.currentUrl();
-    const segments = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
+    const segments = url.split('?')[0].split('#')[0].split('/')
+      .filter(Boolean);
     const seg = segments[segments.length - 1] ?? '';
     // Don't treat a /settings/<tab> sub-route as a public panel — those are
     // owner settings tabs handled by OwnerToolbarComponent, not public drawers.
     const parent = segments[segments.length - 2] ?? '';
+
     if (parent === 'settings') {
       return null;
     }
+
     return PUBLIC_PANELS.includes(seg as PublicPanel) ? (seg as PublicPanel) : null;
   });
 
@@ -64,14 +68,17 @@ export class MessagePageComponent implements OnInit {
       posts: 'Posts',
     };
     const panel = this.activePanelRoute();
+
     return panel ? titles[panel] : '';
   });
 
   protected readonly panelSubtitle = computed((): string => {
     const panel = this.activePanelRoute();
+
     if (panel === 'call') {
       const mins = this.state.callDuration();
       const name = this.state.creator()?.display_name ?? '';
+
       return `${String(mins)}-minute private session with ${name}`;
     }
     const subtitles: Record<PublicPanel, string> = {
@@ -81,6 +88,7 @@ export class MessagePageComponent implements OnInit {
       support: 'Select an amount to show your support',
       posts: 'Latest updates and insights',
     };
+
     return panel ? subtitles[panel] : '';
   });
 
@@ -90,17 +98,21 @@ export class MessagePageComponent implements OnInit {
    */
   protected readonly secondaryActions = computed((): SecondaryAction[] => {
     const actions: SecondaryAction[] = [];
+
     // Message only appears in the bar when calls are the primary inline form
     if (this.state.messagesEnabled() && this.state.callsEnabled()) {
       actions.push({ route: 'message', label: 'Message', icon: 'message' });
     }
+
     if (this.state.tipsEnabled()) {
       actions.push({ route: 'support', label: 'Support', icon: 'support' });
     }
+
     if (this.state.shopEnabled()) {
       actions.push({ route: 'shop', label: 'Products', icon: 'shop' });
     }
     actions.push({ route: 'posts', label: 'Posts', icon: 'posts' });
+
     return actions;
   });
 
@@ -118,20 +130,24 @@ export class MessagePageComponent implements OnInit {
 
   public ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
+
     if (!slug) {
       this.state.error.set('Invalid URL');
       this.state.loading.set(false);
+
       return;
     }
 
     // Handle legacy ?tab= query parameter by redirecting to child route
     const tab = this.route.snapshot.queryParamMap.get('tab');
+
     if (tab) {
       const routeMap: Record<string, string> = {
         message: 'message',
         call: 'call',
       };
       const childRoute = routeMap[tab];
+
       if (childRoute) {
         void this.router.navigate([childRoute], {
           relativeTo: this.route,
@@ -141,12 +157,14 @@ export class MessagePageComponent implements OnInit {
       }
     }
 
-    void this.state.initialize(slug).then(() => {
-      const creator = this.state.creator();
-      if (creator) {
-        void this.ownerState.initialize(creator);
-      }
-    });
+    void this.state.initialize(slug)
+      .then(() => {
+        const creator = this.state.creator();
+
+        if (creator) {
+          void this.ownerState.initialize(creator);
+        }
+      });
   }
 
   protected closePanelRoute(): void {

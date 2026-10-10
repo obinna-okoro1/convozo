@@ -4,9 +4,9 @@
  */
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, OnInit, signal } from '@angular/core';
-import { Message, CallBooking, CreatorMonthlyAnalytics } from '@core/models';
-import { AnalyticsService, AnalyticsData } from '@core/services/analytics.service';
+import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
+import { CallBooking, CreatorMonthlyAnalytics, Message } from 'app/core/models';
+import { AnalyticsData, AnalyticsService } from 'app/core/services/analytics.service';
 
 @Component({
   selector: 'app-analytics-dashboard',
@@ -23,10 +23,10 @@ import { AnalyticsService, AnalyticsData } from '@core/services/analytics.servic
   ],
 })
 export class AnalyticsDashboardComponent implements OnInit {
-  public messages = input<Message[]>([]);
-  public callBookings = input<CallBooking[]>([]);
+  public readonly messages = input<Message[]>([]);
+  public readonly callBookings = input<CallBooking[]>([]);
   /** Retained monthly analytics from the DB — immune to message/booking deletions. */
-  public monthlyAnalytics = input<CreatorMonthlyAnalytics[]>([]);
+  public readonly monthlyAnalytics = input<CreatorMonthlyAnalytics[]>([]);
 
   /**
    * Selected filter: 'all' or a 'YYYY-MM' month key (e.g. '2026-03').
@@ -38,28 +38,35 @@ export class AnalyticsDashboardComponent implements OnInit {
   protected readonly monthOptions = computed<{ value: string; label: string }[]>(() => {
     const opts: { value: string; label: string }[] = [{ value: 'all', label: 'All time' }];
     const now = new Date();
+
     for (let i = 0; i < 6; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const value = `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const value = `${String(d.getFullYear())}-${String(d.getMonth() + 1)
+        .padStart(2, '0')}`;
       const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       opts.push({ value, label });
     }
+
     return opts;
   });
 
   /** Human-readable label for the currently selected period. */
   protected readonly selectedLabel = computed<string>(
-    () => this.monthOptions().find((o) => o.value === this.selectedFilter())?.label ?? 'All time',
+    () => this.monthOptions()
+      .find((o) => o.value === this.selectedFilter())?.label ?? 'All time',
   );
 
   /** Retained DB row for the selected month, or null when 'All time' is selected. */
   protected readonly selectedMonthRow = computed<CreatorMonthlyAnalytics | null>(() => {
     const filter = this.selectedFilter();
+
     if (filter === 'all') {
       return null;
     }
+
     // DB stores month as first-of-month date string: 'YYYY-MM-01'
-    return this.monthlyAnalytics().find((r) => r.month === `${filter}-01`) ?? null;
+    return this.monthlyAnalytics()
+      .find((r) => r.month === `${filter}-01`) ?? null;
   });
 
   protected readonly analytics = signal<AnalyticsData>({
@@ -82,27 +89,31 @@ export class AnalyticsDashboardComponent implements OnInit {
   // ── Refund aggregates — scoped to the selected month (or all months for 'all') ───
   protected readonly refundRows = computed<CreatorMonthlyAnalytics[]>(() => {
     const filter = this.selectedFilter();
+
     if (filter === 'all') {
       return this.monthlyAnalytics();
     }
     const row = this.selectedMonthRow();
+
     return row !== null ? [row] : [];
   });
 
   protected readonly totalRefundsAmount = computed<number>(
-    () => this.refundRows().reduce((sum, r) => sum + r.total_refunds, 0) / 100,
+    () => this.refundRows()
+      .reduce((sum, r) => sum + r.total_refunds, 0) / 100,
   );
 
   protected readonly totalRefundCount = computed<number>(() =>
-    this.refundRows().reduce(
-      (sum, r) =>
-        sum +
+    this.refundRows()
+      .reduce(
+        (sum, r) =>
+          sum +
         r.message_refund_count +
         r.support_refund_count +
         r.call_refund_count +
         r.shop_refund_count,
-      0,
-    ),
+        0,
+      ),
   );
 
   protected readonly hasRefunds = computed<boolean>(() => this.totalRefundsAmount() > 0);
@@ -110,23 +121,31 @@ export class AnalyticsDashboardComponent implements OnInit {
   protected readonly refundBreakdown = computed(() => [
     {
       label: 'Messages',
-      count: this.refundRows().reduce((s, r) => s + r.message_refund_count, 0),
-      amount: this.refundRows().reduce((s, r) => s + r.message_refund_amount, 0) / 100,
+      count: this.refundRows()
+        .reduce((s, r) => s + r.message_refund_count, 0),
+      amount: this.refundRows()
+        .reduce((s, r) => s + r.message_refund_amount, 0) / 100,
     },
     {
       label: 'Donations',
-      count: this.refundRows().reduce((s, r) => s + r.support_refund_count, 0),
-      amount: this.refundRows().reduce((s, r) => s + r.support_refund_amount, 0) / 100,
+      count: this.refundRows()
+        .reduce((s, r) => s + r.support_refund_count, 0),
+      amount: this.refundRows()
+        .reduce((s, r) => s + r.support_refund_amount, 0) / 100,
     },
     {
       label: 'Sessions',
-      count: this.refundRows().reduce((s, r) => s + r.call_refund_count, 0),
-      amount: this.refundRows().reduce((s, r) => s + r.call_refund_amount, 0) / 100,
+      count: this.refundRows()
+        .reduce((s, r) => s + r.call_refund_count, 0),
+      amount: this.refundRows()
+        .reduce((s, r) => s + r.call_refund_amount, 0) / 100,
     },
     {
       label: 'Shop',
-      count: this.refundRows().reduce((s, r) => s + r.shop_refund_count, 0),
-      amount: this.refundRows().reduce((s, r) => s + r.shop_refund_amount, 0) / 100,
+      count: this.refundRows()
+        .reduce((s, r) => s + r.shop_refund_count, 0),
+      amount: this.refundRows()
+        .reduce((s, r) => s + r.shop_refund_amount, 0) / 100,
     },
   ]);
 
@@ -138,18 +157,22 @@ export class AnalyticsDashboardComponent implements OnInit {
    */
   protected readonly retainedRevenue = computed<number | null>(() => {
     const rows = this.refundRows();
+
     if (rows.length === 0) {
       return null;
     }
+
     return rows.reduce((sum, r) => sum + r.total_gross, 0) / 100;
   });
 
   /** Creator net revenue (after 22% platform fee) from retained DB rows. */
   protected readonly retainedNetRevenue = computed<number | null>(() => {
     const rows = this.refundRows();
+
     if (rows.length === 0) {
       return null;
     }
+
     return rows.reduce((sum, r) => sum + r.total_net, 0) / 100;
   });
 
@@ -161,6 +184,7 @@ export class AnalyticsDashboardComponent implements OnInit {
     { type: string; count: number; revenue: number }[] | null
   >(() => {
     const rows = this.refundRows();
+
     if (rows.length === 0) {
       return null;
     }
@@ -184,6 +208,7 @@ export class AnalyticsDashboardComponent implements OnInit {
       count: rows.reduce((s, r) => s + r.shop_order_count, 0),
       revenue: rows.reduce((s, r) => s + r.shop_gross, 0) / 100,
     };
+
     // Only include streams that have activity
     return [msgs, donations, calls, shop].filter((s) => s.count > 0);
   });
@@ -200,18 +225,23 @@ export class AnalyticsDashboardComponent implements OnInit {
   } | null>(() => {
     const filter = this.selectedFilter();
     const allRows = this.monthlyAnalytics();
+
     if (allRows.length < 2 || filter === 'all') {
       return null;
     }
     const currentRow = this.selectedMonthRow();
+
     if (!currentRow) {
       return null;
     }
     // Find the row for the preceding calendar month
-    const [cy, cm] = currentRow.month.split('-').map(Number);
+    const [cy, cm] = currentRow.month.split('-')
+      .map(Number);
     const prevDate = new Date(cy, cm - 2, 1); // month is 1-based, subtract 2 for prev
-    const prevKey = `${String(prevDate.getFullYear())}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-01`;
+    const prevKey = `${String(prevDate.getFullYear())}-${String(prevDate.getMonth() + 1)
+      .padStart(2, '0')}-01`;
     const prevRow = allRows.find((r) => r.month === prevKey);
+
     if (!prevRow) {
       return null;
     }
@@ -223,6 +253,7 @@ export class AnalyticsDashboardComponent implements OnInit {
     const currCount =
       currentRow.message_count + currentRow.call_count + currentRow.shop_order_count;
     const messageGrowth = prevCount === 0 ? 0 : ((currCount - prevCount) / prevCount) * 100;
+
     return { revenueGrowth, messageGrowth };
   });
 
@@ -235,10 +266,12 @@ export class AnalyticsDashboardComponent implements OnInit {
   /** Bar width for the type breakdown — computed from retained rows only. */
   protected getRetainedTypePercentage(count: number): number {
     const breakdown = this.retainedTypeBreakdown();
+
     if (!breakdown) {
       return 0;
     }
     const total = breakdown.reduce((s, t) => s + t.count, 0);
+
     return total > 0 ? (count / total) * 100 : 0;
   }
 
@@ -257,6 +290,7 @@ export class AnalyticsDashboardComponent implements OnInit {
 
   protected getBarHeight(revenue: number): number {
     const maxRevenue = Math.max(...this.analytics().dailyStats.map((d) => d.revenue), 1);
+
     return Math.max((revenue / maxRevenue) * 100, 2);
   }
 
@@ -265,15 +299,19 @@ export class AnalyticsDashboardComponent implements OnInit {
     const monthDates = this.getMonthDateRange(filter);
 
     const messages = monthDates
-      ? this.messages().filter((m) => {
+      ? this.messages()
+        .filter((m) => {
           const d = new Date(m.created_at);
+
           return d >= monthDates.start && d < monthDates.end;
         })
       : this.messages();
 
     const bookings = monthDates
-      ? this.callBookings().filter((b) => {
+      ? this.callBookings()
+        .filter((b) => {
           const d = new Date(b.created_at);
+
           return d >= monthDates.start && d < monthDates.end;
         })
       : this.callBookings();
@@ -294,7 +332,9 @@ export class AnalyticsDashboardComponent implements OnInit {
     if (filter === 'all') {
       return null;
     }
-    const [y, m] = filter.split('-').map(Number);
+    const [y, m] = filter.split('-')
+      .map(Number);
+
     return { start: new Date(y, m - 1, 1), end: new Date(y, m, 1) };
   }
 }

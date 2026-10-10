@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
+import { CallBooking, SupabaseResponse } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { CallBooking, SupabaseResponse } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -36,6 +36,7 @@ export class BookingService {
         () => {
           void (async () => {
             const { data } = await this.getCallBookings(creatorId);
+
             if (data) {
               onchange(data);
             }
@@ -60,7 +61,7 @@ export class BookingService {
       .select()
       .single();
 
-    return { data: data as CallBooking | null, error };
+    return { data: data, error };
   }
 
   public async deleteCallBooking(bookingId: string): Promise<SupabaseResponse<void>> {

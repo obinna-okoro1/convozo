@@ -9,5 +9,6 @@ import { RouterLink } from '@angular/router';
 })
 export class PrivacyPolicyComponent {
   protected readonly lastUpdated = 'July 11, 2025';
-  protected readonly currentYear = new Date().getFullYear();
+  protected readonly currentYear = new Date()
+    .getFullYear();
 }

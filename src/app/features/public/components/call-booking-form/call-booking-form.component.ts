@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { APP_CONSTANTS } from '@core/constants';
-import { AvailabilitySlot, DayOfWeek } from '@core/models';
+import { APP_CONSTANTS } from 'app/core/constants';
+import { AvailabilitySlot, DayOfWeek } from 'app/core/models';
 
 export interface CallBookingFormData {
   senderName: string;
@@ -65,7 +65,9 @@ export class CallBookingFormComponent {
 
   protected readonly selectedDate = signal<string>('');
   protected selectedIso = '';
-  protected readonly timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  protected readonly timezone = Intl.DateTimeFormat()
+    .resolvedOptions().timeZone;
+
   // declared before computed signals that reference it
   private readonly _today = new Date();
   protected readonly calendarYear = signal<number>(this._today.getFullYear());
@@ -77,6 +79,7 @@ export class CallBookingFormComponent {
       const abbr = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
         .formatToParts(new Date())
         .find((p) => p.type === 'timeZoneName')?.value ?? '';
+
       return `${tz.replace(/_/g, ' ')} (${abbr})`;
     } catch {
       return tz.replace(/_/g, ' ');
@@ -92,11 +95,13 @@ export class CallBookingFormComponent {
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
     ];
+
     return `${MONTH_NAMES[this.calendarMonth()]} ${String(this.calendarYear())}`;
   });
 
   protected readonly canGoPrev = computed<boolean>(() => {
     const today = this._today;
+
     return (
       this.calendarYear() > today.getFullYear() ||
       (this.calendarYear() === today.getFullYear() && this.calendarMonth() > today.getMonth())
@@ -118,11 +123,18 @@ export class CallBookingFormComponent {
 
     // Build map: dayOfWeek → [{startMin, endMin}]
     const availMap = new Map<number, { startMin: number; endMin: number }[]>();
+
     for (const slot of availability) {
-      const [sh, sm] = slot.start_time.substring(0, 5).split(':').map(Number) as [number, number];
-      const [eh, em] = slot.end_time.substring(0, 5).split(':').map(Number) as [number, number];
+      const [sh, sm] = slot.start_time.substring(0, 5)
+        .split(':')
+        .map(Number) as [number, number];
+      const [eh, em] = slot.end_time.substring(0, 5)
+        .split(':')
+        .map(Number) as [number, number];
+
       if (!availMap.has(slot.day_of_week)) { availMap.set(slot.day_of_week, []); }
-      availMap.get(slot.day_of_week)?.push({ startMin: sh * 60 + sm, endMin: eh * 60 + em });
+      availMap.get(slot.day_of_week)
+        ?.push({ startMin: sh * 60 + sm, endMin: eh * 60 + em });
     }
 
     for (let offset = 1; offset <= 60; offset++) {
@@ -132,22 +144,29 @@ export class CallBookingFormComponent {
 
       const dow = date.getDay() as DayOfWeek;
       const windows = availMap.get(dow);
+
       if (!windows) { continue; }
 
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1)
+        .padStart(2, '0');
+      const day = String(date.getDate())
+        .padStart(2, '0');
       const key = `${String(year)}-${month}-${day}`;
       const label = `${DAY_NAMES[dow]}, ${MONTHS[date.getMonth()]} ${String(date.getDate())}`;
 
       const times: { iso: string; label: string }[] = [];
+
       for (const { startMin, endMin } of windows) {
         const step = duration + this.bufferMinutes();
+
         for (let s = startMin; s + duration <= endMin; s += step) {
           const slotDate = new Date(date);
           slotDate.setHours(Math.floor(s / 60), s % 60, 0, 0);
           const iso = slotDate.toISOString();
+
           if (slotDate <= now) { continue; }
+
           // Skip slots that are already taken by another confirmed booking
           if (bookedSet.has(iso)) { continue; }
           times.push({
@@ -175,7 +194,8 @@ export class CallBookingFormComponent {
 
     const firstDay = new Date(year, month, 1);
     const startDow = firstDay.getDay(); // 0 = Sun
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInMonth = new Date(year, month + 1, 0)
+      .getDate();
 
     const cells: CalendarCell[] = [];
 
@@ -187,8 +207,10 @@ export class CallBookingFormComponent {
     // Day cells
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
-      const dayMonth = String(month + 1).padStart(2, '0');
-      const dayStr = String(d).padStart(2, '0');
+      const dayMonth = String(month + 1)
+        .padStart(2, '0');
+      const dayStr = String(d)
+        .padStart(2, '0');
       const key = `${String(year)}-${dayMonth}-${dayStr}`;
 
       const isToday =
@@ -214,16 +236,23 @@ export class CallBookingFormComponent {
 
   protected readonly timesForSelectedDay = computed<{ iso: string; label: string }[]>(() => {
     const key = this.selectedDate();
+
     if (!key) { return []; }
-    return this.slotMap().get(key)?.times ?? [];
+
+    return this.slotMap()
+      .get(key)?.times ?? [];
   });
 
   protected readonly selectedSlotLabel = computed<string | null>(() => {
     const key = this.selectedDate();
+
     if (!key || !this.selectedIso) { return null; }
-    const group = this.slotMap().get(key);
+    const group = this.slotMap()
+      .get(key);
+
     if (!group) { return null; }
     const time = group.times.find((s) => s.iso === this.selectedIso);
+
     return time ? `${group.label} · ${time.label}` : null;
   });
 
@@ -233,6 +262,7 @@ export class CallBookingFormComponent {
     if (!this.canGoPrev()) { return; }
     let m = this.calendarMonth() - 1;
     let y = this.calendarYear();
+
     if (m < 0) { m = 11; y -= 1; }
     this.calendarMonth.set(m);
     this.calendarYear.set(y);
@@ -241,6 +271,7 @@ export class CallBookingFormComponent {
   protected nextMonth(): void {
     let m = this.calendarMonth() + 1;
     let y = this.calendarYear();
+
     if (m > 11) { m = 0; y += 1; }
     this.calendarMonth.set(m);
     this.calendarYear.set(y);
@@ -272,7 +303,9 @@ export class CallBookingFormComponent {
     const m = totalMins % 60;
     const period = h >= 12 ? 'PM' : 'AM';
     const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${String(displayH)}:${m.toString().padStart(2, '0')} ${period}`;
+
+    return `${String(displayH)}:${m.toString()
+      .padStart(2, '0')} ${period}`;
   }
 }
 

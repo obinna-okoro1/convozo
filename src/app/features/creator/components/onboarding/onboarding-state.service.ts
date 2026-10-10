@@ -13,24 +13,25 @@
  * (Stripe connection, pricing, toggle activation) happens post-onboarding in Settings.
  */
 
-import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { Injectable, OnDestroy, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { APP_CONSTANTS, ROUTES, ERROR_MESSAGES } from '@core/constants';
-import { FormValidators } from '@core/validators/form-validators';
-import { AuthService } from '@features/auth/services/auth.service';
-import { CreatorService } from '../../services/creator.service';
-import { SupabaseService } from '@core/services/supabase.service';
+import { APP_CONSTANTS, ERROR_MESSAGES, ROUTES } from 'app/core/constants';
+import {
+  EXPERT_CATEGORIES,
+  type ExpertSubcategory,
+  getCategoryById,
+} from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
+import { FormValidators } from 'app/core/validators/form-validators';
+import { AuthService } from 'app/features/auth/services/auth.service';
+import type { SelectOption } from 'app/shared/components/ui/searchable-select/searchable-select.component';
+import { errorMessage } from 'app/shared/utils/error.utils';
+
 import {
   COUNTRY_CODES,
   detectCountryIndex,
 } from './phone-country-codes.data';
-import type { SelectOption } from '@shared/components/ui/searchable-select/searchable-select.component';
-import { errorMessage } from '@shared/utils/error.utils';
-import {
-  EXPERT_CATEGORIES,
-  getCategoryById,
-  type ExpertSubcategory,
-} from '@core/models';
+import { CreatorService } from '../../services/creator.service';
 
 @Injectable()
 export class OnboardingStateService implements OnDestroy {
@@ -74,8 +75,11 @@ export class OnboardingStateService implements OnDestroy {
 
   readonly fullPhoneNumber = computed(() => {
     const country = COUNTRY_CODES[this.selectedCountryIndex()];
-    const local = this.phoneNumber().trim();
-    if (!local) return '';
+    const local = this.phoneNumber()
+      .trim();
+
+    if (!local) {return '';}
+
     return `${country.code} ${local}`;
   });
 
@@ -108,7 +112,8 @@ export class OnboardingStateService implements OnDestroy {
   );
 
   readonly subcategoryOptions = computed<SelectOption[]>(() =>
-    this.filteredSubcategories().map(s => ({ value: s.id, label: s.label })),
+    this.filteredSubcategories()
+      .map(s => ({ value: s.id, label: s.label })),
   );
 
   // Tracks a creator row already written to the DB during this session.
@@ -141,7 +146,8 @@ export class OnboardingStateService implements OnDestroy {
 
   private loadOAuthData(): void {
     const oauthData = this.authService.getStoredOAuthData();
-    if (!oauthData) return;
+
+    if (!oauthData) {return;}
 
     this.hasOAuthData.set(true);
     this.oauthProvider.set(oauthData.provider || '');
@@ -160,11 +166,14 @@ export class OnboardingStateService implements OnDestroy {
 
   private async checkExistingProfile(): Promise<void> {
     const user = this.authService.getCurrentUser();
+
     if (!user) {
       await this.router.navigate([ROUTES.AUTH.LOGIN]);
+
       return;
     }
     const { data: creator } = await this.creatorService.getCreatorByUserId(user.id);
+
     if (creator) {
       await this.router.navigate(['/' + creator.slug]);
     }
@@ -188,6 +197,7 @@ export class OnboardingStateService implements OnDestroy {
 
   updateDisplayName(value: string): void {
     this.displayName.set(value);
+
     if (!this.slugManuallyEdited()) {
       const generated = FormValidators.generateSlug(value);
       this.slug.set(generated);
@@ -211,6 +221,7 @@ export class OnboardingStateService implements OnDestroy {
 
     if (!slug || !FormValidators.isValidSlug(slug)) {
       this.slugStatus.set(slug ? 'invalid' : 'idle');
+
       return;
     }
 
@@ -221,10 +232,11 @@ export class OnboardingStateService implements OnDestroy {
   }
 
   private async performSlugCheck(slug: string): Promise<void> {
-    if (this.slug() !== slug) return;
+    if (this.slug() !== slug) {return;}
 
     const { available } = await this.creatorService.checkSlugAvailability(slug);
-    if (this.slug() !== slug) return;
+
+    if (this.slug() !== slug) {return;}
 
     this.slugStatus.set(available ? 'available' : 'taken');
   }
@@ -237,10 +249,12 @@ export class OnboardingStateService implements OnDestroy {
    */
   private async requireUser() {
     const { data: { user } } = await this.supabaseService.client.auth.getUser();
+
     if (!user) {
       void this.router.navigate([ROUTES.AUTH.LOGIN]);
       throw new Error('Your session has expired. Please sign in again.');
     }
+
     return user;
   }
 
@@ -304,7 +318,8 @@ export class OnboardingStateService implements OnDestroy {
           yearsOfExperience: this.yearsOfExperience() ?? undefined,
           linkedinUrl: this.linkedinUrl() || undefined,
         });
-        if (error) throw error;
+
+        if (error) {throw error;}
       } else {
         const { data: creator, error } = await this.creatorService.createCreator({
           userId: user.id,
@@ -318,8 +333,10 @@ export class OnboardingStateService implements OnDestroy {
           yearsOfExperience: this.yearsOfExperience() ?? undefined,
           linkedinUrl: this.linkedinUrl() || undefined,
         });
+
         if (error || !creator) {
           const msg = (error as { message?: string } | null)?.message ?? '';
+
           if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('slug')) {
             this.slugStatus.set('taken');
             this.currentStep.set(1);
@@ -346,10 +363,12 @@ export class OnboardingStateService implements OnDestroy {
         tipsEnabled: false,
         responseExpectation: APP_CONSTANTS.DEFAULT_RESPONSE_EXPECTATION,
       });
-      if (settingsError) throw settingsError;
+
+      if (settingsError) {throw settingsError;}
 
       // Verify settings were actually created (guard against future database issues)
       const { data: settingsCheck } = await this.creatorService.getCreatorSettings(creatorId);
+
       if (!settingsCheck) {
         throw new Error('Failed to verify creator settings were saved. Please try again.');
       }
@@ -358,6 +377,7 @@ export class OnboardingStateService implements OnDestroy {
       await this.router.navigate(['/' + this.slug()]);
     } catch (err) {
       const msg = errorMessage(err, '');
+
       if (
         msg.includes('row-level security') ||
         msg.includes('violates') ||

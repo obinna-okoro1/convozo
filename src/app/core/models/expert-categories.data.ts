@@ -226,6 +226,8 @@ export function getCategoryById(id: string): ExpertCategory | undefined {
 /** Look up a subcategory label — returns null when the IDs don't match any entry. */
 export function getSubcategoryLabel(categoryId: string, subcategoryId: string): string | null {
   const cat = getCategoryById(categoryId);
-  if (!cat) return null;
+
+  if (!cat) {return null;}
+
   return cat.subcategories.find((s) => s.id === subcategoryId)?.label ?? null;
 }

@@ -6,13 +6,16 @@
  */
 
 import { TestBed } from '@angular/core/testing';
+
 import { AnalyticsService } from './analytics.service';
-import { Message, CallBooking } from '../models';
+import { CallBooking, Message } from '../models';
 
 // ── Test data factories ──────────────────────────────────────────────────────
 
 function makeMessage(overrides: Partial<Message> = {}): Message {
-  const now = new Date().toISOString();
+  const now = new Date()
+    .toISOString();
+
   return {
     id: 'msg-1',
     creator_id: 'creator-1',
@@ -33,7 +36,9 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
 }
 
 function makeBooking(overrides: Partial<CallBooking> = {}): CallBooking {
-  const now = new Date().toISOString();
+  const now = new Date()
+    .toISOString();
+
   return {
     id: 'booking-1',
     creator_id: 'creator-1',
@@ -84,7 +89,8 @@ describe('AnalyticsService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── Empty state ────────────────────────────────────────────────────────────
@@ -92,20 +98,30 @@ describe('AnalyticsService', () => {
   describe('calculateAnalytics() with no data', () => {
     it('returns zeros for all numeric fields', () => {
       const result = service.calculateAnalytics([], []);
-      expect(result.totalRevenue).toBe(0);
-      expect(result.totalMessages).toBe(0);
-      expect(result.avgMessageValue).toBe(0);
-      expect(result.responseRate).toBe(0);
-      expect(result.avgResponseTime).toBe(0);
-      expect(result.revenueGrowth).toBe(0);
-      expect(result.messageGrowth).toBe(0);
+      expect(result.totalRevenue)
+        .toBe(0);
+      expect(result.totalMessages)
+        .toBe(0);
+      expect(result.avgMessageValue)
+        .toBe(0);
+      expect(result.responseRate)
+        .toBe(0);
+      expect(result.avgResponseTime)
+        .toBe(0);
+      expect(result.revenueGrowth)
+        .toBe(0);
+      expect(result.messageGrowth)
+        .toBe(0);
     });
 
     it('returns empty arrays for collections', () => {
       const result = service.calculateAnalytics([], []);
-      expect(result.topSenders).toEqual([]);
-      expect(result.dailyStats).toEqual([]);
-      expect(result.messageTypeBreakdown).toEqual([]);
+      expect(result.topSenders)
+        .toEqual([]);
+      expect(result.dailyStats)
+        .toEqual([]);
+      expect(result.messageTypeBreakdown)
+        .toEqual([]);
     });
   });
 
@@ -118,14 +134,16 @@ describe('AnalyticsService', () => {
         makeMessage({ id: 'msg-2', amount_paid: 2000 }), // $20
       ];
       const result = service.calculateAnalytics(messages);
-      expect(result.totalRevenue).toBeCloseTo(30);
+      expect(result.totalRevenue)
+        .toBeCloseTo(30);
     });
 
     it('adds booking revenue to total', () => {
       const messages = [makeMessage({ amount_paid: 1000 })]; // $10
       const bookings = [makeBooking({ amount_paid: 5000 })]; // $50
       const result = service.calculateAnalytics(messages, bookings);
-      expect(result.totalRevenue).toBeCloseTo(60);
+      expect(result.totalRevenue)
+        .toBeCloseTo(60);
     });
 
     it('calculates average value across messages and bookings', () => {
@@ -133,7 +151,8 @@ describe('AnalyticsService', () => {
       const bookings = [makeBooking({ amount_paid: 2000 })]; // $20
       const result = service.calculateAnalytics(messages, bookings);
       // 2 items totalling $40 => avg $20
-      expect(result.avgMessageValue).toBeCloseTo(20);
+      expect(result.avgMessageValue)
+        .toBeCloseTo(20);
     });
   });
 
@@ -146,7 +165,8 @@ describe('AnalyticsService', () => {
         makeMessage({ id: 'msg-2', is_handled: true }),
       ];
       const result = service.calculateAnalytics(messages);
-      expect(result.responseRate).toBe(100);
+      expect(result.responseRate)
+        .toBe(100);
     });
 
     it('calculates 50% response rate when half the messages are handled', () => {
@@ -155,21 +175,26 @@ describe('AnalyticsService', () => {
         makeMessage({ id: 'msg-2', is_handled: false }),
       ];
       const result = service.calculateAnalytics(messages);
-      expect(result.responseRate).toBe(50);
+      expect(result.responseRate)
+        .toBe(50);
     });
 
     it('calculates average response time in hours', () => {
-      const sentAt = new Date('2025-01-01T10:00:00Z').toISOString();
-      const repliedAt = new Date('2025-01-01T12:00:00Z').toISOString(); // 2 h later
+      const sentAt = new Date('2025-01-01T10:00:00Z')
+        .toISOString();
+      const repliedAt = new Date('2025-01-01T12:00:00Z')
+        .toISOString(); // 2 h later
       const msg = makeMessage({ created_at: sentAt, replied_at: repliedAt });
       const result = service.calculateAnalytics([msg]);
-      expect(result.avgResponseTime).toBeCloseTo(2);
+      expect(result.avgResponseTime)
+        .toBeCloseTo(2);
     });
 
     it('returns 0 avg response time when no replies exist', () => {
       const messages = [makeMessage({ replied_at: null })];
       const result = service.calculateAnalytics(messages);
-      expect(result.avgResponseTime).toBe(0);
+      expect(result.avgResponseTime)
+        .toBe(0);
     });
   });
 
@@ -187,7 +212,8 @@ describe('AnalyticsService', () => {
         }),
       ];
       const result = service.calculateAnalytics(messages);
-      expect(result.topSenders[0].email).toBe('high@test.com');
+      expect(result.topSenders[0].email)
+        .toBe('high@test.com');
     });
 
     it('aggregates multiple messages from the same sender', () => {
@@ -196,9 +222,12 @@ describe('AnalyticsService', () => {
         makeMessage({ id: 'msg-2', amount_paid: 2000 }),
       ];
       const result = service.calculateAnalytics(messages);
-      expect(result.topSenders.length).toBe(1);
-      expect(result.topSenders[0].totalSpent).toBeCloseTo(30);
-      expect(result.topSenders[0].messageCount).toBe(2);
+      expect(result.topSenders.length)
+        .toBe(1);
+      expect(result.topSenders[0].totalSpent)
+        .toBeCloseTo(30);
+      expect(result.topSenders[0].messageCount)
+        .toBe(2);
     });
   });
 
@@ -214,15 +243,18 @@ describe('AnalyticsService', () => {
       const result = service.calculateAnalytics(messages);
       const msgEntry = result.messageTypeBreakdown.find((e) => e.type === 'message');
       const supportEntry = result.messageTypeBreakdown.find((e) => e.type === 'support');
-      expect(msgEntry?.count).toBe(2);
-      expect(supportEntry?.count).toBe(1);
+      expect(msgEntry?.count)
+        .toBe(2);
+      expect(supportEntry?.count)
+        .toBe(1);
     });
 
     it('adds call bookings as a separate category', () => {
       const bookings = [makeBooking(), makeBooking({ id: 'b-2' })];
       const result = service.calculateAnalytics([], bookings);
       const callEntry = result.messageTypeBreakdown.find((e) => e.type === 'session');
-      expect(callEntry?.count).toBe(2);
+      expect(callEntry?.count)
+        .toBe(2);
     });
   });
 
@@ -230,26 +262,32 @@ describe('AnalyticsService', () => {
 
   describe('formatCurrency()', () => {
     it('formats whole dollar amounts with $ sign', () => {
-      expect(service.formatCurrency(10)).toContain('$');
-      expect(service.formatCurrency(10)).toContain('10');
+      expect(service.formatCurrency(10))
+        .toContain('$');
+      expect(service.formatCurrency(10))
+        .toContain('10');
     });
 
     it('formats zero as $0', () => {
-      expect(service.formatCurrency(0)).toContain('0');
+      expect(service.formatCurrency(0))
+        .toContain('0');
     });
   });
 
   describe('formatPercentage()', () => {
     it('prepends + for positive values', () => {
-      expect(service.formatPercentage(5.5)).toBe('+5.5%');
+      expect(service.formatPercentage(5.5))
+        .toBe('+5.5%');
     });
 
     it('keeps - for negative values', () => {
-      expect(service.formatPercentage(-3.2)).toBe('-3.2%');
+      expect(service.formatPercentage(-3.2))
+        .toBe('-3.2%');
     });
 
     it('formats zero as +0.0%', () => {
-      expect(service.formatPercentage(0)).toBe('+0.0%');
+      expect(service.formatPercentage(0))
+        .toBe('+0.0%');
     });
   });
 
@@ -264,11 +302,13 @@ describe('AnalyticsService', () => {
       const refunded = makeMessage({
         id: 'msg-refunded',
         amount_paid: 2000, // $20 — must NOT count
-        refunded_at: new Date().toISOString(),
+        refunded_at: new Date()
+          .toISOString(),
       });
       const result = service.calculateAnalytics([active, refunded]);
       // Only $10 should count toward revenue
-      expect(result.totalRevenue).toBeCloseTo(10);
+      expect(result.totalRevenue)
+        .toBeCloseTo(10);
     });
 
     it('still counts refunded message in totalMessages (it happened)', () => {
@@ -276,11 +316,13 @@ describe('AnalyticsService', () => {
       const refunded = makeMessage({
         id: 'msg-refunded',
         amount_paid: 2000,
-        refunded_at: new Date().toISOString(),
+        refunded_at: new Date()
+          .toISOString(),
       });
       const result = service.calculateAnalytics([active, refunded]);
       // totalMessages reflects all inquiries received, regardless of refund status
-      expect(result.totalMessages).toBe(2);
+      expect(result.totalMessages)
+        .toBe(2);
     });
 
     it('excludes refunded message from avgMessageValue calculation', () => {
@@ -289,10 +331,12 @@ describe('AnalyticsService', () => {
       const refunded = makeMessage({
         id: 'msg-refunded',
         amount_paid: 5000,
-        refunded_at: new Date().toISOString(),
+        refunded_at: new Date()
+          .toISOString(),
       });
       const result = service.calculateAnalytics([active, refunded]);
-      expect(result.avgMessageValue).toBeCloseTo(10);
+      expect(result.avgMessageValue)
+        .toBeCloseTo(10);
     });
 
     it('excludes refunded message from topSenders revenue', () => {
@@ -303,23 +347,27 @@ describe('AnalyticsService', () => {
           sender_email: 'alice@test.com',
           sender_name: 'Alice',
           amount_paid: 3000,
-          refunded_at: new Date().toISOString(), // $30 refunded — must not count
+          refunded_at: new Date()
+            .toISOString(), // $30 refunded — must not count
         }),
       ];
       const result = service.calculateAnalytics(messages);
       const alice = result.topSenders.find((s) => s.email === 'alice@test.com');
       // Only the non-refunded $50 should be in alice's totalSpent
-      expect(alice?.totalSpent).toBeCloseTo(50);
+      expect(alice?.totalSpent)
+        .toBeCloseTo(50);
     });
 
     it('all-refunded messages → totalRevenue = 0', () => {
-      const refundedAt = new Date().toISOString();
+      const refundedAt = new Date()
+        .toISOString();
       const messages = [
         makeMessage({ amount_paid: 1000, refunded_at: refundedAt }),
         makeMessage({ id: 'msg-2', amount_paid: 2000, refunded_at: refundedAt }),
       ];
       const result = service.calculateAnalytics(messages);
-      expect(result.totalRevenue).toBe(0);
+      expect(result.totalRevenue)
+        .toBe(0);
     });
   });
 
@@ -332,7 +380,8 @@ describe('AnalyticsService', () => {
         payout_status: 'refunded',
       });
       const result = service.calculateAnalytics([], [active, refunded]);
-      expect(result.totalRevenue).toBeCloseTo(50);
+      expect(result.totalRevenue)
+        .toBeCloseTo(50);
     });
 
     it('excludes booking with payout_status=disputed from totalRevenue', () => {
@@ -342,10 +391,12 @@ describe('AnalyticsService', () => {
         amount_paid: 10000, // $100 frozen by chargeback — must NOT count
         payout_status: 'disputed',
         dispute_id: 'dp_test_xyz',
-        dispute_frozen_at: new Date().toISOString(),
+        dispute_frozen_at: new Date()
+          .toISOString(),
       });
       const result = service.calculateAnalytics([], [active, disputed]);
-      expect(result.totalRevenue).toBeCloseTo(50);
+      expect(result.totalRevenue)
+        .toBeCloseTo(50);
     });
 
     it('disputed booking excluded from avgMessageValue', () => {
@@ -356,10 +407,12 @@ describe('AnalyticsService', () => {
         amount_paid: 10000,
         payout_status: 'disputed',
         dispute_id: 'dp_test',
-        dispute_frozen_at: new Date().toISOString(),
+        dispute_frozen_at: new Date()
+          .toISOString(),
       });
       const result = service.calculateAnalytics([], [active, disputed]);
-      expect(result.avgMessageValue).toBeCloseTo(50);
+      expect(result.avgMessageValue)
+        .toBeCloseTo(50);
     });
 
     it('disputed booking excluded from messageTypeBreakdown session revenue', () => {
@@ -369,12 +422,14 @@ describe('AnalyticsService', () => {
         amount_paid: 10000,
         payout_status: 'disputed',
         dispute_id: 'dp_test',
-        dispute_frozen_at: new Date().toISOString(),
+        dispute_frozen_at: new Date()
+          .toISOString(),
       });
       const result = service.calculateAnalytics([], [active, disputed]);
       const sessionEntry = result.messageTypeBreakdown.find((e) => e.type === 'session');
       // Revenue in breakdown must not include the disputed $100
-      expect(sessionEntry?.revenue).toBeCloseTo(50);
+      expect(sessionEntry?.revenue)
+        .toBeCloseTo(50);
     });
 
     it('mix of active, refunded, disputed bookings — only active counts', () => {
@@ -385,10 +440,12 @@ describe('AnalyticsService', () => {
         amount_paid: 10000,
         payout_status: 'disputed',
         dispute_id: 'dp_x',
-        dispute_frozen_at: new Date().toISOString(),
+        dispute_frozen_at: new Date()
+          .toISOString(),
       }); // $100
       const result = service.calculateAnalytics([], [active, refunded, disputed]);
-      expect(result.totalRevenue).toBeCloseTo(30);
+      expect(result.totalRevenue)
+        .toBeCloseTo(30);
     });
   });
 });

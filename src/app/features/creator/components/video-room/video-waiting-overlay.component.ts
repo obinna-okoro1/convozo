@@ -5,7 +5,7 @@
  * Displays animated avatar ring, call duration info, and a leave button.
  */
 
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-video-waiting-overlay',

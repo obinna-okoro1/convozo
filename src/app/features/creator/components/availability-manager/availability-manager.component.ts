@@ -7,12 +7,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AvailabilitySlot, DayOfWeek } from '@core/models';
-import { AvailabilityService } from '../../services/availability.service';
+import { AvailabilitySlot, DayOfWeek } from 'app/core/models';
 import {
   SearchableSelectComponent,
   SelectOption,
-} from '@shared/components/ui/searchable-select/searchable-select.component';
+} from 'app/shared/components/ui/searchable-select/searchable-select.component';
+
+import { AvailabilityService } from '../../services/availability.service';
 
 interface DaySchedule {
   day: DayOfWeek;
@@ -39,10 +40,13 @@ const DAY_LABELS: { day: DayOfWeek; label: string; shortLabel: string }[] = [
 ];
 
 const TIME_OPTIONS: string[] = [];
+
 // Generate time options in 30-minute intervals from 00:00 to 23:30
 for (let h = 0; h < 24; h++) {
   for (let m = 0; m < 60; m += 30) {
-    TIME_OPTIONS.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+    TIME_OPTIONS.push(`${h.toString()
+      .padStart(2, '0')}:${m.toString()
+      .padStart(2, '0')}`);
   }
 }
 
@@ -67,17 +71,22 @@ export class AvailabilityManagerComponent implements OnInit {
   protected readonly timeOptions = TIME_OPTIONS;
 
   protected readonly timeSelectOptions: SelectOption[] = TIME_OPTIONS.map((t) => {
-    const [hours, minutes] = t.split(':').map(Number);
+    const [hours, minutes] = t.split(':')
+      .map(Number);
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    return { value: t, label: `${String(displayHour)}:${minutes.toString().padStart(2, '0')} ${period}` };
+
+    return { value: t, label: `${String(displayHour)}:${minutes.toString()
+      .padStart(2, '0')} ${period}` };
   });
 
   protected readonly totalSlots = computed(() =>
-    this.schedule().reduce((sum, day) => sum + (day.enabled ? day.slots.length : 0), 0),
+    this.schedule()
+      .reduce((sum, day) => sum + (day.enabled ? day.slots.length : 0), 0),
   );
 
-  protected readonly activeDays = computed(() => this.schedule().filter((d) => d.enabled).length);
+  protected readonly activeDays = computed(() => this.schedule()
+    .filter((d) => d.enabled).length);
 
   constructor(private readonly availabilityService: AvailabilityService) {}
 
@@ -119,7 +128,8 @@ export class AvailabilityManagerComponent implements OnInit {
     // Default new slot starts 1 hour after last slot ends
     const lastEnd = day.slots.length > 0 ? lastSlot.endTime : '09:00';
     const endHour = parseInt(lastEnd.split(':')[0]) + 2;
-    const newEnd = endHour < 24 ? `${endHour.toString().padStart(2, '0')}:00` : '23:30';
+    const newEnd = endHour < 24 ? `${endHour.toString()
+      .padStart(2, '0')}:00` : '23:30';
 
     day.slots = [...day.slots, { startTime: lastEnd, endTime: newEnd }];
     updated[dayIndex] = day;
@@ -195,6 +205,7 @@ export class AvailabilityManagerComponent implements OnInit {
           slots: source.slots.map((s) => ({ ...s, id: undefined })),
         };
       }
+
       return day;
     });
     this.schedule.set(updated);
@@ -252,10 +263,13 @@ export class AvailabilityManagerComponent implements OnInit {
    * Format time for display (24h → 12h)
    */
   protected formatTime(time: string): string {
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] = time.split(':')
+      .map(Number);
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    return `${String(displayHour)}:${minutes.toString().padStart(2, '0')} ${period}`;
+
+    return `${String(displayHour)}:${minutes.toString()
+      .padStart(2, '0')} ${period}`;
   }
 
   /**
@@ -268,6 +282,7 @@ export class AvailabilityManagerComponent implements OnInit {
       if (error) {
         this.error.set('Failed to load availability');
         this.initEmptySchedule();
+
         return;
       }
 

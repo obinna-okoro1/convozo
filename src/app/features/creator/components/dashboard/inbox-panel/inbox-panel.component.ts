@@ -1,23 +1,23 @@
+import { CommonModule, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  OnDestroy,
   computed,
   effect,
   input,
-  OnDestroy,
   output,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RealtimeChannel } from '@supabase/supabase-js';
-import { Message, MessageReply, MessageStats, FilterStatus } from '@core/models';
-import { MessageService } from '@features/creator/services/message.service';
-import { ToastService } from '@shared/services/toast.service';
+import { FilterStatus, Message, MessageReply, MessageStats } from 'app/core/models';
+import { MessageService } from 'app/features/creator/services/message.service';
 import {
   SearchableSelectComponent,
   SelectOption,
-} from '@shared/components/ui/searchable-select/searchable-select.component';
+} from 'app/shared/components/ui/searchable-select/searchable-select.component';
+import { ToastService } from 'app/shared/services/toast.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Component({
   selector: 'app-inbox-panel',
@@ -67,13 +67,17 @@ export class InboxPanelComponent implements OnDestroy {
   protected readonly filteredMessages = computed<Message[]>(() => {
     const msgs = this.messages();
     const status = this.filterStatus();
-    if (status === 'unhandled') return msgs.filter((m) => !m.is_handled);
-    if (status === 'handled') return msgs.filter((m) => m.is_handled);
+
+    if (status === 'unhandled') {return msgs.filter((m) => !m.is_handled);}
+
+    if (status === 'handled') {return msgs.filter((m) => m.is_handled);}
+
     return msgs;
   });
 
   protected readonly filterOptions = computed<SelectOption[]>(() => {
     const s = this.stats();
+
     return [
       { value: 'all', label: `All (${s.total})` },
       { value: 'unhandled', label: `Pending (${s.unhandled})` },
@@ -88,9 +92,11 @@ export class InboxPanelComponent implements OnDestroy {
   protected handleMessageClick(message: Message): void {
     this.selectedMessage.set(message);
     this.replyText.set('');
+
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       this.showMessageModal.set(true);
     }
+
     if (!message.is_handled) {
       this.markHandled.emit(message);
     }
@@ -104,8 +110,10 @@ export class InboxPanelComponent implements OnDestroy {
 
   protected async sendInlineReply(): Promise<void> {
     const message = this.selectedMessage();
-    const content = this.replyText().trim();
-    if (!message || !content || this.sendingReply()) return;
+    const content = this.replyText()
+      .trim();
+
+    if (!message || !content || this.sendingReply()) {return;}
 
     this.sendingReply.set(true);
 
@@ -120,7 +128,8 @@ export class InboxPanelComponent implements OnDestroy {
         message_id: message.id,
         sender_type: 'expert',
         content,
-        created_at: new Date().toISOString(),
+        created_at: new Date()
+          .toISOString(),
       };
       this.replies.update((prev) => [...prev, optimistic]);
     } else {
@@ -164,13 +173,13 @@ export class InboxPanelComponent implements OnDestroy {
     this.replies.set([]);
     this.replyText.set('');
 
-    if (!messageId) return;
+    if (!messageId) {return;}
 
     this.loadingReplies.set(true);
     const { data } = await this.messageService.getReplies(messageId);
     this.loadingReplies.set(false);
 
-    if (data) this.replies.set(data);
+    if (data) {this.replies.set(data);}
 
     // Subscribe to new replies in real-time
     this.repliesChannel = this.messageService.subscribeToReplies(messageId, (updated) => {

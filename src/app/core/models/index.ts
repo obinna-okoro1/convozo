@@ -2,7 +2,7 @@
  * Core data models — barrel export
  *
  * Domain models are split into focused files for maintainability.
- * Import from this barrel: `import { Creator, Message } from '@core/models';`
+ * Import from this barrel: `import { Creator, Message } from 'app/core/models';`
  */
 
 export * from './creator.model';

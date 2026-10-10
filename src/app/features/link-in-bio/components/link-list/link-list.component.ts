@@ -4,7 +4,8 @@
  */
 
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { CreatorLink } from '@core/models';
+import { CreatorLink } from 'app/core/models';
+
 import { LinkButtonComponent } from '../link-button/link-button.component';
 
 @Component({

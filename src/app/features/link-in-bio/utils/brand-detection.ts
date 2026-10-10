@@ -279,10 +279,12 @@ for (const brand of BRANDS) {
  */
 export function detectBrand(url: string): BrandInfo | null {
   try {
-    const hostname = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+    const hostname = new URL(url).hostname.replace(/^www\./, '')
+      .toLowerCase();
 
     // Exact match first
     const exactKey = DOMAIN_MAP.get(hostname);
+
     if (exactKey) {
       return BRANDS.find((b) => b.key === exactKey) ?? null;
     }
@@ -303,6 +305,7 @@ export function detectBrand(url: string): BrandInfo | null {
   } catch {
     // Invalid URL — return null
   }
+
   return null;
 }
 

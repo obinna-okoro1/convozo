@@ -1,14 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import {
-  ImageUploadComponent,
   ImageChangeEvent,
-} from '@shared/components/ui/image-upload/image-upload.component';
-import { SearchableSelectComponent } from '@shared/components/ui/searchable-select/searchable-select.component';
+  ImageUploadComponent,
+} from 'app/shared/components/ui/image-upload/image-upload.component';
+import { SearchableSelectComponent } from 'app/shared/components/ui/searchable-select/searchable-select.component';
+
 import { SettingsStateService } from '../../settings-state.service';
 
 /** Preset banner images bundled with the app (served from /assets/banners/). */
-interface BannerPreset { label: string; value: string; }
+interface BannerPreset { label: string; value: string }
 
 @Component({
   selector: 'app-profile-view',
@@ -28,12 +29,14 @@ export class ProfileViewComponent {
   /** Only used to drive the upload component preview when a custom banner is active. */
   protected readonly customBannerUrl = computed(() => {
     const url = this.state.bannerImageUrl();
+
     // Return empty string for preset banners — the upload component should show blank
     return url && !url.startsWith('/assets/banners/') ? url : '';
   });
 
   protected readonly isPresetBanner = computed(() =>
-    this.state.bannerImageUrl().startsWith('/assets/banners/'),
+    this.state.bannerImageUrl()
+      .startsWith('/assets/banners/'),
   );
 
   constructor(protected readonly state: SettingsStateService) {}

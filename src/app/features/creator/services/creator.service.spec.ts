@@ -14,9 +14,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { TestBed } from '@angular/core/testing';
+
 import { CreatorService } from './creator.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
@@ -34,6 +35,7 @@ function makeQueryChain(result: { data: unknown; error: unknown }) {
   chain.select.and.returnValue(chain);
   chain.insert.and.returnValue(chain);
   chain.eq.and.returnValue(chain);
+
   return chain;
 }
 
@@ -78,7 +80,8 @@ describe('CreatorService', () => {
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(service)
+      .toBeTruthy();
   });
 
   // ── createCreator — payment_provider routing ───────────────────────────────
@@ -97,78 +100,92 @@ describe('CreatorService', () => {
       mockClient.from.and.returnValue({
         insert: (data: unknown) => {
           insertArgs.push(data);
+
           return chain;
         },
       });
+
       return { insertArgs };
     }
 
     it('sets payment_provider to "flutterwave" for NG creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('NG'));
-      expect(insertArgs[0].payment_provider).toBe('flutterwave');
+      expect(insertArgs[0].payment_provider)
+        .toBe('flutterwave');
     });
 
     it('sets payment_provider to "flutterwave" for ZA creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('ZA'));
-      expect(insertArgs[0].payment_provider).toBe('flutterwave');
+      expect(insertArgs[0].payment_provider)
+        .toBe('flutterwave');
     });
 
     it('sets payment_provider to "flutterwave" for lowercase "ng" (case-insensitive)', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('ng'));
-      expect(insertArgs[0].payment_provider).toBe('flutterwave');
+      expect(insertArgs[0].payment_provider)
+        .toBe('flutterwave');
     });
 
     it('sets payment_provider to "flutterwave" for lowercase "za" (case-insensitive)', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('za'));
-      expect(insertArgs[0].payment_provider).toBe('flutterwave');
+      expect(insertArgs[0].payment_provider)
+        .toBe('flutterwave');
     });
 
     it('sets payment_provider to "stripe" for US creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('US'));
-      expect(insertArgs[0].payment_provider).toBe('stripe');
+      expect(insertArgs[0].payment_provider)
+        .toBe('stripe');
     });
 
     it('sets payment_provider to "stripe" for GB creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('GB'));
-      expect(insertArgs[0].payment_provider).toBe('stripe');
+      expect(insertArgs[0].payment_provider)
+        .toBe('stripe');
     });
 
     it('sets payment_provider to "stripe" for CA creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('CA'));
-      expect(insertArgs[0].payment_provider).toBe('stripe');
+      expect(insertArgs[0].payment_provider)
+        .toBe('stripe');
     });
 
     it('sets payment_provider to "stripe" for AU creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('AU'));
-      expect(insertArgs[0].payment_provider).toBe('stripe');
+      expect(insertArgs[0].payment_provider)
+        .toBe('stripe');
     });
 
     it('sets payment_provider to "stripe" for DE creators', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('DE'));
-      expect(insertArgs[0].payment_provider).toBe('stripe');
+      expect(insertArgs[0].payment_provider)
+        .toBe('stripe');
     });
 
     it('always stores country in uppercase regardless of input case', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('ng'));
       // Stored as 'NG', not 'ng'
-      expect(insertArgs[0].country).toBe('NG');
+      expect(insertArgs[0].country)
+        .toBe('NG');
     });
 
     it('stores country in uppercase for Stripe countries too', async () => {
       const { insertArgs } = setupInsertCapture();
       await service.createCreator(makeCreatorInput('us'));
-      expect(insertArgs[0].country).toBe('US');
-      expect(insertArgs[0].payment_provider).toBe('stripe');
+      expect(insertArgs[0].country)
+        .toBe('US');
+      expect(insertArgs[0].payment_provider)
+        .toBe('stripe');
     });
 
     it('returns data and error from Supabase insert', async () => {
@@ -178,8 +195,10 @@ describe('CreatorService', () => {
       };
       mockClient.from.and.returnValue({ insert: () => chain });
       const result = await service.createCreator(makeCreatorInput('NG'));
-      expect(result.data).toEqual(jasmine.objectContaining({ id: 'creator-99' }));
-      expect(result.error).toBeNull();
+      expect(result.data)
+        .toEqual(jasmine.objectContaining({ id: 'creator-99' }));
+      expect(result.error)
+        .toBeNull();
     });
 
     it('propagates Supabase error on insert failure', async () => {
@@ -190,9 +209,10 @@ describe('CreatorService', () => {
       };
       mockClient.from.and.returnValue({ insert: () => chain });
       const result = await service.createCreator(makeCreatorInput('NG'));
-      expect(result.error).toEqual(
-        jasmine.objectContaining({ message: 'unique constraint violation' }),
-      );
+      expect(result.error)
+        .toEqual(
+          jasmine.objectContaining({ message: 'unique constraint violation' }),
+        );
     });
   });
 
@@ -203,14 +223,16 @@ describe('CreatorService', () => {
       const chain = makeQueryChain({ data: null, error: null });
       mockClient.from.and.returnValue(chain);
       await service.getFlutterwaveSubaccount('creator-1');
-      expect(mockClient.from).toHaveBeenCalledWith('flutterwave_subaccounts');
+      expect(mockClient.from)
+        .toHaveBeenCalledWith('flutterwave_subaccounts');
     });
 
     it('filters by creator_id', async () => {
       const chain = makeQueryChain({ data: null, error: null });
       mockClient.from.and.returnValue(chain);
       await service.getFlutterwaveSubaccount('creator-42');
-      expect(chain.eq).toHaveBeenCalledWith('creator_id', 'creator-42');
+      expect(chain.eq)
+        .toHaveBeenCalledWith('creator_id', 'creator-42');
     });
 
     it('returns the subaccount data when found', async () => {
@@ -223,17 +245,20 @@ describe('CreatorService', () => {
       const chain = makeQueryChain({ data: mockSubaccount, error: null });
       mockClient.from.and.returnValue(chain);
       const result = await service.getFlutterwaveSubaccount('creator-1');
-      expect(result.data).toEqual(
-        jasmine.objectContaining({ id: 'sub-1', subaccount_id: 'RS_abc123' }),
-      );
-      expect(result.error).toBeNull();
+      expect(result.data)
+        .toEqual(
+          jasmine.objectContaining({ id: 'sub-1', subaccount_id: 'RS_abc123' }),
+        );
+      expect(result.error)
+        .toBeNull();
     });
 
     it('returns null data when no subaccount exists', async () => {
       const chain = makeQueryChain({ data: null, error: null });
       mockClient.from.and.returnValue(chain);
       const result = await service.getFlutterwaveSubaccount('creator-new');
-      expect(result.data).toBeNull();
+      expect(result.data)
+        .toBeNull();
     });
   });
 
@@ -245,10 +270,11 @@ describe('CreatorService', () => {
         Promise.resolve({ data: { banks: [] }, error: null }),
       );
       await service.getFlutterwaveBanks('NG');
-      expect(mockClient.functions.invoke).toHaveBeenCalledWith(
-        'get-flutterwave-banks',
-        jasmine.objectContaining({ body: { country: 'NG' } }),
-      );
+      expect(mockClient.functions.invoke)
+        .toHaveBeenCalledWith(
+          'get-flutterwave-banks',
+          jasmine.objectContaining({ body: { country: 'NG' } }),
+        );
     });
 
     it('passes the correct country code to the edge function', async () => {
@@ -260,7 +286,8 @@ describe('CreatorService', () => {
         string,
         { body: { country: string } },
       ];
-      expect(options.body.country).toBe('ZA');
+      expect(options.body.country)
+        .toBe('ZA');
     });
 
     it('returns data and error from the edge function', async () => {
@@ -269,16 +296,18 @@ describe('CreatorService', () => {
         Promise.resolve({ data: { banks: mockBanks }, error: null }),
       );
       const result = await service.getFlutterwaveBanks('NG');
-      expect((result.data as any).banks).toEqual(mockBanks);
+      expect((result.data as any).banks)
+        .toEqual(mockBanks);
     });
 
     it('propagates edge function errors', async () => {
       const fnError = { message: 'Edge function unavailable' };
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
       const result = await service.getFlutterwaveBanks('NG');
-      expect(result.error).toEqual(
-        jasmine.objectContaining({ message: 'Edge function unavailable' }),
-      );
+      expect(result.error)
+        .toEqual(
+          jasmine.objectContaining({ message: 'Edge function unavailable' }),
+        );
     });
   });
 
@@ -290,12 +319,13 @@ describe('CreatorService', () => {
         Promise.resolve({ data: { account_name: 'JOHN DOE' }, error: null }),
       );
       await service.resolveFlutterwaveAccount('1234567890', '044');
-      expect(mockClient.functions.invoke).toHaveBeenCalledWith(
-        'get-flutterwave-banks',
-        jasmine.objectContaining({
-          body: { resolve: true, account_number: '1234567890', bank_code: '044' },
-        }),
-      );
+      expect(mockClient.functions.invoke)
+        .toHaveBeenCalledWith(
+          'get-flutterwave-banks',
+          jasmine.objectContaining({
+            body: { resolve: true, account_number: '1234567890', bank_code: '044' },
+          }),
+        );
     });
 
     it('passes the account number and bank code correctly', async () => {
@@ -307,8 +337,10 @@ describe('CreatorService', () => {
         string,
         { body: { account_number: string; bank_code: string } },
       ];
-      expect(options.body.account_number).toBe('9999999999');
-      expect(options.body.bank_code).toBe('033');
+      expect(options.body.account_number)
+        .toBe('9999999999');
+      expect(options.body.bank_code)
+        .toBe('033');
     });
 
     it('returns the account name on success', async () => {
@@ -316,16 +348,18 @@ describe('CreatorService', () => {
         Promise.resolve({ data: { account_name: 'NOMSA DLAMINI' }, error: null }),
       );
       const result = await service.resolveFlutterwaveAccount('6200123456', 'FNB');
-      expect((result.data as any).account_name).toBe('NOMSA DLAMINI');
+      expect((result.data as any).account_name)
+        .toBe('NOMSA DLAMINI');
     });
 
     it('propagates edge function errors on failure', async () => {
       const fnError = { message: 'Could not resolve account' };
       mockClient.functions.invoke.and.returnValue(Promise.resolve({ data: null, error: fnError }));
       const result = await service.resolveFlutterwaveAccount('0000000000', '044');
-      expect(result.error).toEqual(
-        jasmine.objectContaining({ message: 'Could not resolve account' }),
-      );
+      expect(result.error)
+        .toEqual(
+          jasmine.objectContaining({ message: 'Could not resolve account' }),
+        );
     });
   });
 
@@ -342,17 +376,18 @@ describe('CreatorService', () => {
         businessName: 'Test Creator',
         country: 'NG',
       });
-      expect(mockClient.functions.invoke).toHaveBeenCalledWith(
-        'create-flutterwave-recipient',
-        jasmine.objectContaining({
-          body: {
-            bank_code: '044',
-            account_number: '1234567890',
-            business_name: 'Test Creator',
-            country: 'NG',
-          },
-        }),
-      );
+      expect(mockClient.functions.invoke)
+        .toHaveBeenCalledWith(
+          'create-flutterwave-recipient',
+          jasmine.objectContaining({
+            body: {
+              bank_code: '044',
+              account_number: '1234567890',
+              business_name: 'Test Creator',
+              country: 'NG',
+            },
+          }),
+        );
     });
 
     it('passes all four required params to the edge function', async () => {
@@ -369,10 +404,14 @@ describe('CreatorService', () => {
           body: { bank_code: string; account_number: string; business_name: string; country: string };
         },
       ];
-      expect(options.body.bank_code).toBe('FNB');
-      expect(options.body.account_number).toBe('6200123456');
-      expect(options.body.business_name).toBe('Nomsa Dlamini');
-      expect(options.body.country).toBe('ZA');
+      expect(options.body.bank_code)
+        .toBe('FNB');
+      expect(options.body.account_number)
+        .toBe('6200123456');
+      expect(options.body.business_name)
+        .toBe('Nomsa Dlamini');
+      expect(options.body.country)
+        .toBe('ZA');
     });
 
     it('returns the subaccount data on success', async () => {
@@ -384,8 +423,10 @@ describe('CreatorService', () => {
         businessName: 'Test',
         country: 'NG',
       });
-      expect(result.data).toEqual(jasmine.objectContaining({ subaccount_id: 'RS_xyz' }));
-      expect(result.error).toBeNull();
+      expect(result.data)
+        .toEqual(jasmine.objectContaining({ subaccount_id: 'RS_xyz' }));
+      expect(result.error)
+        .toBeNull();
     });
 
     it('propagates edge function errors', async () => {
@@ -397,7 +438,8 @@ describe('CreatorService', () => {
         businessName: 'Test',
         country: 'NG',
       });
-      expect(result.error).toEqual(fnError);
+      expect(result.error)
+        .toEqual(fnError);
     });
   });
 });

@@ -5,6 +5,7 @@
 
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -34,6 +35,7 @@ export class CallbackComponent implements OnInit {
       await this.router.navigate(['/auth/login'], {
         queryParams: { error: 'oauth_failed' },
       });
+
       return;
     }
 

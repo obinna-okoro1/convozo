@@ -3,7 +3,7 @@
  * Manages saved response templates for quick replies
  */
 
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 
 export interface ResponseTemplate {
   id: string;
@@ -121,13 +121,15 @@ export class ResponseTemplateService {
   public readonly currentCreatorName = signal<string>('');
 
   public readonly allTemplates = computed(() => this.templates());
-  public readonly favoriteTemplates = computed(() => this.templates().filter((t) => t.is_favorite));
+  public readonly favoriteTemplates = computed(() => this.templates()
+    .filter((t) => t.is_favorite));
 
   public readonly categories = computed<TemplateCategory[]>(() => {
     const categoryMap = new Map<string, number>();
-    this.templates().forEach((t) => {
-      categoryMap.set(t.category, (categoryMap.get(t.category) ?? 0) + 1);
-    });
+    this.templates()
+      .forEach((t) => {
+        categoryMap.set(t.category, (categoryMap.get(t.category) ?? 0) + 1);
+      });
 
     const categoryIcons: Record<string, string> = {
       General: '💬',
@@ -138,11 +140,12 @@ export class ResponseTemplateService {
       Other: '📝',
     };
 
-    return Array.from(categoryMap.entries()).map(([name, count]) => ({
-      name,
-      icon: categoryIcons[name] || '📝',
-      count,
-    }));
+    return Array.from(categoryMap.entries())
+      .map(([name, count]) => ({
+        name,
+        icon: categoryIcons[name] || '📝',
+        count,
+      }));
   });
 
   private readonly templates = signal<ResponseTemplate[]>([]);
@@ -156,6 +159,7 @@ export class ResponseTemplateService {
    */
   public initializeTemplates(creatorId: string, creatorName?: string): void {
     this.currentCreatorId.set(creatorId);
+
     if (creatorName !== undefined) {
       this.currentCreatorName.set(creatorName);
     }
@@ -166,7 +170,8 @@ export class ResponseTemplateService {
     }
 
     // Create default templates
-    const now = new Date().toISOString();
+    const now = new Date()
+      .toISOString();
     const defaultTemplates: ResponseTemplate[] = DEFAULT_TEMPLATES.map((t, index) => ({
       ...t,
       id: `template_${creatorId}_${String(index)}`,
@@ -183,7 +188,8 @@ export class ResponseTemplateService {
    * Get templates by category
    */
   public getTemplatesByCategory(category: string): ResponseTemplate[] {
-    return this.templates().filter((t) => t.category === category);
+    return this.templates()
+      .filter((t) => t.category === category);
   }
 
   /**
@@ -191,12 +197,17 @@ export class ResponseTemplateService {
    */
   public searchTemplates(query: string): ResponseTemplate[] {
     const lowerQuery = query.toLowerCase();
-    return this.templates().filter(
-      (t) =>
-        t.title.toLowerCase().includes(lowerQuery) ||
-        t.content.toLowerCase().includes(lowerQuery) ||
-        t.category.toLowerCase().includes(lowerQuery),
-    );
+
+    return this.templates()
+      .filter(
+        (t) =>
+          t.title.toLowerCase()
+            .includes(lowerQuery) ||
+        t.content.toLowerCase()
+          .includes(lowerQuery) ||
+        t.category.toLowerCase()
+          .includes(lowerQuery),
+      );
   }
 
   /**
@@ -205,7 +216,8 @@ export class ResponseTemplateService {
   public createTemplate(
     template: Omit<ResponseTemplate, 'id' | 'created_at' | 'updated_at' | 'usage_count'>,
   ): ResponseTemplate {
-    const now = new Date().toISOString();
+    const now = new Date()
+      .toISOString();
     const newTemplate: ResponseTemplate = {
       ...template,
       id: `template_${String(Date.now())}`,
@@ -216,6 +228,7 @@ export class ResponseTemplateService {
 
     this.templates.update((templates) => [...templates, newTemplate]);
     this.saveTemplates();
+
     return newTemplate;
   }
 
@@ -228,14 +241,18 @@ export class ResponseTemplateService {
     this.templates.update((templates) =>
       templates.map((t) => {
         if (t.id === id) {
-          updated = { ...t, ...updates, updated_at: new Date().toISOString() };
+          updated = { ...t, ...updates, updated_at: new Date()
+            .toISOString() };
+
           return updated;
         }
+
         return t;
       }),
     );
 
     this.saveTemplates();
+
     return updated;
   }
 
@@ -246,6 +263,7 @@ export class ResponseTemplateService {
     const before = this.templates().length;
     this.templates.update((templates) => templates.filter((t) => t.id !== id));
     this.saveTemplates();
+
     return this.templates().length < before;
   }
 
@@ -275,10 +293,11 @@ export class ResponseTemplateService {
   public applyTemplate(template: ResponseTemplate, variables: Record<string, string>): string {
     let content = template.content;
 
-    Object.entries(variables).forEach(([key, value]) => {
-      const regex = new RegExp(`\\{${key}\\}`, 'g');
-      content = content.replace(regex, value);
-    });
+    Object.entries(variables)
+      .forEach(([key, value]) => {
+        const regex = new RegExp(`\\{${key}\\}`, 'g');
+        content = content.replace(regex, value);
+      });
 
     // Increment usage
     this.incrementUsage(template.id);
@@ -290,7 +309,8 @@ export class ResponseTemplateService {
    * Get most used templates
    */
   public getMostUsedTemplates(limit: number = 5): ResponseTemplate[] {
-    return [...this.templates()].sort((a, b) => b.usage_count - a.usage_count).slice(0, limit);
+    return [...this.templates()].sort((a, b) => b.usage_count - a.usage_count)
+      .slice(0, limit);
   }
 
   /**
@@ -306,7 +326,8 @@ export class ResponseTemplateService {
   public importTemplates(json: string, creatorId: string): number {
     try {
       const imported = JSON.parse(json) as ResponseTemplate[];
-      const now = new Date().toISOString();
+      const now = new Date()
+        .toISOString();
 
       const newTemplates = imported.map((t, index) => ({
         ...t,
@@ -318,9 +339,11 @@ export class ResponseTemplateService {
 
       this.templates.update((templates) => [...templates, ...newTemplates]);
       this.saveTemplates();
+
       return newTemplates.length;
     } catch (error) {
       console.error('Failed to import templates:', error);
+
       return 0;
     }
   }
@@ -331,6 +354,7 @@ export class ResponseTemplateService {
   private loadTemplates(): void {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+
       if (stored) {
         this.templates.set(JSON.parse(stored) as ResponseTemplate[]);
       }

@@ -9,8 +9,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { AvailabilitySlot, SupabaseResponse } from '@core/models';
-import { SupabaseService } from '@core/services/supabase.service';
+import { AvailabilitySlot, SupabaseResponse } from 'app/core/models';
+import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -65,6 +65,7 @@ export class AvailabilityService {
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save availability';
+
       return { success: false, error: message };
     }
   }
@@ -81,7 +82,7 @@ export class AvailabilityService {
       .select()
       .single();
 
-    return { data: data as AvailabilitySlot | null, error };
+    return { data: data, error };
   }
 
   /**
@@ -110,6 +111,6 @@ export class AvailabilityService {
       .select()
       .single();
 
-    return { data: data as AvailabilitySlot | null, error };
+    return { data: data, error };
   }
 }

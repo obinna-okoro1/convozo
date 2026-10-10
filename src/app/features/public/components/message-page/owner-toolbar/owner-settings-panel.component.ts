@@ -12,13 +12,13 @@
  * naturally closes the settings drawer (the toolbar reads the URL and hides the drawer).
  */
 
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { SettingsStateService } from '@features/creator/components/settings/settings-state.service';
-import { MonetizationViewComponent } from '@features/creator/components/settings/views/monetization-view/monetization-view.component';
-import { PaymentsViewComponent } from '@features/creator/components/settings/views/payments-view/payments-view.component';
-import { ProfileViewComponent } from '@features/creator/components/settings/views/profile-view/profile-view.component';
-import { ShopViewComponent } from '@features/creator/components/settings/views/shop-view/shop-view.component';
+import { SettingsStateService } from 'app/features/creator/components/settings/settings-state.service';
+import { MonetizationViewComponent } from 'app/features/creator/components/settings/views/monetization-view/monetization-view.component';
+import { PaymentsViewComponent } from 'app/features/creator/components/settings/views/payments-view/payments-view.component';
+import { ProfileViewComponent } from 'app/features/creator/components/settings/views/profile-view/profile-view.component';
+import { ShopViewComponent } from 'app/features/creator/components/settings/views/shop-view/shop-view.component';
 
 type SettingsTab = 'profile' | 'monetization' | 'payments' | 'shop';
 
@@ -88,6 +88,7 @@ export class OwnerSettingsPanelComponent implements OnInit {
     // e.g. /:slug/settings/monetization → opens on the Monetization tab.
     const match = /\/settings\/([^/?#]+)/.exec(this.router.url);
     const tabFromUrl = match?.[1] as SettingsTab | undefined;
+
     if (tabFromUrl && this.tabs.some((t) => t.id === tabFromUrl)) {
       this.currentTab.set(tabFromUrl);
     }
@@ -100,6 +101,7 @@ export class OwnerSettingsPanelComponent implements OnInit {
     // the browser history — back button should close the drawer, not step
     // through each tab the user clicked.
     const slug = this.router.url.split('/')[1];
+
     if (slug) {
       void this.router.navigate([`/${slug}/settings/${tab}`], { replaceUrl: true });
     }
