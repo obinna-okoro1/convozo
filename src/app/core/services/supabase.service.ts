@@ -13,6 +13,8 @@ import {
   ShopOrder,
   StripeAccount,
 } from '../models';
+import type { Database, TablesInsert } from '../models/database.types';
+
 
 interface SupabaseResponse<T> {
   data: T | null;
@@ -43,7 +45,7 @@ export class SupabaseService {
    * This is `public` only because Angular's DI doesn't have package-scoped access
    * modifiers — treat it as internal-to-services.
    */
-  public readonly client: SupabaseClient;
+  public readonly client: SupabaseClient<Database>;
   public readonly currentUser$: Observable<User | null>;
 
   private readonly currentUserSubject: BehaviorSubject<User | null>;
@@ -51,7 +53,7 @@ export class SupabaseService {
   private sessionInitPromise: Promise<void> | null = null;
 
   constructor() {
-    this.client = createClient(environment.supabase.url, environment.supabase.anonKey) as SupabaseClient;
+    this.client = createClient<Database>(environment.supabase.url, environment.supabase.anonKey);
 
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
     this.currentUser$ = this.currentUserSubject.asObservable();
@@ -115,7 +117,7 @@ export class SupabaseService {
 
   public async createCreator(creator: Partial<Creator>): Promise<SupabaseResponse<Creator>> {
     const { data, error } = await this.client.from('creators')
-      .insert(creator)
+      .insert(creator as TablesInsert<'creators'>)
       .select()
       .single();
 
@@ -153,7 +155,7 @@ export class SupabaseService {
   ): Promise<SupabaseResponse<CreatorSettings>> {
     const { data, error } = await this.client
       .from('creator_settings')
-      .insert(settings)
+      .insert(settings as TablesInsert<'creator_settings'>)
       .select()
       .single();
 
@@ -297,7 +299,7 @@ export class SupabaseService {
       .eq('creator_id', creatorId)
       .order('month', { ascending: false });
 
-    return { data: data as CreatorMonthlyAnalytics[] | null, error };
+    return { data: data, error };
   }
 
   // ── Private ────────────────────────────────────────────────────────

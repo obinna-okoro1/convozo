@@ -190,7 +190,7 @@ export class VideoCallService {
       this.currentBooking.set(data as CallBooking);
     }
 
-    return { data: data, error };
+    return { data: data as CallBooking | null, error };
   }
 
   /**
@@ -217,7 +217,7 @@ export class VideoCallService {
       this.currentBooking.set({ ...current, ...row } as CallBooking);
     }
 
-    return { data: row, error: null };
+    return { data: row as Partial<CallBooking>, error: null };
   }
 
   public startCountdown(durationMinutes: number): void {

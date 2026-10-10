@@ -12,7 +12,7 @@ const ERROR = 'error';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'cypress-out/**'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'cypress-out/**', 'src/app/core/models/database.types.ts'],
   },
   {
     files: ['**/*.ts'],

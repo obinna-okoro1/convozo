@@ -32,7 +32,7 @@ export class AvailabilityService {
       .order('day_of_week', { ascending: true })
       .order('start_time', { ascending: true });
 
-    return { data, error };
+    return { data: data as AvailabilitySlot[] | null, error };
   }
 
   /**
@@ -83,7 +83,7 @@ export class AvailabilityService {
       .select()
       .single();
 
-    return { data: data, error };
+    return { data: data as AvailabilitySlot | null, error };
   }
 
   /**
@@ -112,6 +112,6 @@ export class AvailabilityService {
       .select()
       .single();
 
-    return { data: data, error };
+    return { data: data as AvailabilitySlot | null, error };
   }
 }

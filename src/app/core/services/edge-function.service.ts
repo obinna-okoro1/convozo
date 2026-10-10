@@ -10,6 +10,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { FunctionsHttpError } from '@supabase/functions-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { environment } from 'environments/environment';
 
@@ -92,6 +93,30 @@ export interface PortalBooking {
 export interface ClientPortalData {
   messages: PortalMessage[];
   bookings: PortalBooking[];
+}
+
+/** Result of invoking an Edge Function, with the SDK's `any` error narrowed to `Error`. */
+export interface EdgeFunctionInvokeResult<T> {
+  data: T | null;
+  error: Error | null;
+}
+
+/**
+ * Invoke an Edge Function and return a typed result.
+ * The SDK types `error` as `any`; every value it returns there is a FunctionsError.
+ */
+export async function invokeEdgeFunction<T>(
+  client: SupabaseClient,
+  functionName: string,
+  body: object,
+): Promise<EdgeFunctionInvokeResult<T>> {
+  const response = await client.functions.invoke<T>(functionName, { body });
+
+  if (response.error === null) {
+    return { data: response.data, error: null };
+  }
+
+  return { data: null, error: response.error as Error };
 }
 
 @Injectable({
@@ -219,7 +244,7 @@ export class EdgeFunctionService {
    * in error.context.json(). This method unwraps it automatically.
    */
   private async invoke<T>(functionName: string, body: object): Promise<EdgeFunctionResponse<T>> {
-    const { data, error } = await this.supabase.client.functions.invoke(functionName, { body });
+    const { data, error } = await invokeEdgeFunction<T>(this.supabase.client, functionName, body);
 
     if (!error) {
       return { data: (data ?? undefined) as T | undefined, error: undefined };
@@ -228,7 +253,7 @@ export class EdgeFunctionService {
     // Unwrap FunctionsHttpError: read the real JSON body from the response
     if (error instanceof FunctionsHttpError) {
       try {
-        const responseBody = (await error.context.json()) as { error?: string };
+        const responseBody = (await (error.context as Response).json()) as { error?: string };
         const responseMessage = responseBody?.error ?? error.message;
 
         return { data: undefined, error: { message: responseMessage } };

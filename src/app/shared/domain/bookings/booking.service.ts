@@ -17,7 +17,7 @@ export class BookingService {
       .eq('creator_id', creatorId)
       .order('created_at', { ascending: false });
 
-    return { data, error };
+    return { data: data as CallBooking[] | null, error };
   }
 
   public subscribeToCallBookings(
@@ -62,7 +62,7 @@ export class BookingService {
       .select()
       .single();
 
-    return { data: data, error };
+    return { data: data as CallBooking | null, error };
   }
 
   public async deleteCallBooking(bookingId: string): Promise<SupabaseResponse<void>> {

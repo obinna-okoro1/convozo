@@ -20,6 +20,7 @@ import {
   SupabaseResponse,
 } from 'app/core/models';
 import { EdgeFunctionService } from 'app/core/services/edge-function.service';
+import { invokeEdgeFunction } from 'app/core/services/edge-function.service';
 import { SupabaseService } from 'app/core/services/supabase.service';
 
 @Injectable({
@@ -110,7 +111,7 @@ export class CreatorService {
       .select()
       .single();
 
-    return { data: creator, error };
+    return { data: creator as Creator | null, error };
   }
 
   public async updateCreatorProfile(data: {
@@ -149,7 +150,7 @@ export class CreatorService {
       .select()
       .single();
 
-    return { data: creator, error };
+    return { data: creator as Creator | null, error };
   }
 
   public async getCreatorSettings(creatorId: string): Promise<SupabaseResponse<CreatorSettings>> {
@@ -159,7 +160,7 @@ export class CreatorService {
       .eq('creator_id', creatorId)
       .maybeSingle();
 
-    return { data: data, error };
+    return { data: data as CreatorSettings | null, error };
   }
 
   public async createCreatorSettings(data: {
@@ -187,7 +188,7 @@ export class CreatorService {
       .select()
       .single();
 
-    return { data: settings, error };
+    return { data: settings as CreatorSettings | null, error };
   }
 
   public async updateCreatorSettings(data: {
@@ -231,7 +232,7 @@ export class CreatorService {
       .select()
       .single();
 
-    return { data: settings, error };
+    return { data: settings as CreatorSettings | null, error };
   }
 
   public async checkSlugAvailability(
@@ -302,12 +303,13 @@ export class CreatorService {
   public async getFlutterwaveBanks(
     country: string,
   ): Promise<EdgeFunctionResponse<FlutterwaveBank[]>> {
-    const { data, error } = await this.supabaseService.client.functions.invoke(
+    const { data, error } = await invokeEdgeFunction<FlutterwaveBank[]>(
+      this.supabaseService.client,
       'get-flutterwave-banks',
-      { body: { country } },
+      { country },
     );
 
-    return { data: data as FlutterwaveBank[] | undefined, error };
+    return { data: data ?? undefined, error };
   }
 
   /**
@@ -318,12 +320,13 @@ export class CreatorService {
     accountNumber: string,
     bankCode: string,
   ): Promise<EdgeFunctionResponse<{ account_name: string }>> {
-    const { data, error } = await this.supabaseService.client.functions.invoke(
+    const { data, error } = await invokeEdgeFunction<{ account_name: string }>(
+      this.supabaseService.client,
       'get-flutterwave-banks',
-      { body: { resolve: true, account_number: accountNumber, bank_code: bankCode } },
+      { resolve: true, account_number: accountNumber, bank_code: bankCode },
     );
 
-    return { data: data as { account_name: string } | undefined, error };
+    return { data: data ?? undefined, error };
   }
 
   /**
@@ -336,18 +339,17 @@ export class CreatorService {
     businessName: string;
     country: string;
   }): Promise<EdgeFunctionResponse<FlutterwaveSubaccount>> {
-    const { data, error } = await this.supabaseService.client.functions.invoke(
+    const { data, error } = await invokeEdgeFunction<FlutterwaveSubaccount>(
+      this.supabaseService.client,
       'create-flutterwave-recipient',
       {
-        body: {
-          bank_code: params.bankCode,
-          account_number: params.accountNumber,
-          business_name: params.businessName,
-          country: params.country,
-        },
+        bank_code: params.bankCode,
+        account_number: params.accountNumber,
+        business_name: params.businessName,
+        country: params.country,
       },
     );
 
-    return { data: data, error };
+    return { data: data ?? undefined, error };
   }
 }

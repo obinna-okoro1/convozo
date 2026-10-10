@@ -245,7 +245,7 @@ export class LinksViewComponent {
 
       if (data) {
         // Prepend to the public feed immediately so the owner sees it
-        this.state.creatorPosts.update((posts) => [data as CreatorPost, ...posts]);
+        this.state.creatorPosts.update((posts) => [data, ...posts]);
       }
       this.toast.success('Post published!');
       this.closePostModal();

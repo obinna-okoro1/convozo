@@ -35,7 +35,7 @@ export class MessageService {
       .neq('message_type', 'call')
       .order('created_at', { ascending: false });
 
-    return { data, error };
+    return { data: data as Message[] | null, error };
   }
 
   /**
@@ -141,7 +141,7 @@ export class MessageService {
       .eq('message_id', messageId)
       .order('created_at', { ascending: true });
 
-    return { data: data, error };
+    return { data: data as MessageReply[] | null, error };
   }
 
   /**

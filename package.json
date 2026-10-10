@@ -6,6 +6,7 @@
     "start": "ng serve",
     "start:all": "concurrently \"supabase functions serve\" \"ng serve\"",
     "build": "ng build",
+    "db:types": "supabase gen types typescript --local --schema public > src/app/core/models/database.types.ts",
     "watch": "ng build --watch --configuration development",
     "test": "vitest run",
     "test:watch": "vitest",
