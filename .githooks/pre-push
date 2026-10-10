@@ -1,12 +1,12 @@
 #!/bin/bash
 # .githooks/pre-push
-# Runs the Angular test suite before any push to the 'develop' or 'main' branch.
+# Runs the Vitest unit test suite before any push to the 'develop' or 'main' branch.
 # Install once per clone with: git config core.hooksPath .githooks
 
 while read local_ref local_sha remote_ref remote_sha; do
   if [[ "$remote_ref" == "refs/heads/develop" || "$remote_ref" == "refs/heads/main" ]]; then
     echo "🧪 Running unit tests before pushing to $(echo $remote_ref | sed 's|refs/heads/||')..."
-    npx ng test --watch=false --browsers=ChromeHeadless
+    pnpm test
     if [[ $? -ne 0 ]]; then
       echo "❌ Tests failed. Push aborted."
       exit 1

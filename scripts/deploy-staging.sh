@@ -21,7 +21,7 @@ if [[ -n $(git status --porcelain) ]]; then
 fi
 
 echo "🧪 Running unit tests..."
-npx ng test --watch=false --browsers=ChromeHeadless
+pnpm test
 if [[ $? -ne 0 ]]; then
   echo "❌ Tests failed. Merge to develop aborted."
   exit 1

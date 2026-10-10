@@ -14,20 +14,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run unit tests
-        run: npx ng test --watch=false --browsers=ChromeHeadlessCI
+        run: pnpm test
 
       - name: Build (staging)
-        run: npm run build -- --configuration=staging
+        run: pnpm build --configuration=staging
 
       - name: Deploy frontend to Cloudflare Pages (develop)
         uses: cloudflare/wrangler-action@v3
