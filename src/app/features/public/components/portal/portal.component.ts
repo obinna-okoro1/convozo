@@ -56,7 +56,15 @@ export class PortalComponent implements OnInit, OnDestroy {
 
   private authUnsubscribe: (() => void) | null = null;
 
-  public async ngOnInit(): Promise<void> {
+  public ngOnInit(): void {
+    void this.initializeSession();
+  }
+
+  public ngOnDestroy(): void {
+    this.authUnsubscribe?.();
+  }
+
+  private async initializeSession(): Promise<void> {
     // Subscribe to future auth events (magic-link click fires SIGNED_IN)
     const {
       data: { subscription },
@@ -83,10 +91,6 @@ export class PortalComponent implements OnInit, OnDestroy {
     } else {
       this.view.set('unauthenticated');
     }
-  }
-
-  public ngOnDestroy(): void {
-    this.authUnsubscribe?.();
   }
 
   // ── Unauthenticated form ────────────────────────────────────────────

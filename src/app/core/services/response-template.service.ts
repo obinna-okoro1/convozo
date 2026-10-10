@@ -3,7 +3,7 @@
  * Manages saved response templates for quick replies
  */
 
-import { Injectable, computed, signal } from '@angular/core';
+import { ErrorHandler, Injectable, computed, inject, signal } from '@angular/core';
 
 export interface ResponseTemplate {
   id: string;
@@ -117,6 +117,7 @@ const STORAGE_KEY = 'convozo_response_templates';
   providedIn: 'root',
 })
 export class ResponseTemplateService {
+  private readonly errorHandler = inject(ErrorHandler);
   public readonly currentCreatorId = signal<string>('');
   public readonly currentCreatorName = signal<string>('');
 
@@ -342,7 +343,7 @@ export class ResponseTemplateService {
 
       return newTemplates.length;
     } catch (error) {
-      console.error('Failed to import templates:', error);
+      this.errorHandler.handleError(new Error('Failed to import templates', { cause: error }));
 
       return 0;
     }
@@ -359,7 +360,7 @@ export class ResponseTemplateService {
         this.templates.set(JSON.parse(stored) as ResponseTemplate[]);
       }
     } catch (error) {
-      console.error('Failed to load templates:', error);
+      this.errorHandler.handleError(new Error('Failed to load templates', { cause: error }));
     }
   }
 
@@ -370,7 +371,7 @@ export class ResponseTemplateService {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.templates()));
     } catch (error) {
-      console.error('Failed to save templates:', error);
+      this.errorHandler.handleError(new Error('Failed to save templates', { cause: error }));
     }
   }
 }

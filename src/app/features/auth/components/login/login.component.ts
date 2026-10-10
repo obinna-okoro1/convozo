@@ -9,7 +9,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ERROR_MESSAGES } from 'app/core/constants';
-
 import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 @Component({

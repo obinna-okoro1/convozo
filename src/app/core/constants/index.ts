@@ -8,6 +8,7 @@ export const APP_CONSTANTS = {
   PRICE_MULTIPLIER: 100, // Convert dollars to cents
   DEFAULT_RESPONSE_EXPECTATION: '24-48 hours',
   EMAIL_REGEX:
+    // eslint-disable-next-line max-len -- a regex literal cannot be wrapped
     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/,
 } as const;
 

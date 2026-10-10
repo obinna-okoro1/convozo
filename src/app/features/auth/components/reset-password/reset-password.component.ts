@@ -18,7 +18,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { SupabaseService } from 'app/core/services/supabase.service';
-
 import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 @Component({

@@ -39,7 +39,11 @@ class ElementHarness implements MountedElement {
   public getComponent<T>(): T { return (this.element as unknown as { __ngContext__: { 8: T } }).__ngContext__[8]; }
 }
 
-export async function mount<T>(component: Type<T>, metadata: Parameters<typeof TestBed.configureTestingModule>[0] = {}, cb?: (sut: MountedSut<T>) => void): Promise<MountedSut<T>> {
+export async function mount<T>(
+  component: Type<T>,
+  metadata: Parameters<typeof TestBed.configureTestingModule>[0] = {},
+  cb?: (sut: MountedSut<T>) => void,
+): Promise<MountedSut<T>> {
   await TestBed.configureTestingModule({ imports: [component], ...metadata })
     .compileComponents();
   const fixture = TestBed.createComponent(component);

@@ -15,6 +15,7 @@ export const PUBLIC_ROUTES: Routes = [
   },
   {
     path: ':slug',
+    data: { breadcrumbLabel: false },
     loadComponent: () =>
       import('./components/message-page/message-page.component').then(
         (m) => m.MessagePageComponent,

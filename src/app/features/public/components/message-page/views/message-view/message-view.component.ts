@@ -8,8 +8,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   MessageFormComponent,
   MessageFormData,
-} from 'app/features/public/components/message-form/message-form.component';
-
+} from '../../../message-form/message-form.component';
 import { MessagePageStateService } from '../../message-page-state.service';
 
 @Component({

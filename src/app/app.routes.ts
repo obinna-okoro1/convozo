@@ -49,6 +49,7 @@ export const routes: Routes = [
   },
   {
     path: 'call/:bookingId',
+    data: { breadcrumbLabel: false },
     loadComponent: () =>
       import('./features/creator/components/video-room/video-room.component').then(
         (m) => m.VideoRoomComponent,
@@ -56,6 +57,7 @@ export const routes: Routes = [
   },
   {
     path: 'conversation/:token',
+    data: { breadcrumbLabel: false },
     loadComponent: () =>
       import('./features/public/components/conversation/conversation.component').then(
         (m) => m.ConversationComponent,
@@ -70,6 +72,7 @@ export const routes: Routes = [
   },
   {
     path: ':slug',
+    data: { breadcrumbLabel: false },
     loadComponent: () =>
       import('./features/public/components/message-page/message-page.component').then(
         (m) => m.MessagePageComponent,

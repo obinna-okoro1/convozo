@@ -4,7 +4,7 @@
  * Holds creator data, settings, Stripe account, and form-level state.
  */
 
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { ErrorHandler, Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import {
@@ -26,6 +26,7 @@ import { CreatorService } from '../creator/creator.service';
 
 @Injectable()
 export class SettingsStateService {
+  private readonly errorHandler = inject(ErrorHandler);
   private readonly creatorService = inject(CreatorService);
   private readonly supabaseService = inject(SupabaseService);
   private readonly router = inject(Router);
@@ -333,7 +334,7 @@ export class SettingsStateService {
         this.slugStatus.set('taken');
         this.error.set('This slug is already taken — please choose a different one');
       } else {
-        console.error('[saveProfile] DB update failed:', updated.error);
+        this.errorHandler.handleError(new Error('[saveProfile] DB update failed', { cause: updated.error }));
         this.error.set('Failed to update profile');
       }
     }
@@ -383,7 +384,7 @@ export class SettingsStateService {
       this.success.set(true);
       setTimeout(() => this.success.set(false), 3000);
     } else {
-      console.error('[saveMonetization] DB update failed:', updated.error);
+      this.errorHandler.handleError(new Error('[saveMonetization] DB update failed', { cause: updated.error }));
       this.error.set('Failed to update monetization');
     }
   }
@@ -458,7 +459,7 @@ export class SettingsStateService {
       );
 
       if (error != null) {
-        console.error('[refreshStripeStatus] verify failed:', error);
+        this.errorHandler.handleError(new Error('[refreshStripeStatus] verify failed', { cause: error }));
 
         return;
       }

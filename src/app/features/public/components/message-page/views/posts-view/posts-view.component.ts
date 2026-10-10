@@ -3,7 +3,7 @@
  * Accessed via /:slug/posts. Shows full chronological feed.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ErrorHandler, OnInit, inject, signal } from '@angular/core';
 
 import { CreatorPost } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
@@ -19,6 +19,7 @@ import { ProfileOwnerService } from '../../services/profile-owner.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostsViewComponent implements OnInit {
+  private readonly errorHandler = inject(ErrorHandler);
   protected readonly state = inject(MessagePageStateService);
   protected readonly ownerState = inject(ProfileOwnerService);
   private readonly supabase = inject(SupabaseService);
@@ -67,7 +68,7 @@ export class PostsViewComponent implements OnInit {
         this.posts.set(data as CreatorPost[]);
       }
     } catch (err) {
-      console.error('Failed to load posts:', err);
+      this.errorHandler.handleError(new Error('Failed to load posts', { cause: err }));
     } finally {
       this.loading.set(false);
     }

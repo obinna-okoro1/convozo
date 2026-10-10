@@ -21,14 +21,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  ErrorHandler,
   NgZone,
   OnDestroy,
   OnInit,
-  ViewChild,
   computed,
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
@@ -57,13 +58,14 @@ import { VideoCallService } from '../../services/video-call.service';
   ],
 })
 export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
+  private readonly errorHandler = inject(ErrorHandler);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
   public readonly videoCallService = inject(VideoCallService);
   private readonly supabaseService = inject(SupabaseService);
 
-  @ViewChild('dailyIframe') public dailyIframeRef!: ElementRef<HTMLIFrameElement>;
+  public readonly dailyIframeRef = viewChild.required<ElementRef<HTMLIFrameElement>>('dailyIframe');
 
   public readonly loading = signal(true);
   public readonly connecting = signal(false);
@@ -170,16 +172,16 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!existingInstance) {
           break;
         } // No instance to destroy
-        existingInstance.destroy();
+        void existingInstance.destroy();
         // Small yield to allow async cleanup
         break;
-      } catch (err) {
+      } catch {
         // Instance may already be destroyed or invalid — continue
       }
       attempts++;
     }
 
-    this.dailyCall = DailyIframe.wrap(this.dailyIframeRef.nativeElement, {
+    this.dailyCall = DailyIframe.wrap(this.dailyIframeRef().nativeElement, {
       // We provide our own End Call button and timer overlay.
       // NOTE: iframeStyle cannot be passed to wrap() — it only works with createFrame().
       // The iframe is already styled full-screen via CSS classes in the template.
@@ -271,7 +273,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       .on('error', (event) => {
         this.ngZone.run(() => {
           const e = event as { errorMsg?: string };
-          console.error('[Daily] Error:', e);
+          this.errorHandler.handleError(new Error('[Daily] Error', { cause: e }));
           this.videoCallService.callState.set('error');
           this.videoCallService.errorMessage.set(
             e.errorMsg ?? 'An error occurred in the video call',
@@ -554,7 +556,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
         .forEach((track) => track.stop());
     } catch (err) {
       // Permission denied or no devices — non-fatal, Daily.co handles its own error
-      console.warn('[Media] Early permission request failed (non-fatal):', (err as Error).message);
+      this.errorHandler.handleError(
+        new Error('[Media] Early permission request failed (non-fatal)', { cause: err }),
+      );
     }
   }
 
@@ -644,7 +648,11 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
           void this.bookingChannel
             .track({ role: this.role, joined_at: new Date()
               .toISOString() })
-            .catch((err) => console.warn('[Presence] track() failed (non-fatal):', err));
+            .catch((err: unknown) => {
+              this.errorHandler.handleError(
+                new Error('[Presence] track() failed (non-fatal)', { cause: err }),
+              );
+            });
         }
       });
   }
@@ -670,7 +678,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
   private async joinDailyRoom(roomUrl: string, token: string): Promise<void> {
     if (!this.dailyCall) {
       // This should never happen: ngAfterViewInit fires before the async Edge Function returns
-      console.error('[Daily] Call object not ready');
+      this.errorHandler.handleError(new Error('[Daily] Call object not ready'));
 
       return;
     }
@@ -679,7 +687,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       await this.dailyCall.join({ url: roomUrl, token });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to connect to video room';
-      console.error('[Daily] join() failed:', err);
+      this.errorHandler.handleError(new Error('[Daily] join() failed', { cause: err }));
       this.videoCallService.callState.set('error');
       this.videoCallService.errorMessage.set(message);
     }
@@ -706,7 +714,7 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       try {
         await this.dailyCall.leave();
       } catch (err) {
-        console.error('[Daily] Leave error:', err);
+        this.errorHandler.handleError(new Error('[Daily] Leave error', { cause: err }));
       }
     }
 
@@ -742,7 +750,9 @@ export class VideoRoomComponent implements OnInit, AfterViewInit, OnDestroy {
       try {
         await this.dailyCall.leave();
       } catch (err) {
-        console.error('[Daily] Leave error during waiting exit:', err);
+        this.errorHandler.handleError(
+          new Error('[Daily] Leave error during waiting exit', { cause: err }),
+        );
       }
     }
     this.videoCallService.reset();

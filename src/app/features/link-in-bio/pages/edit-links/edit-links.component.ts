@@ -8,11 +8,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 
 import { CreatorLink } from 'app/core/models';
-import { ToastService } from 'app/shared/services/toast.service';
-
+import { BrandInfo, getBrandByKey } from 'app/shared/domain/links/brand-detection';
 import { LinkFormModalComponent } from 'app/shared/domain/links/link-form-modal/link-form-modal.component';
 import { LinkService } from 'app/shared/domain/links/link.service';
-import { BrandInfo, getBrandByKey } from 'app/shared/domain/links/brand-detection';
+import { ToastService } from 'app/shared/services/toast.service';
+
 
 @Component({
   selector: 'app-edit-links',

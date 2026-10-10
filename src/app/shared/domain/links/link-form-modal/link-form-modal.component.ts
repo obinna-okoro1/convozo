@@ -42,10 +42,10 @@ export class LinkFormModalComponent {
   public readonly totalLinkCount = input<number>(0);
 
   /** Emitted when form is successfully saved */
-  public readonly onSaved = output<void>();
+  public readonly saved = output<void>();
 
   /** Emitted when user closes/cancels the modal */
-  public readonly onClosed = output<void>();
+  public readonly closed = output<void>();
 
   // Form fields
   protected formUrl = '';
@@ -129,7 +129,7 @@ export class LinkFormModalComponent {
           this.toast.error('Failed to update link');
         } else {
           this.toast.success('Link updated');
-          this.onSaved.emit();
+          this.saved.emit();
         }
       } else {
         // Create new link
@@ -146,7 +146,7 @@ export class LinkFormModalComponent {
           this.toast.error('Failed to add link');
         } else {
           this.toast.success('Link added');
-          this.onSaved.emit();
+          this.saved.emit();
         }
       }
     } catch {
@@ -160,6 +160,6 @@ export class LinkFormModalComponent {
    * Closes the modal
    */
   protected closeModal(): void {
-    this.onClosed.emit();
+    this.closed.emit();
   }
 }

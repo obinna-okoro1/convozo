@@ -25,7 +25,6 @@ import {
   Component,
   ElementRef,
   HostListener,
-  OnDestroy,
   computed,
   inject,
   input,
@@ -46,7 +45,7 @@ export interface SelectOption {
   templateUrl: './searchable-select.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SearchableSelectComponent implements OnDestroy {
+export class SearchableSelectComponent {
   private readonly elementRef = inject(ElementRef);
 
   /** The list of options to display. */
@@ -98,12 +97,6 @@ export class SearchableSelectComponent implements OnDestroy {
 
     return match ? match.label : '';
   });
-
-  /* ─── Lifecycle ─── */
-
-  public ngOnDestroy(): void {
-    // Cleanup if needed
-  }
 
   /* ─── Click outside to close ─── */
 

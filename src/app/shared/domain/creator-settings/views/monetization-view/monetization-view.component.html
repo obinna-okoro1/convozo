@@ -23,8 +23,8 @@
               once your bank account is connected.
             </p>
             <a
-              [routerLink]="drawerMode ? null : '../payments'"
-              (click)="drawerMode && goToPayments.emit()"
+              [routerLink]="drawerMode() ? null : '../payments'"
+              (click)="drawerMode() && goToPayments.emit()"
               class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5"
             >
               Go to Payments
@@ -44,8 +44,8 @@
               here, but toggles are locked until connected.
             </p>
             <a
-              [routerLink]="drawerMode ? null : '../payments'"
-              (click)="drawerMode && goToPayments.emit()"
+              [routerLink]="drawerMode() ? null : '../payments'"
+              (click)="drawerMode() && goToPayments.emit()"
               class="btn-primary btn-sm mt-3 inline-flex items-center gap-1.5"
             >
               Connect with Stripe

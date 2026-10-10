@@ -229,9 +229,9 @@ export class EdgeFunctionService {
     if (error instanceof FunctionsHttpError) {
       try {
         const responseBody = (await error.context.json()) as { error?: string };
-        const message = responseBody?.error ?? error.message;
+        const responseMessage = responseBody?.error ?? error.message;
 
-        return { data: undefined, error: { message } };
+        return { data: undefined, error: { message: responseMessage } };
       } catch {
         return { data: undefined, error: { message: error.message } };
       }

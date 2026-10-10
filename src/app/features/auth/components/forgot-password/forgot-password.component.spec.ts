@@ -31,9 +31,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { type SpyObj, createSpyObj } from '@testing/test-utils';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 import { ForgotPasswordComponent } from './forgot-password.component';
-import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

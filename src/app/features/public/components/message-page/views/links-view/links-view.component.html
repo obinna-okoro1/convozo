@@ -238,8 +238,8 @@
     [creatorId]="ownerState.creatorId()!"
     [editingLink]="editingLink()"
     [totalLinkCount]="state.creatorLinks().length"
-    (onSaved)="onLinkSaved()"
-    (onClosed)="closeLinkModal()"
+    (saved)="onLinkSaved()"
+    (closed)="closeLinkModal()"
   />
 }
 

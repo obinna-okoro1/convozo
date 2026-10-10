@@ -16,10 +16,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { CreatorLink } from 'app/core/models';
 import { SupabaseService } from 'app/core/services/supabase.service';
+import { LinkService } from 'app/shared/domain/links/link.service';
 
 import { CreatorHeaderComponent } from '../../components/creator-header/creator-header.component';
 import { LinkListComponent } from '../../components/link-list/link-list.component';
-import { LinkService } from 'app/shared/domain/links/link.service';
 
 interface CreatorProfile {
   id: string;

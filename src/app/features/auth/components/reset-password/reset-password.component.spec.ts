@@ -40,10 +40,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 
 import { type SpyObj, createSpyObj } from '@testing/test-utils';
+import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 import { ResetPasswordComponent } from './reset-password.component';
 import { SupabaseService } from '../../../../core/services/supabase.service';
-import { AuthService } from 'app/shared/domain/auth/auth.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

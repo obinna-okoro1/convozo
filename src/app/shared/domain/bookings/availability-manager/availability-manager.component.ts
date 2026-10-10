@@ -139,7 +139,7 @@ export class AvailabilityManagerComponent implements OnInit {
 
     // Default new slot starts 1 hour after last slot ends
     const lastEnd = day.slots.length > 0 ? lastSlot.endTime : '09:00';
-    const endHour = parseInt(lastEnd.split(':')[0]) + 2;
+    const endHour = parseInt(lastEnd.split(':')[0], 10) + 2;
     const newEnd = endHour < 24 ? `${endHour.toString()
       .padStart(2, '0')}:00` : '23:30';
 

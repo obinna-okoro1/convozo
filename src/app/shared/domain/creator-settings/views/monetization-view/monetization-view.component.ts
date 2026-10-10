@@ -2,11 +2,10 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Input,
-  Output,
   computed,
   inject,
+  input,
+  output,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -25,9 +24,9 @@ export class MonetizationViewComponent {
   protected readonly state = inject(SettingsStateService);
 
   /** True when rendered inside the owner toolbar drawer — disables routerLinks and emits events instead. */
-  @Input() public drawerMode = false;
+  public readonly drawerMode = input(false);
   /** Emitted when the user clicks "Go to Payments" inside the drawer. */
-  @Output() public readonly goToPayments = new EventEmitter<void>();
+  public readonly goToPayments = output<void>();
 
   /** Reference to the embedded availability manager so we can call save() on it */
   private readonly availabilityManager = viewChild(AvailabilityManagerComponent);

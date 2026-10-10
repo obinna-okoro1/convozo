@@ -17,12 +17,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Input,
   OnInit,
-  Output,
   computed,
   inject,
+  input,
+  output,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -113,9 +112,9 @@ const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024; // 10 MB
 })
 export class ShopViewComponent implements OnInit {
   /** True when rendered inside the owner toolbar drawer — disables routerLinks and emits events instead. */
-  @Input() public drawerMode = false;
+  public readonly drawerMode = input(false);
   /** Emitted when the user clicks "Go to Payments" inside the drawer. */
-  @Output() public readonly goToPayments = new EventEmitter<void>();
+  public readonly goToPayments = output<void>();
 
   protected readonly state = inject(SettingsStateService);
   protected readonly shopService = inject(ShopService);
@@ -187,8 +186,8 @@ export class ShopViewComponent implements OnInit {
   // ── File upload handlers ───────────────────────────────────────────────────
 
   protected async onFileSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const fileInput = event.target as HTMLInputElement;
+    const file = fileInput.files?.[0];
 
     if (!file) {
       return;
@@ -196,7 +195,7 @@ export class ShopViewComponent implements OnInit {
 
     if (file.size > MAX_FILE_SIZE) {
       this.fileUploadError.set('File is too large. Maximum size is 500 MB.');
-      input.value = '';
+      fileInput.value = '';
 
       return;
     }
@@ -215,7 +214,7 @@ export class ShopViewComponent implements OnInit {
 
     if (result.error || !result.path) {
       this.fileUploadError.set('Upload failed. Please try again.');
-      input.value = '';
+      fileInput.value = '';
 
       return;
     }
@@ -226,12 +225,12 @@ export class ShopViewComponent implements OnInit {
       fileDisplayName: file.name,
     }));
     // Reset input so re-selecting the same file triggers change event
-    input.value = '';
+    fileInput.value = '';
   }
 
   protected async onThumbnailSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const fileInput = event.target as HTMLInputElement;
+    const file = fileInput.files?.[0];
 
     if (!file) {
       return;
@@ -239,7 +238,7 @@ export class ShopViewComponent implements OnInit {
 
     if (file.size > MAX_THUMBNAIL_SIZE) {
       this.thumbnailUploadError.set('Image is too large. Maximum size is 10 MB.');
-      input.value = '';
+      fileInput.value = '';
 
       return;
     }
@@ -258,7 +257,7 @@ export class ShopViewComponent implements OnInit {
 
     if (result.error || !result.path) {
       this.thumbnailUploadError.set('Thumbnail upload failed. Please try again.');
-      input.value = '';
+      fileInput.value = '';
 
       return;
     }
@@ -268,7 +267,7 @@ export class ShopViewComponent implements OnInit {
       thumbnailStoragePath: result.path,
       thumbnailPublicUrl: result.publicUrl,
     }));
-    input.value = '';
+    fileInput.value = '';
   }
 
   protected clearFile(): void {

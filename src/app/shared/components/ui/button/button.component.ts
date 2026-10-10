@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -12,26 +12,26 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonComponent {
-  @Input() public variant: ButtonVariant = 'primary';
-  @Input() public size: ButtonSize = 'md';
-  @Input() public type: 'button' | 'submit' | 'reset' = 'button';
-  @Input() public disabled = false;
-  @Input() public loading = false;
-  @Input() public fullWidth = false;
-  @Input() public icon = false;
+  public readonly variant = input<ButtonVariant>('primary');
+  public readonly size = input<ButtonSize>('md');
+  public readonly type = input<'button' | 'submit' | 'reset'>('button');
+  public readonly disabled = input(false);
+  public readonly loading = input(false);
+  public readonly fullWidth = input(false);
+  public readonly icon = input(false);
 
   public clicked = output<Event>();
 
   public get buttonClasses(): string {
     const baseClasses = this.getVariantClasses();
     const sizeClasses = this.getSizeClasses();
-    const widthClass = this.fullWidth ? 'w-full' : '';
+    const widthClass = this.fullWidth() ? 'w-full' : '';
 
     return `tap-highlight transform active:scale-[0.97] transition-transform duration-150 ${baseClasses} ${sizeClasses} ${widthClass}`;
   }
 
   public handleClick(event: Event): void {
-    if (!this.disabled && !this.loading) {
+    if (!this.disabled() && !this.loading()) {
       this.clicked.emit(event);
     }
   }
@@ -44,7 +44,7 @@ export class ButtonComponent {
       danger: 'btn-danger',
     };
 
-    return variants[this.variant];
+    return variants[this.variant()];
   }
 
   private getSizeClasses(): string {
@@ -54,6 +54,6 @@ export class ButtonComponent {
       lg: 'btn-lg',
     };
 
-    return sizes[this.size];
+    return sizes[this.size()];
   }
 }

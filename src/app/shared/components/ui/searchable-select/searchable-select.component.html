@@ -1,9 +1,10 @@
 <!-- Searchable Select Dropdown -->
-<div class="relative" (keydown)="onKeydown($event)">
+<div class="relative">
   <!-- Trigger Button -->
   <button
     type="button"
     (click)="toggle()"
+    (keydown)="onKeydown($event)"
     [disabled]="disabled()"
     [class]="
       'flex items-center justify-between gap-2 w-full text-left cursor-pointer transition-all duration-200 ' +
@@ -52,6 +53,7 @@
               />
             </svg>
             <input
+              (keydown)="onKeydown($event)"
               #searchInput
               type="text"
               [value]="searchTerm()"
@@ -70,6 +72,7 @@
           <button
             type="button"
             (click)="selectOption(option)"
+            (keydown)="onKeydown($event)"
             [disabled]="option.disabled"
             [class]="
               'w-full text-left px-3 py-2.5 text-sm transition-colors duration-100 flex items-center gap-2 ' +

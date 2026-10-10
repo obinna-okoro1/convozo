@@ -3,7 +3,7 @@
  * Handles OAuth callbacks for Supabase, and Instagram (login + connect)
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ErrorHandler, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from 'app/shared/domain/auth/auth.service';
@@ -16,6 +16,7 @@ import { AuthService } from 'app/shared/domain/auth/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CallbackComponent implements OnInit {
+  private readonly errorHandler = inject(ErrorHandler);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -29,7 +30,7 @@ export class CallbackComponent implements OnInit {
     const error = this.route.snapshot.queryParamMap.get('error');
 
     if (error) {
-      console.error('OAuth error:', error);
+      this.errorHandler.handleError(new Error(`OAuth error: ${error}`));
       await this.router.navigate(['/auth/login'], {
         queryParams: { error: 'oauth_failed' },
       });

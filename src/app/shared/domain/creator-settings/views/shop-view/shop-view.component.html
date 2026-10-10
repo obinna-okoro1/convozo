@@ -25,8 +25,8 @@
                 account is connected.
               </p>
               <a
-                [routerLink]="drawerMode ? null : '../payments'"
-                (click)="drawerMode && goToPayments.emit()"
+                [routerLink]="drawerMode() ? null : '../payments'"
+                (click)="drawerMode() && goToPayments.emit()"
                 class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5"
                 >Go to Payments
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,8 +43,8 @@
                 You can add items now, but your shop won't go live until Stripe is connected.
               </p>
               <a
-                [routerLink]="drawerMode ? null : '../payments'"
-                (click)="drawerMode && goToPayments.emit()"
+                [routerLink]="drawerMode() ? null : '../payments'"
+                (click)="drawerMode() && goToPayments.emit()"
                 class="btn-primary btn-sm mt-2 inline-flex items-center gap-1.5"
                 >Connect with Stripe
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

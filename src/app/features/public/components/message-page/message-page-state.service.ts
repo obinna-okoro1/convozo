@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { ErrorHandler, Injectable, computed, inject, signal } from '@angular/core';
 
 import { ERROR_MESSAGES } from 'app/core/constants';
 import {
@@ -22,6 +22,7 @@ import { SupportFormData } from './views/support-view/support-view.component';
 
 @Injectable()
 export class MessagePageStateService {
+  private readonly errorHandler = inject(ErrorHandler);
   private readonly supabaseService = inject(SupabaseService);
   private readonly edgeFunctions = inject(EdgeFunctionService);
   private readonly toast = inject(ToastService);
@@ -258,7 +259,7 @@ export class MessagePageStateService {
         this.availabilitySlots.set(data as AvailabilitySlot[]);
       }
     } catch (err) {
-      console.error('Failed to load availability slots:', err);
+      this.errorHandler.handleError(new Error('Failed to load availability slots', { cause: err }));
     }
   }
 
@@ -283,7 +284,7 @@ export class MessagePageStateService {
         );
       }
     } catch (err) {
-      console.error('Failed to load confirmed bookings:', err);
+      this.errorHandler.handleError(new Error('Failed to load confirmed bookings', { cause: err }));
     }
   }
 
@@ -295,7 +296,7 @@ export class MessagePageStateService {
         this.creatorLinks.set(data);
       }
     } catch (err) {
-      console.error('Failed to load creator links:', err);
+      this.errorHandler.handleError(new Error('Failed to load creator links', { cause: err }));
     }
   }
 
@@ -313,7 +314,7 @@ export class MessagePageStateService {
         this.creatorPosts.set(data as CreatorPost[]);
       }
     } catch (err) {
-      console.error('Failed to load creator posts:', err);
+      this.errorHandler.handleError(new Error('Failed to load creator posts', { cause: err }));
     }
   }
 

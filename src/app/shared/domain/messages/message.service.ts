@@ -9,7 +9,7 @@
  * Errors: all methods handle errors internally and never throw to callers
  */
 
-import { Injectable, inject } from '@angular/core';
+import { ErrorHandler, Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { Message, MessageReply, MessageStats, SupabaseResponse } from 'app/core/models';
@@ -20,6 +20,7 @@ import { SupabaseService } from 'app/core/services/supabase.service';
   providedIn: 'root',
 })
 export class MessageService {
+  private readonly errorHandler = inject(ErrorHandler);
   private readonly supabaseService = inject(SupabaseService);
   private readonly edgeFunctions = inject(EdgeFunctionService);
 
@@ -91,8 +92,9 @@ export class MessageService {
       );
 
       if (functionError != null) {
-        console.error('[MessageService] Reply function error:', functionError);
-        throw functionError;
+        this.errorHandler.handleError(new Error('[MessageService] Reply function error', { cause: functionError }));
+
+        return { success: false, error: 'Failed to send reply' };
       }
 
       return { success: true };

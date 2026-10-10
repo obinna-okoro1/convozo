@@ -8,8 +8,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   CallBookingFormComponent,
   CallBookingFormData,
-} from 'app/features/public/components/call-booking-form/call-booking-form.component';
-
+} from '../../../call-booking-form/call-booking-form.component';
 import { MessagePageStateService } from '../../message-page-state.service';
 
 @Component({

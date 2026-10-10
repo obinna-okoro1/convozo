@@ -16,7 +16,7 @@ import { authGuard } from './auth.guard';
 import { SupabaseService } from '../services/supabase.service';
 
 /** Helper to invoke the functional guard in the TestBed context. */
-async function runGuard(): Promise<boolean | unknown> {
+async function runGuard(): Promise<unknown> {
   return TestBed.runInInjectionContext(async () =>
     authGuard(
       {} as ActivatedRouteSnapshot,

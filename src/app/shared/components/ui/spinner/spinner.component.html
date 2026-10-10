@@ -13,8 +13,8 @@
     />
   </svg>
 
-  @if (label) {
-    <span class="ml-2 text-sm text-neutral-600">{{ label }}</span>
+  @if (label()) {
+    <span class="ml-2 text-sm text-neutral-600">{{ label() }}</span>
   }
 
   <span class="sr-only">Loading...</span>

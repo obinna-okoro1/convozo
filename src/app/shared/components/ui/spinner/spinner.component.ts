@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 export type SpinnerSize = 'sm' | 'md' | 'lg';
 
@@ -11,12 +11,12 @@ export type SpinnerSize = 'sm' | 'md' | 'lg';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpinnerComponent {
-  @Input() public size: SpinnerSize = 'md';
-  @Input() public label = '';
-  @Input() public center = false;
+  public readonly size = input<SpinnerSize>('md');
+  public readonly label = input('');
+  public readonly center = input(false);
 
   public get containerClasses(): string {
-    const centerClass = this.center
+    const centerClass = this.center()
       ? 'flex items-center justify-center min-h-[12.5rem]'
       : 'inline-flex items-center';
 
@@ -30,6 +30,6 @@ export class SpinnerComponent {
       lg: 'w-8 h-8',
     };
 
-    return sizes[this.size];
+    return sizes[this.size()];
   }
 }
